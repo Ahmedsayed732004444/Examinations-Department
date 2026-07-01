@@ -1,59 +1,95 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<div align="center">
+  <img src="public/images/dashboard/1782916324_6a4524e4d5bdb.png" alt="Logo" width="120" height="120">
+  <h1 align="center">Antigravity Exam System</h1>
+  <p align="center">
+    <strong>نظام متكامل واحترافي لإدارة المقاييس والاختبارات النفسية والمهنية</strong>
+    <br />
+    <br />
+    <a href="#المميزات-الرئيسية">المميزات</a>
+    ·
+    <a href="#التقنيات-المستخدمة">التقنيات</a>
+    ·
+    <a href="#التثبيت-والتشغيل">التشغيل</a>
+  </p>
+</div>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+<hr />
 
-## About Laravel
+## 🌟 نبذة عن المشروع
+**Antigravity Exam System** هو منصة ويب متطورة مبنية باستخدام إطار عمل Laravel. تهدف المنصة إلى توفير بيئة متكاملة للمؤسسات والأفراد لإدارة وإجراء المقاييس والاختبارات (النفسية، المهنية، وغيرها) بمرونة عالية، مع تقديم تقارير تفصيلية ورسومات بيانية تحليلية دقيقة للمستخدمين.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## ✨ المميزات الرئيسية
+### 👨‍💼 لوحة تحكم الإدارة (Admin Dashboard)
+- **إدارة ديناميكية للمقاييس:** إضافة، تعديل، وحذف المقاييس بكل سهولة (اسم، وصف، صورة، مدة زمنية، سعر).
+- **بناء المقاييس بمرونة:** تقسيم المقياس إلى عدة أبعاد (Dimensions) وإضافة أسئلة لكل بعد مع تحديد خيارات الإجابات وأوزانها.
+- **التفسير الذكي للنتائج:** إضافة تفسيرات مخصصة لكل بعد بناءً على المستوى (مرتفع، متوسط، منخفض) وتحديد نقاط القوة وجوانب التطوير.
+- **نظام الكوبونات والتخفيضات:** إنشاء كوبونات خصم أو وصول مجاني للمقاييس وتحديد عدد الاستخدامات المسموحة وتواريخ الانتهاء.
+- **إحصائيات متقدمة:** واجهة رسومية توضح المبيعات، أعداد المستخدمين، المقاييس الأكثر استخداماً، وتحليلات تفصيلية للأداء.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 👤 بوابة المستخدم (User Portal)
+- **تصميم عصري (UI/UX):** واجهة مستخدم احترافية وسريعة الاستجابة على جميع الأجهزة (Mobile Friendly).
+- **التخزين المؤقت الذكي (Smart Caching):** أداء فائق السرعة عبر نظام Caching يعتمد على التحديث اللحظي للبيانات.
+- **إجراء المقاييس والتوقف المؤقت:** إمكانية بدء المقياس، التوقف في أي وقت، واستئناف الحل لاحقاً دون فقدان البيانات.
+- **نظام الدفع والكوبونات:** شاشة منبثقة (Modal) احترافية تتيح للمستخدم إدخال كوبون مجاني أو التوجه للدفع الإلكتروني للحصول على المقياس.
+- **تقارير نتائج احترافية:**
+  - عرض النتيجة النهائية كنسبة مئوية مع تقييم المستوى.
+  - رسم بياني شبكي (Radar Chart) ديناميكي يوضح درجات جميع الأبعاد بحلقات متدرجة.
+  - تحليل مفصل لنقاط القوة والضعف (Areas of Improvement) بناءً على درجات المستخدم.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🛠️ التقنيات المستخدمة
+- **الواجهة الخلفية (Backend):** PHP 8.x, Laravel 11.x
+- **قواعد البيانات:** MySQL
+- **الواجهة الأمامية (Frontend):** Blade Templates, HTML5, CSS3, Vanilla JavaScript, Bootstrap 5
+- **الرسوم البيانية (Charts):** Chart.js
+- **الأيقونات (Icons):** Bootstrap Icons
+- **معايير الكود:** PSR-12, Laravel Pint (لضمان نظافة الكود Clean Code)
 
-## Learning Laravel
+## 🚀 التثبيت والتشغيل
+اتبع الخطوات التالية لتشغيل المشروع على بيئتك المحلية:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+1. **استنساخ المستودع (Clone):**
+   ```bash
+   git clone https://github.com/Ahmedsayed732004444/Examinations-Department.git
+   cd Examinations-Department
+   ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+2. **تثبيت الحزم (Dependencies):**
+   ```bash
+   composer install
+   npm install
+   npm run build
+   ```
 
-## Laravel Sponsors
+3. **إعداد البيئة:**
+   قم بنسخ ملف `.env.example` إلى `.env` وقم بإعداد اتصال قاعدة البيانات الخاصة بك.
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+4. **تجهيز قاعدة البيانات (Migrations & Seeding):**
+   ```bash
+   php artisan migrate --seed
+   ```
+   *(ملاحظة: يقوم الـ Seeder بإضافة بيانات تجريبية وحسابات مدير لتتمكن من تجربة النظام فوراً)*
 
-### Premium Partners
+5. **ربط مجلد الصور:**
+   ```bash
+   php artisan storage:link
+   ```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+6. **تشغيل الخادم المحلي:**
+   ```bash
+   php artisan serve
+   ```
+   يمكنك الآن زيارة الموقع عبر الرابط `http://localhost:8000`
 
-## Contributing
+## 🔒 الصلاحيات والوصول
+- للوصول إلى لوحة الإدارة، يتم استخدام مسارات `admin/` المحمية بـ `AdminMiddleware`.
+- بوابة المستخدمين تعمل عبر المسارات الأساسية محمية بـ `UserMiddleware`.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+<hr />
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+<div align="center">
+  <sub>تم تطوير هذا النظام باحترافية عالية لتقديم تجربة تقييم مميزة وسلسة.</sub>
+</div>
