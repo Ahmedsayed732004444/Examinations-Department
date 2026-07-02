@@ -45,21 +45,25 @@ class ExamService
      */
     public function getSessionData(ExamSession $session): array
     {
-        $assessment = $session->assessment()->with('questions.answerOptions')->first();
-        $questions = $assessment->questions;
-        $total = $questions->count();
+        $assessment = $session->assessment;
+        $total = $assessment->questions()->count();
         $answeredIds = $session->userAnswers()->pluck('question_id')->toArray();
-        $nextQuestion = $questions->whereNotIn('id', $answeredIds)->first();
+        
+        $nextQuestion = $assessment->questions()
+            ->with('answerOptions')
+            ->whereNotIn('id', $answeredIds)
+            ->orderBy('order_index')
+            ->first();
+            
         $current = count($answeredIds) + 1;
 
         return [
             'assessment' => $assessment,
-            'questions' => $questions,
             'nextQuestion' => $nextQuestion,
             'progress' => [
                 'current' => $current,
                 'total' => $total,
-                'percentage' => round(($current) / $total * 100),
+                'percentage' => $total > 0 ? round(($current) / $total * 100) : 0,
             ],
         ];
     }
@@ -76,12 +80,16 @@ class ExamService
             $lastAnswer->delete();
         }
 
-        // Return same structure as submitAnswer
-        $questions = $session->assessment->questions()->with('answerOptions')->orderBy('order_index')->get();
         $answeredIds = $session->userAnswers()->pluck('question_id')->toArray();
-        $total = $questions->count();
+        $total = $session->assessment->questions()->count();
         $answeredCount = count($answeredIds);
-        $nextQuestion = $questions->whereNotIn('id', $answeredIds)->first();
+        
+        $nextQuestion = $session->assessment->questions()
+            ->with('answerOptions', 'dimension')
+            ->whereNotIn('id', $answeredIds)
+            ->orderBy('order_index')
+            ->first();
+            
         $current = $answeredCount + 1;
 
         if (! $nextQuestion) {
@@ -106,7 +114,7 @@ class ExamService
             'progress' => [
                 'current' => $current,
                 'total' => $total,
-                'percentage' => round(($current) / $total * 100),
+                'percentage' => $total > 0 ? round(($current) / $total * 100) : 0,
             ],
         ];
     }
@@ -131,11 +139,15 @@ class ExamService
         );
 
         // Find next unanswered question
-        $questions = $session->assessment->questions()->with('answerOptions')->orderBy('order_index')->get();
         $answeredIds = $session->userAnswers()->pluck('question_id')->toArray();
-        $total = $questions->count();
+        $total = $session->assessment->questions()->count();
         $answeredCount = count($answeredIds);
-        $nextQuestion = $questions->whereNotIn('id', $answeredIds)->first();
+        
+        $nextQuestion = $session->assessment->questions()
+            ->with('answerOptions', 'dimension')
+            ->whereNotIn('id', $answeredIds)
+            ->orderBy('order_index')
+            ->first();
 
         if (! $nextQuestion) {
             $this->resultService->calculate($session);
@@ -160,7 +172,7 @@ class ExamService
             'progress' => [
                 'current' => $current,
                 'total' => $total,
-                'percentage' => round(($current) / $total * 100),
+                'percentage' => $total > 0 ? round(($current) / $total * 100) : 0,
             ],
         ];
     }
