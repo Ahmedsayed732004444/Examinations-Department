@@ -110,9 +110,9 @@ class DatabaseSeeder extends Seeder
                 // Add dimension interpretations
                 $maxDimScore = count($dData['questions']) * 2;
 
-                // Set default thresholds if not specified
-                $highThresholdDim = $dData['custom_high_dim'] ?? (int) ($maxDimScore * 0.7);
-                $lowThresholdDim = $dData['custom_low_dim'] ?? (int) ($maxDimScore * 0.33);
+                // Set thresholds as percentages globally
+                $highThresholdDim = 70;
+                $lowThresholdDim = 33;
 
                 $dimInterps = $dData['interpretations'] ?? [
                     'high' => "تتمتع بمستوى مرتفع في بعد ({$dData['name']}) وقدرة عالية على توظيفه في بيئة العمل.",
@@ -131,9 +131,9 @@ class DatabaseSeeder extends Seeder
                 }
             }
 
-            // Recommendations for Assessment
-            $highThreshold = $aData['custom_high'] ?? (int) ($totalMaxScore * 0.7);
-            $lowThreshold = $aData['custom_low'] ?? (int) ($totalMaxScore * 0.33);
+            // Recommendations for Assessment (Thresholds as Percentages)
+            $highThreshold = 70;
+            $lowThreshold = 33;
 
             foreach ($aData['recommendations'] as $rec) {
                 Recommendation::create([

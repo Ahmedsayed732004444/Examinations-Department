@@ -47,10 +47,13 @@ class ExamResultService
             fn ($q) => $q->answerOptions->max('score_value') ?? 0
         );
 
-        // Determine overall level from recommendation thresholds
+        // Determine overall level from recommendation thresholds (treat DB values as percentages)
         $recommendation = $assessment->recommendations->first();
-        $highThreshold = $recommendation ? $recommendation->high_threshold : (int) ($maxScore * 0.67);
-        $lowThreshold = $recommendation ? $recommendation->low_threshold : (int) ($maxScore * 0.33);
+        $highPct = $recommendation && $recommendation->high_threshold > 0 ? $recommendation->high_threshold : 70;
+        $lowPct = $recommendation && $recommendation->low_threshold > 0 ? $recommendation->low_threshold : 33;
+        
+        $highThreshold = (int) ($maxScore * ($highPct / 100));
+        $lowThreshold = (int) ($maxScore * ($lowPct / 100));
 
         $level = $this->determineLevel($totalScore, $highThreshold, $lowThreshold);
 
@@ -81,8 +84,11 @@ class ExamResultService
             );
 
             $interpretation = $dimension->interpretations->first();
-            $dimHighThreshold = $interpretation ? $interpretation->high_threshold : (int) ($dimMax * 0.67);
-            $dimLowThreshold = $interpretation ? $interpretation->low_threshold : (int) ($dimMax * 0.33);
+            $dimHighPct = $interpretation && $interpretation->high_threshold > 0 ? $interpretation->high_threshold : 70;
+            $dimLowPct = $interpretation && $interpretation->low_threshold > 0 ? $interpretation->low_threshold : 33;
+            
+            $dimHighThreshold = (int) ($dimMax * ($dimHighPct / 100));
+            $dimLowThreshold = (int) ($dimMax * ($dimLowPct / 100));
 
             DimensionScore::create([
                 'result_id' => $result->id,

@@ -344,12 +344,12 @@
                                 <form class="dimension-interpretations-ajax-form" data-dimension-id="{{ $dim->id }}">
                                     <div class="row g-3 mb-3">
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-medium text-muted">الحد الأقصى للمستوى المنخفض (Low Threshold) *</label>
-                                            <input type="number" class="form-control form-control-sm input-dim-low-threshold" value="{{ $lowThreshold }}" required min="0" placeholder="مثال: 5">
+                                            <label class="form-label small fw-medium text-muted">الحد الأقصى للمستوى المنخفض (%) *</label>
+                                            <input type="number" class="form-control form-control-sm input-dim-low-threshold" value="{{ $lowThreshold }}" required min="0" max="100" placeholder="مثال: 33">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-medium text-muted">الحد الأدنى للمستوى المرتفع (High Threshold) *</label>
-                                            <input type="number" class="form-control form-control-sm input-dim-high-threshold" value="{{ $highThreshold }}" required min="0" placeholder="مثال: 8">
+                                            <label class="form-label small fw-medium text-muted">الحد الأدنى للمستوى المرتفع (%) *</label>
+                                            <input type="number" class="form-control form-control-sm input-dim-high-threshold" value="{{ $highThreshold }}" required min="0" max="100" placeholder="مثال: 70">
                                         </div>
                                     </div>
                                     <div class="row g-3 mb-3">

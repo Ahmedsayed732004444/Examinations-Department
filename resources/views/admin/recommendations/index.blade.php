@@ -84,12 +84,12 @@
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-medium">حد الدرجة المرتفعة *</label>
-                        <input type="number" class="form-control" id="r-high_threshold" placeholder="مثال: 40" min="0">
+                        <label class="form-label small fw-medium">حد الدرجة المرتفعة (%) *</label>
+                        <input type="number" class="form-control" id="r-high_threshold" placeholder="مثال: 70" min="0" max="100">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-medium">حد الدرجة المنخفضة *</label>
-                        <input type="number" class="form-control" id="r-low_threshold" placeholder="مثال: 20" min="0">
+                        <label class="form-label small fw-medium">حد الدرجة المنخفضة (%) *</label>
+                        <input type="number" class="form-control" id="r-low_threshold" placeholder="مثال: 33" min="0" max="100">
                     </div>
                     <div class="col-12">
                         <label class="form-label small fw-medium">وصف نتيجة هذا المستوى *</label>
