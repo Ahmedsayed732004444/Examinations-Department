@@ -61,5 +61,8 @@ class DatabaseSeeder extends Seeder
 
         // Include true assessments data from markdown
         $this->call(AssessmentsSeeder::class);
+
+        // Include comprehensive assessments from docx (interpretations + recommendations)
+        $this->call(ComprehensiveAssessmentsSeeder::class);
     }
 }
