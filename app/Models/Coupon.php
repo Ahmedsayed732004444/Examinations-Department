@@ -11,18 +11,36 @@ class Coupon extends Model
 
     protected $fillable = [
         'title',
+        'code',
         'assessments_limit',
         'expires_at',
         'is_active',
+        'discount_percentage',
+        'discount_percentage_2nd',
+        'discount_percentage_3rd',
+        'applies_to_all_assessments',
+        'applies_to_all_users',
     ];
 
     protected $casts = [
         'expires_at' => 'date',
         'is_active' => 'boolean',
+        'applies_to_all_assessments' => 'boolean',
+        'applies_to_all_users' => 'boolean',
     ];
 
     public function users()
     {
         return $this->belongsToMany(User::class)->withPivot('used_count')->withTimestamps();
+    }
+
+    public function assessments()
+    {
+        return $this->belongsToMany(Assessment::class, 'coupon_assessment');
+    }
+
+    public function permittedUsers()
+    {
+        return $this->belongsToMany(User::class, 'coupon_permitted_user');
     }
 }

@@ -79,10 +79,8 @@ class ExamResultService
                 foreach ($dimension->interpretations as $interp) {
                     if ($interp->low_threshold !== null && $interp->high_threshold !== null) {
                         $usePercentageFallback = false;
-                        if ($dimScore >= $interp->low_threshold && $dimScore <= $interp->high_threshold) {
-                            $dimLevel = $interp->level;
-                            break;
-                        }
+                        $dimLevel = $this->determineLevel($dimScore, $interp->high_threshold, $interp->low_threshold);
+                        break;
                     }
                 }
                 

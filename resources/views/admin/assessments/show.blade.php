@@ -711,11 +711,17 @@
                                     <label class="form-label small fw-semibold text-dark">التقييم (1-5)</label>
                                     <input type="number" class="form-control" id="settings-rating" value="{{ $assessment->rating }}" step="0.1" min="1" max="5">
                                 </div>
-                                <div class="col-12 mt-2 d-flex align-items-end">
+                                <div class="col-12 mt-2 d-flex align-items-end flex-wrap gap-3">
                                     <div class="form-check form-switch ps-0 pe-5 mb-2 fs-6">
                                         <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="settings-is-active" {{ $assessment->is_active ? 'checked' : '' }}>
                                         <label class="form-check-label text-dark fw-medium" for="settings-is-active">
                                             مفعّل وظاهر للمستفيدين
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-switch ps-0 pe-5 mb-2 fs-6">
+                                        <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="settings-hide-coupon" {{ $assessment->hide_coupon_field ? 'checked' : '' }}>
+                                        <label class="form-check-label text-dark fw-medium" for="settings-hide-coupon">
+                                            إخفاء حقل الكوبون في شاشة الدفع للمستخدمين
                                         </label>
                                     </div>
                                 </div>
@@ -1480,6 +1486,7 @@ $(document).ready(function() {
         if ($('#settings-price').val()) formData.append('price', $('#settings-price').val());
         if ($('#settings-rating').val()) formData.append('rating', $('#settings-rating').val());
         formData.append('is_active', $('#settings-is-active').is(':checked') ? 1 : 0);
+        formData.append('hide_coupon_field', $('#settings-hide-coupon').is(':checked') ? 1 : 0);
         
         if ($('#settings-image')[0].files.length > 0) {
             formData.append('image', $('#settings-image')[0].files[0]);

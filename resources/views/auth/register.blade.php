@@ -44,6 +44,16 @@
                                 value="{{ old('email') }}" placeholder="example@email.com" required>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label small fw-medium">رقم الجوال</label>
+                            <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
+                                value="{{ old('phone') }}" placeholder="05xxxxxxxx" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">رقم الهوية الوطنية / الإقامة</label>
+                            <input type="text" name="national_id" class="form-control @error('national_id') is-invalid @enderror"
+                                value="{{ old('national_id') }}" placeholder="1xxxxxxxxx" required>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label small fw-medium">كلمة المرور</label>
                             <input type="password" name="password" class="form-control" placeholder="8 أحرف على الأقل" required>
                         </div>

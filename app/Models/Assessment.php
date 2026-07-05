@@ -22,15 +22,22 @@ class Assessment extends Model
         'rating',
         'rating_count',
         'created_by',
+        'hide_coupon_field',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'hide_coupon_field' => 'boolean',
     ];
 
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function coupons()
+    {
+        return $this->belongsToMany(Coupon::class, 'coupon_assessment');
     }
 
     public function dimensions()

@@ -582,12 +582,21 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
                     </form>
                 @else
                     <div style="flex: 1; padding-right: 4px;">
-                        <button type="button" class="btn-primary-custom w-100" data-bs-toggle="modal" data-bs-target="#paymentCouponModal" data-assessment-id="{{ $assessment->id }}" data-assessment-title="{{ $assessment->title_ar }}" data-assessment-price="{{ $assessment->price > 0 ? number_format($assessment->price, 0) : '0' }}">
+                        <button type="button" class="btn-primary-custom w-100" data-bs-toggle="modal" data-bs-target="#paymentCouponModal" data-assessment-id="{{ $assessment->id }}" data-assessment-title="{{ $assessment->title_ar }}" data-assessment-price="{{ $assessment->price > 0 ? number_format($assessment->price, 0) : '0' }}" data-hide-coupon="{{ $assessment->hide_coupon_field ? '1' : '0' }}">
                             ابدأ المقياس
                         </button>
                     </div>
                 @endif
             </div>
+
+            @if(!$isCompleted && !$isInProgress)
+            <div style="border: 1px dashed #1d4ed8; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 12px; background-color: #f8fafc;">
+                <i class="bi bi-gift" style="color: #1d4ed8; font-size: 1.5rem;"></i>
+                <span style="color: #0f172a; font-size: 0.95rem; font-weight: 500;">
+                    احصل على كوبون <a href="https://wa.me/" target="_blank" style="color: #1d4ed8; font-weight: 700; text-decoration: underline;">من هنا</a> لبدء المقياس مجاناً
+                </span>
+            </div>
+            @endif
 
             @if($isCompleted)
                 <a href="{{ route('exam.result', $userSession->id) }}" class="btn-secondary-custom" style="background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8;">
@@ -715,65 +724,109 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
     background: #f1f5f9;
 }
 </style>
+
+{{-- ============================================================
+     Payment / Coupon Modal
+     ============================================================ --}}
 <div class="modal fade" id="paymentCouponModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
-            <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
-                <h5 class="modal-title fw-bold" style="color: #1a2b56;" id="modalAssessmentTitle">عنوان المقياس</h5>
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pt-4 px-4 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold mb-1" style="color: #1a2b56;" id="modalAssessmentTitle">عنوان المقياس</h5>
+                    <div class="text-muted small" id="modalAssessmentPriceLabel"></div>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body px-4 pb-4">
-                <p class="text-muted small mb-4">كيف تود متابعة الحصول على هذا المقياس؟</p>
-                
-                <ul class="nav nav-pills mb-4 d-flex custom-pills" id="pills-tab" role="tablist">
-                    <li class="nav-item flex-fill text-center" role="presentation">
-                        <button class="nav-link active w-100 fw-bold py-2" id="pills-coupon-tab" data-bs-toggle="pill" data-bs-target="#pills-coupon" type="button" role="tab"><i class="bi bi-ticket-perforated me-1"></i> استخدام كوبون</button>
-                    </li>
-                    <li class="nav-item flex-fill text-center" role="presentation">
-                        <button class="nav-link w-100 fw-bold py-2" id="pills-pay-tab" data-bs-toggle="pill" data-bs-target="#pills-pay" type="button" role="tab"><i class="bi bi-credit-card me-1"></i> الدفع الإلكتروني</button>
-                    </li>
-                </ul>
-                
-                <div class="tab-content" id="pills-tabContent">
-                    <!-- Coupon Tab -->
-                    <div class="tab-pane fade show active" id="pills-coupon" role="tabpanel">
-                        <form method="POST" action="" id="couponForm">
-                            @csrf
-                            @if($activeCoupons->count() > 0)
-                                <div class="text-center mb-4">
-                                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2" style="width: 50px; height: 50px; background: #ecfdf5; color: #10b981; font-size: 1.5rem;">
-                                        <i class="bi bi-check2-circle"></i>
-                                    </div>
-                                    <h6 class="fw-bold" style="color: #10b981;">تهانينا! لديك كوبون متاح للاستخدام</h6>
-                                    <p class="text-muted small mb-0">اختر الكوبون المناسب للبدء فوراً</p>
-                                </div>
-                                <div class="mb-4">
-                                    <select class="form-select form-select-lg" name="coupon_id" required style="border-radius: 10px; border-color: #e2e8f0; font-size: 0.95rem; box-shadow: none;">
-                                        <option value="" disabled selected>-- يرجى تحديد الكوبون --</option>
-                                        @foreach($activeCoupons as $coupon)
-                                            <option value="{{ $coupon->id }}">{{ $coupon->title }} ({{ $coupon->assessments_limit }} مقاييس)</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-primary w-100 fw-bold">استخدام الكوبون وبدء المقياس</button>
-                            @else
-                                <div class="alert alert-warning text-center small border-0 py-3">
-                                    <i class="bi bi-exclamation-circle d-block fs-4 mb-2"></i>
-                                    عذراً، لا توجد كوبونات مجانية متاحة حالياً.
-                                </div>
-                            @endif
-                        </form>
-                    </div>
-                    
-                    <!-- Pay Tab -->
-                    <div class="tab-pane fade" id="pills-pay" role="tabpanel">
-                        <div class="text-center py-4">
-                            <div class="display-6 fw-bold text-navy mb-2" id="modalAssessmentPrice">149 <span class="fs-6">ر.س</span></div>
-                            <p class="text-muted small">بوابة الدفع الإلكتروني قيد التجهيز حالياً. نعتذر عن الإزعاج، يرجى استخدام الكوبونات المجانية المتوفرة.</p>
-                            <button type="button" class="btn btn-secondary w-100 mt-2" disabled>متابعة الدفع (قريباً)</button>
+
+            <div class="modal-body px-4 pb-4 pt-3">
+
+                {{-- Coupon section --}}
+                <div id="couponSection">
+                    <form method="POST" action="" id="couponStartForm">
+                        @csrf
+                        <input type="hidden" name="coupon_code" id="hiddenCouponCode">
+
+                        {{-- Step 1: Enter code --}}
+                        <div id="couponInputArea">
+                            <label class="form-label fw-semibold small text-dark">رمز الكوبون</label>
+                            <div class="input-group mb-2">
+                                <input type="text" id="couponCodeInput" class="form-control form-control-lg text-start" dir="ltr"
+                                    placeholder="أدخل رمز الكوبون..." style="border-radius: 10px 0 0 10px; letter-spacing: 1px;">
+                                <button type="button" id="btnVerifyCoupon" class="btn btn-primary px-3" style="border-radius: 0 10px 10px 0;">
+                                    <span id="verifyCouponText"><i class="bi bi-search me-1"></i>تحقق</span>
+                                    <span id="verifyCouponSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                                </button>
+                            </div>
+                            <div id="couponError" class="text-danger small d-none"></div>
                         </div>
+
+                        {{-- Step 2: Discount breakdown --}}
+                        <div id="couponSuccessArea" class="d-none">
+                            <div class="rounded-3 p-3 mb-3" style="background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%); border: 1px solid #bbf7d0;">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;background:#10b981;color:#fff;font-size:1rem;flex-shrink:0;">
+                                        <i class="bi bi-check-lg"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold small text-success" id="couponSuccessMsg">الكوبون صالح!</div>
+                                        <div class="text-muted" style="font-size:0.7rem;" id="couponUsageLabel"></div>
+                                    </div>
+                                    <button type="button" id="btnChangeCoupon" class="btn btn-sm btn-outline-secondary ms-auto py-0 px-2" style="font-size:0.7rem;">تغيير</button>
+                                </div>
+
+                                <div id="pricingBreakdown" class="small pt-2 border-top border-success border-opacity-25">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">السعر الأصلي</span>
+                                        <span id="breakdownOriginal" class="fw-medium"></span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-success"><i class="bi bi-tag me-1"></i>خصم <span id="breakdownPct"></span>%</span>
+                                        <span class="text-success fw-medium" id="breakdownDiscount"></span>
+                                    </div>
+                                    <div class="d-flex justify-content-between fw-bold" style="border-top: 1px dashed #86efac; padding-top:6px; margin-top:4px;">
+                                        <span class="text-dark">المبلغ المستحق</span>
+                                        <span class="text-primary fs-6" id="breakdownFinal"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="btnStartFree" class="btn btn-success w-100 fw-bold py-2 d-none" style="border-radius: 10px;">
+                                <i class="bi bi-play-circle me-1"></i> ابدأ المقياس مجاناً
+                            </button>
+
+                            <div id="partialPayArea" class="d-none">
+                                <div class="alert alert-info small border-0 py-2 mb-2">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    يوجد مبلغ متبقٍ. سيُطبق الكوبون بعد إتمام الدفع التجريبي.
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 fw-bold py-2" style="border-radius: 10px;">
+                                    <i class="bi bi-credit-card me-1"></i> إتمام الدفع التجريبي وبدء المقياس
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <span class="text-muted small">لا يوجد لديك كوبون؟ </span>
+                        <button type="button" class="btn btn-link btn-sm small p-0 text-primary text-decoration-none" id="btnSwitchToPay">الدفع الإلكتروني</button>
                     </div>
                 </div>
+
+                {{-- Direct Pay section --}}
+                <div id="paySection" class="d-none">
+                    <div class="text-center py-3">
+                        <div class="display-6 fw-bold mb-2" style="color:#1a2b56;" id="payDirectPrice">— ر.س</div>
+                        <p class="text-muted small">بوابة الدفع الإلكتروني قيد التجهيز حالياً.</p>
+                        <button type="button" class="btn btn-secondary w-100" disabled>متابعة الدفع (قريباً)</button>
+                    </div>
+                    <div id="btnSwitchToCouponWrap" class="text-center mt-2">
+                        <button type="button" class="btn btn-link btn-sm small p-0 text-muted text-decoration-none" id="btnSwitchToCoupon">
+                            <i class="bi bi-ticket-perforated me-1"></i>استخدام كوبون
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -781,81 +834,179 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
+    /* ── Category filter ── */
     const filterBtns = document.querySelectorAll('.btn-category');
     const assessmentCards = document.querySelectorAll('.assessment-card');
-
     filterBtns.forEach(btn => {
         btn.addEventListener('click', function() {
-            // Update active state
             filterBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-
             const filterValue = this.getAttribute('data-filter');
-
-            // Show/Hide cards
             assessmentCards.forEach(card => {
-                if (filterValue === 'all' || card.getAttribute('data-category') === filterValue) {
-                    card.style.display = 'flex';
-                    card.style.animation = 'none';
-                    card.offsetHeight; /* trigger reflow */
-                    card.style.animation = null; 
-                } else {
-                    card.style.display = 'none';
-                }
+                const show = filterValue === 'all' || card.getAttribute('data-category') === filterValue;
+                card.style.display = show ? 'flex' : 'none';
             });
         });
     });
 
-    const paymentModal = document.getElementById('paymentCouponModal');
-    if(paymentModal) {
-        paymentModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const title = button.getAttribute('data-assessment-title');
-            const price = button.getAttribute('data-assessment-price');
-            const id = button.getAttribute('data-assessment-id');
-            
-            document.getElementById('modalAssessmentTitle').textContent = title;
-            if (price === '0' || price === 'مجاني' || price === '') {
-                document.getElementById('modalAssessmentPrice').innerHTML = '<span class="text-success fs-5 fw-bold">مجاني</span>';
-            } else {
-                document.getElementById('modalAssessmentPrice').innerHTML = price + ' <span class="fs-6">ر.س</span>';
-            }
-            
-            // Set form action
-            const form = document.getElementById('couponForm');
-            form.action = '/exam/' + id + '/start';
-        });
+    /* ── Modal logic ── */
+    let currentAssessmentId   = null;
+    let currentAssessmentPrice = 0;
+
+    const modal = document.getElementById('paymentCouponModal');
+    if (!modal) return;
+
+    modal.addEventListener('show.bs.modal', function (event) {
+        const btn       = event.relatedTarget;
+        if (!btn) return;
+        const title     = btn.getAttribute('data-assessment-title');
+        const price     = parseFloat(btn.getAttribute('data-assessment-price') || '0');
+        const aId       = btn.getAttribute('data-assessment-id');
+        const hideCoup  = btn.getAttribute('data-hide-coupon') === '1';
+
+        currentAssessmentId    = aId;
+        currentAssessmentPrice = price;
+
+        document.getElementById('modalAssessmentTitle').textContent = title;
+        document.getElementById('modalAssessmentPriceLabel').innerHTML =
+            price > 0 ? '<span style="color:#d97706;font-weight:700;">' + price + ' ر.س</span>' : '<span class="text-success fw-bold">مجاني</span>';
+        document.getElementById('payDirectPrice').innerHTML =
+            price > 0 ? price + ' <span class="fs-6">ر.س</span>' : '<span class="text-success">مجاني</span>';
+
+        resetCouponUI();
+
+        var couponSection = document.getElementById('couponSection');
+        var paySection    = document.getElementById('paySection');
+        var switchWrap    = document.getElementById('btnSwitchToCouponWrap');
+
+        if (hideCoup) {
+            couponSection.classList.add('d-none');
+            paySection.classList.remove('d-none');
+            switchWrap.classList.add('d-none');
+        } else {
+            couponSection.classList.remove('d-none');
+            paySection.classList.add('d-none');
+            switchWrap.classList.remove('d-none');
+        }
+
+        // Free assessment — quick start
+        if (price === 0 && !hideCoup) {
+            var form2 = document.getElementById('couponStartForm');
+            form2.action = '/exam/' + aId + '/start';
+            document.getElementById('couponInputArea').classList.add('d-none');
+            document.getElementById('couponSuccessArea').classList.remove('d-none');
+            document.getElementById('couponSuccessMsg').textContent = 'هذا المقياس مجاني!';
+            document.getElementById('couponUsageLabel').textContent = '';
+            document.getElementById('pricingBreakdown').classList.add('d-none');
+            document.getElementById('btnStartFree').classList.remove('d-none');
+            document.getElementById('partialPayArea').classList.add('d-none');
+            document.getElementById('hiddenCouponCode').value = '';
+        }
+    });
+
+    function resetCouponUI() {
+        document.getElementById('couponCodeInput').value = '';
+        document.getElementById('couponError').classList.add('d-none');
+        document.getElementById('couponError').textContent = '';
+        document.getElementById('couponInputArea').classList.remove('d-none');
+        document.getElementById('couponSuccessArea').classList.add('d-none');
+        document.getElementById('btnStartFree').classList.add('d-none');
+        document.getElementById('partialPayArea').classList.add('d-none');
+        document.getElementById('pricingBreakdown').classList.remove('d-none');
+        document.getElementById('hiddenCouponCode').value = '';
     }
 
-    // Countdown Timers
-    const timers = document.querySelectorAll('.countdown-timer');
-    timers.forEach(timer => {
-        const expiresAt = new Date(timer.getAttribute('data-expires')).getTime();
-        
-        const daysEl = timer.querySelector('.days');
-        const hoursEl = timer.querySelector('.hours');
-        const minutesEl = timer.querySelector('.minutes');
-        const secondsEl = timer.querySelector('.seconds');
-        
-        const updateTimer = setInterval(function() {
-            const now = new Date().getTime();
-            const distance = expiresAt - now;
-            
-            if (distance < 0) {
-                clearInterval(updateTimer);
+    /* Verify coupon via AJAX */
+    document.getElementById('btnVerifyCoupon').addEventListener('click', async function () {
+        var code = document.getElementById('couponCodeInput').value.trim();
+        var errEl = document.getElementById('couponError');
+
+        if (!code) { errEl.textContent = 'يرجى إدخال رمز الكوبون.'; errEl.classList.remove('d-none'); return; }
+        errEl.classList.add('d-none');
+
+        var btnText = document.getElementById('verifyCouponText');
+        var spinner = document.getElementById('verifyCouponSpinner');
+        btnText.classList.add('d-none'); spinner.classList.remove('d-none');
+        this.disabled = true;
+
+        try {
+            var res = await fetch('/coupon/validate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ code: code, assessment_id: currentAssessmentId }),
+            });
+
+            var data = await res.json();
+
+            if (data.valid) {
+                document.getElementById('hiddenCouponCode').value = code;
+                document.getElementById('couponStartForm').action = '/exam/' + currentAssessmentId + '/start';
+
+                document.getElementById('couponSuccessMsg').textContent = data.message;
+                document.getElementById('couponUsageLabel').textContent = 'استخدام رقم ' + data.usage_number;
+                document.getElementById('breakdownPct').textContent = data.discount;
+                document.getElementById('breakdownOriginal').textContent = data.price + ' ر.س';
+                document.getElementById('breakdownDiscount').textContent = '‑' + data.discount_amount + ' ر.س';
+                document.getElementById('breakdownFinal').textContent = data.is_free ? 'مجاني 🎉' : data.final_price + ' ر.س';
+
+                document.getElementById('couponInputArea').classList.add('d-none');
+                document.getElementById('couponSuccessArea').classList.remove('d-none');
+
+                if (data.is_free) {
+                    document.getElementById('btnStartFree').classList.remove('d-none');
+                    document.getElementById('partialPayArea').classList.add('d-none');
+                } else {
+                    document.getElementById('btnStartFree').classList.add('d-none');
+                    document.getElementById('partialPayArea').classList.remove('d-none');
+                }
+            } else {
+                errEl.textContent = data.message || 'الكوبون غير صالح.';
+                errEl.classList.remove('d-none');
+            }
+        } catch (e) {
+            errEl.textContent = 'حدث خطأ أثناء الاتصال بالخادم. حاول مرة أخرى.';
+            errEl.classList.remove('d-none');
+        } finally {
+            btnText.classList.remove('d-none'); spinner.classList.add('d-none');
+            this.disabled = false;
+        }
+    });
+
+    document.getElementById('btnChangeCoupon').addEventListener('click', resetCouponUI);
+
+    document.getElementById('btnSwitchToPay').addEventListener('click', function () {
+        document.getElementById('couponSection').classList.add('d-none');
+        document.getElementById('paySection').classList.remove('d-none');
+    });
+    document.getElementById('btnSwitchToCoupon').addEventListener('click', function () {
+        document.getElementById('paySection').classList.add('d-none');
+        document.getElementById('couponSection').classList.remove('d-none');
+    });
+
+    /* ── Countdown Timers ── */
+    document.querySelectorAll('.countdown-timer').forEach(function(timer) {
+        var expiresAt = new Date(timer.getAttribute('data-expires')).getTime();
+        var daysEl    = timer.querySelector('.days');
+        var hoursEl   = timer.querySelector('.hours');
+        var minsEl    = timer.querySelector('.minutes');
+        var secsEl    = timer.querySelector('.seconds');
+
+        var tick = setInterval(function() {
+            var diff = expiresAt - Date.now();
+            if (diff < 0) {
+                clearInterval(tick);
                 timer.innerHTML = '<div class="alert alert-danger m-0 py-2 border-0"><i class="bi bi-exclamation-circle me-1"></i> انتهت صلاحية الكوبون</div>';
                 return;
             }
-            
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            
-            daysEl.textContent = days.toString().padStart(2, '0');
-            hoursEl.textContent = hours.toString().padStart(2, '0');
-            minutesEl.textContent = minutes.toString().padStart(2, '0');
-            secondsEl.textContent = seconds.toString().padStart(2, '0');
+            daysEl.textContent  = String(Math.floor(diff / 86400000)).padStart(2, '0');
+            hoursEl.textContent = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
+            minsEl.textContent  = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+            secsEl.textContent  = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
         }, 1000);
     });
 });

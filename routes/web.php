@@ -17,6 +17,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // User routes
 Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/coupon/validate', [ExamController::class, 'validateCoupon'])->name('coupon.validate');
     Route::post('/exam/{assessment}/start', [ExamController::class, 'start'])->name('exam.start');
     Route::get('/exam/{session}', [ExamController::class, 'show'])->name('exam.show');
     Route::post('/exam/{session}/answer', [ExamController::class, 'answer'])->name('exam.answer');
