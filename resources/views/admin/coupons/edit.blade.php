@@ -203,6 +203,13 @@ const oldValues = {
     discount_percentage:       '{{ old("discount_percentage", $coupon->discount_percentage) }}',
     discount_percentage_2nd:   '{{ old("discount_percentage_2nd", $coupon->discount_percentage_2nd) }}',
     discount_percentage_3rd:   '{{ old("discount_percentage_3rd", $coupon->discount_percentage_3rd) }}',
+    discount_percentage_4th:   '{{ old("discount_percentage_4th", $coupon->discount_percentage_4th) }}',
+    discount_percentage_5th:   '{{ old("discount_percentage_5th", $coupon->discount_percentage_5th) }}',
+    discount_percentage_6th:   '{{ old("discount_percentage_6th", $coupon->discount_percentage_6th) }}',
+    discount_percentage_7th:   '{{ old("discount_percentage_7th", $coupon->discount_percentage_7th) }}',
+    discount_percentage_8th:   '{{ old("discount_percentage_8th", $coupon->discount_percentage_8th) }}',
+    discount_percentage_9th:   '{{ old("discount_percentage_9th", $coupon->discount_percentage_9th) }}',
+    discount_percentage_10th:  '{{ old("discount_percentage_10th", $coupon->discount_percentage_10th) }}',
 };
 
 const badgeColors = ['success','primary','warning','info','secondary','dark','danger','success','primary','warning'];

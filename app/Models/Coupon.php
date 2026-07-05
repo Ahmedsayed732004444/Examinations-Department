@@ -18,6 +18,13 @@ class Coupon extends Model
         'discount_percentage',
         'discount_percentage_2nd',
         'discount_percentage_3rd',
+        'discount_percentage_4th',
+        'discount_percentage_5th',
+        'discount_percentage_6th',
+        'discount_percentage_7th',
+        'discount_percentage_8th',
+        'discount_percentage_9th',
+        'discount_percentage_10th',
         'applies_to_all_assessments',
         'applies_to_all_users',
     ];
