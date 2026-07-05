@@ -427,22 +427,22 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
 <div class="stats-row">
     <div class="stat-box">
         <i class="bi bi-pie-chart"></i>
-        <h5>50+</h5>
+        <h5>{{ $siteSettings['stat_fields'] ?? '50+' }}</h5>
         <p>مجال ومهارة<br>مختلفة</p>
     </div>
     <div class="stat-box">
         <i class="bi bi-mortarboard"></i>
-        <h5>150+</h5>
+        <h5>{{ $siteSettings['stat_assessments'] ?? '150+' }}</h5>
         <p>مقياس مهني<br>وشخصي معتمد</p>
     </div>
     <div class="stat-box">
         <i class="bi bi-journal-check"></i>
-        <h5>+10,000</h5>
+        <h5>{{ $siteSettings['stat_exams'] ?? '10,000+' }}</h5>
         <p>اختبار ومقياس<br>تم إنجازه</p>
     </div>
     <div class="stat-box">
         <i class="bi bi-people"></i>
-        <h5>+25,000</h5>
+        <h5>{{ $siteSettings['stat_users'] ?? '25,000+' }}</h5>
         <p>مستخدم من الأفراد<br>والجهات</p>
     </div>
 </div>
@@ -590,9 +590,9 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
             </div>
 
             @if(!$isCompleted && !$isInProgress)
-            <div style="border: 1px dashed #1d4ed8; border-radius: 8px; padding: 10px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; background-color: #f8fafc;">
-                <i class="bi bi-gift" style="color: #1d4ed8; font-size: 1.2rem;"></i>
-                <span style="color: #0f172a; font-size: 0.8rem; font-weight: 600; text-align: center; line-height: 1.4;">
+            <div style="border: 1px dashed #1d4ed8; border-radius: 4px; padding: 4px 2px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 4px; background-color: #f8fafc;">
+                <i class="bi bi-gift" style="color: #1d4ed8; font-size: 0.8rem;"></i>
+                <span style="color: #0f172a; font-size: 0.5rem; font-weight: 700; text-align: center; white-space: nowrap; letter-spacing: -0.3px;">
                     احصل على كوبون
                     <a href="#"
                        class="btn-reveal-coupon"
@@ -609,11 +609,11 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
 
             @if($isCompleted)
                 <a href="{{ route('exam.result', $userSession->id) }}" class="btn-secondary-custom" style="background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8;">
-                    <i class="bi bi-file-earmark-check me-1"></i> عرض نموذج التقرير
+                    <i class="bi bi-file-earmark-check me-1"></i> عرض التقرير
                 </a>
             @else
                 <a href="#" onclick="alert('ليس لديك نتيجة في هذا المقياس حتى الآن. يرجى أداء المقياس أولاً لاستخراج تقريرك.'); return false;" class="btn-secondary-custom">
-                    <i class="bi bi-eye me-1"></i> عرض نموذج التقرير
+                    <i class="bi bi-eye me-1"></i> عرض التقرير
                 </a>
             @endif
         </div>

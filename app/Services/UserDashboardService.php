@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Assessment;
 use App\Models\Coupon;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -79,6 +80,11 @@ class UserDashboardService
         // 4. Load My Coupons (No need to cache as it's a very light query and pivot updates are tricky to track globally)
         $myCoupons = $user->coupons()->get();
 
-        return compact('assessments', 'userSessions', 'progressMap', 'activeCoupons', 'myCoupons');
+        // 5. Site Settings (stats)
+        $siteSettings = Cache::remember('site_settings', 3600, function () {
+            return Setting::pluck('value', 'key')->toArray();
+        });
+
+        return compact('assessments', 'userSessions', 'progressMap', 'activeCoupons', 'myCoupons', 'siteSettings');
     }
 }

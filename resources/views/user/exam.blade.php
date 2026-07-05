@@ -106,7 +106,39 @@
 @section('content')
 <div class="exam-wrapper">
 
-    <div class="card" id="question-card">
+    @if($progress['current'] == 1)
+    <div class="card" id="intro-card" style="border-radius: 20px; border: 0; box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08); background: #ffffff; padding: 40px;">
+        <div class="text-center mb-4">
+            <div style="width: 80px; height: 80px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                <i class="bi bi-journal-text text-primary" style="font-size: 2.5rem;"></i>
+            </div>
+            <h3 class="fw-bold" style="color: #1a2b56;">{{ $assessment->title_ar }}</h3>
+            @if($assessment->description_ar)
+                <p class="text-muted fs-6 mt-2">{{ $assessment->description_ar }}</p>
+            @endif
+        </div>
+        
+        <div class="p-4 rounded-4 mt-4" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+            <div class="d-flex align-items-start gap-3">
+                <i class="bi bi-info-circle-fill text-primary" style="font-size: 1.5rem; margin-top: 2px;"></i>
+                <div style="color: #334155; line-height: 1.8; font-size: 0.95rem;">
+                    <strong>توجيهات هامة قبل البدء:</strong>
+                    <p class="mb-0 mt-2">
+                        كن صادقًا مع نفسك في إجاباتك؛ فكلما كانت إجاباتك أكثر دقة وواقعية، كانت نتائج المقياس أكثر فائدة لك في فهم ذاتك وتطويرها. لا توجد إجابات صحيحة أو خاطئة؛ صدقك مع نفسك هو مفتاح الحصول على نتائج تعكس واقعك وتفيدك حقًا. اقرأ كل عبارة بعناية، ثم اختر الإجابة التي تعبر عنك.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-5">
+            <button type="button" class="btn btn-primary px-5 py-3 fw-bold shadow-sm" id="btn-start-exam" style="border-radius: 12px; font-size: 1.1rem; transition: all 0.2s;">
+                فهمت ذلك، ابدأ المقياس <i class="bi bi-arrow-left ms-2"></i>
+            </button>
+        </div>
+    </div>
+    @endif
+
+    <div class="card" id="question-card" style="{{ $progress['current'] == 1 ? 'display: none;' : '' }}">
         {{-- Header Desktop --}}
         <div class="d-none d-sm-flex justify-content-between align-items-start mb-5 header-desktop">
             <div class="progress-container mt-2">
@@ -219,15 +251,30 @@ let timeLeft         = TIME_LIMIT ? TIME_LIMIT * 60 : 0;
 const LS_KEY         = `exam_${SESSION_ID}`;
 
 /* ── Timer ── */
-if (TIME_LIMIT) {
-    timerInterval = setInterval(() => {
-        timeLeft--;
-        const m = String(Math.floor(timeLeft / 60)).padStart(2,'0');
-        const s = String(timeLeft % 60).padStart(2,'0');
-        $('#timer-text').text(`${m}:${s}`);
-        if (timeLeft <= 0) { clearInterval(timerInterval); submitCurrent(true); }
-    }, 1000);
+let timerStarted = false;
+function startTimer() {
+    if (TIME_LIMIT && !timerStarted) {
+        timerStarted = true;
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            const m = String(Math.floor(timeLeft / 60)).padStart(2,'0');
+            const s = String(timeLeft % 60).padStart(2,'0');
+            $('#timer-text').text(`${m}:${s}`);
+            if (timeLeft <= 0) { clearInterval(timerInterval); submitCurrent(true); }
+        }, 1000);
+    }
 }
+
+if ($('#intro-card').length === 0) {
+    startTimer();
+}
+
+$('#btn-start-exam').on('click', function() {
+    $('#intro-card').fadeOut(250, function() {
+        $('#question-card').fadeIn(250);
+        startTimer();
+    });
+});
 
 /* ── Option selection ── */
 $(document).on('click', '.option-card', function () {

@@ -29,6 +29,8 @@ Route::middleware(['auth', 'user'])->group(function () {
 // Admin routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/settings', [Admin\SettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [Admin\SettingController::class, 'update'])->name('settings.update');
 
     Route::get('/assessments', [Admin\AssessmentController::class, 'index'])->name('assessments.index');
     Route::post('/assessments', [Admin\AssessmentController::class, 'store'])->name('assessments.store');
