@@ -39,54 +39,66 @@
                 </div>
             </div>
 
-            {{-- Tiered Discounts --}}
-            <div class="card border-primary border-opacity-25 bg-primary-subtle bg-opacity-10 mb-4">
+            {{-- STEP 1: عدد مرات الاستخدام - يؤثر على حقول الخصم --}}
+            <div class="card border-warning border-opacity-50 mb-4" style="background: #fffdf0;">
                 <div class="card-header bg-transparent border-0 py-3">
-                    <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-percent me-2"></i>نسب الخصم المتدرجة</h6>
-                    <div class="text-muted small mt-1">حدد خصمًا مختلفًا لكل استخدام للمستخدم نفسه (بناءً على الهوية/الجوال/الإيميل)</div>
+                    <h6 class="fw-bold mb-0 text-warning-emphasis">
+                        <i class="bi bi-1-circle-fill me-2 text-warning"></i>
+                        الخطوة الأولى: حدد عدد مرات الاستخدام المسموحة لكل مستخدم
+                    </h6>
+                    <div class="text-muted small mt-1">سيظهر لك حقل خصم لكل مرة استخدام بعد تحديد العدد.</div>
                 </div>
                 <div class="card-body pt-0">
-                    <div class="row g-3">
+                    <div class="row align-items-center g-3">
                         <div class="col-md-4">
-                            <label for="discount_percentage" class="form-label fw-semibold">خصم الاستخدام الأول (%) <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="discount_percentage" name="discount_percentage" value="{{ old('discount_percentage', $coupon->discount_percentage) }}" min="0" max="100" required>
-                                <span class="input-group-text">%</span>
-                            </div>
+                            <label for="assessments_limit" class="form-label fw-semibold">
+                                عدد مرات الاستخدام <span class="text-danger">*</span>
+                            </label>
+                            <input type="number"
+                                   class="form-control form-control-lg fw-bold text-center"
+                                   id="assessments_limit"
+                                   name="assessments_limit"
+                                   value="{{ old('assessments_limit', $coupon->assessments_limit) }}"
+                                   min="1" max="10" required
+                                   oninput="renderDiscountFields(this.value)">
+                            <div class="form-text">كم مرة يمكن لنفس الشخص استخدام هذا الكوبون؟</div>
                         </div>
-                        <div class="col-md-4">
-                            <label for="discount_percentage_2nd" class="form-label fw-semibold">خصم الاستخدام الثاني (%)</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="discount_percentage_2nd" name="discount_percentage_2nd" value="{{ old('discount_percentage_2nd', $coupon->discount_percentage_2nd) }}" min="0" max="100" placeholder="فارغ = لا يوجد">
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="discount_percentage_3rd" class="form-label fw-semibold">خصم الاستخدام الثالث (%)</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="discount_percentage_3rd" name="discount_percentage_3rd" value="{{ old('discount_percentage_3rd', $coupon->discount_percentage_3rd) }}" min="0" max="100" placeholder="فارغ = لا يوجد">
-                                <span class="input-group-text">%</span>
+                        <div class="col-md-8">
+                            <div class="p-3 rounded border bg-light text-muted small">
+                                <i class="bi bi-info-circle me-1 text-primary"></i>
+                                مثال: إذا أدخلت <strong>3</strong>، يمكن للمستخدم استخدام الكوبون 3 مرات، ويمكنك تحديد نسبة خصم مختلفة لكل مرة.
                             </div>
                         </div>
                     </div>
-                    <div class="mt-3 p-3 bg-light rounded border">
-                        <div class="text-muted small fw-semibold mb-1"><i class="bi bi-info-circle me-1"></i>معاينة التدرج الحالي:</div>
-                        <ul class="mb-0 small ps-3">
-                            <li>الاستخدام الأول: <strong class="text-success">{{ $coupon->discount_percentage }}%</strong></li>
-                            <li>الاستخدام الثاني: <strong>{{ $coupon->discount_percentage_2nd !== null ? $coupon->discount_percentage_2nd . '%' : '— غير مفعّل' }}</strong></li>
-                            <li>الاستخدام الثالث: <strong>{{ $coupon->discount_percentage_3rd !== null ? $coupon->discount_percentage_3rd . '%' : '— غير مفعّل' }}</strong></li>
-                        </ul>
+                </div>
+            </div>
+
+            {{-- STEP 2: نسب الخصم - تظهر ديناميكياً --}}
+            <div class="card border-primary border-opacity-25 mb-4" style="background: #f0f4ff;">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h6 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-2-circle-fill me-2 text-primary"></i>
+                        الخطوة الثانية: حدد نسبة الخصم لكل مرة استخدام
+                    </h6>
+                    <div class="text-muted small mt-1">حدد خصماً مختلفاً لكل مرة استخدام. مثال: الأولى 100%، الثانية 50%، الثالثة 10%</div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="row g-3" id="discount-fields-container">
+                        {{-- تُنشأ ديناميكياً بالـ JavaScript --}}
+                    </div>
+
+                    {{-- معاينة حية --}}
+                    <div id="discount-preview" class="mt-3 p-3 bg-white rounded border d-none">
+                        <div class="text-muted small fw-semibold mb-2">
+                            <i class="bi bi-eye me-1 text-primary"></i>معاينة التدرج:
+                        </div>
+                        <div id="preview-content" class="d-flex flex-wrap gap-2"></div>
                     </div>
                 </div>
             </div>
 
             {{-- Limits & Expiry --}}
             <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                    <label for="assessments_limit" class="form-label fw-semibold">الحد الأقصى للاستخدام لكل مستخدم <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control" id="assessments_limit" name="assessments_limit" value="{{ old('assessments_limit', $coupon->assessments_limit) }}" min="1" required>
-                    <div class="form-text">يُحتسب عبر جميع الحسابات التي تشارك نفس الهوية أو الجوال أو الإيميل.</div>
-                </div>
                 <div class="col-md-6">
                     <label for="expires_at" class="form-label fw-semibold">تاريخ انتهاء الصلاحية</label>
                     <input type="date" class="form-control" id="expires_at" name="expires_at" value="{{ old('expires_at', $coupon->expires_at?->format('Y-m-d')) }}">
@@ -182,16 +194,103 @@
 
 @push('scripts')
 <script>
+// ترتيب الأرقام بالعربية
+const ordinals = ['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة'];
+const fieldNames = ['discount_percentage','discount_percentage_2nd','discount_percentage_3rd',
+                    'discount_percentage_4th','discount_percentage_5th','discount_percentage_6th',
+                    'discount_percentage_7th','discount_percentage_8th','discount_percentage_9th','discount_percentage_10th'];
+const oldValues = {
+    discount_percentage:       '{{ old("discount_percentage", $coupon->discount_percentage) }}',
+    discount_percentage_2nd:   '{{ old("discount_percentage_2nd", $coupon->discount_percentage_2nd) }}',
+    discount_percentage_3rd:   '{{ old("discount_percentage_3rd", $coupon->discount_percentage_3rd) }}',
+};
+
+const badgeColors = ['success','primary','warning','info','secondary','dark','danger','success','primary','warning'];
+
+function renderDiscountFields(count) {
+    count = parseInt(count) || 1;
+    count = Math.max(1, Math.min(10, count));
+
+    const container = document.getElementById('discount-fields-container');
+    const preview   = document.getElementById('discount-preview');
+    const previewContent = document.getElementById('preview-content');
+
+    container.innerHTML = '';
+    previewContent.innerHTML = '';
+
+    // حساب عرض الأعمدة
+    let colClass = 'col-md-4';
+    if (count === 1) colClass = 'col-md-4';
+    else if (count === 2) colClass = 'col-md-6';
+    else if (count <= 4) colClass = 'col-md-3';
+    else colClass = 'col-md-4';
+
+    for (let i = 0; i < count; i++) {
+        const name  = fieldNames[i] ?? `discount_percentage_${i + 1}`;
+        const label = `الاستخدام ${ordinals[i]}`;
+        const isFirst = i === 0;
+        const savedVal = oldValues[name] ?? '';
+        const badgeColor = badgeColors[i];
+
+        const col = document.createElement('div');
+        col.className = colClass;
+        col.innerHTML = `
+            <div class="position-relative">
+                <label for="${name}" class="form-label fw-semibold d-flex align-items-center gap-2">
+                    <span class="badge bg-${badgeColor} rounded-pill" style="min-width:26px;">${i + 1}</span>
+                    ${label}
+                    ${isFirst ? '<span class="text-danger">*</span>' : ''}
+                </label>
+                <div class="input-group">
+                    <input type="number"
+                           class="form-control discount-input"
+                           id="${name}"
+                           name="${name}"
+                           value="${savedVal || (isFirst ? 100 : '')}"
+                           min="0" max="100"
+                           ${isFirst ? 'required' : ''}
+                           placeholder="${isFirst ? '100' : 'مثال: 50'}"
+                           data-index="${i}"
+                           oninput="updatePreview()">
+                    <span class="input-group-text fw-bold">%</span>
+                </div>
+                ${isFirst ? '<div class="form-text text-success fw-medium"><i class="bi bi-check-circle me-1"></i>مطلوب</div>' : '<div class="form-text">اختياري</div>'}
+            </div>`;
+        container.appendChild(col);
+    }
+
+    preview.classList.toggle('d-none', count < 1);
+    updatePreview();
+}
+
+function updatePreview() {
+    const inputs = document.querySelectorAll('.discount-input');
+    const previewContent = document.getElementById('preview-content');
+    previewContent.innerHTML = '';
+
+    inputs.forEach((input, i) => {
+        const val = input.value;
+        const badge = document.createElement('span');
+        const color = badgeColors[i];
+        badge.className = `badge bg-${color}-subtle text-${color}-emphasis border border-${color}-subtle px-3 py-2 rounded-pill fs-6`;
+        badge.style.fontFamily = 'monospace';
+        badge.innerHTML = `<span class="text-muted small ms-1">المرة ${ordinals[i]}:</span> ${val !== '' ? val + '%' : '—'}`;
+        previewContent.appendChild(badge);
+    });
+}
+
 function toggleAssessmentPicker() {
     const all = document.getElementById('applies_to_all');
-    const picker = document.getElementById('assessment-picker');
-    picker.classList.toggle('d-none', all.checked);
+    document.getElementById('assessment-picker').classList.toggle('d-none', all.checked);
 }
 
 function toggleUserPicker() {
     const all = document.getElementById('applies_to_all_users');
-    const picker = document.getElementById('user-picker');
-    picker.classList.toggle('d-none', all.checked);
+    document.getElementById('user-picker').classList.toggle('d-none', all.checked);
 }
+
+// تهيئة أولية
+const initCount = parseInt(document.getElementById('assessments_limit').value) || 1;
+renderDiscountFields(initCount);
 </script>
 @endpush

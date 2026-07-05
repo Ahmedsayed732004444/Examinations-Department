@@ -1,13 +1,9 @@
-import docx
+from docx import Document
+import json
 
-path = r"C:\Users\AIO\Downloads\مقاييس التميز الشخصي والاحتراف المهني.docx"
-doc = docx.Document(path)
+doc = Document(r'C:\Users\AIO\Downloads\مقاييس التميز الشخصي والاحتراف المهني.docx')
+lines = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
 
-with open('docx_raw.txt', 'w', encoding='utf-8') as f:
-    for i, para in enumerate(doc.paragraphs):
-        text = para.text.strip()
-        if text:
-            style = para.style.name if para.style else ''
-            f.write(f"[{i:04d}][{style}] {text}\n")
-
-print(f"Total paragraphs: {len(doc.paragraphs)}")
+with open('docx_content.txt', 'w', encoding='utf-8') as f:
+    for line in lines[:150]:
+        f.write(line + '\n')

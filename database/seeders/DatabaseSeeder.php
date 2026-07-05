@@ -66,13 +66,9 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Include true assessments data from markdown
-        $this->call(AssessmentsSeeder::class);
+        // Include all finalized comprehensive assessments
+        $this->call(FinalComprehensiveSeeder::class);
 
-<<<<<<< HEAD
-        // Include comprehensive assessments from docx (interpretations + recommendations)
-        $this->call(ComprehensiveAssessmentsSeeder::class);
-=======
         // Seed some demo coupons
         $assessment = Assessment::first();
 
@@ -110,6 +106,5 @@ class DatabaseSeeder extends Seeder
             ]);
             $specificCoupon->assessments()->attach($assessment->id);
         }
->>>>>>> d81249790b0e5ea4668e88f7860d5cd0bf69f202
     }
 }
