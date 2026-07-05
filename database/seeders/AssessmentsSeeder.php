@@ -15,6 +15,32 @@ use App\Models\User;
 
 class AssessmentsSeeder extends Seeder
 {
+    private function extractOptions($lines) {
+        $options = [];
+        $parsingOptions = false;
+        foreach($lines as $line) {
+            $trimLine = trim($line);
+            if (str_starts_with($trimLine, '## عبارات')) {
+                break;
+            }
+            if (preg_match('/\|\s*(الإجابة|الاستجابة|الخيارات|الخيار|نطاق العبارات)\s*\|\s*(الدرجة|النقاط|نعم|دائماً)\s*\|/ui', $trimLine) || preg_match('/\|.*نعم.*إلى حد ما.*لا.*/ui', $trimLine)) {
+                $parsingOptions = true;
+                continue;
+            }
+            if ($parsingOptions && preg_match('/\|[\s\-]+\|[\s\-]+\|/', $trimLine)) {
+                continue;
+            }
+            if ($parsingOptions && preg_match('/\|\s*(.+?)\s*\|\s*(\d+)\s*\|/', $trimLine, $optMatch)) {
+                $label = trim($optMatch[1]);
+                $score = (int)trim($optMatch[2]);
+                $options[] = ['label' => $label, 'score' => $score];
+            } elseif ($parsingOptions && !empty($trimLine) && !str_starts_with($trimLine, '|')) {
+                $parsingOptions = false;
+            }
+        }
+        return $options;
+    }
+
     /**
      * Run the database seeds.
      *
@@ -62,7 +88,7 @@ class AssessmentsSeeder extends Seeder
             
             $title = 'Unknown Scale';
             $intro = '';
-            $options = [];
+            $options = $this->extractOptions($lines);
             $questionsText = '';
             $overallText = '';
             $dimInterpText = '';
@@ -77,8 +103,8 @@ class AssessmentsSeeder extends Seeder
                     continue;
                 }
                 
-                if (str_starts_with($trimLine, '## ')) {
-                    $sectionTitle = trim(substr($trimLine, 3));
+                if (preg_match('/^##\s+(.+)$/', $trimLine, $secMatch)) {
+                    $sectionTitle = trim($secMatch[1]);
 
                     if (preg_match('/هدف|الهدف/ui', $sectionTitle)) {
                         $currentSection = 'intro';
@@ -98,14 +124,6 @@ class AssessmentsSeeder extends Seeder
                 
                 if ($currentSection === 'intro') {
                     $intro .= $line . "\n";
-                } elseif ($currentSection === 'options') {
-                    if (preg_match('/\|\s*(.+?)\s*\|\s*(\d+)\s*\|/', $trimLine, $optMatch)) {
-                        $label = trim($optMatch[1]);
-                        $score = (int)trim($optMatch[2]);
-                        if ($label !== 'الإجابة' && !str_contains($label, '---')) {
-                            $options[] = ['label' => $label, 'score' => $score];
-                        }
-                    }
                 } elseif ($currentSection === 'questions') {
                     $questionsText .= $line . "\n";
                 } elseif ($currentSection === 'overall') {
