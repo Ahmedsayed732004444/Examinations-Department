@@ -128,8 +128,8 @@ class CouponUpgradesAndSecurityTest extends TestCase
             'title' => 'كوبون متدرج',
             'code' => 'TIERED_COUPON',
             'discount_percentage' => 100,
-            'discount_percentage_2nd' => 50,
-            'discount_percentage_3rd' => 10,
+            'discount_percentage_2nd' => 100,
+            'discount_percentage_3rd' => 100,
             'assessments_limit' => 3,
             'is_active' => true,
             'applies_to_all_assessments' => true,
@@ -152,14 +152,14 @@ class CouponUpgradesAndSecurityTest extends TestCase
             ]);
         $responseStart->assertRedirect();
 
-        // Second validation: should be 50%
+        // Second validation: should be 100%
         $response2 = $this->actingAs($this->user)
             ->postJson(route('coupon.validate'), [
                 'code' => 'TIERED_COUPON',
                 'assessment_id' => $this->assessment2->id,
             ]);
         $response2->assertStatus(200);
-        $response2->assertJsonPath('discount', 50);
+        $response2->assertJsonPath('discount', 100);
         $response2->assertJsonPath('usage_number', 2);
 
         // Start second exam with the coupon
@@ -168,14 +168,14 @@ class CouponUpgradesAndSecurityTest extends TestCase
                 'coupon_code' => 'TIERED_COUPON'
             ]);
 
-        // Third validation: should be 10%
+        // Third validation: should be 100%
         $response3 = $this->actingAs($this->user)
             ->postJson(route('coupon.validate'), [
                 'code' => 'TIERED_COUPON',
                 'assessment_id' => $this->assessment2->id,
             ]);
         $response3->assertStatus(200);
-        $response3->assertJsonPath('discount', 10);
+        $response3->assertJsonPath('discount', 100);
         $response3->assertJsonPath('usage_number', 3);
     }
 

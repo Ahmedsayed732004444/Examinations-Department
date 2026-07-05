@@ -7,6 +7,7 @@ use App\Models\Assessment;
 use App\Models\Coupon;
 use App\Models\ExamSession;
 use App\Models\User;
+use App\Services\CouponService;
 use App\Services\ExamService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -17,60 +18,8 @@ class ExamController extends Controller
 {
     public function __construct(
         private readonly ExamService $examService,
+        private readonly CouponService $couponService,
     ) {}
-
-    /**
-     * Resolve the actual discount percentage a user should get for a given coupon.
-     * Checks usage across all identities (email, phone, national_id) to prevent fraud.
-     */
-    private function resolveDiscount(Coupon $coupon, User $user): array
-    {
-        // Count total real usages across all linked identities (anti-fraud check)
-        $totalUsed = $this->countLinkedUsage($coupon, $user);
-
-        // Determine which tier applies
-        $discount = null;
-        if ($totalUsed === 0) {
-            $discount = $coupon->discount_percentage;        // 1st use
-        } elseif ($totalUsed === 1 && $coupon->discount_percentage_2nd !== null) {
-            $discount = $coupon->discount_percentage_2nd;    // 2nd use
-        } elseif ($totalUsed === 2 && $coupon->discount_percentage_3rd !== null) {
-            $discount = $coupon->discount_percentage_3rd;    // 3rd use
-        }
-
-        $exhausted = $totalUsed >= $coupon->assessments_limit;
-
-        return [
-            'total_used'  => $totalUsed,
-            'discount'    => $discount,
-            'exhausted'   => $exhausted,
-        ];
-    }
-
-    /**
-     * Count exam sessions using this coupon across all users sharing
-     * the same national_id, phone, or email as the requesting user.
-     */
-    private function countLinkedUsage(Coupon $coupon, User $user): int
-    {
-        // Collect all user IDs that share any identity document
-        $linkedUserIds = User::where(function ($q) use ($user) {
-            $q->where('email', $user->email);
-            if ($user->name) {
-                $q->orWhere('name', $user->name);
-            }
-            if ($user->national_id) {
-                $q->orWhere('national_id', $user->national_id);
-            }
-            if ($user->phone) {
-                $q->orWhere('phone', $user->phone);
-            }
-        })->pluck('id');
-
-        return ExamSession::whereIn('user_id', $linkedUserIds)
-            ->where('coupon_id', $coupon->id)
-            ->count();
-    }
 
     /**
      * AJAX endpoint: validate a coupon code for a given assessment,
@@ -86,59 +35,64 @@ class ExamController extends Controller
         $user       = auth()->user();
         $assessment = Assessment::findOrFail($request->assessment_id);
 
-        $coupon = Coupon::where('code', $request->code)
-            ->where('is_active', true)
+        $result = $this->couponService->validateCouponForUser($request->code, $assessment, $user);
+
+        if (!$result['valid']) {
+            return response()->json(['valid' => false, 'message' => $result['message']], 422);
+        }
+
+        return response()->json([
+            'valid'            => true,
+            'coupon_id'        => $result['coupon']->id,
+            'discount'         => $result['discount'],
+            'price'            => $result['price'],
+            'discount_amount'  => $result['discount_amount'],
+            'final_price'      => $result['final_price'],
+            'is_free'          => $result['is_free'],
+            'usage_number'     => $result['usage_number'],
+            'message'          => $result['message'],
+        ]);
+    }
+
+    /**
+     * AJAX endpoint: get the available public coupon code(s) for a given assessment.
+     * Returns the first active coupon that applies to this assessment and is for all users.
+     */
+    public function getCouponForAssessment(Assessment $assessment): JsonResponse
+    {
+        $user = auth()->user();
+
+        // Find active, non-expired coupons that apply to this assessment
+        $coupon = Coupon::where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('expires_at')
                   ->orWhere('expires_at', '>=', now()->toDateString());
             })
+            ->where(function ($q) use ($assessment, $user) {
+                // Either applies to all assessments, or specifically to this one
+                $q->where('applies_to_all_assessments', true)
+                  ->orWhereHas('assessments', fn ($a) => $a->where('assessment_id', $assessment->id));
+            })
+            ->where(function ($q) use ($user) {
+                // Either applies to all users, or specifically to this user
+                $q->where('applies_to_all_users', true)
+                  ->orWhereHas('permittedUsers', fn ($u) => $u->where('user_id', $user->id));
+            })
             ->first();
 
         if (!$coupon) {
-            return response()->json(['valid' => false, 'message' => 'الكوبون غير صالح أو منتهي الصلاحية.'], 422);
+            return response()->json([
+                'found' => false,
+                'message' => 'لا يوجد كوبون متاح لهذا المقياس حالياً.',
+            ]);
         }
-
-        // Check if coupon applies to this assessment
-        if (!$coupon->applies_to_all_assessments) {
-            $appliesToAssessment = $coupon->assessments()->where('assessment_id', $assessment->id)->exists();
-            if (!$appliesToAssessment) {
-                return response()->json(['valid' => false, 'message' => 'هذا الكوبون لا ينطبق على هذا المقياس.'], 422);
-            }
-        }
-
-        // Check if coupon applies to this user
-        if (!$coupon->applies_to_all_users) {
-            $appliesToUser = $coupon->permittedUsers()->where('user_id', $user->id)->exists();
-            if (!$appliesToUser) {
-                return response()->json(['valid' => false, 'message' => 'هذا الكوبون مخصص لمستخدمين محددين فقط وليس لحسابك.'], 422);
-            }
-        }
-
-        // Resolve discount tier (with anti-fraud cross-referencing)
-        $resolved = $this->resolveDiscount($coupon, $user);
-
-        if ($resolved['exhausted']) {
-            return response()->json(['valid' => false, 'message' => 'لقد استنفدت جميع فرص الاستخدام لهذا الكوبون.'], 422);
-        }
-
-        if ($resolved['discount'] === null) {
-            return response()->json(['valid' => false, 'message' => 'لا يوجد خصم متاح لك على هذا الكوبون في هذه المرحلة.'], 422);
-        }
-
-        $price            = (float) ($assessment->price ?? 0);
-        $discountAmount   = round($price * $resolved['discount'] / 100, 2);
-        $finalPrice       = max(0, $price - $discountAmount);
 
         return response()->json([
-            'valid'            => true,
-            'coupon_id'        => $coupon->id,
-            'discount'         => $resolved['discount'],
-            'price'            => $price,
-            'discount_amount'  => $discountAmount,
-            'final_price'      => $finalPrice,
-            'is_free'          => $finalPrice <= 0,
-            'usage_number'     => $resolved['total_used'] + 1,
-            'message'          => "الكوبون صالح! خصم {$resolved['discount']}% سيُطبق.",
+            'found'    => true,
+            'code'     => $coupon->code,
+            'title'    => $coupon->title,
+            'discount' => $coupon->discount_percentage,
+            'expires'  => $coupon->expires_at ? $coupon->expires_at->format('Y-m-d') : null,
         ]);
     }
 
@@ -162,49 +116,23 @@ class ExamController extends Controller
             }
 
             if ($request->filled('coupon_code')) {
-                $coupon = Coupon::where('code', $request->coupon_code)
-                    ->where('is_active', true)
-                    ->where(function ($q) {
-                        $q->whereNull('expires_at')
-                          ->orWhere('expires_at', '>=', now()->toDateString());
-                    })
-                    ->first();
+                $result = $this->couponService->validateCouponForUser($request->coupon_code, $assessment, $user);
 
-                if (!$coupon) {
-                    return redirect()->back()->with('error', 'الكوبون المحدد غير صالح أو منتهي الصلاحية.');
+                if (!$result['valid']) {
+                    return redirect()->back()->with('error', $result['message']);
                 }
 
-                // Validate assessment scope
-                if (!$coupon->applies_to_all_assessments) {
-                    if (!$coupon->assessments()->where('assessment_id', $assessment->id)->exists()) {
-                        return redirect()->back()->with('error', 'هذا الكوبون لا ينطبق على هذا المقياس.');
-                    }
+                if (!$result['is_free']) {
+                    // If the coupon doesn't make it 100% free, we would normally redirect to the payment gateway here.
+                    // For now, since payment gateway isn't implemented, we just return an error with the remaining amount.
+                    return redirect()->back()->with('error', 'يجب استكمال الدفع للمبلغ المتبقي: ' . $result['final_price'] . ' ر.س. (بوابة الدفع غير مفعلة حالياً)');
                 }
 
-                // Validate user scope
-                if (!$coupon->applies_to_all_users) {
-                    if (!$coupon->permittedUsers()->where('user_id', $userId)->exists()) {
-                        return redirect()->back()->with('error', 'هذا الكوبون مخصص لمستخدمين محددين فقط وليس لحسابك.');
-                    }
-                }
+                $couponId        = $result['coupon']->id;
+                $discountApplied = $result['discount'];
 
-                // Resolve tier (anti-fraud)
-                $resolved = $this->resolveDiscount($coupon, $user);
-
-                if ($resolved['exhausted'] || $resolved['discount'] === null) {
-                    return redirect()->back()->with('error', 'لقد استنفدت جميع فرص الاستخدام لهذا الكوبون.');
-                }
-
-                $couponId        = $coupon->id;
-                $discountApplied = $resolved['discount'];
-
-                // Record usage: increment or attach on the pivot table for this exact user
-                $pivot = $coupon->users()->where('user_id', $userId)->first();
-                if ($pivot) {
-                    $coupon->users()->updateExistingPivot($userId, ['used_count' => $pivot->pivot->used_count + 1]);
-                } else {
-                    $coupon->users()->attach($userId, ['used_count' => 1]);
-                }
+                // Record usage
+                $this->couponService->recordUsage($result['coupon'], $userId);
             }
         }
 
