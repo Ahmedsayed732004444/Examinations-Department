@@ -10,7 +10,7 @@ class User extends Authenticatable
 {
     use HasUuids, Notifiable;
 
-    protected $fillable = ['name', 'email', 'password', 'role'];
+    protected $fillable = ['name', 'email', 'password', 'role', 'national_id', 'phone'];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -37,5 +37,10 @@ class User extends Authenticatable
     public function coupons()
     {
         return $this->belongsToMany(Coupon::class)->withPivot('used_count')->withTimestamps();
+    }
+
+    public function permittedCoupons()
+    {
+        return $this->belongsToMany(Coupon::class, 'coupon_permitted_user');
     }
 }

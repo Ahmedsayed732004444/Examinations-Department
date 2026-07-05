@@ -24,6 +24,7 @@ class UpdateSettingsRequest extends FormRequest
             'price' => 'nullable|numeric|min:0',
             'rating' => 'nullable|numeric|min:1|max:5',
             'is_active' => 'nullable|boolean',
+            'hide_coupon_field' => 'nullable|boolean',
         ];
     }
 
@@ -34,6 +35,7 @@ class UpdateSettingsRequest extends FormRequest
     {
         $this->merge([
             'is_active' => $this->boolean('is_active'),
+            'hide_coupon_field' => $this->boolean('hide_coupon_field'),
         ]);
     }
 }

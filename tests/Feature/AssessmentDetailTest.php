@@ -87,6 +87,7 @@ class AssessmentDetailTest extends TestCase
             'description_ar' => 'وصف جديد',
             'time_limit_min' => 45,
             'is_active' => 0,
+            'scoring_type' => 'overall_score',
         ];
 
         $response = $this->actingAs($this->admin)

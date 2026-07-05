@@ -11,7 +11,7 @@
                 <form method="GET" action="{{ route('admin.users.index') }}" class="d-flex gap-2">
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="ابحث باسم المستخدم أو البريد الإلكتروني..." value="{{ $search }}">
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="ابحث بالاسم أو البريد أو الجوال أو الهوية..." value="{{ $search }}">
                         @if($search)
                             <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary d-flex align-items-center"><i class="bi bi-x-lg"></i></a>
                         @endif
@@ -34,6 +34,8 @@
                     <th>#</th>
                     <th>الاسم</th>
                     <th>البريد الإلكتروني</th>
+                    <th>رقم الجوال</th>
+                    <th>رقم الهوية</th>
                     <th>نوع الحساب</th>
                     <th class="text-center">الاختبارات المؤداة</th>
                     <th class="text-center">الإجراءات</th>
@@ -46,7 +48,9 @@
                         <td>
                             <div class="fw-semibold text-dark">{{ $user->name }}</div>
                         </td>
-                        <td class="text-muted">{{ $user->email }}</td>
+                        <td class="text-muted small">{{ $user->email }}</td>
+                        <td class="text-muted small">{{ $user->phone ?? '—' }}</td>
+                        <td class="text-muted small">{{ $user->national_id ?? '—' }}</td>
                         <td>
                             @if($user->isAdmin())
                                 <span class="badge bg-danger-subtle text-danger px-2.5 py-1.5 rounded-pill small">مدير النظام</span>
@@ -67,7 +71,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">
+                        <td colspan="8" class="text-center py-5 text-muted">
                             <i class="bi bi-people fs-1 d-block mb-3 text-secondary"></i>
                             لا يوجد مستخدمين يطابقون خيارات البحث.
                         </td>
