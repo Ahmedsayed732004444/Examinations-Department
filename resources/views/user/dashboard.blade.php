@@ -590,10 +590,19 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
             </div>
 
             @if(!$isCompleted && !$isInProgress)
-            <div style="border: 1px dashed #1d4ed8; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 12px; background-color: #f8fafc;">
-                <i class="bi bi-gift" style="color: #1d4ed8; font-size: 1.5rem;"></i>
-                <span style="color: #0f172a; font-size: 0.95rem; font-weight: 500;">
-                    احصل على كوبون <a href="https://wa.me/" target="_blank" style="color: #1d4ed8; font-weight: 700; text-decoration: underline;">من هنا</a> لبدء المقياس مجاناً
+            <div style="border: 1px dashed #1d4ed8; border-radius: 8px; padding: 10px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; background-color: #f8fafc;">
+                <i class="bi bi-gift" style="color: #1d4ed8; font-size: 1.2rem;"></i>
+                <span style="color: #0f172a; font-size: 0.8rem; font-weight: 600; text-align: center; line-height: 1.4;">
+                    احصل على كوبون
+                    <a href="#"
+                       class="btn-reveal-coupon"
+                       data-assessment-id="{{ $assessment->id }}"
+                       data-assessment-title="{{ $assessment->title_ar }}"
+                       data-assessment-price="{{ $assessment->price > 0 ? number_format($assessment->price, 0) : '0' }}"
+                       data-hide-coupon="{{ $assessment->hide_coupon_field ? '1' : '0' }}"
+                       style="color: #1d4ed8; font-weight: 800; text-decoration: underline;"
+                    >من هنا</a>
+                    لبدء المقياس مجاناً
                 </span>
             </div>
             @endif
@@ -724,6 +733,68 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
     background: #f1f5f9;
 }
 </style>
+
+{{-- ============================================================
+     Coupon Reveal Modal  ("من هنا" button target)
+     ============================================================ --}}
+<div class="modal fade" id="couponRevealModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+
+            {{-- Header --}}
+            <div class="modal-header border-0 pb-0 pt-4 px-4" style="background: linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);">
+                <div>
+                    <h5 class="modal-title fw-bold mb-0" style="color:#1a2b56;" id="revealModalTitle">كوبون المقياس</h5>
+                    <p class="text-muted small mb-0" id="revealModalSub">اضغط لنسخ الكوبون ثم فعّله</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body px-4 pt-3 pb-4" style="background: linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);">
+
+                {{-- Loading --}}
+                <div id="revealLoading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-muted small mt-2 mb-0">جارٍ البحث عن كوبون...</p>
+                </div>
+
+                {{-- No coupon --}}
+                <div id="revealNoCoupon" class="d-none text-center py-3">
+                    <i class="bi bi-emoji-frown" style="font-size:2.5rem;color:#94a3b8;"></i>
+                    <p class="text-muted mt-2 mb-0 small">لا يوجد كوبون متاح لهذا المقياس حالياً.</p>
+                </div>
+
+                {{-- Coupon Card --}}
+                <div id="revealCouponCard" class="d-none">
+                    <div class="rounded-3 p-4 text-center mb-3" style="background:#fff; border: 2px dashed #1d4ed8; position:relative;">
+                        <div class="mb-2">
+                            <i class="bi bi-ticket-perforated" style="font-size:2rem; color:#1d4ed8;"></i>
+                        </div>
+                        <div class="text-muted small mb-1" id="revealCouponTitle"></div>
+                        <div class="fw-bold mb-2" style="font-size:0.85rem; color:#64748b;" id="revealCouponDiscount"></div>
+                        <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                            <span id="revealCouponCode"
+                                  style="font-size:1.6rem; font-weight:800; letter-spacing:4px; color:#1a2b56; font-family:monospace;"
+                            >—</span>
+                        </div>
+                        <div class="text-muted" style="font-size:0.7rem;" id="revealCouponExpiry"></div>
+                    </div>
+
+                    <button type="button" id="btnCopyCoupon"
+                            class="btn btn-outline-primary w-100 fw-semibold mb-3" style="border-radius:10px;">
+                        <i class="bi bi-clipboard me-1"></i> نسخ الكوبون
+                    </button>
+
+                    <button type="button" id="btnGoToApply"
+                            class="btn w-100 fw-bold py-2" style="border-radius:10px; background:#f59e0b; color:#fff; border:none;">
+                        <i class="bi bi-arrow-left-circle me-1"></i> تطبيق الكوبون وبدء المقياس
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
 
 {{-- ============================================================
      Payment / Coupon Modal
@@ -1009,6 +1080,114 @@ document.addEventListener('DOMContentLoaded', function() {
             secsEl.textContent  = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
         }, 1000);
     });
+    /* ── Coupon Reveal Modal logic ── */
+    let revealAssessmentId   = null;
+    let revealAssessmentPrice = 0;
+    let revealAssessmentTitle = '';
+    let revealHideCoupon = false;
+    let revealedCouponCode = '';
+
+    document.querySelectorAll('.btn-reveal-coupon').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            revealAssessmentId    = this.getAttribute('data-assessment-id');
+            revealAssessmentPrice = parseFloat(this.getAttribute('data-assessment-price') || '0');
+            revealAssessmentTitle = this.getAttribute('data-assessment-title');
+            revealHideCoupon      = this.getAttribute('data-hide-coupon') === '1';
+
+            // Reset UI
+            document.getElementById('revealLoading').classList.remove('d-none');
+            document.getElementById('revealNoCoupon').classList.add('d-none');
+            document.getElementById('revealCouponCard').classList.add('d-none');
+            document.getElementById('revealModalTitle').textContent = revealAssessmentTitle;
+            document.getElementById('revealModalSub').textContent = 'جارٍ البحث عن كوبون...';
+
+            var revealModal = new bootstrap.Modal(document.getElementById('couponRevealModal'));
+            revealModal.show();
+
+            // Fetch coupon
+            fetch('/coupon/for-assessment/' + revealAssessmentId, {
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+            })
+            .then(r => r.json())
+            .then(function(data) {
+                document.getElementById('revealLoading').classList.add('d-none');
+                if (!data.found) {
+                    document.getElementById('revealNoCoupon').classList.remove('d-none');
+                    document.getElementById('revealModalSub').textContent = '';
+                    return;
+                }
+                revealedCouponCode = data.code;
+                document.getElementById('revealCouponTitle').textContent  = data.title;
+                document.getElementById('revealCouponCode').textContent   = data.code;
+                document.getElementById('revealCouponDiscount').textContent = 'خصم ' + data.discount + '%';
+                document.getElementById('revealCouponExpiry').textContent  = data.expires ? 'صالح حتى: ' + data.expires : 'بدون تاريخ انتهاء';
+                document.getElementById('revealModalSub').textContent = 'انسخ الكود واضغط تطبيق';
+                document.getElementById('revealCouponCard').classList.remove('d-none');
+            })
+            .catch(function() {
+                document.getElementById('revealLoading').classList.add('d-none');
+                document.getElementById('revealNoCoupon').classList.remove('d-none');
+            });
+        });
+    });
+
+    // Copy button
+    document.getElementById('btnCopyCoupon').addEventListener('click', function() {
+        if (!revealedCouponCode) return;
+        navigator.clipboard.writeText(revealedCouponCode).then(function() {
+            var btn = document.getElementById('btnCopyCoupon');
+            btn.innerHTML = '<i class="bi bi-clipboard-check me-1"></i> تم النسخ!';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success');
+            setTimeout(function() {
+                btn.innerHTML = '<i class="bi bi-clipboard me-1"></i> نسخ الكوبون';
+                btn.classList.add('btn-outline-primary');
+                btn.classList.remove('btn-success');
+            }, 2000);
+        });
+    });
+
+    // Go to apply: close reveal modal, open payment modal with code pre-filled
+    document.getElementById('btnGoToApply').addEventListener('click', function() {
+        // Close the reveal modal
+        bootstrap.Modal.getInstance(document.getElementById('couponRevealModal')).hide();
+
+        // Wait a tick then open payment modal with coupon pre-filled
+        setTimeout(function() {
+            currentAssessmentId    = revealAssessmentId;
+            currentAssessmentPrice = revealAssessmentPrice;
+
+            // Manually trigger the payment modal with correct data
+            var payModal = new bootstrap.Modal(document.getElementById('paymentCouponModal'));
+
+            document.getElementById('modalAssessmentTitle').textContent = revealAssessmentTitle;
+            document.getElementById('modalAssessmentPriceLabel').innerHTML =
+                revealAssessmentPrice > 0
+                    ? '<span style="color:#d97706;font-weight:700;">' + revealAssessmentPrice + ' ر.س</span>'
+                    : '<span class="text-success fw-bold">مجاني</span>';
+            document.getElementById('payDirectPrice').innerHTML =
+                revealAssessmentPrice > 0
+                    ? revealAssessmentPrice + ' <span class="fs-6">ر.س</span>'
+                    : '<span class="text-success">مجاني</span>';
+
+            resetCouponUI();
+
+            // Pre-fill the coupon code and auto-verify it
+            document.getElementById('couponCodeInput').value = revealedCouponCode;
+            document.getElementById('couponSection').classList.remove('d-none');
+            document.getElementById('paySection').classList.add('d-none');
+            document.getElementById('couponStartForm').action = '/exam/' + revealAssessmentId + '/start';
+
+            payModal.show();
+
+            // Auto-click verify after the modal opens
+            setTimeout(function() {
+                document.getElementById('btnVerifyCoupon').click();
+            }, 400);
+        }, 350);
+    });
+
 });
 </script>
 
