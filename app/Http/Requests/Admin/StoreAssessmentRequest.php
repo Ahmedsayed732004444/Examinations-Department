@@ -15,6 +15,7 @@ class StoreAssessmentRequest extends FormRequest
     {
         return [
             'title_ar' => 'required|string|max:255',
+            'subtitle_ar' => 'nullable|string|max:255',
             'category' => 'required|string|max:255',
             'description_ar' => 'nullable|string',
             'time_limit_min' => 'nullable|integer|min:1',

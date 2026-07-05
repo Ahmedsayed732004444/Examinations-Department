@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreign('dimension_id')->references('id')->on('dimensions')->cascadeOnDelete();
             $table->integer('score');
             $table->integer('max_score');
-            $table->enum('level', ['high', 'medium', 'low']);
+            $table->string('level')->nullable();
             $table->timestamps();
         });
     }

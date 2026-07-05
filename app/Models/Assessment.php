@@ -11,7 +11,9 @@ class Assessment extends Model
 
     protected $fillable = [
         'title_ar',
+        'subtitle_ar',
         'category',
+        'scoring_type',
         'description_ar',
         'image_url',
         'time_limit_min',

@@ -16,11 +16,11 @@ class StoreRecommendationRequest extends FormRequest
     {
         return [
             'assessment_id' => 'required|uuid|exists:assessments,id',
-            'level' => 'required|in:high,medium,low',
+            'level' => 'required|string',
             'description_ar' => 'required|string',
-            'programs_ar' => 'required|string',
-            'high_threshold' => 'required|integer|min:0',
-            'low_threshold' => 'required|integer|min:0',
+            'programs_ar' => 'nullable|string',
+            'high_threshold' => 'nullable|integer|min:0',
+            'low_threshold' => 'nullable|integer|min:0',
         ];
     }
 }

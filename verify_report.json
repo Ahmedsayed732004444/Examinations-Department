@@ -1,0 +1,301 @@
+[
+    {
+        "id": "019f2850-6d5f-71fa-93b6-71195cdc342c",
+        "title": "اعرف نمطك القيادي",
+        "dimensions_count": 3,
+        "questions_count": 15,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-7251-7056-9db5-66cf95196a02",
+        "title": "هل لديك سمات القائد التحويلي؟",
+        "dimensions_count": 4,
+        "questions_count": 25,
+        "recommendations_count": 1,
+        "recommendations": [
+            {
+                "level": "medium",
+                "low": 0,
+                "high": 0,
+                "programs": "Yes"
+            }
+        ]
+    },
+    {
+        "id": "019f2850-7937-7139-ab27-acae7d540069",
+        "title": "قيّم مهاراتك الإدارية",
+        "dimensions_count": 4,
+        "questions_count": 40,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-83c9-73d5-92cb-bfbf0d2121b3",
+        "title": "تحفيز العاملين ومكافأتهم: كيف تحفز موظفيك؟",
+        "dimensions_count": 4,
+        "questions_count": 30,
+        "recommendations_count": 1,
+        "recommendations": [
+            {
+                "level": "medium",
+                "low": 0,
+                "high": 0,
+                "programs": "Yes"
+            }
+        ]
+    },
+    {
+        "id": "019f2850-8d20-73b6-a662-8d8415e5d717",
+        "title": "هل تفكر بإيجابية؟",
+        "dimensions_count": 1,
+        "questions_count": 20,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-9391-715b-8033-f14050220f61",
+        "title": "مقياس الثقة بالنفس في بيئة العمل",
+        "dimensions_count": 1,
+        "questions_count": 15,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-9808-714b-8fb6-c83fb0120e60",
+        "title": "مقياس الذكاء العاطفي",
+        "dimensions_count": 4,
+        "questions_count": 32,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-a1f3-70d6-a208-2ab12a5b6f8c",
+        "title": "مقياس السمات الشخصية",
+        "dimensions_count": 1,
+        "questions_count": 20,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-a8a9-706a-8cfa-3c3f9a46a7a1",
+        "title": "مقياس معرفة الذات",
+        "dimensions_count": 5,
+        "questions_count": 25,
+        "recommendations_count": 3,
+        "recommendations": [
+            {
+                "level": "high",
+                "low": 34,
+                "high": 999,
+                "programs": "Yes"
+            },
+            {
+                "level": "low",
+                "low": 0,
+                "high": 16,
+                "programs": "Yes"
+            },
+            {
+                "level": "medium",
+                "low": 17,
+                "high": 33,
+                "programs": "Yes"
+            }
+        ]
+    },
+    {
+        "id": "019f2850-b089-7266-bebb-1372fa1c3fc1",
+        "title": "مقياس استثمار الوقت",
+        "dimensions_count": 4,
+        "questions_count": 16,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-b595-7138-98ce-d4973e7d1bf2",
+        "title": "مقياس الإبداع الإداري",
+        "dimensions_count": 5,
+        "questions_count": 20,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-bc9f-700b-8434-5d9790edcac9",
+        "title": "هل أنت قادر على النجاح في وظيفتك \/ مهنتك؟",
+        "dimensions_count": 4,
+        "questions_count": 20,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-c362-7378-a877-8e51ef4152a1",
+        "title": "مهارة اتخاذ القرار",
+        "dimensions_count": 1,
+        "questions_count": 15,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-c7d4-7189-8aae-75278d425db9",
+        "title": "هل تخطط؟",
+        "dimensions_count": 1,
+        "questions_count": 20,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-cdb9-73d6-8d20-0ba0405b49bf",
+        "title": "القدرة على التفاوض والحوار وإقناع الآخرين",
+        "dimensions_count": 1,
+        "questions_count": 20,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-d431-73d1-994b-420e3047b359",
+        "title": "مقياس مهارات الاتصال",
+        "dimensions_count": 6,
+        "questions_count": 60,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-e67c-7274-82b5-1c8809b35b51",
+        "title": "هل تحب العمل في فريق؟",
+        "dimensions_count": 1,
+        "questions_count": 10,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-ea12-7060-a4c9-24cf74bcdd9b",
+        "title": "التوجيه المهني",
+        "dimensions_count": 4,
+        "questions_count": 40,
+        "recommendations_count": 1,
+        "recommendations": [
+            {
+                "level": "medium",
+                "low": 40,
+                "high": 80,
+                "programs": "Yes"
+            }
+        ]
+    },
+    {
+        "id": "019f2850-f63d-71d2-b4bf-c70a59664d7e",
+        "title": "حب العمل",
+        "dimensions_count": 1,
+        "questions_count": 20,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2850-fb03-719f-9a7f-c2b2055e4d2b",
+        "title": "ولاؤك لعملك الحالي",
+        "dimensions_count": 3,
+        "questions_count": 21,
+        "recommendations_count": 1,
+        "recommendations": [
+            {
+                "level": "medium",
+                "low": 21,
+                "high": 42,
+                "programs": "Yes"
+            }
+        ]
+    },
+    {
+        "id": "019f2851-02c1-7307-a64b-9c8f15abdbe9",
+        "title": "الرضا الوظيفي",
+        "dimensions_count": 7,
+        "questions_count": 40,
+        "recommendations_count": 0,
+        "recommendations": []
+    },
+    {
+        "id": "019f2851-0f55-700c-9270-bc1deb187d0f",
+        "title": "مقياس الإرهاق المهني",
+        "dimensions_count": 4,
+        "questions_count": 20,
+        "recommendations_count": 1,
+        "recommendations": [
+            {
+                "level": "low",
+                "low": 0,
+                "high": 13,
+                "programs": "Yes"
+            }
+        ]
+    },
+    {
+        "id": "019f2851-163c-7176-963e-18d0f676d95f",
+        "title": "مقياس الاحتراق الوظيفي",
+        "dimensions_count": 3,
+        "questions_count": 30,
+        "recommendations_count": 1,
+        "recommendations": [
+            {
+                "level": "low",
+                "low": 0,
+                "high": 20,
+                "programs": "Yes"
+            }
+        ]
+    },
+    {
+        "id": "019f2851-1f40-7178-9b63-9395c52076cd",
+        "title": "مقياس السلامة والصحة المهنية",
+        "dimensions_count": 5,
+        "questions_count": 25,
+        "recommendations_count": 3,
+        "recommendations": [
+            {
+                "level": "high",
+                "low": 34,
+                "high": 999,
+                "programs": "Yes"
+            },
+            {
+                "level": "low",
+                "low": 0,
+                "high": 16,
+                "programs": "Yes"
+            },
+            {
+                "level": "medium",
+                "low": 17,
+                "high": 33,
+                "programs": "Yes"
+            }
+        ]
+    },
+    {
+        "id": "019f2851-2723-7172-bc41-2d9de886e9cf",
+        "title": "مقياس مستوى ضغوط العمل",
+        "dimensions_count": 6,
+        "questions_count": 30,
+        "recommendations_count": 3,
+        "recommendations": [
+            {
+                "level": "high",
+                "low": 46,
+                "high": 999,
+                "programs": "Yes"
+            },
+            {
+                "level": "low",
+                "low": 0,
+                "high": 29,
+                "programs": "Yes"
+            },
+            {
+                "level": "medium",
+                "low": 30,
+                "high": 45,
+                "programs": "Yes"
+            }
+        ]
+    }
+]

@@ -15,12 +15,10 @@ class StoreInterpretationsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'high_threshold' => 'required|integer|min:0',
-            'low_threshold' => 'required|integer|min:0',
-            'interpretations' => 'required|array|size:3',
-            'interpretations.high' => 'required|string',
-            'interpretations.medium' => 'required|string',
-            'interpretations.low' => 'required|string',
+            'high_threshold' => 'nullable|integer|min:0',
+            'low_threshold' => 'nullable|integer|min:0',
+            'interpretations' => 'required|array',
+            'interpretations.*' => 'required|string',
         ];
     }
 }

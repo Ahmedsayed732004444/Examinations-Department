@@ -15,7 +15,9 @@ class UpdateSettingsRequest extends FormRequest
     {
         return [
             'title_ar' => 'required|string|max:255',
+            'subtitle_ar' => 'nullable|string|max:255',
             'category' => 'required|string|max:255',
+            'scoring_type' => 'required|in:overall_score,highest_dimension,dimension_only',
             'description_ar' => 'nullable|string',
             'time_limit_min' => 'nullable|integer|min:1',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',

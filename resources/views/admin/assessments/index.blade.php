@@ -10,6 +10,36 @@
     </button>
 </div>
 
+<!-- Filter Section -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+        <form method="GET" action="{{ route('admin.assessments.index') }}" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">البحث</label>
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="ابحث باسم المقياس..." value="{{ request('search') }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">تصفية حسب المحور</label>
+                <select name="category" class="form-select form-select-sm">
+                    <option value="">جميع المحاور</option>
+                    <option value="مقاييس التوجيه والتوافق المهني" {{ request('category') == 'مقاييس التوجيه والتوافق المهني' ? 'selected' : '' }}>مقاييس التوجيه والتوافق المهني</option>
+                    <option value="الذات والشحصيه" {{ request('category') == 'الذات والشحصيه' ? 'selected' : '' }}>الذات والشخصية</option>
+                    <option value="الكفاءة الشخصية والنجاح المهني" {{ request('category') == 'الكفاءة الشخصية والنجاح المهني' ? 'selected' : '' }}>الكفاءة الشخصية والنجاح المهني</option>
+                    <option value="مقاييس الاتصال والعلاقات المهنية" {{ request('category') == 'مقاييس الاتصال والعلاقات المهنية' ? 'selected' : '' }}>مقاييس الاتصال والعلاقات المهنية</option>
+                    <option value="مقاييس الصحةاملهنية" {{ request('category') == 'مقاييس الصحةاملهنية' ? 'selected' : '' }}>مقاييس الصحة المهنية</option>
+                    <option value="مقاييس القيادة والإدارة" {{ request('category') == 'مقاييس القيادة والإدارة' ? 'selected' : '' }}>مقاييس القيادة والإدارة</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary btn-sm px-4">تصفية</button>
+                @if(request('search') || request('category'))
+                    <a href="{{ route('admin.assessments.index') }}" class="btn btn-outline-secondary btn-sm ms-2">إلغاء</a>
+                @endif
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
@@ -87,6 +117,10 @@
                         <input type="text" class="form-control" id="f-title_ar" placeholder="مثال: مقياس معرفة الذات">
                     </div>
                     <div class="col-md-6">
+                        <label class="form-label small fw-medium">العنوان الجذاب (وصف قصير)</label>
+                        <input type="text" class="form-control" id="f-subtitle_ar" placeholder="مثال: افهم ذاتك بعمق واكتشف نقاط قوتك">
+                    </div>
+                    <div class="col-md-12">
                         <label class="form-label small fw-medium">المحور / الفئة *</label>
                         <input type="text" class="form-control" id="f-category"
                                list="category-datalist"
@@ -222,6 +256,7 @@ $('#btn-save-assessment').on('click', function() {
 
     const formData = new FormData();
     formData.append('title_ar', $('#f-title_ar').val().trim());
+    formData.append('subtitle_ar', $('#f-subtitle_ar').val().trim());
     formData.append('category', $('#f-category').val().trim());
     
     if ($('#f-description_ar').val().trim()) formData.append('description_ar', $('#f-description_ar').val().trim());

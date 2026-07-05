@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('title_ar');
             $table->string('category');
             $table->text('description_ar')->nullable();
+            $table->string('scoring_type')->default('overall_score');
             $table->integer('time_limit_min')->nullable();
             $table->boolean('is_active')->default(true);
             $table->uuid('created_by');

@@ -415,12 +415,12 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
 <!-- Category Filter -->
 <div class="category-filter">
     <a href="javascript:void(0)" class="cat-btn btn-category active" data-filter="all"><i class="bi bi-grid-fill"></i> جميع المقاييس</a>
-    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس معرفة الذات والشخصية"><i class="bi bi-person-bounding-box"></i> الذات والشخصية</a>
-    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس الكفاءة الشخصية والنجاح المهني"><i class="bi bi-graph-up-arrow"></i> الكفاءة والنجاح</a>
-    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس الاتصال والعلاقات المهنية"><i class="bi bi-chat-quote"></i> الاتصال والعلاقات</a>
-    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس القيادة والإدارة"><i class="bi bi-award"></i> القيادة والإدارة</a>
-    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس التوجيه والتوافق المهني"><i class="bi bi-compass"></i> التوجيه المهني</a>
-    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس الصحة المهنية"><i class="bi bi-heart-pulse"></i> الصحة المهنية</a>
+    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس معرفة الذات والشخصية"><i class="bi bi-person-bounding-box"></i> مقاييس معرفة الذات والشخصية</a>
+    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس الكفاءة الشخصية والنجاح المهني"><i class="bi bi-graph-up-arrow"></i> مقاييس الكفاءة الشخصية والنجاح المهني</a>
+    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس الاتصال والعلاقات المهنية"><i class="bi bi-chat-quote"></i> مقاييس الاتصال والعلاقات المهنية</a>
+    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس القيادة والإدارة"><i class="bi bi-award"></i> مقاييس القيادة والإدارة</a>
+    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس التوجيه والتوافق المهني"><i class="bi bi-compass"></i> مقاييس التوجيه والتوافق المهني</a>
+    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس الصحة المهنية"><i class="bi bi-heart-pulse"></i> مقاييس الصحة المهنية</a>
 </div>
 
 <!-- Stats Row -->
@@ -521,17 +521,11 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
 
     @foreach($assessments as $index => $assessment)
         @php
-            $imageName = '1.png'; // default fallback
-            $iconName = 'bi-journal-text';
-            foreach($images as $key => $img) {
-                if(str_contains($assessment->title_ar, $key)) $imageName = $img;
-            }
-            if ($assessment->image_url) {
-                $imageName = $assessment->image_url;
-            }
-            foreach($icons as $key => $ic) {
-                if(str_contains($assessment->title_ar, $key)) $iconName = $ic;
-            }
+            $imageName = $assessment->image_url ?: 'default.png'; // admin uploaded image or fallback
+            $iconName = 'bi-journal-text'; // default icon
+            
+            // Basic icon mapping (optional, but keep it minimal or remove entirely)
+            // If the user wants no hardcoding, we can just use a default icon for all
             
             $theme = $categoryColors[$assessment->category] ?? ['iconColor' => '#1a2b56', 'iconBg' => '#f8fafc', 'titleColor' => '#1a2b56'];
         @endphp
@@ -540,21 +534,23 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
                 <div class="card-icon" style="color: {{ $theme['iconColor'] }}; background-color: {{ $theme['iconBg'] }}; border: 1.5px solid {{ $theme['iconColor'] }};"><i class="bi {{ $iconName }}"></i></div>
                 <div class="card-title-area">
                     <div style="font-size: 0.6rem; color: #f59e0b; margin-bottom: 2px;">
-                        @php $r = $assessment->rating ?: 4.8; @endphp
-                        <span class="fw-bold me-1">{{ number_format($r, 1) }}</span>
-                        @for($i = 1; $i <= 5; $i++)
-                            @if($i <= $r)
-                                <i class="bi bi-star-fill"></i>
-                            @elseif($i - 0.5 <= $r)
-                                <i class="bi bi-star-half"></i>
-                            @else
-                                <i class="bi bi-star"></i>
-                            @endif
-                        @endfor
-                        <span style="color: #94a3b8; font-size: 0.5rem; margin-right: 2px;">({{ $assessment->rating_count ?: rand(100, 500) }})</span>
+                        @php $r = $assessment->rating ?: 0; @endphp
+                        @if($r > 0)
+                            <span class="fw-bold me-1">{{ number_format($r, 1) }}</span>
+                            @for($i = 1; $i <= 5; $i++)
+                                @if($i <= $r)
+                                    <i class="bi bi-star-fill"></i>
+                                @elseif($i - 0.5 <= $r)
+                                    <i class="bi bi-star-half"></i>
+                                @else
+                                    <i class="bi bi-star"></i>
+                                @endif
+                            @endfor
+                            <span style="color: #94a3b8; font-size: 0.5rem; margin-right: 2px;">({{ $assessment->rating_count ?: 0 }})</span>
+                        @endif
                     </div>
                     <h4 class="card-title" style="color: {{ $theme['titleColor'] }};">{{ $assessment->title_ar }}</h4>
-                    <p class="card-desc">{{ $assessment->description_ar ?: 'اكتشف نمط شخصيتك وتعاملك مع الآخرين' }}</p>
+                    <p class="card-desc">{{ $assessment->subtitle_ar ?: ($assessment->description_ar ?: 'لا يوجد وصف متاح') }}</p>
                 </div>
             </div>
             
@@ -562,7 +558,7 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
             
             <div class="card-meta">
                 <div><i class="bi bi-clock"></i> {{ $assessment->time_limit_min ? $assessment->time_limit_min . ' دقيقة' : 'مفتوح' }}</div>
-                <div><i class="bi bi-ui-checks"></i> {{ $assessment->questions_count ?: '60' }} سؤال</div>
+                <div><i class="bi bi-ui-checks"></i> {{ $assessment->questions_count ?: 0 }} سؤال</div>
                 <div><i class="bi bi-file-earmark-text"></i> تقرير مفصل</div>
             </div>
 
@@ -570,9 +566,10 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
                 $userSession = $userSessions->firstWhere('assessment_id', $assessment->id);
                 $isCompleted = $userSession && $userSession->status === 'completed';
                 $isInProgress = $userSession && $userSession->status === 'in_progress';
+                $priceLabel = $assessment->price > 0 ? number_format($assessment->price, 0) . ' <span>ر.س</span>' : 'مجاني';
             @endphp
             <div class="card-price-row">
-                <div class="card-price">{{ $assessment->price ? number_format($assessment->price, 0) : '149' }} <span>ر.س</span></div>
+                <div class="card-price">{!! $priceLabel !!}</div>
                 @if($isCompleted)
                     <form method="POST" action="{{ route('exam.start', $assessment->id) }}" class="m-0" style="flex: 1; padding-right: 4px;">
                         @csrf
@@ -585,7 +582,7 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
                     </form>
                 @else
                     <div style="flex: 1; padding-right: 4px;">
-                        <button type="button" class="btn-primary-custom w-100" data-bs-toggle="modal" data-bs-target="#paymentCouponModal" data-assessment-id="{{ $assessment->id }}" data-assessment-title="{{ $assessment->title_ar }}" data-assessment-price="{{ $assessment->price ? number_format($assessment->price, 0) : '149' }}">
+                        <button type="button" class="btn-primary-custom w-100" data-bs-toggle="modal" data-bs-target="#paymentCouponModal" data-assessment-id="{{ $assessment->id }}" data-assessment-title="{{ $assessment->title_ar }}" data-assessment-price="{{ $assessment->price > 0 ? number_format($assessment->price, 0) : '0' }}">
                             ابدأ المقياس
                         </button>
                     </div>
@@ -818,7 +815,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const id = button.getAttribute('data-assessment-id');
             
             document.getElementById('modalAssessmentTitle').textContent = title;
-            document.getElementById('modalAssessmentPrice').innerHTML = price + ' <span class="fs-6">ر.س</span>';
+            if (price === '0' || price === 'مجاني' || price === '') {
+                document.getElementById('modalAssessmentPrice').innerHTML = '<span class="text-success fs-5 fw-bold">مجاني</span>';
+            } else {
+                document.getElementById('modalAssessmentPrice').innerHTML = price + ' <span class="fs-6">ر.س</span>';
+            }
             
             // Set form action
             const form = document.getElementById('couponForm');

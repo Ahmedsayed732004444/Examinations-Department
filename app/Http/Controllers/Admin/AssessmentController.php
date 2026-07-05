@@ -18,9 +18,10 @@ class AssessmentController extends Controller
         private readonly AssessmentService $assessmentService,
     ) {}
 
-    public function index(): View
+    public function index(\Illuminate\Http\Request $request): View
     {
-        $assessments = $this->assessmentService->list();
+        $filters = $request->only(['category', 'search']);
+        $assessments = $this->assessmentService->list($filters);
 
         return view('admin.assessments.index', compact('assessments'));
     }

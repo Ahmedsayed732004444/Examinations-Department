@@ -51,6 +51,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/questions/{question}', [Admin\QuestionController::class, 'update'])->name('questions.update');
     Route::delete('/questions/{question}', [Admin\QuestionController::class, 'destroy'])->name('questions.destroy');
 
+    // Answer Options Routes
+    Route::get('/questions/{question}/options', [Admin\AnswerOptionController::class, 'index'])->name('options.index');
+    Route::post('/questions/{question}/options', [Admin\AnswerOptionController::class, 'store'])->name('options.store');
+    Route::put('/options/{option}', [Admin\AnswerOptionController::class, 'update'])->name('options.update');
+    Route::delete('/options/{option}', [Admin\AnswerOptionController::class, 'destroy'])->name('options.destroy');
+    Route::post('/questions/{question}/sync-options', [Admin\AnswerOptionController::class, 'syncToAssessment'])->name('options.sync');
+
     Route::get('/exams/create', [Admin\ExamController::class, 'create'])->name('exams.create');
     Route::post('/exams', [Admin\ExamController::class, 'store'])->name('exams.store');
 

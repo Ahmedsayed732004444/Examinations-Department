@@ -12,11 +12,11 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('assessment_id');
             $table->foreign('assessment_id')->references('id')->on('assessments')->cascadeOnDelete();
-            $table->enum('level', ['high', 'medium', 'low']);
+            $table->string('level');
             $table->text('description_ar');
             $table->text('programs_ar');
-            $table->integer('high_threshold');
-            $table->integer('low_threshold');
+            $table->integer('high_threshold')->nullable();
+            $table->integer('low_threshold')->nullable();
             $table->timestamps();
         });
     }

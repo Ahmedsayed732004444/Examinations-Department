@@ -8,11 +8,18 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class AssessmentRepository implements AssessmentRepositoryInterface
 {
-    public function paginated(int $perPage = 15): LengthAwarePaginator
+    public function paginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        return Assessment::withCount(['questions', 'dimensions'])
-            ->orderByDesc('created_at')
-            ->paginate($perPage);
+        $query = Assessment::withCount(['questions', 'dimensions']);
+        
+        if (!empty($filters['category'])) {
+            $query->where('category', $filters['category']);
+        }
+        if (!empty($filters['search'])) {
+            $query->where('title_ar', 'like', '%' . $filters['search'] . '%');
+        }
+
+        return $query->orderByDesc('created_at')->paginate($perPage);
     }
 
     public function findWithRelations(string $id): Assessment

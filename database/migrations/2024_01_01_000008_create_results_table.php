@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreign('session_id')->references('id')->on('exam_sessions')->cascadeOnDelete();
             $table->integer('total_score');
             $table->integer('max_possible_score');
-            $table->enum('level', ['high', 'medium', 'low']);
+            $table->string('level')->nullable();
             $table->timestamp('calculated_at');
             $table->timestamps();
         });

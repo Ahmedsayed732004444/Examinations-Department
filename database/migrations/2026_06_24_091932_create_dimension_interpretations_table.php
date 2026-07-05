@@ -12,10 +12,10 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('dimension_id');
             $table->foreign('dimension_id')->references('id')->on('dimensions')->cascadeOnDelete();
-            $table->enum('level', ['high', 'medium', 'low']);
+            $table->string('level');
             $table->text('interpretation_text_ar');
-            $table->integer('high_threshold');
-            $table->integer('low_threshold');
+            $table->integer('high_threshold')->nullable();
+            $table->integer('low_threshold')->nullable();
             $table->timestamps();
 
             $table->unique(['dimension_id', 'level'], 'dim_interpretations_dim_level_unique');

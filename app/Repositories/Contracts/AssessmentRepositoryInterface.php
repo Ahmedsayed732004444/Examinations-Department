@@ -10,7 +10,7 @@ interface AssessmentRepositoryInterface
     /**
      * Return paginated list of assessments with questions/dimensions counts.
      */
-    public function paginated(int $perPage = 15): LengthAwarePaginator;
+    public function paginated(array $filters = [], int $perPage = 15): LengthAwarePaginator;
 
     /**
      * Find an assessment and eager-load all nested relations needed for the show page.

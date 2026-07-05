@@ -35,6 +35,13 @@
 .footer-cta { background: #1a2b56; color: white; border-radius: 16px; padding: 25px; margin-top: 30px; position: relative; overflow: hidden; }
 .footer-cta::before { content: ""; position: absolute; right: 0; top: 0; width: 150px; height: 100%; background: linear-gradient(90deg, rgba(245,158,11,0.2) 0%, transparent 100%); pointer-events: none; }
 
+/* Markdown Content */
+.markdown-content p:last-child { margin-bottom: 0; }
+.markdown-content h1, .markdown-content h2, .markdown-content h3, .markdown-content h4 { font-size: 1rem; font-weight: 800; margin-bottom: 0.5rem; color: #1e293b; }
+.markdown-content ul { padding-right: 1.2rem; margin-bottom: 0.5rem; }
+.markdown-content strong { color: #1a2b56; }
+
+
 /* Mobile Optimizations */
 @media (max-width: 768px) {
     .result-wrapper { overflow-x: hidden; width: 100%; }
@@ -106,13 +113,12 @@
         };
         $chartData[] = $ringValue;
 
-        $interpretation = $ds->dimension->interpretations->where('level', $ds->level)->first();
-        $text = $interpretation ? $interpretation->interpretation_text_ar : 'تحتاج إلى التركيز أكثر على هذا البعد.';
-
         if ($ds->level === 'high') {
-            $strengths[] = $text;
+            $strengths[] = "مستوى متميز في: " . $ds->dimension->name_ar;
+        } elseif ($ds->level === 'low') {
+            $weaknesses[] = "تحتاج إلى تطوير: " . $ds->dimension->name_ar;
         } else {
-            $weaknesses[] = $text;
+            $weaknesses[] = "فرصة لتعزيز وتنمية: " . $ds->dimension->name_ar;
         }
     }
 @endphp
@@ -170,9 +176,9 @@
                     <h2 class="fw-bold text-navy mb-2">{{ $assessment->title_ar }}</h2>
                     <p class="text-muted small mb-3">نتيجتك في اختبار {{ $assessment->title_ar }}</p>
                     @if($recommendation && $recommendation->description_ar)
-                        <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.6;">
-                            {{ $recommendation->description_ar }}
-                        </p>
+                        <div class="text-secondary markdown-content" style="font-size: 0.9rem; line-height: 1.6; text-align: right;">
+                            {!! Str::markdown($recommendation->description_ar) !!}
+                        </div>
                     @else
                         <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.6;">
                             تشير نتيجتك إلى أنك تمتلك مستوى {{ $mainLvl['label'] }} في {{ $assessment->category }}.
@@ -227,8 +233,8 @@
                             </div>
                         </div>
                         @if($interpretation)
-                            <div class="text-muted ps-5 ms-3" style="font-size: 0.85rem; line-height: 1.5;">
-                                {{ $interpretation->interpretation_text_ar }}
+                            <div class="text-muted ps-5 ms-3 markdown-content mt-2" style="font-size: 0.85rem; line-height: 1.5; text-align: right;">
+                                {!! Str::markdown($interpretation->interpretation_text_ar) !!}
                             </div>
                         @endif
                     </div>

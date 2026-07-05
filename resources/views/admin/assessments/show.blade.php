@@ -290,6 +290,9 @@
                                         
                                         <!-- Actions -->
                                         <div class="d-flex gap-1 align-items-center q-actions" id="q-actions-{{ $q->id }}">
+                                            <button class="btn btn-sm btn-outline-info border-0 btn-manage-options" data-id="{{ $q->id }}" title="خيارات الإجابة">
+                                                <i class="bi bi-list-check"></i>
+                                            </button>
                                             <button class="btn btn-sm btn-outline-secondary border-0 btn-edit-q" data-id="{{ $q->id }}" title="تعديل نص السؤال">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
@@ -421,6 +424,9 @@
                             </div>
                             
                             <div class="d-flex gap-1 align-items-center q-actions" id="q-actions-{{ $q->id }}">
+                                <button class="btn btn-sm btn-outline-info border-0 btn-manage-options" data-id="{{ $q->id }}" title="خيارات الإجابة">
+                                    <i class="bi bi-list-check"></i>
+                                </button>
                                 <button class="btn btn-sm btn-outline-secondary border-0 btn-edit-q" data-id="{{ $q->id }}" title="تعديل السؤال">
                                     <i class="bi bi-pencil"></i>
                                 </button>
@@ -492,98 +498,92 @@
     <!-- Tab 2: التوصيات -->
     <div class="tab-pane fade" id="tab-recommendations" role="tabpanel" aria-labelledby="recommendations-tab">
         @php
-            $recs = $assessment->recommendations->keyBy('level');
-            $levels = [
-                'high' => ['title' => 'مستوى مرتفع', 'color' => 'success', 'border' => 'border-success'],
-                'medium' => ['title' => 'مستوى متوسط', 'color' => 'warning', 'border' => 'border-warning'],
-                'low' => ['title' => 'مستوى منخفض', 'color' => 'danger', 'border' => 'border-danger']
-            ];
+            $recs = $assessment->recommendations;
         @endphp
         
-        <div class="row g-4">
-            @foreach($levels as $key => $info)
-                @php
-                    $rec = $recs->get($key);
-                @endphp
-                <div class="col-lg-4">
-                    <div class="card border-0 border-start border-4 {{ $info['border'] }} recommendation-card shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h5 class="mb-1 text-dark fw-bold"><i class="bi bi-star-fill text-warning me-2"></i>التوصيات وتفسيرات النتيجة</h5>
+                <p class="text-muted small mb-0">إدارة التوصيات التي تظهر للمستفيدين بناءً على المجموع أو النمط.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="addNewRecommendationCard()">
+                <i class="bi bi-plus-lg me-1"></i>إضافة توصية جديدة
+            </button>
+        </div>
+
+        <div class="row g-4" id="recommendations-container">
+            @forelse($recs as $index => $rec)
+                @php $key = $rec->id; @endphp
+                <div class="col-lg-4 rec-col" id="rec-col-{{ $key }}">
+                    <div class="card border-0 border-start border-4 border-primary recommendation-card shadow-sm h-100">
                         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                            <span class="badge bg-{{ $info['color'] }}-subtle text-{{ $info['color'] }} border border-{{ $info['color'] }}-subtle px-3 py-2 rounded">
-                                <i class="bi bi-bar-chart-fill me-1"></i>{{ $info['title'] }}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded">
+                                <i class="bi bi-bar-chart-fill me-1"></i>{{ $rec->level }}
                             </span>
-                            @if($rec)
-                                <span class="text-muted small">مُعرّف</span>
-                            @else
-                                <span class="text-muted small text-danger">غير مُعرّف</span>
-                            @endif
                         </div>
                         <div class="card-body">
-                            <!-- Toggle View / Form -->
-                            @if($rec)
-                                <!-- Saved Recommendation View -->
-                                <div class="rec-card-view-mode" id="rec-view-{{ $key }}">
-                                    <div class="mb-3">
-                                        <label class="small text-muted mb-1 d-block">نطاق الدرجات</label>
-                                        <div class="fw-bold text-dark fs-5">
+                            <!-- Saved Recommendation View -->
+                            <div class="rec-card-view-mode" id="rec-view-{{ $key }}">
+                                <div class="mb-3">
+                                    <label class="small text-muted mb-1 d-block">نطاق الدرجات</label>
+                                    <div class="fw-bold text-dark fs-5">
+                                        @if($rec->low_threshold !== null && $rec->high_threshold !== null)
                                             من {{ $rec->low_threshold }} إلى {{ $rec->high_threshold }} درجة
-                                        </div>
+                                        @else
+                                            <span class="text-muted fs-6">يعتمد على النمط أو المحور الأعلى</span>
+                                        @endif
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="small text-muted mb-1 d-block">الوصف العيادي</label>
-                                        <div class="text-dark whitespace-pre-wrap small bg-light p-3 rounded" style="min-height: 80px;">{{ $rec->description_ar }}</div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="small text-muted mb-1 d-block">البرامج الإرشادية والتوصيات المقترحة</label>
-                                        <div class="text-dark small bg-light p-3 rounded" style="min-height: 80px;">
-                                            @php
-                                                $lines = array_filter(array_map('trim', explode("\n", $rec->programs_ar)));
-                                            @endphp
-                                            @if(count($lines) > 0)
-                                                <ul class="mb-0 ps-0 list-unstyled">
-                                                    @foreach($lines as $line)
-                                                        <li class="mb-1"><i class="bi bi-check2 text-{{ $info['color'] }} me-1"></i>{{ $line }}</li>
-                                                    @endforeach
-                                                </ul>
-                                            @else
-                                                <span class="text-muted">لا يوجد برامج مسجلة.</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <button class="btn btn-outline-primary btn-sm w-100 btn-toggle-rec-edit" data-level="{{ $key }}">
-                                        <i class="bi bi-pencil-square me-1"></i>تعديل التوصية
-                                    </button>
                                 </div>
-                            @else
-                                <!-- Button to expand new form inline -->
-                                <div class="text-center py-4 rec-add-placeholder" id="rec-add-placeholder-{{ $key }}">
-                                    <i class="bi bi-journal-plus display-6 text-muted mb-2 d-block"></i>
-                                    <p class="text-muted small">لا توجد توصيات مدخلة لهذا المستوى بعد.</p>
-                                    <button class="btn btn-primary btn-sm btn-expand-rec-form" data-level="{{ $key }}">
-                                        <i class="bi bi-plus-lg me-1"></i>إضافة توصية
-                                    </button>
+                                <div class="mb-3">
+                                    <label class="small text-muted mb-1 d-block">الوصف العيادي</label>
+                                    <div class="text-dark whitespace-pre-wrap small bg-light p-3 rounded" style="min-height: 80px;">{{ $rec->description_ar }}</div>
                                 </div>
-                            @endif
+                                <div class="mb-3">
+                                    <label class="small text-muted mb-1 d-block">البرامج الإرشادية والتوصيات المقترحة</label>
+                                    <div class="text-dark small bg-light p-3 rounded" style="min-height: 80px;">
+                                        @php
+                                            $lines = array_filter(array_map('trim', explode("\n", $rec->programs_ar ?? '')));
+                                        @endphp
+                                        @if(count($lines) > 0)
+                                            <ul class="mb-0 ps-0 list-unstyled">
+                                                @foreach($lines as $line)
+                                                    <li class="mb-1"><i class="bi bi-check2 text-primary me-1"></i>{{ $line }}</li>
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <span class="text-muted">لا يوجد برامج مسجلة.</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm w-100 btn-toggle-rec-edit" data-level="{{ $key }}">
+                                    <i class="bi bi-pencil-square me-1"></i>تعديل التوصية
+                                </button>
+                            </div>
                             
-                            <!-- Form container (Hidden or Shown for edits/adds) -->
-                            <div class="rec-form-container {{ $rec ? 'd-none' : 'd-none' }}" id="rec-form-{{ $key }}">
+                            <!-- Form container -->
+                            <div class="rec-form-container d-none" id="rec-form-{{ $key }}">
                                 <form class="recommendation-ajax-form" data-level="{{ $key }}">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">اسم المستوى / النمط (مثال: مستوى مرتفع، النمط الأوتوقراطي)</label>
+                                        <input type="text" class="form-control form-control-sm rec-input-level-name" value="{{ $rec->level }}" required>
+                                    </div>
                                     <div class="row g-2 mb-3">
                                         <div class="col-6">
                                             <label class="form-label small fw-medium text-muted">الحد الأدنى للدرجة</label>
-                                            <input type="number" class="form-control form-control-sm rec-input-low" value="{{ $rec ? $rec->low_threshold : '' }}" required min="0">
+                                            <input type="number" class="form-control form-control-sm rec-input-low" value="{{ $rec->low_threshold }}" min="0">
                                         </div>
                                         <div class="col-6">
                                             <label class="form-label small fw-medium text-muted">الحد الأقصى للدرجة</label>
-                                            <input type="number" class="form-control form-control-sm rec-input-high" value="{{ $rec ? $rec->high_threshold : '' }}" required min="0">
+                                            <input type="number" class="form-control form-control-sm rec-input-high" value="{{ $rec->high_threshold }}" min="0">
                                         </div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label small fw-medium text-muted">الوصف العيادي للتوصية</label>
-                                        <textarea class="form-control form-control-sm rec-textarea-desc" rows="4" required placeholder="ادخل تفاصيل تشخيص هذا المستوى..." style="min-height: 80px;">{{ $rec ? $rec->description_ar : '' }}</textarea>
+                                        <textarea class="form-control form-control-sm rec-textarea-desc" rows="4" required placeholder="ادخل تفاصيل تشخيص هذا المستوى..." style="min-height: 80px;">{{ $rec->description_ar }}</textarea>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label small fw-medium text-muted">البرامج الإرشادية (توصية في كل سطر)</label>
-                                        <textarea class="form-control form-control-sm rec-textarea-programs" rows="4" required placeholder="توصية أ&#10;توصية ب&#10;توصية ج" style="min-height: 80px;">{{ $rec ? $rec->programs_ar : '' }}</textarea>
+                                        <textarea class="form-control form-control-sm rec-textarea-programs" rows="4" placeholder="توصية أ&#10;توصية ب&#10;توصية ج" style="min-height: 80px;">{{ $rec->programs_ar }}</textarea>
                                     </div>
                                     
                                     <div class="d-flex gap-2">
@@ -591,18 +591,63 @@
                                             <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ التوصية</span>
                                             <span class="spinner-border spinner-border-sm d-none"></span>
                                         </button>
-                                        @if($rec)
-                                            <button type="button" class="btn btn-secondary btn-sm btn-cancel-rec-edit" data-level="{{ $key }}">
-                                                إلغاء
-                                            </button>
-                                        @endif
+                                        <button type="button" class="btn btn-secondary btn-sm btn-cancel-rec-edit" data-level="{{ $key }}">إلغاء</button>
                                     </div>
                                 </form>
                             </div>
                         </div>
                     </div>
                 </div>
-            @endforeach
+            @empty
+                <div class="col-12 text-center py-5" id="no-recs-placeholder">
+                    <i class="bi bi-inbox text-muted display-4"></i>
+                    <p class="text-muted mt-3 mb-0">لا توجد توصيات لهذا المقياس حتى الآن.</p>
+                </div>
+            @endforelse
+        </div>
+
+        <!-- Template for new recommendation -->
+        <template id="new-rec-template">
+            <div class="col-lg-4 rec-col" id="rec-col-NEW_ID">
+                <div class="card border-0 border-start border-4 border-success recommendation-card shadow-sm h-100">
+                    <div class="card-header bg-white py-3">
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded">توصية جديدة</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="rec-form-container" id="rec-form-NEW_ID">
+                            <form class="recommendation-ajax-form" data-level="NEW_ID">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">اسم المستوى / النمط</label>
+                                    <input type="text" class="form-control form-control-sm rec-input-level-name" placeholder="مثال: مستوى مرتفع" required>
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label small fw-medium text-muted">الحد الأدنى للدرجة</label>
+                                        <input type="number" class="form-control form-control-sm rec-input-low" min="0">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small fw-medium text-muted">الحد الأقصى للدرجة</label>
+                                        <input type="number" class="form-control form-control-sm rec-input-high" min="0">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">الوصف العيادي للتوصية</label>
+                                    <textarea class="form-control form-control-sm rec-textarea-desc" rows="4" required style="min-height: 80px;"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">البرامج الإرشادية (توصية في كل سطر)</label>
+                                    <textarea class="form-control form-control-sm rec-textarea-programs" rows="4" style="min-height: 80px;"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success btn-sm w-100 btn-save-recommendation">
+                                    <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ التوصية</span>
+                                    <span class="spinner-border spinner-border-sm d-none"></span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
         </div>
     </div>
     
@@ -623,8 +668,20 @@
                                     <input type="text" class="form-control" id="settings-title" value="{{ $assessment->title_ar }}" required>
                                 </div>
                                 <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark">العنوان الجذاب (وصف قصير)</label>
+                                    <input type="text" class="form-control" id="settings-subtitle" value="{{ $assessment->subtitle_ar }}">
+                                </div>
+                                <div class="col-md-12">
                                     <label class="form-label small fw-semibold text-dark">المحور / الفئة *</label>
                                     <input type="text" class="form-control" id="settings-category" value="{{ $assessment->category }}" required>
+                                </div>
+                                <div class="col-md-12 mt-3">
+                                    <label class="form-label small fw-semibold text-dark">طريقة حساب النتيجة والتوصية *</label>
+                                    <select class="form-select" id="settings-scoring-type">
+                                        <option value="overall_score" {{ ($assessment->scoring_type ?? 'overall_score') == 'overall_score' ? 'selected' : '' }}>بناءً على الدرجة الكلية (مثل: مرتفع/متوسط/منخفض)</option>
+                                        <option value="highest_dimension" {{ ($assessment->scoring_type ?? 'overall_score') == 'highest_dimension' ? 'selected' : '' }}>بناءً على المحور الأعلى درجة (مثل: الأنماط القيادية)</option>
+                                        <option value="dimension_only" {{ ($assessment->scoring_type ?? 'overall_score') == 'dimension_only' ? 'selected' : '' }}>لا يوجد تقييم كلي (تقييم الأبعاد فقط)</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -690,6 +747,66 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Answer Options Modal -->
+<div class="modal fade" id="optionsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">خيارات الإجابة للسؤال</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <p class="text-muted small mb-3">السؤال: <strong id="modal-q-text" class="text-dark"></strong></p>
+                
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold small">إضافة خيار جديد</span>
+                    </div>
+                    <div class="card-body py-2">
+                        <form id="add-option-form" class="row g-2 align-items-end">
+                            <input type="hidden" id="modal-q-id">
+                            <div class="col-sm-6">
+                                <label class="form-label small text-muted mb-1">نص الخيار (مثال: نعم، أحياناً)</label>
+                                <input type="text" id="add-opt-label" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label small text-muted mb-1">قيمة الدرجة (Score)</label>
+                                <input type="number" id="add-opt-score" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="submit" class="btn btn-primary btn-sm w-100">إضافة</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle mb-0" id="options-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>نص الخيار</th>
+                                    <th>الدرجة</th>
+                                    <th style="width: 100px;">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="options-tbody">
+                                <!-- Options injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-primary btn-sm" id="btn-sync-options">
+                    <i class="bi bi-files me-1"></i>تعميم هذه الخيارات على جميع أسئلة المقياس
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إغلاق</button>
             </div>
         </div>
     </div>
@@ -1354,7 +1471,9 @@ $(document).ready(function() {
         const formData = new FormData();
         formData.append('_method', 'PATCH');
         formData.append('title_ar', $('#settings-title').val().trim());
+        formData.append('subtitle_ar', $('#settings-subtitle').val().trim());
         formData.append('category', $('#settings-category').val().trim());
+        formData.append('scoring_type', $('#settings-scoring-type').val());
         
         if ($('#settings-description').val().trim()) formData.append('description_ar', $('#settings-description').val().trim());
         if ($('#settings-time-limit').val()) formData.append('time_limit_min', $('#settings-time-limit').val());
@@ -1480,6 +1599,183 @@ $(document).on('click', '.btn-toggle-reversed', function () {
             showAlert(newVal ? 'تم تفعيل السؤال المعكوس.' : 'تم إلغاء العكس.', 'success');
         },
         error() { showAlert('فشل تحديث السؤال.', 'danger'); }
+    });
+});
+
+/* ── Answer Options Management ── */
+let currentQuestionId = null;
+
+$(document).on('click', '.btn-manage-options', function () {
+    const btn = $(this);
+    currentQuestionId = btn.data('id');
+    const qText = $(`#q-display-${currentQuestionId}`).text();
+    
+    $('#modal-q-id').val(currentQuestionId);
+    $('#modal-q-text').text(qText);
+    
+    // Fetch options
+    loadOptions();
+    
+    const modal = new bootstrap.Modal(document.getElementById('optionsModal'));
+    modal.show();
+});
+
+function loadOptions() {
+    $('#options-tbody').html('<tr><td colspan="3" class="text-center text-muted">جاري التحميل...</td></tr>');
+    $.ajax({
+        url: `/admin/questions/${currentQuestionId}/options`,
+        method: 'GET',
+        success: function(options) {
+            let html = '';
+            if (options.length === 0) {
+                html = '<tr><td colspan="3" class="text-center text-muted small">لا توجد خيارات لهذا السؤال.</td></tr>';
+            } else {
+                options.forEach(opt => {
+                    html += `
+                        <tr data-id="${opt.id}">
+                            <td>
+                                <span class="opt-label-display">${opt.label_ar}</span>
+                                <input type="text" class="form-control form-control-sm opt-label-edit d-none" value="${opt.label_ar}">
+                            </td>
+                            <td>
+                                <span class="opt-score-display">${opt.score_value}</span>
+                                <input type="number" class="form-control form-control-sm opt-score-edit d-none" value="${opt.score_value}">
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm opt-actions-view">
+                                    <button type="button" class="btn btn-outline-secondary btn-edit-opt" title="تعديل"><i class="bi bi-pencil"></i></button>
+                                    <button type="button" class="btn btn-outline-danger btn-delete-opt" title="حذف"><i class="bi bi-trash"></i></button>
+                                </div>
+                                <div class="btn-group btn-group-sm opt-actions-edit d-none">
+                                    <button type="button" class="btn btn-success btn-save-opt"><i class="bi bi-check2"></i></button>
+                                    <button type="button" class="btn btn-secondary btn-cancel-opt"><i class="bi bi-x"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            $('#options-tbody').html(html);
+        },
+        error: function() {
+            $('#options-tbody').html('<tr><td colspan="3" class="text-center text-danger">فشل تحميل الخيارات.</td></tr>');
+        }
+    });
+}
+
+$('#add-option-form').on('submit', function(e) {
+    e.preventDefault();
+    const btn = $(this).find('button[type="submit"]');
+    
+    const payload = {
+        label_ar: $('#add-opt-label').val().trim(),
+        score_value: $('#add-opt-score').val()
+    };
+    
+    setLoading(btn, true);
+    
+    $.ajax({
+        url: `/admin/questions/${currentQuestionId}/options`,
+        method: 'POST',
+        contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify(payload),
+        success: function(res) {
+            setLoading(btn, false);
+            $('#add-opt-label').val('');
+            $('#add-opt-score').val('');
+            loadOptions();
+            showAlert(res.message, 'success');
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            showAlert(xhr.responseJSON?.message || 'فشل إضافة الخيار', 'danger');
+        }
+    });
+});
+
+$(document).on('click', '.btn-edit-opt', function() {
+    const tr = $(this).closest('tr');
+    tr.find('.opt-label-display, .opt-score-display, .opt-actions-view').addClass('d-none');
+    tr.find('.opt-label-edit, .opt-score-edit, .opt-actions-edit').removeClass('d-none');
+});
+
+$(document).on('click', '.btn-cancel-opt', function() {
+    const tr = $(this).closest('tr');
+    tr.find('.opt-label-display, .opt-score-display, .opt-actions-view').removeClass('d-none');
+    tr.find('.opt-label-edit, .opt-score-edit, .opt-actions-edit').addClass('d-none');
+});
+
+$(document).on('click', '.btn-save-opt', function() {
+    const tr = $(this).closest('tr');
+    const optId = tr.data('id');
+    const btn = $(this);
+    
+    const payload = {
+        label_ar: tr.find('.opt-label-edit').val().trim(),
+        score_value: tr.find('.opt-score-edit').val()
+    };
+    
+    const originalHtml = btn.html();
+    btn.html('<span class="spinner-border spinner-border-sm"></span>');
+    
+    $.ajax({
+        url: `/admin/options/${optId}`,
+        method: 'PUT',
+        contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify(payload),
+        success: function(res) {
+            btn.html(originalHtml);
+            loadOptions();
+            showAlert(res.message, 'success');
+        },
+        error: function(xhr) {
+            btn.html(originalHtml);
+            showAlert(xhr.responseJSON?.message || 'فشل التحديث', 'danger');
+        }
+    });
+});
+
+$(document).on('click', '.btn-delete-opt', function() {
+    const tr = $(this).closest('tr');
+    const optId = tr.data('id');
+    
+    if(!confirm('هل أنت متأكد من حذف هذا الخيار؟')) return;
+    
+    $.ajax({
+        url: `/admin/options/${optId}`,
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        success: function(res) {
+            loadOptions();
+            showAlert(res.message, 'success');
+        }
+    });
+});
+
+$('#btn-sync-options').on('click', function() {
+    if(!confirm('تحذير: سيتم مسح كافة خيارات الإجابة الحالية لجميع الأسئلة الأخرى في هذا المقياس، واستبدالها بالخيارات الحالية لهذا السؤال. هل تريد الاستمرار؟')) return;
+    
+    const btn = $(this);
+    const originalHtml = btn.html();
+    btn.html('<i class="bi bi-hourglass-split me-1"></i>جاري التعميم...');
+    btn.prop('disabled', true);
+    
+    $.ajax({
+        url: `/admin/questions/${currentQuestionId}/sync-options`,
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        success: function(res) {
+            btn.html(originalHtml);
+            btn.prop('disabled', false);
+            showAlert(res.message, 'success');
+        },
+        error: function(xhr) {
+            btn.html(originalHtml);
+            btn.prop('disabled', false);
+            showAlert('حدث خطأ أثناء التعميم.', 'danger');
+        }
     });
 });
 

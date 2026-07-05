@@ -14,9 +14,9 @@ class AssessmentService
         private readonly DimensionRepositoryInterface $dimensions,
     ) {}
 
-    public function list(): LengthAwarePaginator
+    public function list(array $filters = []): LengthAwarePaginator
     {
-        return $this->assessments->paginated();
+        return $this->assessments->paginated($filters);
     }
 
     public function getForManagement(string $id): Assessment
