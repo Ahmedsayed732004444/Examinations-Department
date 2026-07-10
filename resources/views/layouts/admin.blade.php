@@ -26,9 +26,9 @@
 
     <!-- Sidebar -->
     <nav class="sidebar d-flex flex-column py-3">
-        <div class="px-4 mb-3">
-            <span class="text-white fw-bold fs-5"><i class="bi bi-stars me-2 text-primary"></i>دار الرؤى</span>
-            <div class="text-muted small mt-1">لوحة الإدارة</div>
+        <div class="px-4 mb-3 text-center pt-2">
+            <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 55px; filter: brightness(0) invert(1);">
+            <div class="text-muted small mt-2">لوحة الإدارة</div>
         </div>
         <ul class="nav flex-column flex-grow-1">
             <li class="nav-item">

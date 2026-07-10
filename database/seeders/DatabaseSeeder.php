@@ -67,7 +67,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // Include all finalized comprehensive assessments
-        $this->call(FinalComprehensiveSeeder::class);
+        $this->call(AssessmentsDatabaseSeeder::class);
 
         // Seed some demo coupons
         $assessment = Assessment::first();

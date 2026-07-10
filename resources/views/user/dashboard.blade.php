@@ -909,14 +909,34 @@ document.addEventListener('DOMContentLoaded', function() {
     /* ── Category filter ── */
     const filterBtns = document.querySelectorAll('.btn-category');
     const assessmentCards = document.querySelectorAll('.assessment-card');
+    
+    // Normalize string for better matching (handling ة/ه and أ/ا)
+    const normalize = (str) => {
+        return str.replace(/ة/g, 'ه')
+                  .replace(/[أإآ]/g, 'ا')
+                  .replace('مقاييس ', '')
+                  .replace('معرفة ', '')
+                  .trim();
+    };
+
     filterBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             filterBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
+            
             const filterValue = this.getAttribute('data-filter');
+            
             assessmentCards.forEach(card => {
-                const show = filterValue === 'all' || card.getAttribute('data-category') === filterValue;
-                card.style.display = show ? 'flex' : 'none';
+                if (filterValue === 'all') {
+                    card.style.display = 'flex';
+                } else {
+                    const cardCat = card.getAttribute('data-category') || '';
+                    const searchStr = normalize(filterValue);
+                    const targetStr = normalize(cardCat);
+                    
+                    const show = targetStr.includes(searchStr) || searchStr.includes(targetStr);
+                    card.style.display = show ? 'flex' : 'none';
+                }
             });
         });
     });

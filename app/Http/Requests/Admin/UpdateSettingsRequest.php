@@ -25,6 +25,9 @@ class UpdateSettingsRequest extends FormRequest
             'rating' => 'nullable|numeric|min:1|max:5',
             'is_active' => 'nullable|boolean',
             'hide_coupon_field' => 'nullable|boolean',
+            'certificates_ar' => 'nullable|string',
+            'programs_ar' => 'nullable|string',
+            'plan_30_days_ar' => 'nullable|string',
         ];
     }
 

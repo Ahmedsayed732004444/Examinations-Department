@@ -725,8 +725,25 @@
                                         </label>
                                     </div>
                                 </div>
+                                </div>
                             </div>
                             
+                            <hr class="my-4">
+                            <h6 class="fw-bold text-primary mb-3"><i class="bi bi-file-earmark-bar-graph me-2"></i>بيانات التقرير المتقدمة</h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-dark">الشهادات الاحترافية المناسبة</label>
+                                    <textarea class="form-control" id="settings-certificates" rows="3" placeholder="شهادة 1، شهادة 2...">{{ $assessment->certificates_ar }}</textarea>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-dark">البرامج التدريبية المقترحة</label>
+                                    <textarea class="form-control" id="settings-programs" rows="3" placeholder="دورة 1، دورة 2...">{{ $assessment->programs_ar }}</textarea>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-dark">خطة تطوير (30 يوماً)</label>
+                                    <textarea class="form-control" id="settings-plan" rows="3" placeholder="الأسبوع 1: ...">{{ $assessment->plan_30_days_ar }}</textarea>
+                                </div>
+                            </div>
                             <button type="submit" class="btn btn-primary" id="btn-save-settings">
                                 <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ التعديلات</span>
                                 <span class="spinner-border spinner-border-sm d-none"></span>
@@ -1485,6 +1502,9 @@ $(document).ready(function() {
         if ($('#settings-time-limit').val()) formData.append('time_limit_min', $('#settings-time-limit').val());
         if ($('#settings-price').val()) formData.append('price', $('#settings-price').val());
         if ($('#settings-rating').val()) formData.append('rating', $('#settings-rating').val());
+        formData.append('certificates_ar', $('#settings-certificates').val().trim());
+        formData.append('programs_ar', $('#settings-programs').val().trim());
+        formData.append('plan_30_days_ar', $('#settings-plan').val().trim());
         formData.append('is_active', $('#settings-is-active').is(':checked') ? 1 : 0);
         formData.append('hide_coupon_field', $('#settings-hide-coupon').is(':checked') ? 1 : 0);
         

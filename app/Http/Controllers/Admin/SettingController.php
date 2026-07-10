@@ -18,6 +18,7 @@ class SettingController extends Controller
     public function update(Request $request)
     {
         $data = $request->validate([
+            'stats_mode' => 'required|in:manual,auto',
             'stat_users' => 'required|string|max:255',
             'stat_exams' => 'required|string|max:255',
             'stat_assessments' => 'required|string|max:255',

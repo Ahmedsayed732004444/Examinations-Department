@@ -159,17 +159,31 @@
                         <input type="file" class="form-control" id="f-image" accept="image/*">
                         <div class="form-text" style="font-size:0.65rem;">اختياري: سيتم عرض صورة افتراضية إن لم تقم برفع صورة.</div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <label class="form-label small fw-medium">وقت الاختبار (دقائق)</label>
                         <input type="number" class="form-control" id="f-time_limit_min" placeholder="بلا حد" min="1">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label small fw-medium">سعر المقياس (ر.س)</label>
                         <input type="number" class="form-control" id="f-price" placeholder="مثال: 149" step="0.01" min="0">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label small fw-medium">التقييم الابتدائي (1-5)</label>
                         <input type="number" class="form-control" id="f-rating" placeholder="مثال: 4.8" step="0.1" min="1" max="5">
+                    </div>
+                    <div class="col-12"><hr class="my-2"></div>
+                    <div class="col-12 text-primary fw-bold mb-0">بيانات التقرير المتقدمة (اختياري)</div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-medium">الشهادات الاحترافية المناسبة</label>
+                        <textarea class="form-control" id="f-certificates_ar" rows="2" placeholder="شهادة 1، شهادة 2..."></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-medium">البرامج التدريبية المقترحة</label>
+                        <textarea class="form-control" id="f-programs_ar" rows="2" placeholder="دورة 1، دورة 2..."></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-medium">خطة تطوير (30 يوماً)</label>
+                        <textarea class="form-control" id="f-plan_30_days_ar" rows="2" placeholder="الأسبوع 1: ..."></textarea>
                     </div>
                 </div>
 
@@ -263,6 +277,9 @@ $('#btn-save-assessment').on('click', function() {
     if ($('#f-time_limit_min').val()) formData.append('time_limit_min', $('#f-time_limit_min').val());
     if ($('#f-price').val()) formData.append('price', $('#f-price').val());
     if ($('#f-rating').val()) formData.append('rating', $('#f-rating').val());
+    if ($('#f-certificates_ar').val().trim()) formData.append('certificates_ar', $('#f-certificates_ar').val().trim());
+    if ($('#f-programs_ar').val().trim()) formData.append('programs_ar', $('#f-programs_ar').val().trim());
+    if ($('#f-plan_30_days_ar').val().trim()) formData.append('plan_30_days_ar', $('#f-plan_30_days_ar').val().trim());
     
     if ($('#f-image')[0].files.length > 0) {
         formData.append('image', $('#f-image')[0].files[0]);

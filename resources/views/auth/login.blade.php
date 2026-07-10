@@ -14,7 +14,7 @@
     <div class="row justify-content-center">
         <div class="col-md-5 col-lg-4">
             <div class="text-center mb-4">
-                <h2 class="fw-bold text-primary"><i class="bi bi-stars me-2"></i>دار الرؤى</h2>
+                <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 70px; margin-bottom: 10px;">
                 <p class="text-muted">نظام مقاييس التميز الشخصي</p>
             </div>
             <div class="card shadow-sm border-0">

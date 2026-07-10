@@ -98,6 +98,20 @@ class CouponService
             $discount = $coupon->discount_percentage_2nd;
         } elseif ($totalUsed === 2 && $coupon->discount_percentage_3rd !== null) {
             $discount = $coupon->discount_percentage_3rd;
+        } elseif ($totalUsed === 3 && $coupon->discount_percentage_4th !== null) {
+            $discount = $coupon->discount_percentage_4th;
+        } elseif ($totalUsed === 4 && $coupon->discount_percentage_5th !== null) {
+            $discount = $coupon->discount_percentage_5th;
+        } elseif ($totalUsed === 5 && $coupon->discount_percentage_6th !== null) {
+            $discount = $coupon->discount_percentage_6th;
+        } elseif ($totalUsed === 6 && $coupon->discount_percentage_7th !== null) {
+            $discount = $coupon->discount_percentage_7th;
+        } elseif ($totalUsed === 7 && $coupon->discount_percentage_8th !== null) {
+            $discount = $coupon->discount_percentage_8th;
+        } elseif ($totalUsed === 8 && $coupon->discount_percentage_9th !== null) {
+            $discount = $coupon->discount_percentage_9th;
+        } elseif ($totalUsed === 9 && $coupon->discount_percentage_10th !== null) {
+            $discount = $coupon->discount_percentage_10th;
         }
 
         $exhausted = $totalUsed >= $coupon->assessments_limit;

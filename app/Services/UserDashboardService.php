@@ -82,7 +82,16 @@ class UserDashboardService
 
         // 5. Site Settings (stats)
         $siteSettings = Cache::remember('site_settings', 3600, function () {
-            return Setting::pluck('value', 'key')->toArray();
+            $settings = Setting::pluck('value', 'key')->toArray();
+            
+            if (isset($settings['stats_mode']) && $settings['stats_mode'] === 'auto') {
+                $settings['stat_users'] = '+' . \App\Models\User::count();
+                $settings['stat_exams'] = '+' . \App\Models\Result::count();
+                $settings['stat_assessments'] = '+' . \App\Models\Assessment::count();
+                $settings['stat_fields'] = '+' . \App\Models\Dimension::count();
+            }
+            
+            return $settings;
         });
 
         return compact('assessments', 'userSessions', 'progressMap', 'activeCoupons', 'myCoupons', 'siteSettings');

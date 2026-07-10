@@ -1,366 +1,607 @@
 @extends('layouts.user')
-@section('title', 'نتيجة الاختبار - ' . $assessment->title_ar)
+@section('title', 'تقرير نتيجة المقياس - ' . $assessment->title_ar)
 
 @push('styles')
-<style>
-.result-wrapper { font-family: 'Noto Kufi Arabic', sans-serif; color: #1e293b; max-width: 1100px; margin: 0 auto; padding-bottom: 40px; }
-.card-custom { border-radius: 16px; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; }
-
-/* Header Section */
-.header-bg { background: #fff; position: relative; overflow: hidden; }
-.header-bg::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, rgba(245, 158, 11, 0.05) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%); pointer-events: none; }
-.stats-box { border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; background: #f8fafc; }
-.stats-box .icon { color: #f59e0b; font-size: 1.5rem; margin-bottom: 8px; }
-.stats-box.blue .icon { color: #3b82f6; }
-.stats-box.indigo .icon { color: #6366f1; }
-
-/* Circle Chart */
-.circular-chart { width: 160px; height: 160px; margin: 0 auto; }
-.circle-bg { fill: none; stroke: #f1f5f9; stroke-width: 3; }
-.circle { fill: none; stroke-width: 3; stroke-linecap: round; transition: stroke-dasharray 1s ease; }
-.percentage { fill: #1e293b; font-size: 0.6em; text-anchor: middle; font-weight: 800; font-family: 'Noto Kufi Arabic'; }
-/* Progress Bars */
-.dim-progress-bg { height: 8px; background: #f1f5f9; border-radius: 8px; width: 100%; margin-top: 5px; position: relative; overflow: hidden; }
-.dim-progress-bar { height: 100%; border-radius: 8px; position: absolute; left: 0; top: 0; }
-.dim-card { border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px; }
-.dim-card:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
-.dim-icon { width: 45px; height: 45px; border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #64748b; }
-/* Lists */
-.sw-list { list-style: none; padding: 0; margin: 0; }
-.sw-list li { position: relative; padding-right: 28px; margin-bottom: 12px; font-size: 0.9rem; color: #475569; }
-.sw-list li::before { content: ""; position: absolute; right: 0; top: 4px; width: 18px; height: 18px; background-size: contain; background-repeat: no-repeat; }
-.sw-list.strengths li::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%2310b981'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z'/%3E%3C/svg%3E"); }
-.sw-list.weaknesses li::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ef4444'%3E%3Cpath d='M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z'/%3E%3Cpath d='M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E"); }
-/* Footer */
-.footer-cta { background: #1a2b56; color: white; border-radius: 16px; padding: 25px; margin-top: 30px; position: relative; overflow: hidden; }
-.footer-cta::before { content: ""; position: absolute; right: 0; top: 0; width: 150px; height: 100%; background: linear-gradient(90deg, rgba(245,158,11,0.2) 0%, transparent 100%); pointer-events: none; }
-
-/* Markdown Content */
-.markdown-content p:last-child { margin-bottom: 0; }
-.markdown-content h1, .markdown-content h2, .markdown-content h3, .markdown-content h4 { font-size: 1rem; font-weight: 800; margin-bottom: 0.5rem; color: #1e293b; }
-.markdown-content ul { padding-right: 1.2rem; margin-bottom: 0.5rem; }
-.markdown-content strong { color: #1a2b56; }
-
-
-/* Mobile Optimizations */
-@media (max-width: 768px) {
-    .result-wrapper { overflow-x: hidden; width: 100%; }
-    .stats-box { padding: 10px 5px; }
-    .stats-box .fs-5 { font-size: 1rem !important; }
-    .stats-box .fs-6 { display: block; font-size: 0.75rem !important; margin-top: 2px; }
-    .circular-chart { width: 130px; height: 130px; }
-    .header-bg { padding: 1rem !important; }
-    .card-body.p-4.p-md-5 { padding: 1.5rem !important; }
-}
-
-@media print { .no-print { display:none!important; } body { background:#fff!important; } .card-custom { border:none!important; box-shadow:none!important; } }
-</style>
+<link href="{{ asset('css/report-pdf.css') }}" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 @endpush
 
 @section('content')
 @php
     $pct = $result->max_possible_score > 0 ? round($result->total_score / $result->max_possible_score * 100) : 0;
     
-    // Level configurations
+    // Level configurations (matched to progress bar)
     $lvlData = [
-        'high'   => ['class' => 'success', 'color' => '#10b981', 'label' => 'مرتفع'],
-        'medium' => ['class' => 'warning', 'color' => '#f59e0b', 'label' => 'متوسط'],
-        'low'    => ['class' => 'danger',  'color' => '#ef4444', 'label' => 'منخفض'],
+        'excellent' => ['label' => 'متميز', 'degree' => 'متميز'],
+        'advanced'  => ['label' => 'متقدم', 'degree' => 'متقدم'],
+        'good'      => ['label' => 'جيد', 'degree' => 'جيد'],
+        'average'   => ['label' => 'متوسط', 'degree' => 'متوسط'],
+        'weak'      => ['label' => 'ضعيف', 'degree' => 'ضعيف'],
+        // Legacy fallbacks
+        'high'   => ['label' => 'متميز', 'degree' => 'متميز'],
+        'medium' => ['label' => 'جيد', 'degree' => 'جيد'],
+        'low'    => ['label' => 'ضعيف', 'degree' => 'ضعيف'],
     ];
-    $levelKey = in_array($result->level, ['high','medium','low']) ? $result->level : 'low';
-    $mainLvl = $lvlData[$levelKey];
-    $dashArray = round($pct * 100 / 100) . ' 100';
 
-    // Prepare chart data and strengths/weaknesses
-    $chartLabels = [];
-    $chartData = [];
+    $isHighestDimension = $assessment->scoring_type === 'highest_dimension';
+    
+    if ($isHighestDimension) {
+        $levelKey = 'highest';
+        $highestLabel = $result->level;
+        
+        // Fix for legacy empty level bug
+        if (empty(trim($highestLabel))) {
+            $highestScore = -1;
+            foreach ($result->dimensionScores as $ds) {
+                if ($ds->score > $highestScore) {
+                    $highestScore = $ds->score;
+                    $highestLabel = trim(str_replace('محور', '', $ds->dimension->name_ar));
+                }
+            }
+        }
+        
+        $mainLvl = ['label' => $highestLabel, 'degree' => $highestLabel];
+    } else {
+        if ($pct >= 80) $levelKey = 'excellent';
+        elseif ($pct >= 60) $levelKey = 'advanced';
+        elseif ($pct >= 40) $levelKey = 'good';
+        elseif ($pct >= 20) $levelKey = 'average';
+        else $levelKey = 'weak';
+        
+        $mainLvl = $lvlData[$levelKey];
+    }
+
+    // Data prep
     $strengths = [];
     $weaknesses = [];
-
-    $genericIcons = ['bi-diagram-3', 'bi-heart', 'bi-bullseye', 'bi-people', 'bi-graph-up-arrow', 'bi-shield-check'];
-
-    // Assessment image mapping
-    $fallbackImage = '1.png';
-    $imagesMapping = [
-        'الذات' => '1.png',
-        'الانفعالي' => '2.png',
-        'القيم' => '3.png',
-        'التواصل' => '4.png',
-        'الشخصي' => '5.png',
-        'التفكير' => '1.png',
-        'العمل' => '2.png',
-        'القيادة' => '3.png',
-        'الصحة' => '4.png',
-        'الأسرة' => '5.png',
-    ];
-    foreach($imagesMapping as $key => $img) {
-        if(str_contains($assessment->title_ar, $key)) {
-            $fallbackImage = $img;
-            break;
-        }
-    }
-    $imageName = $assessment->image_url ?: $fallbackImage;
+    $radarLabels = [];
+    $radarData = [];
 
     foreach($result->dimensionScores as $idx => $ds) {
-        $chartLabels[] = $ds->dimension->name_ar;
-        
-        // Map level to ring index: low=1, medium=2, high=3
-        $ringValue = match($ds->level) {
-            'high'   => 3,
-            'medium' => 2,
-            default  => 1,
-        };
-        $chartData[] = $ringValue;
+        $ds_score_pct = $ds->max_score > 0 ? round(($ds->score / $ds->max_score) * 100) : 0;
+        // Append percentage to the label so it displays neatly outside the radar chart
+        $radarLabels[] = $ds->dimension->name_ar . ' (' . $ds_score_pct . '%)';
+        $radarData[] = $ds_score_pct;
 
-        if ($ds->level === 'high') {
-            $strengths[] = "مستوى متميز في: " . $ds->dimension->name_ar;
-        } elseif ($ds->level === 'low') {
-            $weaknesses[] = "تحتاج إلى تطوير: " . $ds->dimension->name_ar;
+        if (in_array($ds->level, ['excellent', 'advanced', 'high']) || $ds_score_pct >= 60) {
+            $strengths[] = (object)['title' => $ds->dimension->name_ar, 'desc' => 'تمتلك قدرة عالية في هذا الجانب.'];
+        } elseif (in_array($ds->level, ['weak', 'low']) || $ds_score_pct < 40) {
+            $weaknesses[] = (object)['title' => $ds->dimension->name_ar, 'desc' => 'تحتاج إلى تطوير واهتمام لتحسين الأداء.'];
         } else {
-            $weaknesses[] = "فرصة لتعزيز وتنمية: " . $ds->dimension->name_ar;
+            $weaknesses[] = (object)['title' => $ds->dimension->name_ar, 'desc' => 'فرصة لتعزيز وتنمية المهارة.'];
         }
+    }
+
+    $parsedRecommendation = '';
+    $improvementPoints = [];
+
+    if ($recommendation && !empty($recommendation->description_ar)) {
+        $text = strip_tags(Str::markdown($recommendation->description_ar));
+        
+        // 1. Remove grade prefixes (e.g., "مستوى مرتفع (41 درجة فأكثر):")
+        if (mb_strpos($text, ':') !== false) {
+            $parts = explode(':', $text, 2);
+            // If the part before colon is short and contains grade keywords
+            if (mb_strlen($parts[0]) < 100 && (mb_strpos($parts[0], 'درجة') !== false || mb_strpos($parts[0], 'مستوى') !== false)) {
+                $text = trim($parts[1]);
+            }
+        }
+
+        // 2. Fallback to remove prefixes without colons
+        $introWords = ['تشير نتيجتك', 'تشير نتائجك', 'أنت مستثمر'];
+        foreach($introWords as $iw) {
+            $pos = mb_strpos($text, $iw);
+            if ($pos !== false && $pos < 50) {
+                $text = $iw . explode($iw, $text, 2)[1];
+                break;
+            }
+        }
+
+        // 3. Extract recommendations into $improvementPoints
+        $adviseKeywords = [
+            'لذلك، ننصح', 'لذلك ننصح', 'لذلك، نوصي', 'لذلك نوصي', 'لذلك، احرص', 'لذلك احرص',
+            'احرص على', 'يُنصح', 'ينصح', 'نوصي', 'ننصح', 'ولتحسين', 'للتطوير', 'ولتعزيز',
+            'تحتاج', 'المطلوب', 'عليك', 'يجب', 'من المهم', 'من الضروري', 'نقترح',
+            'يتطلب', 'يتوجب', 'الهدف التدريبي', 'التدريب على', 'ينبغي', 'لذا'
+        ];
+        
+        foreach($adviseKeywords as $kw) {
+            if (mb_strpos($text, $kw) !== false) {
+                $parts = explode($kw, $text, 2);
+                $text = trim($parts[0]);
+                
+                // Clean up trailing "لذلك" or "ولهذا" from the summary
+                $text = preg_replace('/(\s*لذلك\s*[,،]?\s*|\s*ولهذا\s*[,،]?\s*)$/u', '', $text);
+                
+                $impText = $kw . $parts[1];
+                // Split text into points by dot, line break, or Arabic comma followed by space
+                $sentences = preg_split('/[.\n]+|،\s+/', $impText);
+                foreach($sentences as $s) {
+                    $s = trim($s);
+                    // Remove leading dashes or bullets if any
+                    $s = ltrim($s, '-*• ');
+                    
+                    // Skip sentences that mention training programs to avoid duplication with the dedicated section
+                    if (str_contains($s, 'البرامج التدريبية') || str_contains($s, 'الدورات المقترحة') || str_contains($s, 'البرامج المقترحة')) {
+                        continue;
+                    }
+                    
+                    if (mb_strlen($s) > 10) {
+                        $improvementPoints[] = $s;
+                    }
+                }
+                break;
+            }
+        }
+
+        // Ensure text ends with a dot if it doesn't
+        if (!empty($text) && !in_array(mb_substr($text, -1), ['.', '!', '؟', ':'])) {
+            $text .= '.';
+        }
+
+        $parsedRecommendation = $text;
+    }
+
+    // Fallback if no recommendation was parsed
+    if (empty($parsedRecommendation)) {
+        $parsedRecommendation = 'لديك مستوى ' . ($mainLvl['label'] ?? '') . ' في ' . $assessment->title_ar . '. يظهر قدرتك على التخطيط واتخاذ القرار.';
+        $improvementPoints[] = 'نوصيك بالتركيز على تطوير بعض المهارات لتحقيق أداء أكثر توازناً وفاعلية.';
+    }
+
+    // Advanced Report Fields (from Assessment DB)
+    $certs = $assessment->certificates_ar ? array_map('trim', explode('،', $assessment->certificates_ar)) : [];
+    if(empty($certs) && $assessment->certificates_ar) $certs = array_map('trim', explode(',', $assessment->certificates_ar));
+    
+    $progs = [];
+    if (!empty($assessment->programs_ar)) {
+        $progs = preg_split('/[،,]+/u', $assessment->programs_ar);
+        $progs = array_values(array_filter(array_map('trim', $progs)));
+    }
+    
+    // Hardcode fallbacks if empty to match the design EXACTLY
+    if (empty($certs)) {
+        $certs = [
+            (object)['title' => 'CSM®', 'desc' => 'شهادة إدارة سكرم المعتمد لإدارة المشاريع بفاعلية.', 'logo' => 'CSM'],
+            (object)['title' => 'PMP®', 'desc' => 'إدارة المشاريع الاحترافية لتعزيز مهارات إدارة المشاريع.', 'logo' => 'PMP'],
+            (object)['title' => 'Lean Six Sigma', 'desc' => 'لتحسين العمليات وزيادة الجودة والكفاءة في العمل.', 'logo' => 'LSS']
+        ];
+    } else {
+        // Map strings to objects for consistency
+        $certs = array_map(function($c) { return (object)['title' => $c, 'desc' => 'شهادة احترافية معتمدة.', 'logo' => 'CERT']; }, $certs);
+    }
+
+    if (empty($progs)) {
+        $progs = [
+            (object)['title' => 'القيادة الفعالة وبناء الفرق', 'icon' => 'bi-people'],
+            (object)['title' => 'إدارة الوقت وزيادة الإنتاجية', 'icon' => 'bi-clock-history'],
+            (object)['title' => 'مهارات التواصل الفعال', 'icon' => 'bi-chat-dots'],
+            (object)['title' => 'مهارات التفاوض والإقناع', 'icon' => 'bi-handshake']
+        ];
+    } else {
+        $progs = array_map(function($p) { 
+            $icon = 'bi-journal-bookmark';
+            if (str_contains($p, 'قياد') || str_contains($p, 'توجيه')) $icon = 'bi-people';
+            elseif (str_contains($p, 'تواصل') || str_contains($p, 'اتصال')) $icon = 'bi-chat-dots';
+            elseif (str_contains($p, 'وقت') || str_contains($p, 'تخطيط')) $icon = 'bi-clock-history';
+            elseif (str_contains($p, 'تفاوض') || str_contains($p, 'إقناع') || str_contains($p, 'علاقات')) $icon = 'bi-handshake';
+            elseif (str_contains($p, 'تفكير') || str_contains($p, 'قرار') || str_contains($p, 'إبداع')) $icon = 'bi-lightbulb';
+            elseif (str_contains($p, 'ثقة') || str_contains($p, 'ذات')) $icon = 'bi-person-check';
+            elseif (str_contains($p, 'سلامة') || str_contains($p, 'ضغوط') || str_contains($p, 'توازن')) $icon = 'bi-heart-pulse';
+            
+            return (object)['title' => $p, 'icon' => $icon]; 
+        }, $progs);
+    }
+    
+    // 30 Day Plan
+    $planSteps = $assessment->plan_30_days_ar ? array_map('trim', explode('،', $assessment->plan_30_days_ar)) : [];
+    if(empty($planSteps) && $assessment->plan_30_days_ar) $planSteps = array_map('trim', explode(',', $assessment->plan_30_days_ar));
+    
+    if (empty($planSteps) || count($planSteps) < 4) {
+        $planSteps = [
+            'تحديد الأولويات ووضع خطة يومية.',
+            'تعلم تقنيات التفاوض وممارسة الحالات العملية.',
+            'تطبيق استراتيجيات إدارة الضغوط.',
+            'مراجعة التقدم وتقييم النتائج.'
+        ];
     }
 @endphp
 
-<div class="result-wrapper">
-    <!-- Header Section -->
-    <div class="card-custom header-bg mb-4">
-        <div class="card-body p-4 p-md-5">
-            <div class="row align-items-center flex-column-reverse flex-md-row">
-                
-                <!-- 3 Stats Cards -->
-                <div class="col-md-4 mt-4 mt-md-0">
-                    <div class="row g-3 h-100">
-                        <div class="col-4 col-md-12">
-                            <div class="stats-box indigo">
-                                <div class="icon"><i class="bi bi-star"></i></div>
-                                <div class="text-muted small mb-1">درجتك</div>
-                                <div class="fs-5 fw-bold text-navy">{{ $result->total_score }} <span class="fs-6 text-muted fw-normal">من أصل {{ $result->max_possible_score }}</span></div>
+<div class="container mb-4 no-print text-end mt-4">
+    <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary px-4 me-2">
+        <i class="bi bi-house me-1"></i> العودة للرئيسية
+    </a>
+    <button onclick="window.print()" class="btn btn-primary px-4 fw-bold">
+        <i class="bi bi-printer me-1"></i> طباعة التقرير الرسمي
+    </button>
+</div>
+
+<div class="infographic-report">
+    <!-- ==================== PAGE 1 ==================== -->
+    <div class="a4-page">
+        
+        <!-- Header -->
+        <div class="report-header">
+            <div class="header-logo px-4">
+                <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 55px; filter: brightness(0) invert(1); margin: 0;">
+            </div>
+            <div class="header-center-tag">
+                <i class="bi bi-shield-check text-darkblue"></i> تقرير احترافي مدعوم بالتحليل العلمي
+            </div>
+            <div class="header-badge">
+                الصفحة 1 من 2
+            </div>
+        </div>
+
+        <h1 class="report-main-title">تقرير النتائج الشخصية والمهنية</h1>
+        <p class="report-subtitle">تقرير احترافي يساعدك على فهم نتائجك واتخاذ قرارات تطوير أكثر وضوحاً.</p>
+
+        <div class="page-padding">
+            <div class="row gx-4 mb-4">
+                <!-- Sidebar -->
+                <div class="col-4">
+                    <div class="user-info-card">
+                        <div class="info-row">
+                            <div class="info-icon-box"><i class="bi bi-person-fill"></i></div>
+                            <div class="info-text-box">
+                                <div class="info-label">اسم المستفيد</div>
+                                <div class="info-value">{{ auth()->user()->name }}</div>
                             </div>
                         </div>
-                        <div class="col-4 col-md-12">
-                            <div class="stats-box blue">
-                                <div class="icon"><i class="bi bi-pie-chart"></i></div>
-                                <div class="text-muted small mb-1">النسبة</div>
-                                <div class="fs-5 fw-bold text-navy">{{ $pct }}%</div>
+                        <div class="info-row">
+                            <div class="info-icon-box"><i class="bi bi-clipboard2-data-fill"></i></div>
+                            <div class="info-text-box">
+                                <div class="info-label">اسم المقياس</div>
+                                <div class="info-value">{{ $assessment->title_ar }}</div>
                             </div>
                         </div>
-                        <div class="col-4 col-md-12">
-                            <div class="stats-box">
-                                <div class="icon"><i class="bi bi-bar-chart"></i></div>
-                                <div class="text-muted small mb-1">المستوى</div>
-                                <div class="fs-5 fw-bold" style="color: {{ $mainLvl['color'] }}">{{ $mainLvl['label'] }}</div>
+                        <div class="info-row">
+                            <div class="info-icon-box"><i class="bi bi-calendar-event-fill"></i></div>
+                            <div class="info-text-box">
+                                <div class="info-label">تاريخ التنفيذ</div>
+                                <div class="info-value">{{ $result->created_at->format('d M Y') }}</div>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-icon-box"><i class="bi bi-tags-fill"></i></div>
+                            <div class="info-text-box">
+                                <div class="info-label">رقم التقرير</div>
+                                <div class="info-value">VR-{{ strtoupper(substr($result->id, 0, 8)) }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Central Circle -->
-                <div class="col-md-4 text-center">
-                    <svg class="circular-chart" viewBox="0 0 36 36">
-                        <path class="circle-bg" d="M18 2.0845 a15.9155 15.9155 0 0 1 0 31.831 a15.9155 15.9155 0 0 1 0 -31.831"/>
-                        <path class="circle" stroke="{{ $mainLvl['color'] }}" stroke-dasharray="{{ $dashArray }}" d="M18 2.0845 a15.9155 15.9155 0 0 1 0 31.831 a15.9155 15.9155 0 0 1 0 -31.831"/>
-                        <text x="18" y="20.35" class="percentage">{{ $pct }}%</text>
-                    </svg>
-                    <div class="mt-3">
-                        <span class="fs-5 fw-bold" style="color: {{ $mainLvl['color'] }}">مستوى {{ $mainLvl['label'] }}</span>
-                    </div>
-                </div>
-
-                <!-- Title & Description -->
-                <div class="col-md-4 text-center text-md-end mb-4 mb-md-0">
-                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3 overflow-hidden shadow-sm" style="width:75px; height:75px; border: 2px solid #e2e8f0; background: #fff;">
-                        <img src="{{ asset('images/dashboard/' . $imageName) }}" alt="{{ $assessment->title_ar }}" style="width:100%; height:100%; object-fit:cover;">
-                    </div>
-                    <h2 class="fw-bold text-navy mb-2">{{ $assessment->title_ar }}</h2>
-                    <p class="text-muted small mb-3">نتيجتك في اختبار {{ $assessment->title_ar }}</p>
-                    @if($recommendation && $recommendation->description_ar)
-                        <div class="text-secondary markdown-content" style="font-size: 0.9rem; line-height: 1.6; text-align: right;">
-                            {!! Str::markdown($recommendation->description_ar) !!}
+                <!-- Overall & Summary -->
+                <div class="col-8">
+                    <!-- Score Card -->
+                    <div class="overall-result-box">
+                        <div class="result-header">
+                            <div>
+                                <div class="result-title">نتيجتك العامة</div>
+                                <div class="level-badge">{{ $isHighestDimension ? 'النمط السائد:' : 'مستوى الجاهزية:' }} {{ $mainLvl['label'] }}</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="result-score-large">{{ $pct }}</span>
+                                <span class="result-score-max">من 100</span>
+                            </div>
                         </div>
-                    @else
-                        <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.6;">
-                            تشير نتيجتك إلى أنك تمتلك مستوى {{ $mainLvl['label'] }} في {{ $assessment->category }}.
+                        
+                        <!-- Progress Bar -->
+                        <div class="progress-container">
+                            @php
+                                // Calculate pin position (RTL means 0% is right, 100% is left)
+                                // In HTML RTL, left is right. We use right: X%
+                                $pinPos = $pct; 
+                            @endphp
+                            <div class="progress-pin text-darkblue" style="right: {{ $pinPos }}%;"><i class="bi bi-geo-alt-fill"></i></div>
+                            <div class="progress-track">
+                                <div class="progress-segment" style="background-color: #ef4444;"></div>
+                                <div class="progress-segment" style="background-color: #f97316;"></div>
+                                <div class="progress-segment" style="background-color: #eab308;"></div>
+                                <div class="progress-segment" style="background-color: #22c55e;"></div>
+                                <div class="progress-segment" style="background-color: #16a34a;"></div>
+                            </div>
+                            <div class="progress-labels">
+                                <div class="progress-label">ضعيف</div>
+                                <div class="progress-label">متوسط</div>
+                                <div class="progress-label">جيد</div>
+                                <div class="progress-label">متقدم</div>
+                                <div class="progress-label">متميز</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Card -->
+                    <div class="summary-card">
+                        <div class="summary-title">
+                            <div class="summary-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
+                            ملخص التقرير
+                        </div>
+                        <p class="summary-text">
+                            {{ $parsedRecommendation }}
                         </p>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Dimensions Section -->
-    <div class="row g-4 mb-4">
-        <!-- Radar Chart -->
-        <div class="col-lg-5">
-            <div class="card-custom h-100 p-4">
-                <h5 class="fw-bold text-navy text-center mb-4">نظرة عامة على الأبعاد</h5>
-                <div style="position: relative; height: 300px; width: 100%;">
-                    <canvas id="radarChart"></canvas>
-                </div>
-                <div class="text-center text-muted mt-4" style="font-size: 0.8rem;">
-                    كلما اتسعت المساحة المظللة، كان مستواك أعلى بشكل عام
-                </div>
-            </div>
-        </div>
-        
-        <!-- Dimensions Detail -->
-        <div class="col-lg-7">
-            <div class="card-custom h-100 p-4">
-                <h5 class="fw-bold text-navy text-center mb-4">تفصيل الأبعاد</h5>
-                @foreach($result->dimensionScores as $idx => $ds)
-                    @php
-                        $dPct = $ds->max_score > 0 ? round($ds->score / $ds->max_score * 100) : 0;
-                        $dLvlKey = in_array($ds->level, ['high','medium','low']) ? $ds->level : 'low';
-                        $dLvl = $lvlData[$dLvlKey];
-                        $icon = $genericIcons[$idx % count($genericIcons)];
-                        $interpretation = $ds->dimension->interpretations->where('level', $ds->level)->first();
-                    @endphp
-                    <div class="dim-card">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="dim-icon me-3"><i class="bi {{ $icon }}"></i></div>
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <h6 class="fw-bold m-0 text-navy">{{ $ds->dimension->name_ar }}</h6>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="badge bg-{{ $dLvl['class'] }}-subtle text-{{ $dLvl['class'] }} border border-{{ $dLvl['class'] }}-subtle" style="font-size:0.7rem;">{{ $dLvl['label'] }}</span>
-                                        <span class="text-muted small" dir="ltr">{{ $ds->score }}/{{ $ds->max_score }}</span>
-                                    </div>
-                                </div>
-                                <div class="dim-progress-bg">
-                                    <div class="dim-progress-bar" style="width: {{ $dPct }}%; background-color: {{ $dLvl['color'] }};"></div>
-                                </div>
-                            </div>
-                        </div>
-                        @if($interpretation)
-                            <div class="text-muted ps-5 ms-3 markdown-content mt-2" style="font-size: 0.85rem; line-height: 1.5; text-align: right;">
-                                {!! Str::markdown($interpretation->interpretation_text_ar) !!}
-                            </div>
-                        @endif
                     </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-
-    <!-- Strengths & Weaknesses -->
-    <div class="row g-4 mb-4">
-        <!-- Weaknesses -->
-        <div class="col-md-6">
-            <div class="card-custom h-100 p-4" style="background: #fffcfc; border-color: #fee2e2;">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold m-0" style="color: #ef4444;">الجوانب التي تحتاج للتطوير</h5>
-                    <i class="bi bi-graph-up-arrow fs-4 text-danger opacity-50"></i>
                 </div>
-                <ul class="sw-list weaknesses">
-                    @forelse($weaknesses as $w)
-                        <li>{{ $w }}</li>
-                    @empty
-                        <li class="text-muted">لا توجد جوانب تحتاج لتطوير عاجل، استمر في أداءك المتميز!</li>
-                    @endforelse
-                </ul>
             </div>
-        </div>
-        
-        <!-- Strengths -->
-        <div class="col-md-6">
-            <div class="card-custom h-100 p-4" style="background: #f0fdf4; border-color: #dcfce3;">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold m-0" style="color: #10b981;">نقاط القوة لديك</h5>
-                    <i class="bi bi-trophy fs-4 text-success opacity-50"></i>
-                </div>
-                <ul class="sw-list strengths">
-                    @forelse($strengths as $s)
-                        <li>{{ $s }}</li>
-                    @empty
-                        <li class="text-muted">هناك دائمًا فرصة لاكتشاف وتنمية نقاط قوتك بشكل أعمق.</li>
-                    @endforelse
-                </ul>
-            </div>
-        </div>
-    </div>
 
-    <!-- Footer CTA -->
-    <div class="footer-cta d-flex flex-column flex-md-row justify-content-between align-items-center no-print">
-        <div class="d-flex align-items-center mb-3 mb-md-0 position-relative z-1">
-            <div class="me-3 fs-1 text-warning"><i class="bi bi-gift"></i></div>
+            <!-- Radar & Strengths -->
+            @if(count($radarLabels) > 1)
+            <div class="row gx-4 mb-4">
+                @if(count($radarLabels) >= 3)
+                <div class="col-6">
+                    <div class="radar-card">
+                        <div class="section-icon-title">مستوى المهارات</div>
+                        <div style="position: relative; height: 250px; width: 100%;">
+                            <canvas id="skillsRadar"></canvas>
+                        </div>
+                        <div class="d-flex justify-content-center gap-3 mt-3" style="font-size:0.8rem;">
+                            <span class="text-danger"><i class="bi bi-circle-fill"></i> ضعيف</span>
+                            <span class="text-warning"><i class="bi bi-circle-fill"></i> متوسط</span>
+                            <span class="text-success"><i class="bi bi-circle-fill"></i> جيد</span>
+                            <span style="color:#16a34a;"><i class="bi bi-circle-fill"></i> متقدم</span>
+                            <span style="color:#15803d;"><i class="bi bi-circle-fill"></i> متميز</span>
+                        </div>
+                    </div>
+                </div>
+                @endif
+                <div class="{{ count($radarLabels) >= 3 ? 'col-6' : 'col-12' }}">
+                    <div class="strengths-card">
+                        <div class="section-icon-title">نقاط القوة <i class="bi bi-hand-thumbs-up-fill text-success" style="font-size:1.5rem;"></i></div>
+                        <ul class="strengths-list">
+                            @forelse($strengths as $st)
+                            <li>
+                                <div class="strengths-icon"><i class="bi bi-people-fill"></i></div>
+                                <div class="strengths-text">
+                                    <h6>{{ $st->title }}</h6>
+                                    <p>{{ $st->desc }}</p>
+                                </div>
+                            </li>
+                            @empty
+                            <li>
+                                <div class="strengths-icon bg-secondary"><i class="bi bi-info"></i></div>
+                                <div class="strengths-text">
+                                    <h6 class="text-secondary">لا يوجد</h6>
+                                    <p>لا توجد نقاط قوة بارزة حالياً.</p>
+                                </div>
+                            </li>
+                            @endforelse
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Opportunities (Footer of Page 1 Content) -->
+            <div class="opp-card">
+                <div class="section-icon-title text-gold"><i class="bi bi-bar-chart-fill"></i> فرص التطوير</div>
+                
+                @if(count($radarLabels) > 1 && count($weaknesses) > 0)
+                <div class="row">
+                    @forelse(array_slice($weaknesses, 0, 4) as $wk)
+                    <div class="col-3 opp-item text-center px-3" style="border-left: 1px solid #fde68a;">
+                        <h6>{{ $wk->title }}</h6>
+                        <p>{{ $wk->desc }}</p>
+                    </div>
+                    @empty
+                    @endforelse
+                </div>
+                @endif
+
+                @if(count($improvementPoints) > 0)
+                <div class="{{ (count($radarLabels) > 1 && count($weaknesses) > 0) ? 'mt-4 pt-3' : '' }}" style="{{ (count($radarLabels) > 1 && count($weaknesses) > 0) ? 'border-top: 1px dashed #fde68a;' : '' }}">
+                    <ul style="padding-right: 20px; margin-bottom: 0; font-size: 0.95rem; color: #475569; line-height: 1.6;">
+                        @foreach($improvementPoints as $pt)
+                            <li style="margin-bottom: 6px;"><i class="bi bi-check2-circle text-gold me-2"></i> {{ $pt }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+                
+                @if(count($improvementPoints) == 0 && (count($radarLabels) <= 1 || count($weaknesses) == 0))
+                <div class="text-center text-muted">لا توجد مجالات عاجلة للتطوير.</div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Footer Page 1 -->
+        <div class="footer-bar">
+            <div>نتائج هذا التقرير سرية وتستخدم لأغراض التطوير فقط<br><span style="color:#94a3b8;">جميع الحقوق محفوظة &copy; {{ date('Y') }} دار الرؤى للتدريب والتطوير</span></div>
             <div>
-                <h4 class="fw-bold mb-1 text-white">استثمر في نفسك اليوم</h4>
-                <p class="mb-0 text-white-50 small">ابدأ رحلتك التطويرية وحقق أفضل نسخة من نفسك</p>
+                <i class="bi bi-award-fill footer-medal"></i>
             </div>
         </div>
-        <div class="d-flex gap-2 position-relative z-1">
-            <a href="{{ route('dashboard') }}" class="btn bg-white text-navy fw-bold px-4">
-                <i class="bi bi-house me-1"></i> العودة للرئيسية
-            </a>
-            <button onclick="window.print()" class="btn btn-warning fw-bold px-4 text-white">
-                <i class="bi bi-file-pdf me-1"></i> تحميل تقرير النتيجة
-            </button>
+    </div>
+
+
+    <!-- ==================== PAGE 2 ==================== -->
+    <div class="a4-page">
+        <!-- Header -->
+        <div class="p2-header">
+            <div class="p2-badge">الصفحة 2 من 2</div>
+            <div class="p2-logo-box px-4">
+                <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 45px; filter: brightness(0) invert(1); margin: 0;">
+            </div>
+        </div>
+
+        <div class="page-padding">
+            <h2 class="p2-main-title"><i class="bi bi-bullseye text-darkblue"></i> ماذا تعني هذه النتيجة؟</h2>
+            <p class="p2-subtitle">
+                تعكس نتيجتك امتلاكك لمجموعة قوية من المهارات التي تؤهلك لتحقيق الأهداف بكفاءة. 
+                لتحقيق أقصى استفادة من إمكاناتك، نوصيك بالتركيز على تطوير المهارات المحددة لتعزيز تأثيرك في بيئة العمل.
+            </p>
+
+            <!-- Certificates -->
+            <div class="p2-section-card bg-light-blue">
+                <div class="p2-section-title"><i class="bi bi-award-fill text-darkblue"></i> الشهادات الاحترافية المناسبة</div>
+                <div class="p2-section-subtitle">قد تكون مناسبة لك بناءً على نتائج هذا المقياس</div>
+                
+                <div class="row gx-3">
+                    @foreach(array_slice($certs, 0, 3) as $cert)
+                    <div class="col-4">
+                        <div class="cert-card">
+                            <div class="cert-icon bg-gold">{{ is_object($cert) ? (isset($cert->logo) ? $cert->logo : substr($cert->title,0,3)) : 'C' }}</div>
+                            <h6>{{ is_object($cert) ? $cert->title : $cert }}</h6>
+                            <p>{{ is_object($cert) ? $cert->desc : 'شهادة احترافية.' }}</p>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Programs -->
+            <div class="p2-section-card bg-light-gray border-light-blue">
+                <div class="p2-section-title"><i class="bi bi-mortarboard-fill text-darkblue"></i> البرامج التدريبية المقترحة</div>
+                
+                <div class="row gx-3 mt-4">
+                    @foreach(array_slice($progs, 0, 8) as $prog)
+                    <div class="col-3 mb-3">
+                        <div class="prog-card border-0 shadow-sm h-100">
+                            <div class="prog-icon"><i class="bi {{ is_object($prog) ? $prog->icon : 'bi-journal' }}"></i></div>
+                            <h6>{{ is_object($prog) ? $prog->title : $prog }}</h6>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- 30 Day Plan -->
+            <div class="p2-section-card bg-light-blue" style="margin-bottom:0;">
+                <div class="p2-section-title"><i class="bi bi-calendar3 text-darkblue"></i> خطة تطوير مختصرة (30 يوماً)</div>
+                
+                <div class="d-flex justify-content-between align-items-stretch mt-4" style="gap:10px;">
+                    <!-- Step 1 -->
+                    <div style="flex:1;">
+                        <div class="plan-step shadow-sm border-0">
+                            <h6>الأسبوع الأول</h6>
+                            <p>{{ $planSteps[0] ?? 'تحديد الأولويات ووضع خطة يومية.' }}</p>
+                            <div class="plan-step-icon"><i class="bi bi-clipboard-check"></i></div>
+                        </div>
+                    </div>
+                    <div class="plan-arrow"><i class="bi bi-chevron-left"></i></div>
+                    
+                    <!-- Step 2 -->
+                    <div style="flex:1;">
+                        <div class="plan-step shadow-sm border-0">
+                            <h6>الأسبوع الثاني</h6>
+                            <p>{{ $planSteps[1] ?? 'تعلم تقنيات جديدة للعمل.' }}</p>
+                            <div class="plan-step-icon"><i class="bi bi-handshake"></i></div>
+                        </div>
+                    </div>
+                    <div class="plan-arrow"><i class="bi bi-chevron-left"></i></div>
+                    
+                    <!-- Step 3 -->
+                    <div style="flex:1;">
+                        <div class="plan-step shadow-sm border-0">
+                            <h6>الأسبوع الثالث</h6>
+                            <p>{{ $planSteps[2] ?? 'تطبيق الاستراتيجيات عملياً.' }}</p>
+                            <div class="plan-step-icon"><i class="bi bi-person-lines-fill"></i></div>
+                        </div>
+                    </div>
+                    <div class="plan-arrow"><i class="bi bi-chevron-left"></i></div>
+                    
+                    <!-- Step 4 -->
+                    <div style="flex:1;">
+                        <div class="plan-step shadow-sm border-0">
+                            <h6>الأسبوع الرابع</h6>
+                            <p>{{ $planSteps[3] ?? 'مراجعة التقدم وتقييم النتائج.' }}</p>
+                            <div class="plan-step-icon"><i class="bi bi-bar-chart-steps"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Page 2 -->
+        <div class="quote-footer w-100 d-flex align-items-center">
+            <!-- Right side (Logo) -->
+            <div class="d-flex align-items-center" style="width: 25%;">
+                <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 55px; filter: brightness(0) invert(1);">
+            </div>
+            
+            <!-- Center (Message) -->
+            <div class="text-center px-4" style="flex-grow: 1;">
+                <h5 class="text-white fw-bold mb-2">رسالتنا لك</h5>
+                <p class="mb-0 mx-auto" style="color: #cbd5e1; font-size: 0.95rem; max-width: 600px; line-height: 1.6;">
+                    نتائج هذا المقياس تمثل نقطة بداية لفهم قدراتك. وننصحك بالاستفادة منها في وضع خطة تطوير مستمرة تتناسب مع أهدافك المهنية والشخصية.
+                </p>
+            </div>
+            
+            <!-- Left side (Empty to balance flexbox) -->
+            <div style="width: 25%;"></div>
         </div>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Render Radar Chart
-    const ctx = document.getElementById('radarChart').getContext('2d');
-    const labels = {!! json_encode($chartLabels) !!};
-    const data = {!! json_encode($chartData) !!};
-    
-    new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'مستوى البعد',
-                data: data,
-                backgroundColor: 'rgba(245, 158, 11, 0.2)',
-                borderColor: '#f59e0b',
-                pointBackgroundColor: '#1a2b56',
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: '#1a2b56',
-                borderWidth: 2,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                r: {
-                    min: 0,
-                    max: 3,
-                    angleLines: { color: 'rgba(0, 0, 0, 0.05)' },
-                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
-                    pointLabels: {
-                        font: { family: 'Noto Kufi Arabic', size: 11, weight: 'bold' },
-                        color: '#475569'
-                    },
-                    ticks: {
-                        display: false,
-                        stepSize: 1
+    const ctx = document.getElementById('skillsRadar');
+    if(ctx) {
+        const labels = {!! json_encode($radarLabels) !!};
+        const data = {!! json_encode($radarData) !!};
+        
+        // If there are less than 3 dimensions, a radar chart won't render a polygon. Use bar instead.
+        const chartType = labels.length < 3 ? 'bar' : 'radar';
+        
+        const config = {
+            type: chartType,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'النسبة المئوية',
+                    data: data,
+                    backgroundColor: chartType === 'bar' ? 'rgba(30, 58, 138, 0.8)' : 'rgba(30, 58, 138, 0.2)',
+                    borderColor: 'rgba(30, 58, 138, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(30, 58, 138, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(30, 58, 138, 1)'
+                }]
+            },
+            options: {
+                layout: { padding: 35 },
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        display: false
                     }
                 }
             },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1a2b56',
-                    titleFont: { family: 'Noto Kufi Arabic' },
-                    bodyFont: { family: 'Noto Kufi Arabic' },
-                    rtl: true,
-                    callbacks: {
-                        label: function(context) {
-                            const val = context.raw;
-                            if(val === 3) return ' مرتفع';
-                            if(val === 2) return ' متوسط';
-                            return ' منخفض';
-                        }
-                    }
+            plugins: [ChartDataLabels]
+        };
+
+        if (chartType === 'radar') {
+            config.options.scales = {
+                r: {
+                    angleLines: { color: '#e2e8f0' },
+                    grid: { color: '#e2e8f0' },
+                    pointLabels: {
+                        font: { family: 'Tajawal', size: 11, weight: 'bold' },
+                        color: '#0f172a'
+                    },
+                    ticks: { display: false, min: 0, max: 100, stepSize: 20 }
                 }
-            }
+            };
+        } else {
+            config.options.scales = {
+                y: {
+                    min: 0, max: 100,
+                    grid: { color: '#e2e8f0' },
+                    ticks: { font: { family: 'Tajawal' } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Tajawal', weight: 'bold' }, color: '#0f172a' }
+                }
+            };
         }
-    });
+
+        new Chart(ctx, config);
+    }
 });
 </script>
 @endsection

@@ -85,22 +85,16 @@ class ExamResultService
                 }
                 
                 if ($usePercentageFallback) {
-                    $dimHighPct = $firstInterp->high_threshold > 0 ? $firstInterp->high_threshold : 70;
-                    $dimLowPct = $firstInterp->low_threshold > 0 ? $firstInterp->low_threshold : 33;
-                    $dimHighThreshold = (int) ($dimMax * ($dimHighPct / 100));
-                    $dimLowThreshold = (int) ($dimMax * ($dimLowPct / 100));
-                    $dimLevel = $this->determineLevel($dimScore, $dimHighThreshold, $dimLowThreshold);
+                    $dimLevel = $this->determineLevel($dimScore, $dimMax);
                 }
             } else {
                 // Old percentage fallback
-                $dimHighThreshold = (int) ($dimMax * 0.70);
-                $dimLowThreshold = (int) ($dimMax * 0.33);
-                $dimLevel = $this->determineLevel($dimScore, $dimHighThreshold, $dimLowThreshold);
+                $dimLevel = $this->determineLevel($dimScore, $dimMax);
             }
 
             if ($dimScore > $highestDimScore) {
                 $highestDimScore = $dimScore;
-                $highestDimName = trim(str_replace('محور', '', $dimension->title_ar));
+                $highestDimName = trim(str_replace('محور', '', $dimension->name_ar));
             }
 
             $dimensionScoresData[] = [
@@ -141,17 +135,10 @@ class ExamResultService
                 
                 // Fallback if thresholds were zero or missing (treat as old percentage logic)
                 if ($level === null && $usePercentageFallback) {
-                    $firstRec = $assessment->recommendations->first();
-                    $highPct = $firstRec->high_threshold > 0 ? $firstRec->high_threshold : 70;
-                    $lowPct = $firstRec->low_threshold > 0 ? $firstRec->low_threshold : 33;
-                    $highThreshold = (int) ($maxScore * ($highPct / 100));
-                    $lowThreshold = (int) ($maxScore * ($lowPct / 100));
-                    $level = $this->determineLevel($totalScore, $highThreshold, $lowThreshold);
+                    $level = $this->determineLevel($totalScore, $maxScore);
                 }
             } else {
-                $highThreshold = (int) ($maxScore * 0.70);
-                $lowThreshold = (int) ($maxScore * 0.33);
-                $level = $this->determineLevel($totalScore, $highThreshold, $lowThreshold);
+                $level = $this->determineLevel($totalScore, $maxScore);
             }
         } elseif ($scoringType === 'dimension_only') {
             $level = null;
@@ -196,15 +183,17 @@ class ExamResultService
         return max(0, $maxOptionScore - $earnedScore);
     }
 
-    private function determineLevel(int $score, int $highThreshold, int $lowThreshold): string
+    private function determineLevel(int $score, int $maxScore): string
     {
-        if ($score >= $highThreshold) {
-            return 'high';
-        }
-        if ($score <= $lowThreshold) {
-            return 'low';
-        }
-
-        return 'medium';
+        if ($maxScore <= 0) return 'weak';
+        
+        $pct = ($score / $maxScore) * 100;
+        
+        if ($pct >= 80) return 'excellent';
+        if ($pct >= 60) return 'advanced';
+        if ($pct >= 40) return 'good';
+        if ($pct >= 20) return 'average';
+        
+        return 'weak';
     }
 }

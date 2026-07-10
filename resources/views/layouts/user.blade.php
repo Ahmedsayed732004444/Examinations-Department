@@ -84,11 +84,7 @@
         <!-- Logo -->
         <a class="navbar-brand text-decoration-none" href="{{ route('dashboard') }}">
             <div class="d-flex align-items-center">
-                <i class="bi bi-bezier2 me-2 fs-3 text-navy"></i>
-                <div class="d-flex flex-column lh-1">
-                    <div class="fw-bold text-navy fs-5">دار الرؤى</div>
-                    <div class="text-muted" style="font-size: 0.6rem; font-weight:600;">للتدريب</div>
-                </div>
+                <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 48px;">
             </div>
         </a>
 

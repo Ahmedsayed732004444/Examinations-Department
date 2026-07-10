@@ -13,6 +13,25 @@
             @method('PUT')
 
             <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-graph-up me-2"></i> إحصائيات لوحة تحكم المستخدم</h5>
+            
+            <div class="mb-4 bg-light p-3 rounded border">
+                <label class="form-label fw-bold mb-3">طريقة عرض الإحصائيات (في الرئيسية)</label>
+                <div class="d-flex gap-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="stats_mode" id="modeManual" value="manual" {{ ($settings['stats_mode'] ?? 'manual') == 'manual' ? 'checked' : '' }}>
+                        <label class="form-check-label fw-medium" for="modeManual">
+                            أرقام يدوية (تسويقية)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="stats_mode" id="modeAuto" value="auto" {{ ($settings['stats_mode'] ?? 'manual') == 'auto' ? 'checked' : '' }}>
+                        <label class="form-check-label fw-medium text-primary" for="modeAuto">
+                            أرقام تلقائية (حقيقية من قاعدة البيانات)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             <div class="row mb-3">
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">مستخدم من الأفراد والجهات</label>

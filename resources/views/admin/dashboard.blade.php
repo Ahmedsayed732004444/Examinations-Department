@@ -82,10 +82,10 @@
                 @forelse($recentSessions as $session)
                 <tr>
                     <td>
-                        <div class="fw-medium">{{ $session->user->name }}</div>
-                        <div class="text-muted small">{{ $session->user->email }}</div>
+                        <div class="fw-medium">{{ $session->user?->name ?? 'مستخدم محذوف' }}</div>
+                        <div class="text-muted small">{{ $session->user?->email ?? '-' }}</div>
                     </td>
-                    <td>{{ $session->assessment->title_ar }}</td>
+                    <td>{{ $session->assessment?->title_ar ?? 'مقياس محذوف' }}</td>
                     <td class="text-muted small">{{ $session->completed_at?->format('Y/m/d H:i') }}</td>
                     <td>
                         @if($session->result)

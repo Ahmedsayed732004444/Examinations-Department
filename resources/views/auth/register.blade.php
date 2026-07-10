@@ -14,8 +14,8 @@
     <div class="row justify-content-center">
         <div class="col-md-5 col-lg-4">
             <div class="text-center mb-4">
-                <h2 class="fw-bold text-primary"><i class="bi bi-stars me-2"></i>دار الرؤى</h2>
-                <p class="text-muted">إنشاء حساب جديد</p>
+                <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 70px; margin-bottom: 10px;">
+                <p class="text-muted">نظام مقاييس التميز الشخصي</p>
             </div>
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
@@ -52,6 +52,24 @@
                             <label class="form-label small fw-medium">رقم الهوية الوطنية / الإقامة</label>
                             <input type="text" name="national_id" class="form-control @error('national_id') is-invalid @enderror"
                                 value="{{ old('national_id') }}" placeholder="1xxxxxxxxx" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">النوع</label>
+                            <select name="gender" class="form-control @error('gender') is-invalid @enderror" required>
+                                <option value="" disabled {{ old('gender') ? '' : 'selected' }}>اختر النوع</option>
+                                <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>ذكر</option>
+                                <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>أنثى</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">المؤهل</label>
+                            <input type="text" name="qualification" class="form-control @error('qualification') is-invalid @enderror"
+                                value="{{ old('qualification') }}" placeholder="مثال: بكالوريوس" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">الجنسية</label>
+                            <input type="text" name="nationality" class="form-control @error('nationality') is-invalid @enderror"
+                                value="{{ old('nationality') }}" placeholder="مثال: سعودي" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-medium">كلمة المرور</label>

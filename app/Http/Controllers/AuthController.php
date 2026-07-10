@@ -46,6 +46,9 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users',
             'national_id' => 'required|string|unique:users|max:20',
             'phone' => 'required|string|unique:users|max:20',
+            'gender' => 'required|string|in:male,female',
+            'qualification' => 'required|string|max:255',
+            'nationality' => 'required|string|max:255',
             'password' => 'required|min:8|confirmed',
         ]);
 
@@ -54,6 +57,9 @@ class AuthController extends Controller
             'email' => $data['email'],
             'national_id' => $data['national_id'],
             'phone' => $data['phone'],
+            'gender' => $data['gender'],
+            'qualification' => $data['qualification'],
+            'nationality' => $data['nationality'],
             'password' => Hash::make($data['password']),
             'role' => 'user',
         ]);
