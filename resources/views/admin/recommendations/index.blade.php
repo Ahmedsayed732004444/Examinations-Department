@@ -33,11 +33,27 @@
                             <div class="border border-{{ $lc }} rounded-3 p-3 h-100">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="badge bg-{{ $lc }}-subtle text-{{ $lc }} border border-{{ $lc }}-subtle">{{ $ll }}</span>
-                                    <button class="btn btn-sm btn-outline-danger btn-delete-rec"
-                                            data-id="{{ $rec->id }}"
-                                            data-url="{{ route('admin.recommendations.destroy', $rec->id) }}">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-primary btn-edit-rec"
+                                                data-id="{{ $rec->id }}"
+                                                data-assessment="{{ $rec->assessment_id }}"
+                                                data-level="{{ $rec->level }}"
+                                                data-high="{{ $rec->high_threshold }}"
+                                                data-low="{{ $rec->low_threshold }}"
+                                                data-desc="{{ $rec->description_ar }}"
+                                                data-certificates_intro="{{ $rec->certificates_intro_ar }}"
+                                                data-certificates="{{ $rec->certificates_ar }}"
+                                                data-programs="{{ is_array($rec->programs_ar) ? implode("\n", $rec->programs_ar) : $rec->programs_ar }}"
+                                                data-plan_intro="{{ $rec->plan_30_days_intro_ar }}"
+                                                data-plan="{{ $rec->plan_30_days_ar }}">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger btn-delete-rec"
+                                                data-id="{{ $rec->id }}"
+                                                data-url="{{ route('admin.recommendations.destroy', $rec->id) }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 <p class="small text-muted mb-2">{{ Str::limit($rec->description_ar, 100) }}</p>
                                 <div class="small text-muted">
@@ -64,6 +80,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <input type="hidden" id="r-id" value="">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label small fw-medium">المقياس *</label>
@@ -97,10 +114,27 @@
                             placeholder="وصف يظهر للمستخدم بناءً على مستواه..."></textarea>
                     </div>
                     <div class="col-12">
+                        <label class="form-label small fw-medium">الجملة الافتتاحية للشهادات (اختياري)</label>
+                        <input type="text" class="form-control" id="r-certificates_intro_ar" placeholder="مثال: من أهم الشهادات التي ننصحك بالحصول عليها:">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">الشهادات الاحترافية المناسبة *</label>
+                        <textarea class="form-control json-certificates-data" id="r-certificates_ar" rows="3"
+                            placeholder="إضافة شهادة..."></textarea>
+                    </div>
+                    <div class="col-12">
                         <label class="form-label small fw-medium">البرامج والتوصيات المقترحة *</label>
-                        <textarea class="form-control" id="r-programs_ar" rows="5"
-                            placeholder="برنامج أول&#10;برنامج ثانٍ&#10;برنامج ثالث&#10;(برنامج في كل سطر)"></textarea>
-                        <div class="form-text">أدخل كل برنامج أو توصية في سطر منفصل.</div>
+                        <textarea class="form-control json-programs-data" id="r-programs_ar" rows="5"
+                            placeholder="إضافة برنامج/توصية..."></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">الجملة الافتتاحية لخطة التطوير (اختياري)</label>
+                        <input type="text" class="form-control" id="r-plan_30_days_intro_ar" placeholder="مثال: نقترح عليك خلال الـ 30 يوماً القادمة اتباع الخطوات التالية:">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">خطة تطوير (30 يوماً) *</label>
+                        <textarea class="form-control json-plan-data" id="r-plan_30_days_ar" rows="3"
+                            placeholder="إضافة خطوة..."></textarea>
                     </div>
                 </div>
             </div>
@@ -118,13 +152,25 @@
 
 @push('scripts')
 <script>
+    window.APP_ICONS = @json($icons ?? []);
+</script>
+<script>
 $('#btn-save-rec').on('click', function() {
     const btn = $(this);
+    let certs = []; try { certs = JSON.parse($('#r-certificates_ar').val() || '[]'); } catch(e){}
+    let progs = []; try { progs = JSON.parse($('#r-programs_ar').val() || '[]'); } catch(e){}
+    let plan = []; try { plan = JSON.parse($('#r-plan_30_days_ar').val() || '[]'); } catch(e){}
+
     const payload = {
-        assessment_id:  $('#r-assessment_id').val(),
-        level:          $('#r-level').val(),
+        id: $('#r-id').val() || null,
+        assessment_id: $('#r-assessment_id').val(),
+        level: $('#r-level').val(),
         description_ar: $('#r-description_ar').val().trim(),
-        programs_ar:    $('#r-programs_ar').val().trim(),
+        certificates_intro_ar: $('#r-certificates_intro_ar').val().trim(),
+        certificates_ar: certs,
+        programs_ar: progs,
+        plan_30_days_intro_ar: $('#r-plan_30_days_intro_ar').val().trim(),
+        plan_30_days_ar: plan,
         high_threshold: parseInt($('#r-high_threshold').val()) || 0,
         low_threshold:  parseInt($('#r-low_threshold').val()) || 0,
     };
@@ -156,5 +202,51 @@ $(document).on('click', '.btn-delete-rec', function() {
     const url = $(this).data('url');
     confirmDelete('هل تريد حذف هذه التوصية؟', url, () => location.reload());
 });
+
+$(document).on('click', '.btn-edit-rec', function() {
+    const btn = $(this);
+    $('#r-id').val(btn.data('id') || '');
+    $('#r-assessment_id').val(btn.data('assessment'));
+    $('#r-level').val(btn.data('level'));
+    $('#r-high_threshold').val(btn.data('high'));
+    $('#r-low_threshold').val(btn.data('low'));
+    $('#r-description_ar').val(btn.data('desc'));
+    $('#r-certificates_intro_ar').val(btn.data('certificates_intro'));
+    $('#r-plan_30_days_intro_ar').val(btn.data('plan_intro'));
+    
+    $('#r-certificates_ar').val(JSON.stringify(btn.data('certificates')));
+    $('#r-programs_ar').val(JSON.stringify(btn.data('programs')));
+    $('#r-plan_30_days_ar').val(JSON.stringify(btn.data('plan')));
+    
+    $('.modal-title').text('تحديث التوصية');
+    new bootstrap.Modal(document.getElementById('recModal')).show();
+});
+
+$('[data-bs-target="#recModal"]').on('click', function() {
+    clearRecommendationModal();
+    $('.modal-title').text('إضافة / تحديث توصية');
+});
+
+function clearRecommendationModal() {
+    $('#r-id').val('');
+    $('#r-assessment_id').val('');
+    $('#r-level').val('');
+    $('#r-high_threshold').val('');
+    $('#r-low_threshold').val('');
+    $('#r-description_ar').val('');
+    $('#r-certificates_intro_ar').val('');
+    $('#r-plan_30_days_intro_ar').val('');
+    function clearJsonList(selector) {
+        const textarea = $(selector);
+        textarea.val('');
+        if (textarea.data('clearItems')) {
+            textarea.data('clearItems')();
+        }
+    }
+
+    clearJsonList('#r-certificates_ar');
+    clearJsonList('#r-programs_ar');
+    clearJsonList('#r-plan_30_days_ar');
+}
 </script>
 @endpush

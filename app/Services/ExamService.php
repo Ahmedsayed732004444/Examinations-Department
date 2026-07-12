@@ -184,16 +184,6 @@ class ExamService
      */
     public function getResult(ExamSession $session): array
     {
-        $result = $session->result;
-
-        if (! $result) {
-            $result = $this->resultService->calculate($session);
-        }
-
-        $result->load('dimensionScores.dimension.interpretations');
-        $assessment = $session->assessment()->with('recommendations')->first();
-        $recommendation = $assessment->recommendations->where('level', $result->level)->first();
-
-        return compact('result', 'assessment', 'recommendation');
+        return $this->resultService->getFormattedResult($session);
     }
 }

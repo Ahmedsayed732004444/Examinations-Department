@@ -19,7 +19,7 @@ class AssessmentRepository implements AssessmentRepositoryInterface
             $query->where('title_ar', 'like', '%' . $filters['search'] . '%');
         }
 
-        return $query->orderByDesc('created_at')->orderByDesc('id')->paginate($perPage);
+        return $query->orderByDesc('created_at')->paginate($perPage);
     }
 
     public function findWithRelations(string $id): Assessment
@@ -62,3 +62,24 @@ class AssessmentRepository implements AssessmentRepositoryInterface
         return $assessment->fresh();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

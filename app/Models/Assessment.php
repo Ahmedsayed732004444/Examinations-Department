@@ -16,19 +16,17 @@ class Assessment extends Model
         'description_en',
         'category',
         'type',
-        'time_limit_minutes',
+        'time_limit_min',
         'is_active',
         'created_by',
         'image_url',
-        'certificates_ar',
-        'programs_ar',
-        'plan_30_days_ar',
         'subtitle_ar',
         'scoring_type',
         'price',
         'rating',
         'rating_count',
         'hide_coupon_field',
+        'icon',
     ];
 
     protected $casts = [

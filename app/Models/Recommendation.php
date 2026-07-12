@@ -11,11 +11,20 @@ class Recommendation extends Model
 
     protected $fillable = [
         'assessment_id', 'level', 'description_ar',
-        'programs_ar', 'high_threshold', 'low_threshold',
+        'certificates_ar', 'certificates_intro_ar',
+        'programs_ar', 'programs_intro_ar', 'programs_outro_ar',
+        'plan_30_days_ar', 'plan_30_days_intro_ar',
+        'high_threshold', 'low_threshold',
     ];
 
     public function assessment()
     {
         return $this->belongsTo(Assessment::class);
     }
+
+    protected $casts = [
+        'certificates_ar' => 'array',
+        'programs_ar' => 'array',
+        'plan_30_days_ar' => 'array',
+    ];
 }

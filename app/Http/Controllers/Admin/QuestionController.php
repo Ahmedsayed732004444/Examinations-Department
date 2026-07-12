@@ -94,6 +94,7 @@ class QuestionController extends Controller
 
     public function assignDimension(Request $request, Question $question): JsonResponse
     {
+        $request->validate(['dimension_id' => 'nullable|uuid|exists:dimensions,id']);
         $this->questionService->assignDimension($question, $request->dimension_id ?: null);
 
         return response()->json(['success' => true, 'message' => 'تم تحديد البُعد.']);
@@ -101,7 +102,11 @@ class QuestionController extends Controller
 
     public function bulkAssignDimension(Request $request): JsonResponse
     {
-        $request->validate(['ids' => 'required|array', 'ids.*' => 'uuid']);
+        $request->validate([
+            'ids' => 'required|array', 
+            'ids.*' => 'uuid',
+            'dimension_id' => 'nullable|uuid|exists:dimensions,id'
+        ]);
         $this->questionService->bulkAssignDimension($request->ids, $request->dimension_id ?: null);
 
         return response()->json(['success' => true, 'message' => 'تم تعيين البُعد للأسئلة المحددة.']);

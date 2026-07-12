@@ -22,6 +22,13 @@ class RecommendationRepository implements RecommendationRepositoryInterface
 
     public function upsert(array $data): Recommendation
     {
+        if (!empty($data['id'])) {
+            /** @var Recommendation $rec */
+            $rec = Recommendation::findOrFail($data['id']);
+            $rec->update($data);
+            return $rec;
+        }
+
         /** @var Recommendation $rec */
         $rec = Recommendation::updateOrCreate(
             [

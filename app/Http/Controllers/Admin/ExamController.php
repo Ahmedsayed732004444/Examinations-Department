@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Assessment;
 use App\Models\Question;
 use App\Services\AssessmentService;
-use App\Services\QuestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,7 +14,6 @@ class ExamController extends Controller
 {
     public function __construct(
         private readonly AssessmentService $assessmentService,
-        private readonly QuestionService $questionService,
     ) {}
 
     public function create(): View
@@ -36,21 +34,25 @@ class ExamController extends Controller
             'question_ids.*' => 'uuid|exists:questions,id',
         ]);
 
-        $assessment = $this->assessmentService->create([
-            'title_ar' => $data['title_ar'],
-            'category' => $data['category'],
-            'description_ar' => $data['description_ar'] ?? null,
-            'time_limit_min' => $data['time_limit_min'] ?? null,
-            'dimensions' => [],
-        ]);
-
-        // Re-assign chosen questions to this assessment in order
-        foreach ($data['question_ids'] as $idx => $qId) {
-            Question::where('id', $qId)->update([
-                'assessment_id' => $assessment->id,
-                'order_index' => $idx,
+        $assessment = \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            $assessment = $this->assessmentService->create([
+                'title_ar' => $data['title_ar'],
+                'category' => $data['category'],
+                'description_ar' => $data['description_ar'] ?? null,
+                'time_limit_min' => $data['time_limit_min'] ?? null,
+                'dimensions' => [],
             ]);
-        }
+
+            // Re-assign chosen questions to this assessment in order
+            foreach ($data['question_ids'] as $idx => $qId) {
+                Question::where('id', $qId)->update([
+                    'assessment_id' => $assessment->id,
+                    'order_index' => $idx,
+                ]);
+            }
+            
+            return $assessment;
+        });
 
         return response()->json(['success' => true, 'message' => 'تم إنشاء الاختبار.', 'id' => $assessment->id]);
     }

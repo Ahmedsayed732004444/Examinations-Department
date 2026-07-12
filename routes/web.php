@@ -11,7 +11,7 @@ Route::get('/', fn () => redirect()->route('login'));
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1')->name('register.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // User routes
@@ -38,6 +38,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/assessments/{assessment}', [Admin\AssessmentController::class, 'destroy'])->name('assessments.destroy');
     Route::post('/assessments/{assessment}/toggle', [Admin\AssessmentController::class, 'toggle'])->name('assessments.toggle');
     Route::get('/assessments/{assessment}', [Admin\AssessmentController::class, 'show'])->name('assessments.show');
+    Route::get('/assessments/{assessment}/preview/{level}', [Admin\AssessmentController::class, 'previewResult'])->name('assessments.preview');
     Route::patch('/assessments/{assessment}/settings', [Admin\AssessmentController::class, 'updateSettings'])->name('assessments.settings');
 
     Route::get('/questions', [Admin\QuestionController::class, 'index'])->name('questions.index');
@@ -81,6 +82,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/statistics/export-csv', [Admin\StatisticsController::class, 'exportCsv'])->name('statistics.exportCsv');
 
     Route::resource('coupons', Admin\CouponController::class)->except(['show']);
+    Route::resource('icons', Admin\IconController::class)->only(['index', 'store', 'destroy']);
 
     Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');
     Route::get('/users/{user}/results', [Admin\UserController::class, 'userResults'])->name('users.results');

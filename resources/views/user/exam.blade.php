@@ -4,7 +4,179 @@
 @push('styles')
 <style>
 /* ── Layout ── */
-.exam-wrapper { max-width: 800px; margin: 0 auto; padding: 20px 15px 40px; }
+.exam-wrapper {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+}
+
+/* ── Intro Card ── */
+#intro-card {
+    border: 0;
+    border-radius: 24px;
+    background: #ffffff;
+    box-shadow: 0 20px 60px -10px rgba(26, 43, 86, 0.12);
+    overflow: hidden;
+}
+
+.intro-header {
+    background: linear-gradient(135deg, #1a2b56 0%, #2d4a8a 60%, #1e3a7e 100%);
+    padding: 48px 40px 56px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.intro-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+}
+
+.intro-header::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -40px;
+    width: 250px; height: 250px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+}
+
+.intro-icon-wrap {
+    width: 90px; height: 90px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    backdrop-filter: blur(4px);
+    border: 2px solid rgba(255,255,255,0.2);
+    position: relative; z-index: 1;
+}
+
+.intro-title {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.3;
+    position: relative; z-index: 1;
+}
+
+.intro-subtitle {
+    color: rgba(255,255,255,0.75);
+    font-size: 0.95rem;
+    margin: 10px 0 0;
+    position: relative; z-index: 1;
+}
+
+.intro-body {
+    padding: 40px;
+}
+
+/* Chips in header */
+.intro-chips {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    position: relative;
+    z-index: 1;
+}
+
+.intro-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.92);
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+
+.intro-chip i { font-size: 0.8rem; }
+
+/* Guidelines box */
+.intro-guidelines {
+    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+    border: 1px solid #bfdbfe;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 32px;
+}
+
+.intro-guidelines-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a2b56;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.guideline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: #334155;
+    line-height: 1.6;
+}
+
+.guideline-item:last-child { margin-bottom: 0; }
+
+.guideline-dot {
+    width: 28px; height: 28px;
+    background: #1a2b56;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 1px;
+}
+
+/* Start button */
+.btn-start {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px 32px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fff;
+    border: 0;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 8px 24px -4px rgba(245, 158, 11, 0.4);
+    letter-spacing: 0.01em;
+}
+
+.btn-start:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px -4px rgba(245, 158, 11, 0.5);
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #fff;
+}
+
+.btn-start:active {
+    transform: translateY(0);
+}
 
 /* ── Progress ── */
 .progress-container { width: 100%; max-width: 250px; }
@@ -31,12 +203,11 @@
 .option-card.selected { border-color: #f59e0b; background: #fffbeb; }
 .option-card input[type=radio] { display: none; }
 
-/* Custom Radio Circle */
 .custom-radio {
     width: 24px; height: 24px; border-radius: 50%;
     border: 2px solid #cbd5e1;
     display: flex; align-items: center; justify-content: center;
-    margin-left: 15px; /* Margin on left because it's RTL */
+    margin-left: 15px;
     transition: all .2s;
     flex-shrink: 0;
 }
@@ -66,17 +237,6 @@
     padding: 40px;
 }
 
-@media (max-width: 576px) {
-    #question-card { padding: 20px 12px; border-radius: 12px; }
-    .exam-wrapper { padding: 5px 10px 20px; }
-    .header-desktop { display: none !important; }
-    .header-mobile { display: flex !important; }
-    .option-card { padding: 0.8rem 1rem; margin-bottom: 0.6rem; }
-    .option-text { font-size: 0.95rem; }
-    #question-text { font-size: 1.15rem; }
-    .alert { padding: 0.5rem 0.8rem; font-size: 0.85rem; }
-}
-
 /* ── Buttons ── */
 #btn-next {
     background: #f59e0b;
@@ -100,6 +260,35 @@
 .btn-prev:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .timer-footer { font-size: 0.85rem; color: #64748b; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .intro-header { padding: 32px 20px 40px; }
+    .intro-body { padding: 24px 20px; }
+    .intro-title { font-size: 1.45rem; }
+    .intro-icon-wrap { width: 70px; height: 70px; }
+}
+
+@media (max-width: 576px) {
+    .exam-wrapper { padding: 0 0 24px; }
+    #intro-card { border-radius: 0 0 20px 20px; }
+    .intro-header { padding: 24px 16px 32px; }
+    .intro-body { padding: 18px 16px 24px; }
+    .intro-title { font-size: 1.2rem; }
+    .intro-icon-wrap { width: 56px; height: 56px; margin-bottom: 12px; }
+    .intro-chip { font-size: 0.72rem; padding: 4px 10px; }
+    .intro-guidelines { padding: 14px; }
+    .guideline-item { font-size: 0.85rem; }
+    .guideline-dot { width: 24px; height: 24px; font-size: 0.7rem; }
+    .btn-start { font-size: 0.95rem; padding: 14px 20px; }
+    #question-card { padding: 16px 12px; border-radius: 0; }
+    .header-desktop { display: none !important; }
+    .header-mobile { display: flex !important; }
+    .option-card { padding: 0.75rem 1rem; margin-bottom: 0.5rem; }
+    .option-text { font-size: 0.9rem; }
+    #question-text { font-size: 1.1rem; }
+    .alert { padding: 0.5rem 0.8rem; font-size: 0.82rem; }
+}
 </style>
 @endpush
 
@@ -107,33 +296,68 @@
 <div class="exam-wrapper">
 
     @if($progress['current'] == 1)
-    <div class="card" id="intro-card" style="border-radius: 20px; border: 0; box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08); background: #ffffff; padding: 40px;">
-        <div class="text-center mb-4">
-            <div style="width: 80px; height: 80px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
-                <i class="bi bi-journal-text text-primary" style="font-size: 2.5rem;"></i>
+    <div id="intro-card">
+
+        {{-- Coloured Header --}}
+        <div class="intro-header">
+            <div class="intro-icon-wrap">
+                <i class="bi bi-journal-text" style="font-size: 2rem; color: #fff;"></i>
             </div>
-            <h3 class="fw-bold" style="color: #1a2b56;">{{ $assessment->title_ar }}</h3>
-            @if($assessment->description_ar)
-                <p class="text-muted fs-6 mt-2">{{ $assessment->description_ar }}</p>
+            <h1 class="intro-title">{{ $assessment->title_ar }}</h1>
+            @if($assessment->subtitle_ar)
+                <p class="intro-subtitle">{{ $assessment->subtitle_ar }}</p>
             @endif
+
+            {{-- Small chips: questions count + time --}}
+            <div class="intro-chips">
+                <span class="intro-chip">
+                    <i class="bi bi-list-check"></i>
+                    {{ $progress['total'] }} سؤال
+                </span>
+                @if($assessment->time_limit_min)
+                <span class="intro-chip">
+                    <i class="bi bi-clock"></i>
+                    {{ $assessment->time_limit_min }} دقيقة
+                </span>
+                @endif
+                @if($assessment->category)
+                <span class="intro-chip">
+                    <i class="bi bi-tag"></i>
+                    {{ $assessment->category }}
+                </span>
+                @endif
+            </div>
         </div>
-        
-        <div class="p-4 rounded-4 mt-4" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
-            <div class="d-flex align-items-start gap-3">
-                <i class="bi bi-info-circle-fill text-primary" style="font-size: 1.5rem; margin-top: 2px;"></i>
-                <div style="color: #334155; line-height: 1.8; font-size: 0.95rem;">
-                    <strong>توجيهات هامة قبل البدء:</strong>
-                    <p class="mb-0 mt-2">
-                        كن صادقًا مع نفسك في إجاباتك؛ فكلما كانت إجاباتك أكثر دقة وواقعية، كانت نتائج المقياس أكثر فائدة لك في فهم ذاتك وتطويرها. لا توجد إجابات صحيحة أو خاطئة؛ صدقك مع نفسك هو مفتاح الحصول على نتائج تعكس واقعك وتفيدك حقًا. اقرأ كل عبارة بعناية، ثم اختر الإجابة التي تعبر عنك.
-                    </p>
+
+        {{-- Body --}}
+        <div class="intro-body">
+
+            {{-- Guidelines --}}
+            <div class="intro-guidelines">
+                <div class="intro-guidelines-title">
+                    <i class="bi bi-shield-check text-primary"></i>
+                    توجيهات هامة قبل البدء
+                </div>
+                <div class="guideline-item">
+                    <div class="guideline-dot">١</div>
+                    <span>كن صادقًا مع نفسك في إجاباتك؛ فكلما كانت إجاباتك أكثر دقة وواقعية، كانت نتائج المقياس أكثر فائدة لك.</span>
+                </div>
+                <div class="guideline-item">
+                    <div class="guideline-dot">٢</div>
+                    <span>لا توجد إجابات صحيحة أو خاطئة؛ صدقك مع نفسك هو مفتاح الحصول على نتائج تعكس واقعك وتفيدك حقًا.</span>
+                </div>
+                <div class="guideline-item">
+                    <div class="guideline-dot">٣</div>
+                    <span>اقرأ كل عبارة بعناية، ثم اختر الإجابة التي تعبر عنك فعلاً دون تفكير مبالغ فيه.</span>
                 </div>
             </div>
-        </div>
-        
-        <div class="text-center mt-5">
-            <button type="button" class="btn btn-primary px-5 py-3 fw-bold shadow-sm" id="btn-start-exam" style="border-radius: 12px; font-size: 1.1rem; transition: all 0.2s;">
-                فهمت ذلك، ابدأ المقياس <i class="bi bi-arrow-left ms-2"></i>
+
+            {{-- Start Button --}}
+            <button type="button" class="btn-start" id="btn-start-exam">
+                <span>فهمت ذلك، ابدأ المقياس</span>
+                <i class="bi bi-arrow-left"></i>
             </button>
+
         </div>
     </div>
     @endif
@@ -150,19 +374,19 @@
                     <div class="progress-fill" id="progress-bar" style="width:{{ $progress['percentage'] }}%"></div>
                 </div>
             </div>
-            
+
             <div class="text-end">
                 <h4 class="fw-bold mb-1" style="color: #1a2b56;">{{ $assessment->title_ar }}</h4>
-                <span class="text-muted small">{{ $assessment->description_ar ?: 'اختبار لقياس مستوى السمات لديك' }}</span>
             </div>
+
         </div>
 
         {{-- Header Mobile --}}
         <div class="d-flex d-sm-none flex-column mb-3 header-mobile">
             <div class="text-center mb-3">
                 <h6 class="fw-bold mb-1" style="color: #1a2b56;">{{ $assessment->title_ar }}</h6>
-                <span class="text-muted" style="font-size: 0.75rem;">{{ $assessment->description_ar ?: 'اختبار لقياس مستوى السمات لديك' }}</span>
             </div>
+
             <div class="progress-container w-100 mx-auto" style="max-width: 100%;">
                 <div class="d-flex justify-content-between text-muted mb-1" style="font-size: 0.8rem;">
                     <span id="q-pct-mobile" class="fw-bold text-dark">{{ $progress['percentage'] }}%</span>

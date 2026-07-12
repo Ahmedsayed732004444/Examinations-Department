@@ -24,7 +24,7 @@ class StatisticsController extends Controller
 
     public function data(Request $request): JsonResponse
     {
-        $range = (int) $request->query('range', 30);
+        $range = max(1, min((int) $request->query('range', 30), 365));
         $data = $this->statisticsService->getData($range);
 
         return response()->json($data);

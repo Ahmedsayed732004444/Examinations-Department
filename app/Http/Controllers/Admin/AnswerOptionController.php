@@ -93,20 +93,22 @@ class AnswerOptionController extends Controller
 
         $allQuestions = $assessment->questions()->where('id', '!=', $question->id)->get();
 
-        foreach ($allQuestions as $q) {
-            // Delete existing options
-            $q->answerOptions()->delete();
-            
-            // Duplicate the current question's options
-            foreach ($options as $opt) {
-                AnswerOption::create([
-                    'question_id' => $q->id,
-                    'label_ar' => $opt->label_ar,
-                    'score_value' => $opt->score_value,
-                    'order_index' => $opt->order_index,
-                ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($allQuestions, $options) {
+            foreach ($allQuestions as $q) {
+                // Delete existing options
+                $q->answerOptions()->delete();
+                
+                // Duplicate the current question's options
+                foreach ($options as $opt) {
+                    AnswerOption::create([
+                        'question_id' => $q->id,
+                        'label_ar' => $opt->label_ar,
+                        'score_value' => $opt->score_value,
+                        'order_index' => $opt->order_index,
+                    ]);
+                }
             }
-        }
+        });
 
         return response()->json([
             'success' => true,

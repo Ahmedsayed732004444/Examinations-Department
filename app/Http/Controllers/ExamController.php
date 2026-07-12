@@ -6,7 +6,6 @@ use App\Http\Requests\AnswerQuestionRequest;
 use App\Models\Assessment;
 use App\Models\Coupon;
 use App\Models\ExamSession;
-use App\Models\User;
 use App\Services\CouponService;
 use App\Services\ExamService;
 use Illuminate\Http\JsonResponse;
@@ -35,6 +34,24 @@ class ExamController extends Controller
         $user       = auth()->user();
         $assessment = Assessment::findOrFail($request->assessment_id);
 
+        $hasAnySession = ExamSession::where('user_id', $user->id)
+            ->where('assessment_id', $assessment->id)
+            ->exists();
+
+        if ($hasAnySession) {
+            return response()->json([
+                'valid'            => true,
+                'coupon_id'        => null,
+                'discount'         => 100,
+                'price'            => (float) $assessment->price,
+                'discount_amount'  => (float) $assessment->price,
+                'final_price'      => 0,
+                'is_free'          => true,
+                'usage_number'     => 1,
+                'message'          => 'لديك دخول مسبق لهذا المقياس، سيتم استئنافه فوراً.',
+            ]);
+        }
+
         $result = $this->couponService->validateCouponForUser($request->code, $assessment, $user);
 
         if (!$result['valid']) {
@@ -62,13 +79,12 @@ class ExamController extends Controller
     {
         $user = auth()->user();
 
-        // Find active, non-expired coupons that apply to this assessment
-        $coupon = Coupon::where('is_active', true)
+        $coupons = Coupon::where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('expires_at')
                   ->orWhere('expires_at', '>=', now()->toDateString());
             })
-            ->where(function ($q) use ($assessment, $user) {
+            ->where(function ($q) use ($assessment) {
                 // Either applies to all assessments, or specifically to this one
                 $q->where('applies_to_all_assessments', true)
                   ->orWhereHas('assessments', fn ($a) => $a->where('assessment_id', $assessment->id));
@@ -78,9 +94,9 @@ class ExamController extends Controller
                 $q->where('applies_to_all_users', true)
                   ->orWhereHas('permittedUsers', fn ($u) => $u->where('user_id', $user->id));
             })
-            ->first();
+            ->get();
 
-        if (!$coupon) {
+        if ($coupons->isEmpty()) {
             return response()->json([
                 'found' => false,
                 'message' => 'لا يوجد كوبون متاح لهذا المقياس حالياً.',
@@ -89,10 +105,14 @@ class ExamController extends Controller
 
         return response()->json([
             'found'    => true,
-            'code'     => $coupon->code,
-            'title'    => $coupon->title,
-            'discount' => $coupon->discount_percentage,
-            'expires'  => $coupon->expires_at ? $coupon->expires_at->format('Y-m-d') : null,
+            'coupons'  => $coupons->map(function($c) {
+                return [
+                    'code'     => $c->code,
+                    'title'    => $c->title,
+                    'discount' => $c->discount_percentage,
+                    'expires'  => $c->expires_at ? $c->expires_at->format('Y-m-d') : null,
+                ];
+            })
         ]);
     }
 
@@ -199,22 +219,26 @@ class ExamController extends Controller
         return response()->json($result);
     }
 
-    public function result(ExamSession $session): View|RedirectResponse
+    public function result(Request $request, ExamSession $session): View|RedirectResponse|JsonResponse
     {
         $this->authorizeSession($session);
 
-        if ($session->status !== 'completed' && !$session->result) {
+        if ($session->status !== 'completed' || !$session->result) {
             return redirect()->route('exam.show', $session->id);
         }
 
         $data = $this->examService->getResult($session);
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json($data);
+        }
 
         return view('user.result', array_merge(['session' => $session], $data));
     }
 
     private function authorizeSession(ExamSession $session): void
     {
-        if ($session->user_id !== auth()->id() && !auth()->user()->isAdmin()) {
+        if ($session->user_id !== auth()->id() && !optional(auth()->user())->isAdmin()) {
             abort(403);
         }
     }

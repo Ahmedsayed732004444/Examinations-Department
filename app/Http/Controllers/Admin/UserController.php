@@ -27,13 +27,13 @@ class UserController extends Controller
     {
         $sessions = $this->userService->getUserResults($user->id);
 
-        $formatted = $sessions->map(function ($session) {
-            $levelTranslations = [
-                'high' => 'مرتفع',
-                'medium' => 'متوسط',
-                'low' => 'منخفض',
-            ];
+        $levelTranslations = [
+            'high' => 'مرتفع',
+            'medium' => 'متوسط',
+            'low' => 'منخفض',
+        ];
 
+        $formatted = $sessions->map(function ($session) use ($levelTranslations) {
             return [
                 'id' => $session->id,
                 'assessment_title' => $session->assessment->title_ar,

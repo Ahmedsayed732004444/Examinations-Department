@@ -158,6 +158,17 @@
                 </label>
             </div>
             
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="previewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-eye me-1"></i>معاينة النتيجة
+                </button>
+                <ul class="dropdown-menu shadow-sm border-0" aria-labelledby="previewDropdown">
+                    <li><a class="dropdown-item" target="_blank" href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => 'high']) }}"><i class="bi bi-star-fill text-warning me-2"></i>مستوى مرتفع</a></li>
+                    <li><a class="dropdown-item" target="_blank" href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => 'medium']) }}"><i class="bi bi-star-half text-warning me-2"></i>مستوى متوسط</a></li>
+                    <li><a class="dropdown-item" target="_blank" href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => 'low']) }}"><i class="bi bi-star text-warning me-2"></i>مستوى منخفض</a></li>
+                </ul>
+            </div>
+
             <a href="{{ route('admin.assessments.index') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-right me-1"></i>العودة للمقاييس
             </a>
@@ -542,12 +553,12 @@
                                     <label class="small text-muted mb-1 d-block">البرامج الإرشادية والتوصيات المقترحة</label>
                                     <div class="text-dark small bg-light p-3 rounded" style="min-height: 80px;">
                                         @php
-                                            $lines = array_filter(array_map('trim', explode("\n", $rec->programs_ar ?? '')));
+                                            $lines = is_array($rec->programs_ar) ? $rec->programs_ar : (is_string($rec->programs_ar) ? array_filter(array_map('trim', explode("\n", $rec->programs_ar))) : []);
                                         @endphp
                                         @if(count($lines) > 0)
                                             <ul class="mb-0 ps-0 list-unstyled">
                                                 @foreach($lines as $line)
-                                                    <li class="mb-1"><i class="bi bi-check2 text-primary me-1"></i>{{ $line }}</li>
+                                                    <li class="mb-1"><i class="bi bi-check2 text-primary me-1"></i>{{ is_array($line) ? ($line['title'] ?? '') : (is_object($line) ? ($line->title ?? '') : $line) }}</li>
                                                 @endforeach
                                             </ul>
                                         @else
@@ -555,9 +566,14 @@
                                         @endif
                                     </div>
                                 </div>
-                                <button class="btn btn-outline-primary btn-sm w-100 btn-toggle-rec-edit" data-level="{{ $key }}">
-                                    <i class="bi bi-pencil-square me-1"></i>تعديل التوصية
-                                </button>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-primary btn-sm flex-grow-1 btn-toggle-rec-edit" data-level="{{ $key }}">
+                                        <i class="bi bi-pencil-square me-1"></i>تعديل التوصية
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm btn-delete-rec" data-url="{{ route('admin.recommendations.destroy', $rec->id) }}" data-name="{{ $rec->level }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                             
                             <!-- Form container -->
@@ -582,8 +598,23 @@
                                         <textarea class="form-control form-control-sm rec-textarea-desc" rows="4" required placeholder="ادخل تفاصيل تشخيص هذا المستوى..." style="min-height: 80px;">{{ $rec->description_ar }}</textarea>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label small fw-medium text-muted">البرامج الإرشادية (توصية في كل سطر)</label>
-                                        <textarea class="form-control form-control-sm rec-textarea-programs" rows="4" placeholder="توصية أ&#10;توصية ب&#10;توصية ج" style="min-height: 80px;">{{ $rec->programs_ar }}</textarea>
+                                        <label class="form-label small fw-medium text-muted">الجملة الافتتاحية للشهادات (اختياري)</label>
+                                        <input type="text" class="form-control form-control-sm rec-input-certs-intro" placeholder="مثال: من أهم الشهادات التي ننصحك بالحصول عليها:" value="{{ $rec->certificates_intro_ar }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <textarea class="form-control form-control-sm rec-textarea-certificates json-certificates-data" rows="3" placeholder="إضافة شهادة...">{{ is_array($rec->certificates_ar) ? json_encode($rec->certificates_ar) : $rec->certificates_ar }}</textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">البرامج التدريبية المقترحة</label>
+                                        <textarea class="form-control form-control-sm rec-textarea-programs json-programs-data" rows="3" placeholder="إضافة برنامج...">{{ is_array($rec->programs_ar) ? json_encode($rec->programs_ar) : $rec->programs_ar }}</textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">الجملة الافتتاحية لخطة التطوير (اختياري)</label>
+                                        <input type="text" class="form-control form-control-sm rec-input-plan-intro" placeholder="مثال: نقترح عليك خلال الـ 30 يوماً القادمة اتباع الخطوات التالية:" value="{{ $rec->plan_30_days_intro_ar }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">خطة تطوير (30 يوماً)</label>
+                                        <textarea class="form-control form-control-sm rec-textarea-plan json-plan-data" rows="3" placeholder="إضافة خطوة...">{{ is_array($rec->plan_30_days_ar) ? json_encode($rec->plan_30_days_ar) : $rec->plan_30_days_ar }}</textarea>
                                     </div>
                                     
                                     <div class="d-flex gap-2">
@@ -635,8 +666,24 @@
                                     <textarea class="form-control form-control-sm rec-textarea-desc" rows="4" required style="min-height: 80px;"></textarea>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label small fw-medium text-muted">البرامج الإرشادية (توصية في كل سطر)</label>
-                                    <textarea class="form-control form-control-sm rec-textarea-programs" rows="4" style="min-height: 80px;"></textarea>
+                                    <label class="form-label small fw-medium text-muted">الجملة الافتتاحية للشهادات (اختياري)</label>
+                                    <input type="text" class="form-control form-control-sm rec-input-certs-intro" placeholder="مثال: من أهم الشهادات التي ننصحك بالحصول عليها:">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">الشهادات الاحترافية المناسبة (شهادة في كل سطر)</label>
+                                    <textarea class="form-control form-control-sm rec-textarea-certificates dynamic-list-data" rows="3"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">البرامج التدريبية المقترحة (برنامج في كل سطر)</label>
+                                    <textarea class="form-control form-control-sm rec-textarea-programs dynamic-list-data" rows="3"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">الجملة الافتتاحية لخطة التطوير (اختياري)</label>
+                                    <input type="text" class="form-control form-control-sm rec-input-plan-intro" placeholder="مثال: نقترح عليك خلال الـ 30 يوماً القادمة اتباع الخطوات التالية:">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">خطة تطوير (30 يوماً) (خطوة في كل سطر)</label>
+                                    <textarea class="form-control form-control-sm rec-textarea-plan dynamic-list-data" rows="3"></textarea>
                                 </div>
                                 <button type="submit" class="btn btn-success btn-sm w-100 btn-save-recommendation">
                                     <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ التوصية</span>
@@ -671,9 +718,19 @@
                                     <label class="form-label small fw-semibold text-dark">العنوان الجذاب (وصف قصير)</label>
                                     <input type="text" class="form-control" id="settings-subtitle" value="{{ $assessment->subtitle_ar }}">
                                 </div>
-                                <div class="col-md-12">
+                                <div class="col-md-6">
                                     <label class="form-label small fw-semibold text-dark">المحور / الفئة *</label>
                                     <input type="text" class="form-control" id="settings-category" value="{{ $assessment->category }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark">أيقونة المقياس (اختياري)</label>
+                                    @if($assessment->icon && str_starts_with($assessment->icon, '/'))
+                                        <div class="mb-1">
+                                            <img src="{{ asset($assessment->icon) }}" alt="Icon" style="height: 30px; object-fit: contain;">
+                                        </div>
+                                    @endif
+                                    <input type="file" class="form-control text-start" dir="ltr" id="settings-icon-file" accept="image/*">
+                                    <div class="form-text" style="font-size:0.65rem;">ارفع صورة الأيقونة. يفضل خلفية شفافة (PNG).</div>
                                 </div>
                                 <div class="col-md-12 mt-3">
                                     <label class="form-label small fw-semibold text-dark">طريقة حساب النتيجة والتوصية *</label>
@@ -727,23 +784,8 @@
                                 </div>
                                 </div>
                             </div>
-                            
                             <hr class="my-4">
-                            <h6 class="fw-bold text-primary mb-3"><i class="bi bi-file-earmark-bar-graph me-2"></i>بيانات التقرير المتقدمة</h6>
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold text-dark">الشهادات الاحترافية المناسبة</label>
-                                    <textarea class="form-control" id="settings-certificates" rows="3" placeholder="شهادة 1، شهادة 2...">{{ $assessment->certificates_ar }}</textarea>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold text-dark">البرامج التدريبية المقترحة</label>
-                                    <textarea class="form-control" id="settings-programs" rows="3" placeholder="دورة 1، دورة 2...">{{ $assessment->programs_ar }}</textarea>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold text-dark">خطة تطوير (30 يوماً)</label>
-                                    <textarea class="form-control" id="settings-plan" rows="3" placeholder="الأسبوع 1: ...">{{ $assessment->plan_30_days_ar }}</textarea>
-                                </div>
-                            </div>
+
                             <button type="submit" class="btn btn-primary" id="btn-save-settings">
                                 <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ التعديلات</span>
                                 <span class="spinner-border spinner-border-sm d-none"></span>
@@ -921,6 +963,9 @@
 @endsection
 
 @push('scripts')
+<script>
+    window.APP_ICONS = @json($icons ?? []);
+</script>
 <script>
 $(document).ready(function() {
     
@@ -1424,6 +1469,14 @@ $(document).ready(function() {
                 const doc = parser.parseFromString(html, 'text/html');
                 const newContent = doc.querySelector('#tab-recommendations');
                 $('#tab-recommendations').html(newContent.innerHTML);
+                
+                // Re-initialize dynamic lists and JSON lists after replacing DOM
+                if (typeof window.initDynamicLists === 'function') {
+                    window.initDynamicLists('#tab-recommendations');
+                }
+                if (typeof window.initAllJsonLists === 'function') {
+                    window.initAllJsonLists('#tab-recommendations');
+                }
             }
         });
     }
@@ -1447,20 +1500,40 @@ $(document).ready(function() {
         $(`#rec-view-${level}`).removeClass('d-none');
     });
 
+    // Delete recommendation
+    $(document).on('click', '.btn-delete-rec', function() {
+        const url = $(this).data('url');
+        const name = $(this).data('name');
+        
+        confirmDelete(`هل أنت متأكد من حذف التوصية الخاصة بمستوى "${name}"؟`, url, function() {
+            reloadTab2();
+        });
+    });
+
     // Save/Update recommendation
     $(document).on('submit', '.recommendation-ajax-form', function(e) {
         e.preventDefault();
         const form = $(this);
-        const level = form.data('level');
+        const levelData = form.data('level');
+        const levelName = form.find('.rec-input-level-name').val().trim();
         const btn = form.find('.btn-save-recommendation');
         
+        let certs = []; try { certs = JSON.parse(form.find('.rec-textarea-certificates').val() || '[]'); } catch(e){}
+        let progs = []; try { progs = JSON.parse(form.find('.rec-textarea-programs').val() || '[]'); } catch(e){}
+        let plan = []; try { plan = JSON.parse(form.find('.rec-textarea-plan').val() || '[]'); } catch(e){}
+
         const payload = {
+            id: levelData !== 'NEW_ID' ? levelData : null,
             assessment_id: '{{ $assessment->id }}',
-            level: level,
+            level: levelName,
             low_threshold: form.find('.rec-input-low').val(),
             high_threshold: form.find('.rec-input-high').val(),
             description_ar: form.find('.rec-textarea-desc').val().trim(),
-            programs_ar: form.find('.rec-textarea-programs').val().trim()
+            certificates_intro_ar: form.find('.rec-input-certs-intro').val().trim(),
+            certificates_ar: certs,
+            programs_ar: progs,
+            plan_30_days_intro_ar: form.find('.rec-input-plan-intro').val().trim(),
+            plan_30_days_ar: plan
         };
         
         setLoading(btn, true);
@@ -1502,14 +1575,15 @@ $(document).ready(function() {
         if ($('#settings-time-limit').val()) formData.append('time_limit_min', $('#settings-time-limit').val());
         if ($('#settings-price').val()) formData.append('price', $('#settings-price').val());
         if ($('#settings-rating').val()) formData.append('rating', $('#settings-rating').val());
-        formData.append('certificates_ar', $('#settings-certificates').val().trim());
-        formData.append('programs_ar', $('#settings-programs').val().trim());
-        formData.append('plan_30_days_ar', $('#settings-plan').val().trim());
         formData.append('is_active', $('#settings-is-active').is(':checked') ? 1 : 0);
         formData.append('hide_coupon_field', $('#settings-hide-coupon').is(':checked') ? 1 : 0);
         
         if ($('#settings-image')[0].files.length > 0) {
             formData.append('image', $('#settings-image')[0].files[0]);
+        }
+
+        if ($('#settings-icon-file')[0].files.length > 0) {
+            formData.append('icon_file', $('#settings-icon-file')[0].files[0]);
         }
         
         setLoading(btn, true);
@@ -1806,5 +1880,81 @@ $('#btn-sync-options').on('click', function() {
     });
 });
 
+
+    // Dynamic List Editor Initializer
+    window.initDynamicLists = function(container = document) {
+        $(container).find('.dynamic-list-data').not('.dynamic-list-initialized').each(function() {
+            const $textarea = $(this);
+            $textarea.addClass('dynamic-list-initialized d-none');
+            const placeholder = $textarea.attr('placeholder') || 'إضافة عنصر جديد...';
+            
+            // Create UI wrapper
+            const $wrapper = $('<div class="dynamic-list-wrapper"></div>');
+            const $list = $('<div class="dynamic-list-items mb-2"></div>');
+            const $inputGroup = $(`
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control dynamic-list-input" placeholder="${placeholder}">
+                    <button type="button" class="btn btn-primary dynamic-list-add"><i class="bi bi-plus"></i> إضافة</button>
+                </div>
+            `);
+            
+            $wrapper.append($list).append($inputGroup);
+            $textarea.after($wrapper);
+            
+            // Render initial items
+            const val = $textarea.val().trim();
+            const items = val ? val.split('\n') : [];
+            items.forEach(item => {
+                if(item.trim()) addItem(item.trim());
+            });
+            
+            function updateTextarea() {
+                const currentItems = [];
+                $list.find('.dynamic-list-item-text').each(function() {
+                    currentItems.push($(this).text().trim());
+                });
+                $textarea.val(currentItems.join('\n'));
+            }
+            
+            function addItem(text) {
+                const $item = $(`
+                    <div class="d-flex justify-content-between align-items-center bg-white border border-light-subtle shadow-sm rounded px-3 py-2 mb-2">
+                        <span class="dynamic-list-item-text text-dark fw-medium small"><i class="bi bi-check-circle-fill text-success me-2"></i>${text}</span>
+                        <button type="button" class="btn btn-sm text-danger btn-remove-item py-0 px-2 border-0"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                `);
+                $list.append($item);
+            }
+            
+            // Add event
+            $inputGroup.find('.dynamic-list-add').on('click', function() {
+                const $input = $inputGroup.find('.dynamic-list-input');
+                const newText = $input.val().trim();
+                if (newText) {
+                    addItem(newText);
+                    updateTextarea();
+                    $input.val('');
+                    $input.focus();
+                }
+            });
+            
+            $inputGroup.find('.dynamic-list-input').on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    $inputGroup.find('.dynamic-list-add').click();
+                }
+            });
+            
+            // Remove event
+            $list.on('click', '.btn-remove-item', function() {
+                $(this).closest('div').remove();
+                updateTextarea();
+            });
+        });
+    };
+
+    $(document).ready(function() {
+        window.initDynamicLists();
+    });
 </script>
 @endpush

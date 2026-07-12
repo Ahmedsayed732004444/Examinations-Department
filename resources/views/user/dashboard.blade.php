@@ -10,7 +10,7 @@ main.container { padding: 0 !important; max-width: 100% !important; background: 
 /* Global Fonts & Colors */
 body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
 .text-primary-custom { color: #1a2b56; } /* Dark Blue */
-.text-warning-custom { color: #d97706; } /* Gold/Orange */
+.text-warning-custom { color: #f59e0b; } /* Gold/Yellow */
 
 /* ── Hero Section ── */
 .hero-section {
@@ -120,7 +120,7 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
     font-weight: 700;
 }
 .assessments-grid {
-    padding: 0 12px 20px;
+    padding: 0 4px 20px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     align-items: stretch;
@@ -130,20 +130,22 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
 .assessment-card {
     background: #ffffff;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    padding: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    border: 1px solid #f1f5f9;
+    border-top: 4px solid #00b4d8;
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     display: flex;
     flex-direction: column;
     height: 100%;
     width: 100%;
+    min-width: 0;
 }
 .card-header-top {
     display: flex;
     justify-content: flex-start;
     align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 12px;
+    margin-bottom: 12px;
 }
 .card-icon {
     width: 30px;
@@ -156,10 +158,12 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
     color: #1a2b56;
     font-size: 0.8rem;
     flex-shrink: 0;
+    margin-top: 2px;
 }
 .card-title-area {
     text-align: right;
     flex-grow: 1;
+    min-height: 70px;
 }
 .card-title {
     color: #1a2b56;
@@ -177,8 +181,7 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
 .card-desc {
     color: #64748b;
     font-size: 0.6rem;
-    margin-bottom: 8px;
-    line-height: 1.3;
+    line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -187,27 +190,31 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
 }
 .assessment-card img.cover {
     width: 100%;
-    height: 85px;
+    height: 60px;
     object-fit: cover;
     object-position: center 30%;
     border-radius: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 .card-meta {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    gap: 4px;
-    margin-bottom: 10px;
+    padding: 0;
+    margin-bottom: 12px;
     font-size: 0.55rem;
-    color: #64748b;
+    color: #475569;
+    font-weight: 700;
 }
 .card-meta div {
     display: flex;
     align-items: center;
-    gap: 3px;
-    white-space: nowrap;
+    gap: 4px;
+}
+.card-meta .divider {
+    color: #cbd5e1;
+    font-weight: 300;
 }
 .card-price-row {
     display: flex;
@@ -215,56 +222,65 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
     justify-content: space-between;
     align-items: center;
     gap: 6px;
-    margin-bottom: 10px;
 }
 .card-price {
-    color: #1a2b56;
-    font-weight: 800;
-    font-size: 0.95rem;
+    color: #1e3a8a;
+    font-weight: 900;
+    font-size: 0.85rem;
     white-space: nowrap;
 }
-.card-price span { font-size: 0.6rem; font-weight: normal; }
+.card-price span { font-size: 0.55rem; font-weight: bold; color: #64748b; }
 .btn-primary-custom {
-    background: #d97706;
+    background: #1a2b56;
     color: #fff;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 6px 0;
-    font-weight: 700;
-    font-size: 0.65rem;
+    font-weight: 800;
+    font-size: 0.7rem;
     white-space: nowrap;
     width: 100%;
     text-align: center;
+    box-shadow: 0 4px 6px rgba(26, 43, 86, 0.15);
+}
+.btn-primary-custom:hover {
+    background: #0f172a;
 }
 .btn-secondary-custom {
-    display: block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
     width: 100%;
-    text-align: center;
-    color: #1a2b56;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 6px;
+    color: #3b82f6;
+    background: transparent;
+    border: none;
+    padding: 4px 0;
     font-size: 0.65rem;
-    font-weight: 700;
+    font-weight: 800;
     text-decoration: none;
-    background: #fff;
-    margin-top: auto;
+    transition: all 0.2s;
+}
+.btn-secondary-custom:hover {
+    color: #2563eb;
+    text-decoration: underline;
 }
 
 /* ── Desktop Overrides for Assessments Grid ── */
 @media (min-width: 768px) {
+    .stats-row { grid-template-columns: repeat(4, 1fr); }
     .assessments-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
+        gap: 24px;
         padding: 0 15px 20px;
     }
-    .assessment-card { padding: 12px; }
-    .card-header-top { gap: 8px; margin-bottom: 8px; }
-    .card-icon { width: 32px; height: 32px; font-size: 0.9rem; }
+    .assessment-card { padding: 16px; }
+    .card-header-top { gap: 12px; margin-bottom: 12px; }
+    .card-icon { width: 32px; height: 32px; font-size: 0.9rem; margin-top: 2px; }
     .card-title { font-size: 0.95rem; line-height: 1.3; min-height: auto; }
     .card-desc { font-size: 0.65rem; -webkit-line-clamp: 2; line-height: 1.4; margin-bottom: 10px; }
-    .assessment-card img.cover { height: 120px; border-radius: 8px; margin-bottom: 12px; }
-    .card-meta { justify-content: space-between; font-size: 0.65rem; margin-bottom: 12px; gap: 8px; }
+    .assessment-card img.cover { height: 90px; border-radius: 8px; margin-bottom: 16px; }
+    .card-meta { justify-content: space-between; font-size: 0.6rem; margin-bottom: 16px; gap: 8px; }
     .card-price-row { margin-bottom: 12px; gap: 8px; }
     .card-price { font-size: 1rem; }
     .card-price span { font-size: 0.75rem; }
@@ -274,7 +290,7 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
 
 @media (min-width: 992px) {
     .assessments-grid { grid-template-columns: repeat(4, 1fr); }
-    .assessment-card img.cover { height: 160px; }
+    .assessment-card img.cover { height: 120px; }
     .card-title { font-size: 1.1rem; }
     .card-price { font-size: 1.2rem; }
 }
@@ -426,22 +442,38 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
 <!-- Stats Row -->
 <div class="stats-row">
     <div class="stat-box">
-        <i class="bi bi-pie-chart"></i>
+        @if(isset($siteSettings['stat_fields_icon']) && $siteSettings['stat_fields_icon'])
+            <img src="{{ asset($siteSettings['stat_fields_icon']) }}" style="height: 38px; width: auto; object-fit: contain; margin-bottom: 12px; display: inline-block;">
+        @else
+            <i class="bi bi-pie-chart"></i>
+        @endif
         <h5>{{ $siteSettings['stat_fields'] ?? '50+' }}</h5>
         <p>مجال ومهارة<br>مختلفة</p>
     </div>
     <div class="stat-box">
-        <i class="bi bi-mortarboard"></i>
+        @if(isset($siteSettings['stat_assessments_icon']) && $siteSettings['stat_assessments_icon'])
+            <img src="{{ asset($siteSettings['stat_assessments_icon']) }}" style="height: 38px; width: auto; object-fit: contain; margin-bottom: 12px; display: inline-block;">
+        @else
+            <i class="bi bi-mortarboard"></i>
+        @endif
         <h5>{{ $siteSettings['stat_assessments'] ?? '150+' }}</h5>
         <p>مقياس مهني<br>وشخصي معتمد</p>
     </div>
     <div class="stat-box">
-        <i class="bi bi-journal-check"></i>
+        @if(isset($siteSettings['stat_exams_icon']) && $siteSettings['stat_exams_icon'])
+            <img src="{{ asset($siteSettings['stat_exams_icon']) }}" style="height: 38px; width: auto; object-fit: contain; margin-bottom: 12px; display: inline-block;">
+        @else
+            <i class="bi bi-journal-check"></i>
+        @endif
         <h5>{{ $siteSettings['stat_exams'] ?? '10,000+' }}</h5>
         <p>اختبار ومقياس<br>تم إنجازه</p>
     </div>
     <div class="stat-box">
-        <i class="bi bi-people"></i>
+        @if(isset($siteSettings['stat_users_icon']) && $siteSettings['stat_users_icon'])
+            <img src="{{ asset($siteSettings['stat_users_icon']) }}" style="height: 38px; width: auto; object-fit: contain; margin-bottom: 12px; display: inline-block;">
+        @else
+            <i class="bi bi-people"></i>
+        @endif
         <h5>{{ $siteSettings['stat_users'] ?? '25,000+' }}</h5>
         <p>مستخدم من الأفراد<br>والجهات</p>
     </div>
@@ -454,33 +486,7 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
 
 <div class="assessments-grid" id="assessments-container">
     @php
-        $images = [
-            'معرفة الذات' => '1.png',
-            'السمات الشخصية' => '2.png',
-            'الثقة في النفس' => '3.png',
-            'هل تفكر بإيجابية؟' => '4.png',
-            'الذكاء العاطفي' => '5.png',
-            'هل أنت قادر على النجاح في وظيفتك / مهنتك؟' => '6.png',
-            'الإبداع' => '7.png',
-            'استثمار الوقت' => '8.png',
-            'هل تخطط؟' => '9.png',
-            'مهارة اتخاذ القرار' => '10.png',
-            'مهارات الاتصال' => '11.png',
-            'القدرة على التفاوض والحوار وإقناع الآخرين' => '12.png',
-            'هل تحب العمل في فريق؟' => '13.png',
-            'اعرف نمطك القيادي' => '14.png',
-            'هل لديك سمات القائد التحويلي؟' => '15.png',
-            'قيّم مهارات الإدارة' => '16.png',
-            'تحفيز العاملين ومكافأتهم' => '17.png',
-            'التوجيه المهني' => '18.png',
-            'حب العمل' => '19.png',
-            'ولاؤك لعملك الحالي' => '20.png',
-            'الرضا الوظيفي' => '21.png',
-            'احسب مستوى ضغوط العمل لديك' => '22.png',
-            'الاحتراق الوظيفي' => '23.png',
-            'الإرهاق المهني' => '24.png',
-            'السلامة والصحة المهنية' => '25.png'
-        ];
+        // Images are now loaded directly from $assessment->image_url
         $icons = [
             'معرفة الذات' => 'bi-person-bounding-box',
             'الشخصية' => 'bi-person-lines-fill',
@@ -522,7 +528,7 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
     @foreach($assessments as $index => $assessment)
         @php
             $imageName = $assessment->image_url ?: 'default.png'; // admin uploaded image or fallback
-            $iconName = 'bi-journal-text'; // default icon
+            $iconName = $assessment->icon ?: 'bi-journal-text'; // dynamic from DB or default
             
             // Basic icon mapping (optional, but keep it minimal or remove entirely)
             // If the user wants no hardcoding, we can just use a default icon for all
@@ -531,12 +537,19 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
         @endphp
         <div class="assessment-card" data-category="{{ $assessment->category }}">
             <div class="card-header-top">
-                <div class="card-icon" style="color: {{ $theme['iconColor'] }}; background-color: {{ $theme['iconBg'] }}; border: 1.5px solid {{ $theme['iconColor'] }};"><i class="bi {{ $iconName }}"></i></div>
+                <div class="card-icon" style="color: {{ $theme['iconColor'] }}; background-color: {{ $theme['iconBg'] }}; border: 1.5px solid {{ $theme['iconColor'] }};">
+                    @if(str_starts_with($iconName, '/') || str_starts_with($iconName, 'http'))
+                        <img src="{{ asset($iconName) }}" alt="Icon" style="width: 24px; height: 24px; object-fit: contain;">
+                    @else
+                        <i class="bi {{ $iconName }}"></i>
+                    @endif
+                </div>
                 <div class="card-title-area">
-                    <div style="font-size: 0.6rem; color: #f59e0b; margin-bottom: 2px;">
-                        @php $r = $assessment->rating ?: 0; @endphp
-                        @if($r > 0)
-                            <span class="fw-bold me-1">{{ number_format($r, 1) }}</span>
+                    @php $r = $assessment->rating ?: 0; @endphp
+                    @if($r > 0)
+                    <div class="d-flex align-items-center gap-1 mb-1" style="font-size: 0.55rem; color: #f59e0b;">
+                        <span class="fw-bold" style="color: #334155;">{{ number_format($r, 1) }}</span>
+                        <div class="d-flex" style="padding-top: 1px;">
                             @for($i = 1; $i <= 5; $i++)
                                 @if($i <= $r)
                                     <i class="bi bi-star-fill"></i>
@@ -546,76 +559,83 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
                                     <i class="bi bi-star"></i>
                                 @endif
                             @endfor
-                            <span style="color: #94a3b8; font-size: 0.5rem; margin-right: 2px;">({{ $assessment->rating_count ?: 0 }})</span>
-                        @endif
+                        </div>
+                        <span style="color: #94a3b8;">({{ $assessment->rating_count ?: 0 }})</span>
                     </div>
+                    @else
+                    <div style="height: 16px; margin-bottom: 4px;"></div>
+                    @endif
                     <h4 class="card-title" style="color: {{ $theme['titleColor'] }};">{{ $assessment->title_ar }}</h4>
                     <p class="card-desc">{{ $assessment->subtitle_ar ?: ($assessment->description_ar ?: 'لا يوجد وصف متاح') }}</p>
                 </div>
             </div>
             
-            <img src="{{ asset('images/dashboard/' . $imageName) }}" alt="{{ $assessment->title_ar }}" class="cover">
-            
-            <div class="card-meta">
-                <div><i class="bi bi-clock"></i> {{ $assessment->time_limit_min ? $assessment->time_limit_min . ' دقيقة' : 'مفتوح' }}</div>
-                <div><i class="bi bi-ui-checks"></i> {{ $assessment->questions_count ?: 0 }} سؤال</div>
-                <div><i class="bi bi-file-earmark-text"></i> تقرير مفصل</div>
-            </div>
-
             @php
                 $userSession = $userSessions->firstWhere('assessment_id', $assessment->id);
                 $isCompleted = $userSession && $userSession->status === 'completed';
                 $isInProgress = $userSession && $userSession->status === 'in_progress';
-                $priceLabel = $assessment->price > 0 ? number_format($assessment->price, 0) . ' <span>ر.س</span>' : 'مجاني';
+                $priceLabel = $assessment->price > 0 ? number_format($assessment->price, 0) . ' <span style="font-size:0.5rem; font-weight:normal;">ر.س</span>' : 'مجاني';
             @endphp
-            <div class="card-price-row">
-                <div class="card-price">{!! $priceLabel !!}</div>
+            
+            <div style="position: relative;">
+                <img src="{{ asset('images/dashboard/' . $imageName) }}" alt="{{ $assessment->title_ar }}" class="cover">
+            </div>
+            
+            <div class="card-meta">
+                <div><i class="bi bi-file-earmark-text"></i> تقرير مفصل</div>
+                <span class="divider">|</span>
+                <div><i class="bi bi-ui-checks"></i> {{ $assessment->questions_count ?: 0 }} سؤال</div>
+                <span class="divider">|</span>
+                <div><i class="bi bi-clock"></i> {{ $assessment->time_limit_min ? $assessment->time_limit_min . ' دقيقة' : 'مفتوح' }}</div>
+            </div>
+
+            <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px;">
+                <div class="card-price-row">
+                    @if($isCompleted)
+                        <form method="POST" action="{{ route('exam.start', $assessment->id) }}" class="m-0" style="flex: 1;">
+                            @csrf
+                            <button type="submit" class="btn-primary-custom w-100">إعادة المقياس</button>
+                        </form>
+                    @elseif($isInProgress)
+                        <form method="POST" action="{{ route('exam.start', $assessment->id) }}" class="m-0" style="flex: 1;">
+                            @csrf
+                            <button type="submit" class="btn-primary-custom w-100" style="background: #f59e0b;">استئناف المقياس</button>
+                        </form>
+                    @else
+                        <div style="flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                            <div class="card-price" style="white-space: nowrap;">
+                                {!! $assessment->price > 0 ? number_format($assessment->price, 0) . ' <span style="font-size:0.5rem; font-weight:normal;">ر.س</span>' : '<span style="background: #10b981; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">مجاني</span>' !!}
+                            </div>
+                            <button type="button" class="btn-primary-custom" style="flex: 1;" data-bs-toggle="modal" data-bs-target="#paymentCouponModal" data-assessment-id="{{ $assessment->id }}" data-assessment-title="{{ $assessment->title_ar }}" data-assessment-price="{{ $assessment->price > 0 ? number_format($assessment->price, 0) : '0' }}" data-hide-coupon="{{ $assessment->hide_coupon_field ? '1' : '0' }}">
+                                ابدأ المقياس
+                            </button>
+                        </div>
+                    @endif
+                </div>
+
+                @if(!$isCompleted && !$isInProgress)
+                <a href="#" class="btn-reveal-coupon"
+                   data-assessment-id="{{ $assessment->id }}"
+                   data-assessment-title="{{ $assessment->title_ar }}"
+                   data-assessment-price="{{ $assessment->price > 0 ? number_format($assessment->price, 0) : '0' }}"
+                   data-hide-coupon="{{ $assessment->hide_coupon_field ? '1' : '0' }}"
+                   style="background-color: transparent; border-radius: 8px; padding: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; cursor: pointer; border: 1.5px dashed #bfdbfe; transition: all 0.2s;">
+                    <span style="color: #3b82f6; font-size: 0.6rem; font-weight: 700; text-align: center; white-space: nowrap;">
+                        احصل على كوبون من هنا
+                    </span>
+                </a>
+                @endif
+
                 @if($isCompleted)
-                    <form method="POST" action="{{ route('exam.start', $assessment->id) }}" class="m-0" style="flex: 1; padding-right: 4px;">
-                        @csrf
-                        <button type="submit" class="btn-primary-custom w-100">إعادة المقياس</button>
-                    </form>
-                @elseif($isInProgress)
-                    <form method="POST" action="{{ route('exam.start', $assessment->id) }}" class="m-0" style="flex: 1; padding-right: 4px;">
-                        @csrf
-                        <button type="submit" class="btn-primary-custom w-100" style="background: #f59e0b;">استئناف المقياس</button>
-                    </form>
+                    <a href="{{ route('exam.result', $userSession->id) }}" class="btn-secondary-custom">
+                        عرض التقرير <i class="bi bi-eye"></i>
+                    </a>
                 @else
-                    <div style="flex: 1; padding-right: 4px;">
-                        <button type="button" class="btn-primary-custom w-100" data-bs-toggle="modal" data-bs-target="#paymentCouponModal" data-assessment-id="{{ $assessment->id }}" data-assessment-title="{{ $assessment->title_ar }}" data-assessment-price="{{ $assessment->price > 0 ? number_format($assessment->price, 0) : '0' }}" data-hide-coupon="{{ $assessment->hide_coupon_field ? '1' : '0' }}">
-                            ابدأ المقياس
-                        </button>
-                    </div>
+                    <a href="#" onclick="alert('ليس لديك نتيجة في هذا المقياس حتى الآن. يرجى أداء المقياس أولاً لاستخراج تقريرك.'); return false;" class="btn-secondary-custom" style="opacity: 0.7;">
+                        عرض التقرير <i class="bi bi-eye"></i>
+                    </a>
                 @endif
             </div>
-
-            @if(!$isCompleted && !$isInProgress)
-            <div style="border: 1px dashed #1d4ed8; border-radius: 4px; padding: 4px 2px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 4px; background-color: #f8fafc;">
-                <i class="bi bi-gift" style="color: #1d4ed8; font-size: 0.8rem;"></i>
-                <span style="color: #0f172a; font-size: 0.5rem; font-weight: 700; text-align: center; white-space: nowrap; letter-spacing: -0.3px;">
-                    احصل على كوبون
-                    <a href="#"
-                       class="btn-reveal-coupon"
-                       data-assessment-id="{{ $assessment->id }}"
-                       data-assessment-title="{{ $assessment->title_ar }}"
-                       data-assessment-price="{{ $assessment->price > 0 ? number_format($assessment->price, 0) : '0' }}"
-                       data-hide-coupon="{{ $assessment->hide_coupon_field ? '1' : '0' }}"
-                       style="color: #1d4ed8; font-weight: 800; text-decoration: underline;"
-                    >من هنا</a>
-                    لبدء المقياس مجاناً
-                </span>
-            </div>
-            @endif
-
-            @if($isCompleted)
-                <a href="{{ route('exam.result', $userSession->id) }}" class="btn-secondary-custom" style="background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8;">
-                    <i class="bi bi-file-earmark-check me-1"></i> عرض التقرير
-                </a>
-            @else
-                <a href="#" onclick="alert('ليس لديك نتيجة في هذا المقياس حتى الآن. يرجى أداء المقياس أولاً لاستخراج تقريرك.'); return false;" class="btn-secondary-custom">
-                    <i class="bi bi-eye me-1"></i> عرض التقرير
-                </a>
-            @endif
         </div>
     @endforeach
 </div>
@@ -764,31 +784,9 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
                     <p class="text-muted mt-2 mb-0 small">لا يوجد كوبون متاح لهذا المقياس حالياً.</p>
                 </div>
 
-                {{-- Coupon Card --}}
-                <div id="revealCouponCard" class="d-none">
-                    <div class="rounded-3 p-4 text-center mb-3" style="background:#fff; border: 2px dashed #1d4ed8; position:relative;">
-                        <div class="mb-2">
-                            <i class="bi bi-ticket-perforated" style="font-size:2rem; color:#1d4ed8;"></i>
-                        </div>
-                        <div class="text-muted small mb-1" id="revealCouponTitle"></div>
-                        <div class="fw-bold mb-2" style="font-size:0.85rem; color:#64748b;" id="revealCouponDiscount"></div>
-                        <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
-                            <span id="revealCouponCode"
-                                  style="font-size:1.6rem; font-weight:800; letter-spacing:4px; color:#1a2b56; font-family:monospace;"
-                            >—</span>
-                        </div>
-                        <div class="text-muted" style="font-size:0.7rem;" id="revealCouponExpiry"></div>
-                    </div>
-
-                    <button type="button" id="btnCopyCoupon"
-                            class="btn btn-outline-primary w-100 fw-semibold mb-3" style="border-radius:10px;">
-                        <i class="bi bi-clipboard me-1"></i> نسخ الكوبون
-                    </button>
-
-                    <button type="button" id="btnGoToApply"
-                            class="btn w-100 fw-bold py-2" style="border-radius:10px; background:#f59e0b; color:#fff; border:none;">
-                        <i class="bi bi-arrow-left-circle me-1"></i> تطبيق الكوبون وبدء المقياس
-                    </button>
+                {{-- Coupons Container --}}
+                <div id="revealCouponsContainer" class="d-none" style="max-height: 450px; overflow-y: auto; padding-right: 5px;">
+                    <!-- Dynamically populated by JS -->
                 </div>
 
             </div>
@@ -1125,25 +1123,85 @@ document.addEventListener('DOMContentLoaded', function() {
             var revealModal = new bootstrap.Modal(document.getElementById('couponRevealModal'));
             revealModal.show();
 
-            // Fetch coupon
+            // Fetch coupon(s)
             fetch('/coupon/for-assessment/' + revealAssessmentId, {
                 headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
             })
             .then(r => r.json())
             .then(function(data) {
                 document.getElementById('revealLoading').classList.add('d-none');
-                if (!data.found) {
+                if (!data.found || !data.coupons || data.coupons.length === 0) {
                     document.getElementById('revealNoCoupon').classList.remove('d-none');
                     document.getElementById('revealModalSub').textContent = '';
                     return;
                 }
-                revealedCouponCode = data.code;
-                document.getElementById('revealCouponTitle').textContent  = data.title;
-                document.getElementById('revealCouponCode').textContent   = data.code;
-                document.getElementById('revealCouponDiscount').textContent = 'خصم ' + data.discount + '%';
-                document.getElementById('revealCouponExpiry').textContent  = data.expires ? 'صالح حتى: ' + data.expires : 'بدون تاريخ انتهاء';
-                document.getElementById('revealModalSub').textContent = 'انسخ الكود واضغط تطبيق';
-                document.getElementById('revealCouponCard').classList.remove('d-none');
+                
+                let html = '';
+                data.coupons.forEach(function(coupon) {
+                    html += `
+                    <div class="rounded-3 p-4 text-center mb-3" style="background:#fff; border: 2px dashed #1d4ed8; position:relative;">
+                        <div class="mb-2">
+                            <i class="bi bi-ticket-perforated" style="font-size:2rem; color:#1d4ed8;"></i>
+                        </div>
+                        <div class="text-muted small mb-1">${coupon.title || 'كوبون المقياس'}</div>
+                        <div class="fw-bold mb-2" style="font-size:0.85rem; color:#64748b;">خصم ${coupon.discount}%</div>
+                        <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                            <span style="font-size:1.6rem; font-weight:800; letter-spacing:4px; color:#1a2b56; font-family:monospace;">${coupon.code}</span>
+                        </div>
+                        <div class="text-muted mb-3" style="font-size:0.7rem;">${coupon.expires ? 'صالح حتى: ' + coupon.expires : 'بدون تاريخ انتهاء'}</div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-primary fw-semibold btn-copy-multi" data-code="${coupon.code}" style="border-radius:10px; flex:1;">
+                                <i class="bi bi-clipboard me-1"></i> نسخ
+                            </button>
+                            <button type="button" class="btn fw-bold btn-apply-multi" data-code="${coupon.code}" style="border-radius:10px; background:#f59e0b; color:#fff; border:none; flex:2;">
+                                <i class="bi bi-arrow-left-circle me-1"></i> تطبيق وبدء
+                            </button>
+                        </div>
+                    </div>`;
+                });
+                
+                const container = document.getElementById('revealCouponsContainer');
+                container.innerHTML = html;
+                document.getElementById('revealModalSub').textContent = 'انسخ الكود واضغط تطبيق وبدء';
+                container.classList.remove('d-none');
+                
+                // Add event listeners for dynamic buttons
+                container.querySelectorAll('.btn-copy-multi').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const code = this.getAttribute('data-code');
+                        navigator.clipboard.writeText(code).then(() => {
+                            const originalHtml = this.innerHTML;
+                            this.innerHTML = '<i class="bi bi-clipboard-check me-1"></i> تم';
+                            this.classList.remove('btn-outline-primary');
+                            this.classList.add('btn-success');
+                            setTimeout(() => {
+                                this.innerHTML = originalHtml;
+                                this.classList.add('btn-outline-primary');
+                                this.classList.remove('btn-success');
+                            }, 2000);
+                        });
+                    });
+                });
+                
+                container.querySelectorAll('.btn-apply-multi').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const code = this.getAttribute('data-code');
+                        bootstrap.Modal.getInstance(document.getElementById('couponRevealModal')).hide();
+                        
+                        setTimeout(function() {
+                            currentAssessmentId    = revealAssessmentId;
+                            currentAssessmentPrice = revealAssessmentPrice;
+                            var payModal = new bootstrap.Modal(document.getElementById('paymentCouponModal'));
+                            payModal.show();
+                            
+                            setTimeout(function() {
+                                document.getElementById('couponCodeInput').value = code;
+                                document.getElementById('btnVerifyCoupon').click();
+                            }, 500);
+                        }, 400);
+                    });
+                });
             })
             .catch(function() {
                 document.getElementById('revealLoading').classList.add('d-none');
@@ -1152,61 +1210,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Copy button
-    document.getElementById('btnCopyCoupon').addEventListener('click', function() {
-        if (!revealedCouponCode) return;
-        navigator.clipboard.writeText(revealedCouponCode).then(function() {
-            var btn = document.getElementById('btnCopyCoupon');
-            btn.innerHTML = '<i class="bi bi-clipboard-check me-1"></i> تم النسخ!';
-            btn.classList.remove('btn-outline-primary');
-            btn.classList.add('btn-success');
-            setTimeout(function() {
-                btn.innerHTML = '<i class="bi bi-clipboard me-1"></i> نسخ الكوبون';
-                btn.classList.add('btn-outline-primary');
-                btn.classList.remove('btn-success');
-            }, 2000);
-        });
-    });
-
-    // Go to apply: close reveal modal, open payment modal with code pre-filled
-    document.getElementById('btnGoToApply').addEventListener('click', function() {
-        // Close the reveal modal
-        bootstrap.Modal.getInstance(document.getElementById('couponRevealModal')).hide();
-
-        // Wait a tick then open payment modal with coupon pre-filled
-        setTimeout(function() {
-            currentAssessmentId    = revealAssessmentId;
-            currentAssessmentPrice = revealAssessmentPrice;
-
-            // Manually trigger the payment modal with correct data
-            var payModal = new bootstrap.Modal(document.getElementById('paymentCouponModal'));
-
-            document.getElementById('modalAssessmentTitle').textContent = revealAssessmentTitle;
-            document.getElementById('modalAssessmentPriceLabel').innerHTML =
-                revealAssessmentPrice > 0
-                    ? '<span style="color:#d97706;font-weight:700;">' + revealAssessmentPrice + ' ر.س</span>'
-                    : '<span class="text-success fw-bold">مجاني</span>';
-            document.getElementById('payDirectPrice').innerHTML =
-                revealAssessmentPrice > 0
-                    ? revealAssessmentPrice + ' <span class="fs-6">ر.س</span>'
-                    : '<span class="text-success">مجاني</span>';
-
-            resetCouponUI();
-
-            // Pre-fill the coupon code and auto-verify it
-            document.getElementById('couponCodeInput').value = revealedCouponCode;
-            document.getElementById('couponSection').classList.remove('d-none');
-            document.getElementById('paySection').classList.add('d-none');
-            document.getElementById('couponStartForm').action = '/exam/' + revealAssessmentId + '/start';
-
-            payModal.show();
-
-            // Auto-click verify after the modal opens
-            setTimeout(function() {
-                document.getElementById('btnVerifyCoupon').click();
-            }, 400);
-        }, 350);
-    });
+    // Legacy coupon buttons were removed; dynamic handlers are defined inside the fetch promise above.
 
 });
 </script>

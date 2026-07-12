@@ -8,7 +8,7 @@
 
 <div class="card shadow border-0 rounded-4 mb-4">
     <div class="card-body p-4">
-        <form action="{{ route('admin.settings.update') }}" method="POST">
+        <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -35,22 +35,42 @@
             <div class="row mb-3">
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">مستخدم من الأفراد والجهات</label>
-                    <input type="text" name="stat_users" class="form-control" value="{{ old('stat_users', $settings['stat_users'] ?? '25,000+') }}" required>
+                    <input type="text" name="stat_users" class="form-control mb-2" value="{{ old('stat_users', $settings['stat_users'] ?? '25,000+') }}" required>
+                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
+                    @if(isset($settings['stat_users_icon']) && $settings['stat_users_icon'])
+                        <img src="{{ asset($settings['stat_users_icon']) }}" class="mb-1 d-block" height="30">
+                    @endif
+                    <input type="file" name="stat_users_icon" class="form-control form-control-sm" accept="image/*">
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">اختبار ومقياس تم إنجازه</label>
-                    <input type="text" name="stat_exams" class="form-control" value="{{ old('stat_exams', $settings['stat_exams'] ?? '10,000+') }}" required>
+                    <input type="text" name="stat_exams" class="form-control mb-2" value="{{ old('stat_exams', $settings['stat_exams'] ?? '10,000+') }}" required>
+                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
+                    @if(isset($settings['stat_exams_icon']) && $settings['stat_exams_icon'])
+                        <img src="{{ asset($settings['stat_exams_icon']) }}" class="mb-1 d-block" height="30">
+                    @endif
+                    <input type="file" name="stat_exams_icon" class="form-control form-control-sm" accept="image/*">
                 </div>
             </div>
 
             <div class="row mb-4">
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">مقياس مهني وشخصي معتمد</label>
-                    <input type="text" name="stat_assessments" class="form-control" value="{{ old('stat_assessments', $settings['stat_assessments'] ?? '150+') }}" required>
+                    <input type="text" name="stat_assessments" class="form-control mb-2" value="{{ old('stat_assessments', $settings['stat_assessments'] ?? '150+') }}" required>
+                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
+                    @if(isset($settings['stat_assessments_icon']) && $settings['stat_assessments_icon'])
+                        <img src="{{ asset($settings['stat_assessments_icon']) }}" class="mb-1 d-block" height="30">
+                    @endif
+                    <input type="file" name="stat_assessments_icon" class="form-control form-control-sm" accept="image/*">
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">مجال ومهارة مختلفة</label>
-                    <input type="text" name="stat_fields" class="form-control" value="{{ old('stat_fields', $settings['stat_fields'] ?? '50+') }}" required>
+                    <input type="text" name="stat_fields" class="form-control mb-2" value="{{ old('stat_fields', $settings['stat_fields'] ?? '50+') }}" required>
+                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
+                    @if(isset($settings['stat_fields_icon']) && $settings['stat_fields_icon'])
+                        <img src="{{ asset($settings['stat_fields_icon']) }}" class="mb-1 d-block" height="30">
+                    @endif
+                    <input type="file" name="stat_fields_icon" class="form-control form-control-sm" accept="image/*">
                 </div>
             </div>
 

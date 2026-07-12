@@ -20,8 +20,9 @@ class RecommendationController extends Controller
     {
         $recommendations = $this->recommendationService->allGrouped();
         $assessments = Assessment::orderBy('title_ar')->get();
+        $icons = \App\Models\Icon::all()->groupBy('category');
 
-        return view('admin.recommendations.index', compact('recommendations', 'assessments'));
+        return view('admin.recommendations.index', compact('recommendations', 'assessments', 'icons'));
     }
 
     public function store(StoreRecommendationRequest $request): JsonResponse

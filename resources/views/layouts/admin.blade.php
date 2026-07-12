@@ -62,6 +62,11 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.icons*') ? 'active' : '' }}" href="{{ route('admin.icons.index') }}">
+                    <i class="bi bi-images me-2"></i>إدارة الأيقونات
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.statistics*') ? 'active' : '' }}" href="{{ route('admin.statistics.index') }}">
                     <i class="bi bi-bar-chart-line me-2"></i>الإحصائيات
                 </a>
@@ -125,6 +130,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script src="{{ asset('js/app.js') }}"></script>
+<script src="{{ asset('js/json-lists.js') }}"></script>
 @stack('scripts')
 </body>
 </html>
