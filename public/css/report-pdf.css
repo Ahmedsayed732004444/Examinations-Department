@@ -662,7 +662,7 @@ body {
         width: 100% !important;
         height: auto !important;
         min-height: auto !important;
-        page-break-after: auto !important;
+        page-break-after: always !important;
         page-break-inside: auto !important;
         position: relative !important;
         -webkit-print-color-adjust: exact !important;
@@ -679,16 +679,17 @@ body {
         display: none !important;
     }
     
-    /* Prevent page breaks inside accordion items and cards */
+    /* Prevent page breaks inside key report cards and items */
     .accordion-item,
     .p2-section-card,
-    .col,
-    .card,
-    .bg-white,
     .overall-result-box,
     .summary-card,
     .radar-card,
-    .mb-4 {
+    .dimension-detail-item,
+    .plan-step,
+    .opp-item,
+    .cert-card,
+    .p2-section-card .col {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
     }

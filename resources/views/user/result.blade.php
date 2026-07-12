@@ -88,8 +88,9 @@
             'يتطلب', 'يتوجب', 'الهدف التدريبي', 'التدريب على', 'ينبغي', 'لذا'
         ];
         foreach($adviseKeywords as $kw) {
-            if (mb_strpos($text, $kw) !== false) {
-                $parts = explode($kw, $text, 2);
+            $pattern = '/(?<!\p{L})' . preg_quote($kw, '/') . '(?!\p{L})/u';
+            if (preg_match($pattern, $text)) {
+                $parts = preg_split($pattern, $text, 2);
                 $text = trim($parts[0]);
                 $text = preg_replace('/(\s*لذلك\s*[,،]?\s*|\s*ولهذا\s*[,،]?\s*)$/u', '', $text);
                 $impText = $kw . $parts[1];
@@ -102,8 +103,10 @@
                 break;
             }
         }
-        if (!empty($text) && !in_array(mb_substr($text, -1), ['.', '!', '؟', ':'])) {
-            $text .= '.';
+        if (!empty($text) && !in_array(mb_substr(trim($text), -1), ['.', '!', '؟', ':'])) {
+            $text = trim($text) . '.';
+        } else {
+            $text = trim($text);
         }
         $parsedRecommendation = $text;
     }
@@ -281,54 +284,36 @@
             <h2 class="p2-main-title mt-5 mb-4"><i class="bi bi-layers text-darkblue"></i> تفاصيل نتائج الأبعاد</h2>
             <div class="card shadow-sm border-0 rounded-4 mb-5">
                 <div class="card-body p-0">
-                    @foreach($dimensions as $index => $dim)
-                    <div class="p-4 {{ !$loop->last ? 'border-bottom' : '' }}">
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
-                            <h5 class="fw-bold text-darkblue mb-0">{{ $dim['name'] }}</h5>
-                            <span class="badge bg-primary rounded-pill px-3 py-2" style="font-size: 0.85rem;">
-                                الدرجة: {{ $dim['score'] }} من {{ $dim['max_score'] }} | المستوى: {{ $dim['display_level'] ?? $dim['level'] }}
-                            </span>
+                    <div class="accordion" id="dimensionsAccordion">
+                        @foreach($dimensions as $index => $dim)
+                        <div class="accordion-item border-0 {{ !$loop->last ? 'border-bottom' : '' }} dimension-detail-item">
+                            <h2 class="accordion-header" id="heading{{ $index }}">
+                                <button class="accordion-button collapsed px-4 py-3 fw-bold text-darkblue bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" aria-expanded="false" aria-controls="collapse{{ $index }}" style="box-shadow: none;">
+                                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center w-100 pe-3 gap-2">
+                                        <span style="font-size: 1.05rem;">{{ $dim['name'] }}</span>
+                                        <span class="badge bg-primary rounded-pill px-3 py-2" style="font-size: 0.85rem; font-weight: normal;">
+                                            الدرجة: {{ $dim['score'] }} من {{ $dim['max_score'] }} | المستوى: {{ $dim['display_level'] ?? $dim['level'] }}
+                                        </span>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ $index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ $index }}" data-bs-parent="#dimensionsAccordion">
+                                <div class="accordion-body px-4 pb-4 pt-1">
+                                    @if(!empty($dim['interpretation']))
+                                    <p class="text-muted mb-0" style="line-height: 1.8; font-size: 0.95rem; text-align: justify;">
+                                        {{ $dim['interpretation'] }}
+                                    </p>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
-                        @if(!empty($dim['interpretation']))
-                        <p class="text-muted mb-0" style="line-height: 1.8; font-size: 0.95rem; text-align: justify;">
-                            {{ $dim['interpretation'] }}
-                        </p>
-                        @endif
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-
-            <!-- Opportunities (Footer of Page 1 Content) -->
-            @if(count($improvementPoints) > 0 || (count($radarLabels) > 1 && count($weaknesses) > 0))
-            <h2 class="p2-main-title mt-4"><i class="bi bi-graph-up-arrow text-darkblue"></i> فرص التطوير</h2>
-            <div class="opp-card">
-                
-
-                @if(count($radarLabels) > 1 && count($weaknesses) > 0)
-                <div class="row">
-                    @forelse(array_slice($weaknesses, 0, 4) as $wk)
-                    <div class="col-lg-3 col-sm-6 col-12 opp-item text-center px-3 mb-3 mb-lg-0" style="border-left: 1px solid #fde68a;">
-                        <h6>{{ $wk->title }}</h6>
-                        <p>{{ $wk->desc }}</p>
-                    </div>
-                    @empty
-                    @endforelse
-                </div>
-                @endif
-
-                @if(count($improvementPoints) > 0)
-                <div class="{{ (count($radarLabels) > 1 && count($weaknesses) > 0) ? 'mt-4 pt-3' : '' }}" style="{{ (count($radarLabels) > 1 && count($weaknesses) > 0) ? 'border-top: 1px dashed #fde68a;' : '' }}">
-                    <ul style="padding-right: 20px; margin-bottom: 0; font-size: 0.95rem; color: #475569; line-height: 1.6;">
-                        @foreach($improvementPoints as $pt)
-                            <li style="margin-bottom: 6px;"><i class="bi bi-check2-circle text-gold me-2"></i> {{ $pt }}</li>
                         @endforeach
-                    </ul>
+                    </div>
                 </div>
-                @endif
             </div>
             @endif
+
+
         </div>
 
 
@@ -522,13 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 plugins: {
                     legend: { display: false },
                     datalabels: {
-                        display: true,
-                        color: '#1e3a8a',
-                        font: { family: 'Tajawal', weight: 'bold', size: 11 },
-                        formatter: function(value) { return value + '%'; },
-                        align: 'start',
-                        anchor: 'end',
-                        offset: 6
+                        display: false
                     }
                 }
             },
@@ -544,7 +523,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     grid: { color: '#e2e8f0' },
                     pointLabels: {
                         font: { family: 'Tajawal', size: 11, weight: 'bold' },
-                        color: '#0f172a'
+                        color: '#0f172a',
+                        callback: function(label, index) {
+                            if (typeof index !== 'undefined' && data && typeof data[index] !== 'undefined') {
+                                return [label, data[index] + '%'];
+                            }
+                            return label;
+                        }
                     },
                     ticks: { display: false, stepSize: 20 }
                 }
