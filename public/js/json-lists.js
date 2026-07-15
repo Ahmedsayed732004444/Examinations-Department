@@ -22,6 +22,24 @@ $(document).ready(function() {
         $wrapper.append($list).append($inputGroup);
         $textarea.after($wrapper);
         
+        function normalizeItem(item) {
+            if (typeof item === 'string') {
+                const normalized = {};
+                const hasTitle = fields.some(f => f.key === 'title');
+                fields.forEach(f => {
+                    if (f.key === 'title') {
+                        normalized[f.key] = item;
+                    } else if (!hasTitle && f.key === fields[0].key) {
+                        normalized[f.key] = item;
+                    } else {
+                        normalized[f.key] = f.type === 'select' ? (f.options[0]?.value || '') : '';
+                    }
+                });
+                return normalized;
+            }
+            return item;
+        }
+
         // Load initial data
         let initialData = [];
         try {
@@ -34,7 +52,9 @@ $(document).ready(function() {
             console.error('Failed to parse JSON', e);
         }
         
-        initialData.forEach(item => addItem(item));
+        initialData.forEach(item => {
+            addItem(normalizeItem(item));
+        });
         
         function updateTextarea() {
             const currentItems = [];
@@ -144,7 +164,7 @@ $(document).ready(function() {
                 try {
                     const parsed = JSON.parse(newVal);
                     if (Array.isArray(parsed)) {
-                        parsed.forEach(i => addItem(i));
+                        parsed.forEach(i => addItem(normalizeItem(i)));
                     }
                 } catch(e){}
             }

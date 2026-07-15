@@ -31,8 +31,7 @@ class ResultFormatter
         $progIntro = $recommendation ? $recommendation->programs_intro_ar : null;
         $progOutro = $recommendation ? $recommendation->programs_outro_ar : null;
         $progText = $recommendation ? $recommendation->programs_ar : null;
-        
-        $programs = is_array($progText) ? $progText : $this->parseList($progText);
+        $programs = is_array($progText) ? $this->formatProgramsArray($progText) : $this->formatProgramsArray($this->parseList($progText));
         
         if (!empty($progIntro)) $response['programs_intro'] = $progIntro;
         if (!empty($programs)) $response['programs'] = $programs;
@@ -63,9 +62,11 @@ class ResultFormatter
             $interp = $ds->dimension->interpretations->where('level', $ds->level)->first();
             $pct = $ds->max_score > 0 ? round(($ds->score / $ds->max_score) * 100) : 0;
 
+            $cleanName = preg_replace('/^المحور\s+\S+[:：]\s*/u', '', $ds->dimension->name_ar);
+
             $dimensions[] = [
                 'id' => $ds->dimension->id,
-                'name' => $ds->dimension->name_ar,
+                'name' => $cleanName,
                 'score' => $ds->score,
                 'max_score' => $ds->max_score,
                 'percentage' => $pct,
@@ -75,7 +76,7 @@ class ResultFormatter
             ];
 
             // Chart Data using score / max_score
-            $chartLabels[] = $ds->dimension->name_ar;
+            $chartLabels[] = $cleanName;
             $chartData[] = $pct;
         }
 
@@ -144,6 +145,22 @@ class ResultFormatter
             return [
                 'title' => trim(preg_replace('/^[\d\-\.\*\s]+/u', '', $cert)),
                 'description' => 'شهادة احترافية'
+            ];
+        }, array_filter($items));
+    }
+
+    private function formatProgramsArray(array $items): array
+    {
+        return array_map(function($prog) {
+            if (is_array($prog)) {
+                return $prog;
+            }
+            if (is_object($prog)) {
+                return (array) $prog;
+            }
+            return [
+                'title' => trim(preg_replace('/^[\d\-\.\*\s]+/u', '', $prog)),
+                'icon' => 'bi-journal-bookmark'
             ];
         }, array_filter($items));
     }

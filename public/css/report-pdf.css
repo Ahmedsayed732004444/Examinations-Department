@@ -156,17 +156,24 @@ body {
     margin-bottom: 0;
 }
 .info-icon-box {
-    width: 45px;
-    height: 45px;
-    background-color: #e2e8f0;
-    border-radius: 12px;
+    width: 42px;
+    height: 42px;
+    background-color: #f0f4f8;
+    border: 1px solid rgba(26, 43, 86, 0.08);
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
-    color: #64748b;
+    font-size: 1.15rem;
+    color: #1a2b56;
     margin-left: 15px; /* RTL */
     flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+.info-row:hover .info-icon-box {
+    background-color: #1a2b56;
+    color: #ffffff;
+    border-color: #1a2b56;
 }
 .info-text-box {
     flex-grow: 1;
@@ -704,6 +711,38 @@ body {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
+    
+    /* Force sidebar user info items to stack vertically on print */
+    .user-info-card {
+        padding: 15px !important;
+    }
+    .user-info-card .row > div {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+    .user-info-card .info-row {
+        margin-bottom: 12px !important;
+    }
+    .user-info-card .row > div:last-child .info-row {
+        margin-bottom: 0 !important;
+    }
+    .user-info-card .info-label,
+    .user-info-card .info-value {
+        word-break: keep-all !important;
+        word-wrap: normal !important;
+        white-space: normal !important;
+    }
+    .user-info-card .info-icon-box {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 1rem !important;
+        border-radius: 8px !important;
+        background-color: #f0f4f8 !important;
+        color: #1a2b56 !important;
+        border: 1px solid rgba(26, 43, 86, 0.08) !important;
+        margin-left: 12px !important;
+    }
 }
 
 /* Responsive Overrides */
@@ -876,6 +915,24 @@ body {
     
     .p2-section-card .badge {
         font-size: 0.8rem !important;
+    }
+
+    .plan-step {
+        padding: 12px 10px !important;
+        max-width: 250px;
+        margin: 0 auto;
+    }
+    .plan-step h6 {
+        font-size: 0.85rem !important;
+        margin-bottom: 4px !important;
+    }
+    .plan-step p {
+        font-size: 0.72rem !important;
+        line-height: 1.4 !important;
+    }
+    .plan-step-icon {
+        font-size: 1.4rem !important;
+        margin-top: 5px !important;
     }
 
     .footer-bar {

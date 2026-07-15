@@ -670,25 +670,28 @@
                                     <input type="text" class="form-control form-control-sm rec-input-certs-intro" placeholder="مثال: من أهم الشهادات التي ننصحك بالحصول عليها:">
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label small fw-medium text-muted">الشهادات الاحترافية المناسبة (شهادة في كل سطر)</label>
-                                    <textarea class="form-control form-control-sm rec-textarea-certificates dynamic-list-data" rows="3"></textarea>
+                                    <label class="form-label small fw-medium text-muted">الشهادات الاحترافية المناسبة</label>
+                                    <textarea class="form-control form-control-sm rec-textarea-certificates json-certificates-data" rows="3" placeholder="إضافة شهادة..."></textarea>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label small fw-medium text-muted">البرامج التدريبية المقترحة (برنامج في كل سطر)</label>
-                                    <textarea class="form-control form-control-sm rec-textarea-programs dynamic-list-data" rows="3"></textarea>
+                                    <label class="form-label small fw-medium text-muted">البرامج التدريبية المقترحة</label>
+                                    <textarea class="form-control form-control-sm rec-textarea-programs json-programs-data" rows="3" placeholder="إضافة برنامج..."></textarea>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label small fw-medium text-muted">الجملة الافتتاحية لخطة التطوير (اختياري)</label>
                                     <input type="text" class="form-control form-control-sm rec-input-plan-intro" placeholder="مثال: نقترح عليك خلال الـ 30 يوماً القادمة اتباع الخطوات التالية:">
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label small fw-medium text-muted">خطة تطوير (30 يوماً) (خطوة في كل سطر)</label>
-                                    <textarea class="form-control form-control-sm rec-textarea-plan dynamic-list-data" rows="3"></textarea>
+                                    <label class="form-label small fw-medium text-muted">خطة تطوير (30 يوماً)</label>
+                                    <textarea class="form-control form-control-sm rec-textarea-plan json-plan-data" rows="3" placeholder="إضافة خطوة..."></textarea>
                                 </div>
-                                <button type="submit" class="btn btn-success btn-sm w-100 btn-save-recommendation">
-                                    <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ التوصية</span>
-                                    <span class="spinner-border spinner-border-sm d-none"></span>
-                                </button>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-success btn-sm flex-grow-1 btn-save-recommendation">
+                                        <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ التوصية</span>
+                                        <span class="spinner-border spinner-border-sm d-none"></span>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm btn-cancel-rec-edit" data-level="NEW_ID">إلغاء</button>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -1481,6 +1484,31 @@ $(document).ready(function() {
         });
     }
 
+    window.addNewRecommendationCard = function() {
+        $('#no-recs-placeholder').addClass('d-none');
+        
+        if ($('#rec-col-NEW_ID').length > 0) {
+            $('#rec-col-NEW_ID').find('input').first().focus();
+            return;
+        }
+        
+        const template = document.getElementById('new-rec-template');
+        if (!template) return;
+        
+        const clone = template.content.cloneNode(true);
+        $('#recommendations-container').append(clone);
+        
+        if (typeof window.initAllJsonLists === 'function') {
+            window.initAllJsonLists('#rec-col-NEW_ID');
+        }
+        
+        $('html, body').animate({
+            scrollTop: $('#rec-col-NEW_ID').offset().top - 100
+        }, 300);
+        
+        $('#rec-col-NEW_ID').find('input').first().focus();
+    };
+
     // Toggle forms
     $(document).on('click', '.btn-expand-rec-form', function() {
         const level = $(this).data('level');
@@ -1496,8 +1524,15 @@ $(document).ready(function() {
 
     $(document).on('click', '.btn-cancel-rec-edit', function() {
         const level = $(this).data('level');
-        $(`#rec-form-${level}`).addClass('d-none');
-        $(`#rec-view-${level}`).removeClass('d-none');
+        if (level === 'NEW_ID') {
+            $('#rec-col-NEW_ID').remove();
+            if ($('#recommendations-container').children('.rec-col').length === 0) {
+                $('#no-recs-placeholder').removeClass('d-none');
+            }
+        } else {
+            $(`#rec-form-${level}`).addClass('d-none');
+            $(`#rec-view-${level}`).removeClass('d-none');
+        }
     });
 
     // Delete recommendation

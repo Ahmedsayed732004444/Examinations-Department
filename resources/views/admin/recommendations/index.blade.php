@@ -42,10 +42,10 @@
                                                 data-low="{{ $rec->low_threshold }}"
                                                 data-desc="{{ $rec->description_ar }}"
                                                 data-certificates_intro="{{ $rec->certificates_intro_ar }}"
-                                                data-certificates="{{ $rec->certificates_ar }}"
-                                                data-programs="{{ is_array($rec->programs_ar) ? implode("\n", $rec->programs_ar) : $rec->programs_ar }}"
+                                                data-certificates="{{ json_encode($rec->certificates_ar ?? []) }}"
+                                                data-programs="{{ json_encode($rec->programs_ar ?? []) }}"
                                                 data-plan_intro="{{ $rec->plan_30_days_intro_ar }}"
-                                                data-plan="{{ $rec->plan_30_days_ar }}">
+                                                data-plan="{{ json_encode($rec->plan_30_days_ar ?? []) }}">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <button class="btn btn-sm btn-outline-danger btn-delete-rec"
@@ -214,9 +214,23 @@ $(document).on('click', '.btn-edit-rec', function() {
     $('#r-certificates_intro_ar').val(btn.data('certificates_intro'));
     $('#r-plan_30_days_intro_ar').val(btn.data('plan_intro'));
     
-    $('#r-certificates_ar').val(JSON.stringify(btn.data('certificates')));
-    $('#r-programs_ar').val(JSON.stringify(btn.data('programs')));
-    $('#r-plan_30_days_ar').val(JSON.stringify(btn.data('plan')));
+    const certsVal = JSON.stringify(btn.data('certificates') || []);
+    const progsVal = JSON.stringify(btn.data('programs') || []);
+    const planVal = JSON.stringify(btn.data('plan') || []);
+    
+    $('#r-certificates_ar').val(certsVal);
+    $('#r-programs_ar').val(progsVal);
+    $('#r-plan_30_days_ar').val(planVal);
+    
+    if ($('#r-certificates_ar').data('clearItems')) {
+        $('#r-certificates_ar').data('clearItems')(certsVal);
+    }
+    if ($('#r-programs_ar').data('clearItems')) {
+        $('#r-programs_ar').data('clearItems')(progsVal);
+    }
+    if ($('#r-plan_30_days_ar').data('clearItems')) {
+        $('#r-plan_30_days_ar').data('clearItems')(planVal);
+    }
     
     $('.modal-title').text('تحديث التوصية');
     new bootstrap.Modal(document.getElementById('recModal')).show();

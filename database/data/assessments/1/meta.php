@@ -9,4 +9,5 @@ return array (
   'is_active' => true,
   'image_url' => '1.png',
   'price' => 199,
+  'scoring_type' => 'highest_dimension',
 );

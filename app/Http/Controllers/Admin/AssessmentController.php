@@ -169,7 +169,8 @@ class AssessmentController extends Controller
         $session = tap(new ExamSession([
             'id' => 'PREVIEW-SESSION-'.time(),
             'status' => 'completed',
-        ]))->setRelation('result', $result);
+        ]))->setRelation('result', $result)
+           ->setRelation('assessment', $assessment);
 
         return view('user.result', array_merge(['session' => $session], $formattedData));
     }

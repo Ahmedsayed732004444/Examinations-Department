@@ -2,7 +2,7 @@
 @section('title', 'تقرير نتيجة المقياس - ' . (is_array($assessment) ? $assessment['title_ar'] : $assessment->title_ar))
 
 @push('styles')
-<link href="{{ asset('css/report-pdf.css') }}" rel="stylesheet">
+<link href="{{ asset('css/report-pdf.css') }}?v={{ filemtime(public_path('css/report-pdf.css')) }}" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 @endpush
@@ -42,9 +42,12 @@
         }
         $mainLvl = ['label' => $highestLabel, 'degree' => $highestLabel];
     } else {
-        if ($pct >= 67) $levelKey = 'high';
-        elseif ($pct >= 34) $levelKey = 'medium';
-        else $levelKey = 'low';
+        $levelKey = $resObj->level ?? $level ?? 'medium';
+        if (!array_key_exists($levelKey, $lvlData)) {
+            if ($pct >= 67) $levelKey = 'high';
+            elseif ($pct >= 34) $levelKey = 'medium';
+            else $levelKey = 'low';
+        }
         $mainLvl = $lvlData[$levelKey];
     }
 
@@ -81,28 +84,6 @@
                 break;
             }
         }
-        $adviseKeywords = [
-            'لذلك، ننصح', 'لذلك ننصح', 'لذلك، نوصي', 'لذلك نوصي', 'لذلك، احرص', 'لذلك احرص',
-            'احرص على', 'يُنصح', 'ينصح', 'نوصي', 'ننصح', 'ولتحسين', 'للتطوير', 'ولتعزيز',
-            'تحتاج', 'المطلوب', 'عليك', 'يجب', 'من المهم', 'من الضروري', 'نقترح',
-            'يتطلب', 'يتوجب', 'الهدف التدريبي', 'التدريب على', 'ينبغي', 'لذا'
-        ];
-        foreach($adviseKeywords as $kw) {
-            $pattern = '/(?<!\p{L})' . preg_quote($kw, '/') . '(?!\p{L})/u';
-            if (preg_match($pattern, $text)) {
-                $parts = preg_split($pattern, $text, 2);
-                $text = trim($parts[0]);
-                $text = preg_replace('/(\s*لذلك\s*[,،]?\s*|\s*ولهذا\s*[,،]?\s*)$/u', '', $text);
-                $impText = $kw . $parts[1];
-                $sentences = preg_split('/[.\n]+|،\s+/', $impText);
-                foreach($sentences as $s) {
-                    $s = trim(ltrim($s, '-*• '));
-                    if (str_contains($s, 'البرامج التدريبية') || str_contains($s, 'الدورات المقترحة') || str_contains($s, 'البرامج المقترحة')) continue;
-                    if (mb_strlen($s) > 10) $improvementPoints[] = $s;
-                }
-                break;
-            }
-        }
         if (!empty($text) && !in_array(mb_substr(trim($text), -1), ['.', '!', '؟', ':'])) {
             $text = trim($text) . '.';
         } else {
@@ -120,12 +101,18 @@
     $planSteps = [];
     if (!empty($tempPlanSteps)) {
         foreach($tempPlanSteps as $k => $step) {
-            if(is_array($step) && isset($step['title'])) {
-                $planSteps[] = $step['title'];
+            if(is_array($step)) {
+                $planSteps[] = (object)[
+                    'period' => $step['period'] ?? ('الخطوة ' . ($k + 1)),
+                    'title' => $step['title'] ?? '',
+                    'icon' => $step['icon'] ?? 'bi-calendar-check',
+                ];
             } else if (is_string($step)) {
-                $planSteps[] = $step;
-            } else {
-                $planSteps[] = '';
+                $planSteps[] = (object)[
+                    'period' => 'الخطوة ' . ($k + 1),
+                    'title' => $step,
+                    'icon' => 'bi-calendar-check',
+                ];
             }
         }
     }
@@ -186,7 +173,7 @@
                                     <div class="info-icon-box"><i class="bi bi-calendar-event-fill"></i></div>
                                     <div class="info-text-box">
                                         <div class="info-label">تاريخ التنفيذ</div>
-                                        <div class="info-value">{{ $result->created_at->format('d M Y') }}</div>
+                                        <div class="info-value">{{ \Carbon\Carbon::parse($result->created_at ?? $result->calculated_at ?? now())->format('d M Y') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -218,12 +205,37 @@
                                     <span class="text-muted fw-bold" style="font-size: 0.95rem;">/ {{ $result->max_possible_score }}</span>
                                 </div>
                                 @php
-                                    $circleColor = '#ef4444';
-                                    if ($pct >= 67) $circleColor = '#22c55e';
-                                    elseif ($pct >= 34) $circleColor = '#f59e0b';
+                                    $circleColor = '#1a2b56';
+                                    if (isset($levelKey)) {
+                                        if ($levelKey === 'high' || $levelKey === 'excellent' || $levelKey === 'advanced') {
+                                            $circleColor = '#22c55e';
+                                        } elseif ($levelKey === 'medium' || $levelKey === 'good' || $levelKey === 'average') {
+                                            $circleColor = '#f59e0b';
+                                        } elseif ($levelKey === 'low' || $levelKey === 'poor') {
+                                            $circleColor = '#ef4444';
+                                        }
+                                    } else {
+                                        // For highest_dimension scoring (e.g. Leadership Style)
+                                        $lbl = $mainLvl['label'] ?? '';
+                                        if (mb_strpos($lbl, 'ديمقراط') !== false) {
+                                            $circleColor = '#22c55e';
+                                        } elseif (mb_strpos($lbl, 'أوتوقراط') !== false || mb_strpos($lbl, 'تسلط') !== false) {
+                                            $circleColor = '#ef4444';
+                                        } else {
+                                            $circleColor = '#f59e0b';
+                                        }
+                                    }
                                 @endphp
-                                <div class="d-flex justify-content-center align-items-center rounded-circle shadow-sm" style="width: 75px; height: 75px; background-color: {{ $circleColor }}; color: white; font-weight: 900; font-size: 1.6rem; border: 3px solid #f8fafc;">
-                                    {{ $pct }}%
+                                <div class="rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 140px; height: 140px; background: conic-gradient(#1a2b56 0% {{ $pct }}%, #f59e0b {{ $pct }}% 100%); padding: 10px; position: relative; flex-shrink: 0;">
+                                    <div class="rounded-circle bg-white d-flex flex-column justify-content-center align-items-center" style="width: 100%; height: 100%;">
+                                        <span style="font-size: 2.2rem; font-weight: 900; color: #1a2b56; line-height: 1;">{{ $pct }}%</span>
+                                        <span style="font-size: 0.62rem; color: #64748b; font-weight: bold; margin-top: 6px; white-space: nowrap;">
+                                            {{ $isHighestDimension ? 'النمط السائد' : 'مستوى الجاهزية' }}
+                                        </span>
+                                        <span style="font-size: 0.72rem; color: {{ $circleColor }}; font-weight: 800; margin-top: 2px; text-align: center; max-width: 105px; line-height: 1.25; display: inline-block;">
+                                            {{ $mainLvl['label'] }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -264,7 +276,7 @@
                 </div>
 
             <!-- Radar -->
-            @if(count($radarLabels) > 1)
+            @if(!$isHighestDimension && count($radarLabels) > 1)
             <div class="row gx-4 mb-4">
                 @if(count($radarLabels) >= 3)
                 <div class="col-12 mb-4">
@@ -281,36 +293,55 @@
 
             <!-- Dimensions Results -->
             @if(!empty($dimensions) && count($dimensions) > 0)
-            <h2 class="p2-main-title mt-5 mb-4"><i class="bi bi-layers text-darkblue"></i> تفاصيل نتائج الأبعاد</h2>
-            <div class="card shadow-sm border-0 rounded-4 mb-5">
-                <div class="card-body p-0">
-                    <div class="accordion" id="dimensionsAccordion">
-                        @foreach($dimensions as $index => $dim)
-                        <div class="accordion-item border-0 {{ !$loop->last ? 'border-bottom' : '' }} dimension-detail-item">
-                            <h2 class="accordion-header" id="heading{{ $index }}">
-                                <button class="accordion-button collapsed px-4 py-3 fw-bold text-darkblue bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" aria-expanded="false" aria-controls="collapse{{ $index }}" style="box-shadow: none;">
-                                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center w-100 pe-3 gap-2">
-                                        <span style="font-size: 1.05rem;">{{ $dim['name'] }}</span>
-                                        <span class="badge bg-primary rounded-pill px-3 py-2" style="font-size: 0.85rem; font-weight: normal;">
-                                            الدرجة: {{ $dim['score'] }} من {{ $dim['max_score'] }} | المستوى: {{ $dim['display_level'] ?? $dim['level'] }}
-                                        </span>
+                @php
+                    $hasAnyInterpretation = false;
+                    foreach($dimensions as $d) {
+                        if(!empty($d['interpretation'])) {
+                            $hasAnyInterpretation = true;
+                            break;
+                        }
+                    }
+                @endphp
+                @if($hasAnyInterpretation)
+                <h2 class="p2-main-title mt-5 mb-4"><i class="bi bi-layers text-darkblue"></i>تفسير المهارات</h2>
+                <div class="card shadow-sm border-0 rounded-4 mb-5">
+                    <div class="card-body p-0">
+                        <div class="accordion" id="dimensionsAccordion">
+                            @foreach($dimensions as $index => $dim)
+                            @php $hasInterp = !empty($dim['interpretation']); @endphp
+                            <div class="accordion-item border-0 {{ !$loop->last ? 'border-bottom' : '' }} dimension-detail-item">
+                                @if($hasInterp)
+                                    <h2 class="accordion-header" id="heading{{ $index }}">
+                                        <button class="accordion-button collapsed px-4 py-3 fw-bold text-darkblue bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" aria-expanded="false" aria-controls="collapse{{ $index }}" style="box-shadow: none;">
+                                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center w-100 pe-3 gap-2">
+                                                <span style="font-size: 1.05rem;">{{ $dim['name'] }}</span>
+                                                <span class="badge bg-primary rounded-pill px-3 py-2" style="font-size: 0.85rem; font-weight: normal;">
+                                                     الدرجة: {{ $dim['score'] }} من {{ $dim['max_score'] }}@if(!$isHighestDimension) | المستوى: {{ $dim['display_level'] ?? $dim['level'] }}@endif
+                                                 </span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ $index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ $index }}" data-bs-parent="#dimensionsAccordion">
+                                        <div class="accordion-body px-4 pb-4 pt-1">
+                                            <p class="text-muted mb-0" style="line-height: 1.8; font-size: 0.95rem; text-align: justify;">
+                                                {{ $dim['interpretation'] }}
+                                            </p>
+                                        </div>
                                     </div>
-                                </button>
-                            </h2>
-                            <div id="collapse{{ $index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ $index }}" data-bs-parent="#dimensionsAccordion">
-                                <div class="accordion-body px-4 pb-4 pt-1">
-                                    @if(!empty($dim['interpretation']))
-                                    <p class="text-muted mb-0" style="line-height: 1.8; font-size: 0.95rem; text-align: justify;">
-                                        {{ $dim['interpretation'] }}
-                                    </p>
-                                    @endif
-                                </div>
+                                @else
+                                    <div class="px-4 py-3 fw-bold text-darkblue bg-white d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center w-100 gap-2">
+                                        <span style="font-size: 1.05rem;">{{ $dim['name'] }}</span>
+                                        <span class="badge bg-primary rounded-pill px-3 py-2" style="font-size: 0.85rem; font-weight: normal; margin-left: 20px;">
+                                             الدرجة: {{ $dim['score'] }} من {{ $dim['max_score'] }}@if(!$isHighestDimension) | المستوى: {{ $dim['display_level'] ?? $dim['level'] }}@endif
+                                         </span>
+                                    </div>
+                                @endif
                             </div>
+                            @endforeach
                         </div>
-                        @endforeach
                     </div>
                 </div>
-            </div>
+                @endif
             @endif
 
 
@@ -325,12 +356,6 @@
 
 
         <div class="page-padding pt-5 mt-4">
-            <h2 class="p2-main-title"><i class="bi bi-bullseye text-darkblue"></i> ماذا تعني هذه النتيجة؟</h2>
-            <p class="p2-subtitle">
-                تعكس نتيجتك امتلاكك لمجموعة قوية من المهارات التي تؤهلك لتحقيق الأهداف بكفاءة. 
-                لتحقيق أقصى استفادة من إمكاناتك، نوصيك بالتركيز على تطوير المهارات المحددة لتعزيز تأثيرك في بيئة العمل.
-            </p>
-
             <!-- Programs -->
             @if(!empty($progs))
             <div class="mb-4">
@@ -404,49 +429,23 @@
             @endif
 
             <!-- 30 Day Plan -->
-            @if(count($planSteps) >= 4)
+            @if(count($planSteps) > 0)
             <div class="p2-section-card bg-light-blue" style="margin-bottom:0;">
-                <div class="p2-section-title"><i class="bi bi-calendar3 text-darkblue"></i> خطة تطوير مختصرة (30 يوماً)</div>
+                <div class="p2-section-title"><i class="bi bi-calendar3 text-darkblue"></i> خطة تطوير مقترحة</div>
                 
                 <div class="row gx-2 gy-3 mt-4 justify-content-center align-items-stretch">
-                    <!-- Step 1 -->
-                    <div class="col-lg-3 col-md-6 col-12 d-flex align-items-center">
+                    @foreach($planSteps as $index => $step)
+                    <div class="col-lg-{{ count($planSteps) >= 4 ? '3' : (count($planSteps) == 3 ? '4' : (count($planSteps) == 2 ? '6' : '12')) }} col-md-6 col-12 d-flex align-items-center">
                         <div class="plan-step shadow-sm border-0 w-100">
-                            <h6>الأسبوع الأول</h6>
-                            <p>{{ $planSteps[0] ?? 'تحديد الأولويات ووضع خطة يومية.' }}</p>
-                            <div class="plan-step-icon"><i class="bi bi-clipboard-check"></i></div>
+                            <h6>{{ $step->period }}</h6>
+                            <p>{{ $step->title }}</p>
+                            <div class="plan-step-icon"><i class="bi {{ $step->icon }}"></i></div>
                         </div>
+                        @if(!$loop->last && count($planSteps) > 1 && count($planSteps) <= 4)
                         <div class="plan-arrow d-none d-lg-flex ms-2"><i class="bi bi-chevron-left"></i></div>
+                        @endif
                     </div>
-                    
-                    <!-- Step 2 -->
-                    <div class="col-lg-3 col-md-6 col-12 d-flex align-items-center">
-                        <div class="plan-step shadow-sm border-0 w-100">
-                            <h6>الأسبوع الثاني</h6>
-                            <p>{{ $planSteps[1] ?? 'تعلم تقنيات جديدة للعمل.' }}</p>
-                            <div class="plan-step-icon"><i class="bi bi-handshake"></i></div>
-                        </div>
-                        <div class="plan-arrow d-none d-lg-flex ms-2"><i class="bi bi-chevron-left"></i></div>
-                    </div>
-                    
-                    <!-- Step 3 -->
-                    <div class="col-lg-3 col-md-6 col-12 d-flex align-items-center">
-                        <div class="plan-step shadow-sm border-0 w-100">
-                            <h6>الأسبوع الثالث</h6>
-                            <p>{{ $planSteps[2] ?? 'تطبيق الاستراتيجيات عملياً.' }}</p>
-                            <div class="plan-step-icon"><i class="bi bi-person-lines-fill"></i></div>
-                        </div>
-                        <div class="plan-arrow d-none d-lg-flex ms-2"><i class="bi bi-chevron-left"></i></div>
-                    </div>
-                    
-                    <!-- Step 4 -->
-                    <div class="col-lg-3 col-md-6 col-12 d-flex align-items-center">
-                        <div class="plan-step shadow-sm border-0 w-100">
-                            <h6>الأسبوع الرابع</h6>
-                            <p>{{ $planSteps[3] ?? 'مراجعة التقدم وتقييم النتائج.' }}</p>
-                            <div class="plan-step-icon"><i class="bi bi-bar-chart-steps"></i></div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
             </div>
             @endif

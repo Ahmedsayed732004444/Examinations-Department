@@ -424,7 +424,7 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
         </p>
     </div>
     <div class="hero-image-wrap" style="width: 45%; text-align: left;">
-        <img src="{{ asset('images/dashboard/hero_banner_1782904656284.png') }}" alt="Hero Banner" class="hero-image" style="width: 100%; max-height: 400px; border-radius: 12px; object-fit: cover;">
+        <img src="{{ asset('images/dashboard/hero_banner_new.jpg') }}" alt="Hero Banner" class="hero-image" style="width: 100%; max-height: 400px; border-radius: 12px; object-fit: cover;">
     </div>
 </div>
 
@@ -614,14 +614,15 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
                 </div>
 
                 @if(!$isCompleted && !$isInProgress)
-                <a href="#" class="btn-reveal-coupon"
+                <a href="#" class="btn-reveal-coupon w-100"
                    data-assessment-id="{{ $assessment->id }}"
                    data-assessment-title="{{ $assessment->title_ar }}"
                    data-assessment-price="{{ $assessment->price > 0 ? number_format($assessment->price, 0) : '0' }}"
                    data-hide-coupon="{{ $assessment->hide_coupon_field ? '1' : '0' }}"
-                   style="background-color: transparent; border-radius: 8px; padding: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; cursor: pointer; border: 1.5px dashed #bfdbfe; transition: all 0.2s;">
-                    <span style="color: #3b82f6; font-size: 0.6rem; font-weight: 700; text-align: center; white-space: nowrap;">
-                        احصل على كوبون من هنا
+                   style="background-color: #f0f7ff; border-radius: 8px; padding: 6px 8px; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; cursor: pointer; border: 1.2px dashed #2563eb; transition: all 0.2s;">
+                    <i class="bi bi-gift-fill" style="color: #2563eb; font-size: 0.95rem; flex-shrink: 0;"></i>
+                    <span style="color: #1e3a8a; font-size: 0.68rem; font-weight: 700; text-align: center; white-space: nowrap;">
+                        احصل على كوبون <span style="text-decoration: underline; color: #2563eb;">من هنا</span>
                     </span>
                 </a>
                 @endif
@@ -1116,7 +1117,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Reset UI
             document.getElementById('revealLoading').classList.remove('d-none');
             document.getElementById('revealNoCoupon').classList.add('d-none');
-            document.getElementById('revealCouponCard').classList.add('d-none');
             document.getElementById('revealModalTitle').textContent = revealAssessmentTitle;
             document.getElementById('revealModalSub').textContent = 'جارٍ البحث عن كوبون...';
 

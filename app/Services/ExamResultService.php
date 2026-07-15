@@ -90,6 +90,9 @@ class ExamResultService
         }
 
         $assessment = $session->assessment()->with(['recommendations'])->first();
+        if (! $assessment) {
+            abort(404, 'المقياس المرتبط بهذه الجلسة غير موجود. ربما تمت إعادة تهيئة قاعدة البيانات.');
+        }
         $recommendation = $assessment->recommendations->where('level', $result->level)->first();
 
         return $this->resultFormatter->format($assessment, $result, $recommendation);
