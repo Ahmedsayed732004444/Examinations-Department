@@ -27,6 +27,7 @@ class UpdateSettingsRequest extends FormRequest
             'hide_coupon_field' => 'nullable|boolean',
             'icon' => 'nullable|string|max:100',
             'icon_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'report_code' => 'nullable|string|max:50',
         ];
     }
 

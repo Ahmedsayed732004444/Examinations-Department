@@ -759,17 +759,21 @@
                                 <div class="form-text" style="font-size:0.65rem;">اختر صورة جديدة إذا أردت استبدال الصورة الحالية. سيتم مسح الصورة القديمة (إن لم تكن من الصور الافتراضية).</div>
                             </div>
                             <div class="row g-3 mb-4">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label small fw-semibold text-dark">وقت الاختبار (دقائق)</label>
                                     <input type="number" class="form-control" id="settings-time-limit" value="{{ $assessment->time_limit_min }}" placeholder="بلا حد للوقت" min="1">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label small fw-semibold text-dark">السعر (ر.س)</label>
                                     <input type="number" class="form-control" id="settings-price" value="{{ $assessment->price }}" step="0.01" min="0">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label small fw-semibold text-dark">التقييم (1-5)</label>
                                     <input type="number" class="form-control" id="settings-rating" value="{{ $assessment->rating }}" step="0.1" min="1" max="5">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold text-dark">بادئة كود التقرير (مثال: VR)</label>
+                                    <input type="text" class="form-control" id="settings-report-code" value="{{ $assessment->report_code }}" placeholder="بادئة رقم التقرير" maxlength="50">
                                 </div>
                                 <div class="col-12 mt-2 d-flex align-items-end flex-wrap gap-3">
                                     <div class="form-check form-switch ps-0 pe-5 mb-2 fs-6">
@@ -1612,6 +1616,7 @@ $(document).ready(function() {
         if ($('#settings-rating').val()) formData.append('rating', $('#settings-rating').val());
         formData.append('is_active', $('#settings-is-active').is(':checked') ? 1 : 0);
         formData.append('hide_coupon_field', $('#settings-hide-coupon').is(':checked') ? 1 : 0);
+        formData.append('report_code', $('#settings-report-code').val().trim());
         
         if ($('#settings-image')[0].files.length > 0) {
             formData.append('image', $('#settings-image')[0].files[0]);

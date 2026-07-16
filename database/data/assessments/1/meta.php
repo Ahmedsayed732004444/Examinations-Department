@@ -10,4 +10,5 @@ return array (
   'image_url' => '1.png',
   'price' => 199,
   'scoring_type' => 'highest_dimension',
+  'report_code' => 'REP-01',
 );

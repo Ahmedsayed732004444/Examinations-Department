@@ -27,6 +27,7 @@ class Assessment extends Model
         'rating_count',
         'hide_coupon_field',
         'icon',
+        'report_code',
     ];
 
     protected $casts = [

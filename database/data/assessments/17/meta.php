@@ -9,4 +9,5 @@ return array (
   'is_active' => true,
   'image_url' => '17.png',
   'price' => 199,
+  'report_code' => 'REP-17',
 );

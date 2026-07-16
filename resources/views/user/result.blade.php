@@ -41,11 +41,16 @@
             }
         }
         $mainLvl = ['label' => $highestLabel, 'degree' => $highestLabel];
+        
+        // Define levelKey based on the overall percentage score to align color themes (Green/Yellow/Red) with the gauge and progress bar
+        if ($pct >= 70) $levelKey = 'high';
+        elseif ($pct >= 40) $levelKey = 'medium';
+        else $levelKey = 'low';
     } else {
         $levelKey = $resObj->level ?? $level ?? 'medium';
         if (!array_key_exists($levelKey, $lvlData)) {
-            if ($pct >= 67) $levelKey = 'high';
-            elseif ($pct >= 34) $levelKey = 'medium';
+            if ($pct >= 70) $levelKey = 'high';
+            elseif ($pct >= 40) $levelKey = 'medium';
             else $levelKey = 'low';
         }
         $mainLvl = $lvlData[$levelKey];
@@ -123,6 +128,35 @@
     // Replace the global $assessment array with the Object!
     $assessment = $assessmentObj;
     $result = $resObj;
+
+    // Calculate colors based on result level
+    $circleColor = '#1a2b56';
+    $lc = 'primary'; 
+    if (isset($levelKey)) {
+        if ($levelKey === 'high' || $levelKey === 'excellent' || $levelKey === 'advanced') {
+            $circleColor = '#22c55e';
+            $lc = 'success';
+        } elseif ($levelKey === 'medium' || $levelKey === 'good' || $levelKey === 'average') {
+            $circleColor = '#f59e0b';
+            $lc = 'warning';
+        } elseif ($levelKey === 'low' || $levelKey === 'poor' || $levelKey === 'weak') {
+            $circleColor = '#ef4444';
+            $lc = 'danger';
+        }
+    } else {
+        // For highest_dimension scoring (e.g. Leadership Style)
+        $lbl = $mainLvl['label'] ?? '';
+        if (mb_strpos($lbl, 'ديمقراط') !== false || mb_strpos($lbl, 'متميز') !== false || mb_strpos($lbl, 'مرتفع') !== false) {
+            $circleColor = '#22c55e';
+            $lc = 'success';
+        } elseif (mb_strpos($lbl, 'أوتوقراط') !== false || mb_strpos($lbl, 'تسلط') !== false || mb_strpos($lbl, 'ضعيف') !== false || mb_strpos($lbl, 'منخفض') !== false) {
+            $circleColor = '#ef4444';
+            $lc = 'danger';
+        } else {
+            $circleColor = '#f59e0b';
+            $lc = 'warning';
+        }
+    }
 @endphp
 
 
@@ -131,120 +165,132 @@
     <div class="a4-page">
         
         <!-- Header -->
-        <div class="report-header">
-            <div class="header-logo px-4">
-                <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 55px; filter: brightness(0) invert(1); margin: 0;">
+        <div class="report-header px-4 pt-3">
+            <div class="header-logo">
+                <img src="{{ asset('images/logo.png') }}" alt="dar al rouaa" style="height: 50px; filter: brightness(0) invert(1); margin: 0;">
             </div>
-            <div class="header-center-tag">
-                <i class="bi bi-shield-check text-darkblue"></i> تقرير احترافي مدعوم بالتحليل العلمي
+            <div class="header-badge">
+                <i class="bi bi-patch-check-fill me-1"></i> تقرير احترافي مدعوم بالتحليل العلمي
             </div>
-            <div class="d-none d-md-block" style="width: 150px;"></div>
         </div>
 
-        <h1 class="report-main-title">تقرير نتائج {{ $assessment->title_ar }}</h1>
-        <p class="report-subtitle">تقرير احترافي يساعدك على فهم نتائجك واتخاذ قرارات تطوير أكثر وضوحاً.</p>
+        <div class="text-center mt-3 px-4">
+            <h1 class="report-main-title mb-2">تقرير نتائج {{ $assessment->title_ar }}</h1>
+            <p class="report-subtitle mb-0">{{ $assessment->subtitle_ar ?? 'تقرير احترافي يساعدك على فهم نتائجك واتخاذ قرارات تطوير أكثر وضوحاً.' }}</p>
+        </div>
 
-        <div class="page-padding">
-            <div class="row gx-4 mb-4">
-                <!-- Sidebar -->
-                <div class="col-lg-4 col-md-5 col-12 mb-4 mb-md-0">
-                    <div class="user-info-card">
-                        <div class="row gy-2 gx-2">
-                            <div class="col-lg-12 col-6">
-                                <div class="info-row m-0">
-                                    <div class="info-icon-box"><i class="bi bi-person-fill"></i></div>
-                                    <div class="info-text-box">
-                                        <div class="info-label">اسم المستفيد</div>
-                                        <div class="info-value">{{ auth()->user()->name }}</div>
-                                    </div>
+        <div class="page-padding mt-4">
+            
+            <!-- Metadata - Print View Only (1x3 Grid) -->
+            <div class="d-none d-print-block print-metadata-wrapper mb-4">
+                <table class="print-metadata-table w-100">
+                    <tr>
+                        <td style="width: 33.33%; border-left: 1px solid rgba(8, 145, 178, 0.08) !important;">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="print-meta-icon print-meta-solid"><i class="bi bi-person-fill"></i></div>
+                                <div class="ms-3 text-end">
+                                    <div class="print-meta-label">المستفيد</div>
+                                    <div class="print-meta-value">{{ auth()->user()->name }}</div>
                                 </div>
                             </div>
-                            <div class="col-lg-12 col-6">
-                                <div class="info-row m-0">
-                                    <div class="info-icon-box"><i class="bi bi-clipboard2-data-fill"></i></div>
-                                    <div class="info-text-box">
-                                        <div class="info-label">اسم المقياس</div>
-                                        <div class="info-value">{{ $assessment->title_ar }}</div>
-                                    </div>
+                        </td>
+                        <td style="width: 33.33%; border-left: 1px solid rgba(8, 145, 178, 0.08) !important;">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="print-meta-icon print-meta-soft"><i class="bi bi-calendar3-fill"></i></div>
+                                <div class="ms-3 text-end">
+                                    <div class="print-meta-label">تاريخ التنفيذ</div>
+                                    <div class="print-meta-value">{{ \Carbon\Carbon::parse($result->created_at ?? $result->calculated_at ?? now())->format('d M Y') }}</div>
                                 </div>
                             </div>
-                            <div class="col-lg-12 col-6">
-                                <div class="info-row m-0">
-                                    <div class="info-icon-box"><i class="bi bi-calendar-event-fill"></i></div>
-                                    <div class="info-text-box">
-                                        <div class="info-label">تاريخ التنفيذ</div>
-                                        <div class="info-value">{{ \Carbon\Carbon::parse($result->created_at ?? $result->calculated_at ?? now())->format('d M Y') }}</div>
-                                    </div>
+                        </td>
+                        <td style="width: 33.33%;">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="print-meta-icon print-meta-soft"><i class="bi bi-clipboard-fill"></i></div>
+                                <div class="ms-3 text-end">
+                                    <div class="print-meta-label">رقم التقرير</div>
+                                    <div class="print-meta-value">{{ !empty($assessment->report_code) ? strtoupper($assessment->report_code) : 'REP' }}-{{ strtoupper(substr($result->id, 0, 8)) }}</div>
                                 </div>
                             </div>
-                            <div class="col-lg-12 col-6">
-                                <div class="info-row m-0">
-                                    <div class="info-icon-box"><i class="bi bi-tags-fill"></i></div>
-                                    <div class="info-text-box">
-                                        <div class="info-label">رقم التقرير</div>
-                                        <div class="info-value">VR-{{ strtoupper(substr($result->id, 0, 8)) }}</div>
-                                    </div>
-                                </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Metadata - Screen View Only (3 horizontal cards with vertical dividers) -->
+            <div class="meta-container-card mb-4 d-print-none">
+                <div class="row g-0 align-items-center">
+                    <div class="col-4 py-2 border-left-divider">
+                        <div class="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center">
+                            <div class="meta-icon-box meta-icon-solid mb-2 mb-sm-0"><i class="bi bi-person-fill"></i></div>
+                            <div class="text-sm-end ms-sm-3">
+                                <div class="meta-label">المستفيد</div>
+                                <div class="meta-value" style="font-size: 0.8rem; white-space: normal;">{{ auth()->user()->name }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4 py-2 border-left-divider">
+                        <div class="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center">
+                            <div class="meta-icon-box meta-icon-soft mb-2 mb-sm-0"><i class="bi bi-calendar3-fill"></i></div>
+                            <div class="text-sm-end ms-sm-3">
+                                <div class="meta-label">تاريخ التنفيذ</div>
+                                <div class="meta-value" style="font-size: 0.8rem; white-space: normal;">{{ \Carbon\Carbon::parse($result->created_at ?? $result->calculated_at ?? now())->format('d M Y') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4 py-2">
+                        <div class="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center">
+                            <div class="meta-icon-box meta-icon-soft mb-2 mb-sm-0"><i class="bi bi-clipboard-fill"></i></div>
+                            <div class="text-sm-end ms-sm-3">
+                                <div class="meta-label">رقم التقرير</div>
+                                <div class="meta-value" style="font-size: 0.8rem; white-space: normal;">{{ !empty($assessment->report_code) ? strtoupper($assessment->report_code) : 'REP' }}-{{ strtoupper(substr($result->id, 0, 8)) }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Overall & Summary -->
-                <div class="col-lg-8 col-md-7 col-12">
-                    <!-- Score Card -->
-                    <div class="overall-result-box">
-                        <div class="result-header">
-                            <div>
-                                <div class="result-title">نتيجتك العامة</div>
-                                <div class="level-badge">{{ $isHighestDimension ? 'النمط السائد:' : 'مستوى الجاهزية:' }} {{ $mainLvl['label'] }}</div>
-                            </div>
-                            <div class="text-end text-darkblue d-flex align-items-center gap-3">
-                                <div>
-                                    <span class="fw-black" style="font-size: 2.2rem; line-height: 1; letter-spacing: -1px;">{{ $result->total_score }}</span>
-                                    <span class="text-muted fw-bold" style="font-size: 0.95rem;">/ {{ $result->max_possible_score }}</span>
-                                </div>
-                                @php
-                                    $circleColor = '#1a2b56';
-                                    if (isset($levelKey)) {
-                                        if ($levelKey === 'high' || $levelKey === 'excellent' || $levelKey === 'advanced') {
-                                            $circleColor = '#22c55e';
-                                        } elseif ($levelKey === 'medium' || $levelKey === 'good' || $levelKey === 'average') {
-                                            $circleColor = '#f59e0b';
-                                        } elseif ($levelKey === 'low' || $levelKey === 'poor') {
-                                            $circleColor = '#ef4444';
-                                        }
-                                    } else {
-                                        // For highest_dimension scoring (e.g. Leadership Style)
-                                        $lbl = $mainLvl['label'] ?? '';
-                                        if (mb_strpos($lbl, 'ديمقراط') !== false) {
-                                            $circleColor = '#22c55e';
-                                        } elseif (mb_strpos($lbl, 'أوتوقراط') !== false || mb_strpos($lbl, 'تسلط') !== false) {
-                                            $circleColor = '#ef4444';
-                                        } else {
-                                            $circleColor = '#f59e0b';
-                                        }
-                                    }
-                                @endphp
-                                <div class="rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 140px; height: 140px; background: conic-gradient(#1a2b56 0% {{ $pct }}%, #f59e0b {{ $pct }}% 100%); padding: 10px; position: relative; flex-shrink: 0;">
+            <!-- Score & Summary side-by-side row -->
+            <div class="row g-4 mb-4 align-items-start score-summary-row">
+                <!-- Score Card -->
+                <div class="col-md-6 col-12 d-flex">
+                    <div class="main-score-card w-100 p-4 d-flex flex-column justify-content-between">
+                        <!-- Card Header -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="card-section-title mb-0">النتيجة العامة</h4>
+                            <div class="card-section-icon"><i class="bi bi-award"></i></div>
+                        </div>
+
+                        <div class="row align-items-center">
+                            <!-- Gauge -->
+                            <div class="col-sm-5 col-5 text-center py-2 d-flex justify-content-center align-items-center">
+                                <div class="rounded-circle d-flex justify-content-center align-items-center shadow-sm score-gauge-wrapper" 
+                                     style="width: 120px; height: 120px; background: conic-gradient({{ $circleColor }} 0% {{ $pct }}%, #f3f4f6 {{ $pct }}% 100%); padding: 9px; position: relative;">
                                     <div class="rounded-circle bg-white d-flex flex-column justify-content-center align-items-center" style="width: 100%; height: 100%;">
-                                        <span style="font-size: 2.2rem; font-weight: 900; color: #1a2b56; line-height: 1;">{{ $pct }}%</span>
-                                        <span style="font-size: 0.62rem; color: #64748b; font-weight: bold; margin-top: 6px; white-space: nowrap;">
-                                            {{ $isHighestDimension ? 'النمط السائد' : 'مستوى الجاهزية' }}
-                                        </span>
-                                        <span style="font-size: 0.72rem; color: {{ $circleColor }}; font-weight: 800; margin-top: 2px; text-align: center; max-width: 105px; line-height: 1.25; display: inline-block;">
-                                            {{ $mainLvl['label'] }}
-                                        </span>
+                                        <span style="font-size: 1.9rem; font-weight: 900; color: #1a2b56; line-height: 1;">{{ $pct }}%</span>
+                                        <span style="font-size: 0.58rem; color: #64748b; font-weight: bold; margin-top: 4px; white-space: nowrap;">النتيجة الكلية</span>
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Level Info -->
+                            <div class="col-sm-7 col-7 py-2 text-start px-2">
+                                <div class="score-level-label">{{ $isHighestDimension ? 'النمط السائد:' : 'مستوى الجاهزية:' }}</div>
+                                <div class="score-level-value text-{{ $lc }} mb-1">{{ $mainLvl['label'] }}</div>
+                                <div class="score-level-range text-muted" style="font-size: 0.72rem; font-weight: 500;">
+                                    @if($lc === 'success')
+                                        النطاق (70 - 100)
+                                    @elseif($lc === 'warning')
+                                        النطاق (40 - 69)
+                                    @else
+                                        النطاق (0 - 39)
+                                    @endif
+                                </div>
+                            </div>
                         </div>
-                        
+
                         <!-- Progress Bar -->
-                        <div class="progress-container">
+                        <div class="progress-container mt-4 mb-2">
                             @php
-                                // Calculate pin position (RTL means 0% is right, 100% is left)
-                                // In HTML RTL, left is right. We use right: X%
                                 $pinPos = $pct; 
                             @endphp
                             <div class="progress-pin text-darkblue" style="right: {{ $pinPos }}%;"><i class="bi bi-geo-alt-fill"></i></div>
@@ -253,36 +299,50 @@
                                 <div class="progress-segment" style="background-color: #f59e0b;"></div>
                                 <div class="progress-segment" style="background-color: #22c55e;"></div>
                             </div>
-                            <div class="progress-labels">
-                                <div class="progress-label">منخفض</div>
-                                <div class="progress-label">متوسط</div>
-                                <div class="progress-label">مرتفع</div>
+                            <div class="progress-labels d-flex justify-content-between mt-2" style="font-size: 0.68rem; font-weight: 500;">
+                                <div class="progress-label text-danger" style="text-align: right;">منخفض<br>(0 - 39)</div>
+                                <div class="progress-label text-warning" style="text-align: center;">متوسط<br>(40 - 69)</div>
+                                <div class="progress-label text-success" style="text-align: left;">مرتفع<br>(70 - 100)</div>
                             </div>
                         </div>
                     </div>
-
-                @if(!empty($parsedRecommendation))
-                    <!-- Summary Card -->
-                    <div class="summary-card">
-                        <div class="summary-title">
-                            <div class="summary-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
-                            ملخص التقرير
-                        </div>
-                        <p class="summary-text">
-                            {{ $parsedRecommendation }}
-                        </p>
-                    </div>
-                @endif
                 </div>
 
-            <!-- Radar -->
+                <!-- Summary Card -->
+                <div class="col-md-6 col-12 d-flex">
+                    <div class="summary-card w-100 p-4 d-flex flex-column">
+                        <!-- Card Header -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="card-section-title mb-0">ملخص التقرير</h4>
+                            <div class="card-section-icon"><i class="bi bi-file-text"></i></div>
+                        </div>
+                        <div class="flex-grow-1">
+                            @php
+                                $sentences = array_filter(array_map('trim', explode('.', $parsedRecommendation)));
+                            @endphp
+                            <div class="summary-text mb-0" style="text-align: justify; font-size: 0.88rem; line-height: 1.7; color: #475569;">
+                                @foreach($sentences as $sentence)
+                                    @if(!empty($sentence))
+                                        <div class="mb-2 d-flex align-items-start gap-2">
+                                            <span class="text-primary" style="font-weight: bold;">•</span>
+                                            <span>{{ $sentence }}.</span>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Radar Chart -->
             @if(!$isHighestDimension && count($radarLabels) > 1)
             <div class="row gx-4 mb-4">
                 @if(count($radarLabels) >= 3)
                 <div class="col-12 mb-4">
                     <div class="radar-card text-center">
                         <div class="fw-bold text-darkblue mb-3" style="font-size: 1.3rem;">مستوى المهارات</div>
-                        <div style="position: relative; height: 380px; max-width: 500px; margin: 0 auto; width: 100%;">
+                        <div style="position: relative; height: 350px; max-width: 500px; margin: 0 auto; width: 100%;">
                             <canvas id="skillsRadar"></canvas>
                         </div>
                     </div>
@@ -291,7 +351,7 @@
             </div>
             @endif
 
-            <!-- Dimensions Results -->
+            <!-- Dimensions Results Accordion -->
             @if(!empty($dimensions) && count($dimensions) > 0)
                 @php
                     $hasAnyInterpretation = false;
@@ -303,8 +363,8 @@
                     }
                 @endphp
                 @if($hasAnyInterpretation)
-                <h2 class="p2-main-title mt-5 mb-4"><i class="bi bi-layers text-darkblue"></i>تفسير المهارات</h2>
-                <div class="card shadow-sm border-0 rounded-4 mb-5">
+                <h2 class="p2-main-title mt-4 mb-3"><i class="bi bi-layers text-darkblue"></i>تفسير المهارات</h2>
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
                     <div class="card-body p-0">
                         <div class="accordion" id="dimensionsAccordion">
                             @foreach($dimensions as $index => $dim)
@@ -344,19 +404,15 @@
                 @endif
             @endif
 
-
         </div>
-
-
     </div>
 
 
     <!-- ==================== PAGE 2 ==================== -->
     <div class="a4-page">
-
-
         <div class="page-padding pt-5 mt-4">
-            <!-- Programs -->
+            
+            <!-- Training Programs Section -->
             @if(!empty($progs))
             <div class="mb-4">
                 <div class="p2-section-title mb-3"><i class="bi bi-mortarboard-fill text-darkblue"></i> البرامج التدريبية المقترحة</div>
@@ -367,17 +423,21 @@
                     </p>
                 @endif
 
-                <div class="p2-section-card bg-light-gray border-0 shadow-sm mb-3 p-3">
-                    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-2 g-md-3 justify-content-center text-center">
+                <!-- Training Programs Grid View (All Viewports) -->
+                <div>
+                    <div class="row row-cols-3 row-cols-sm-3 row-cols-md-4 g-2 g-md-3 justify-content-center">
                         @foreach($progs as $prog)
                         <div class="col">
-                            <div class="bg-white rounded-4 shadow-sm p-2 h-100 d-flex flex-column align-items-center justify-content-center">
-                                @if(isset($prog->icon) && (str_starts_with($prog->icon, 'http') || str_starts_with($prog->icon, '/')))
-                                    <img src="{{ str_starts_with($prog->icon, '/') ? asset($prog->icon) : $prog->icon }}" alt="{{ $prog->title ?? '' }}" class="mb-2" style="height: 30px; width: auto; object-fit: contain;">
-                                @else
-                                    <i class="bi {{ $prog->icon ?? 'bi-journal-bookmark' }} text-secondary mb-2" style="font-size: 1.5rem;"></i>
-                                @endif
-                                <h6 class="fw-bold text-darkblue mb-0" style="font-size: 0.75rem; line-height: 1.3;">{{ $prog->title ?? '' }}</h6>
+                            <div class="program-card h-100 text-center">
+                                <div class="program-icon-wrapper">
+                                    @if(isset($prog->icon) && (str_starts_with($prog->icon, 'http') || str_starts_with($prog->icon, '/')))
+                                        <img src="{{ str_starts_with($prog->icon, '/') ? asset($prog->icon) : $prog->icon }}" alt="{{ $prog->title ?? '' }}" class="program-img-icon">
+                                    @else
+                                        <i class="bi {{ $prog->icon ?? 'bi-journal-bookmark' }} program-bi-icon"></i>
+                                    @endif
+                                </div>
+                                <h5 class="program-title">{{ $prog->title ?? '' }}</h5>
+                                <p class="program-desc mb-0 d-none d-sm-block">{{ $prog->description ?? 'برنامج تدريبي مخصص لتنمية المهارات وتعزيز الكفاءة المهنية.' }}</p>
                             </div>
                         </div>
                         @endforeach
@@ -392,34 +452,34 @@
             </div>
             @endif
 
-            <!-- Certificates -->
+            <!-- Certificates Section -->
             @if(!empty($certs))
-            <div class="mb-4 p2-section-card bg-light-blue">
-                <div class="p2-section-title"><i class="bi bi-award-fill text-darkblue"></i> الشهادات الاحترافية المناسبة</div>
-                <div class="p2-section-subtitle">قد تكون مناسبة لك بناءً على نتائج هذا المقياس</div>
+            <div class="mb-4">
+                <div class="p2-section-title mb-3"><i class="bi bi-award-fill text-darkblue"></i> الشهادات الاحترافية المناسبة</div>
+                <div class="p2-section-subtitle mb-3 text-muted small">قد تكون مناسبة لك بناءً على نتائج هذا المقياس</div>
                 
                 @if(!empty($certificates_intro))
-                    <p class="mt-3 mb-3" style="color: #1a2b56; line-height: 1.8; font-size: 0.95rem; text-align: justify;">
+                    <p class="mb-3" style="color: #1a2b56; line-height: 1.8; font-size: 0.95rem; text-align: justify;">
                         {{ $certificates_intro }}
                     </p>
                 @endif
                 
-                <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-2 g-md-3 justify-content-center pt-3 pb-2">
+                <div class="row row-cols-3 row-cols-sm-3 row-cols-md-4 g-2 g-md-3 justify-content-center pt-2">
                     @foreach($certs as $cert)
-                    <div class="col" style="max-width: 180px;">
-                        <div class="card border-0 shadow-sm rounded-4 text-center p-2 h-100" style="background-color: #ffffff;">
-                            @if(isset($cert->icon) && (str_starts_with($cert->icon, 'http') || str_starts_with($cert->icon, '/')))
-                                <div class="mx-auto mb-1 d-flex align-items-center justify-content-center" style="height: 35px;">
-                                    <img src="{{ str_starts_with($cert->icon, '/') ? asset($cert->icon) : $cert->icon }}" alt="{{ $cert->title ?? '' }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
-                                </div>
-                            @else
-                                <div class="mx-auto cert-icon {{ $cert->icon ?? 'blue-hexagon' }}" style="transform: scale(0.6); margin-bottom: -15px; margin-top: -15px;">
-                                    {{ substr(strtoupper($cert->title ?? ''), 0, 4) }}
-                                </div>
-                            @endif
-                            <h6 class="fw-bold mb-1 text-dark mt-1" style="font-size: 0.75rem; line-height: 1.3;">{{ $cert->title ?? '' }}</h6>
+                    <div class="col">
+                        <div class="program-card h-100 text-center">
+                            <div class="program-icon-wrapper">
+                                @if(isset($cert->icon) && (str_starts_with($cert->icon, 'http') || str_starts_with($cert->icon, '/')))
+                                    <img src="{{ str_starts_with($cert->icon, '/') ? asset($cert->icon) : $cert->icon }}" alt="{{ $cert->title ?? '' }}" class="program-img-icon">
+                                @else
+                                    <div class="cert-icon-inner {{ $cert->icon ?? 'blue-hexagon' }}">
+                                        {{ substr(strtoupper($cert->title ?? ''), 0, 4) }}
+                                    </div>
+                                @endif
+                            </div>
+                            <h5 class="program-title">{{ $cert->title ?? '' }}</h5>
                             @if(!empty($cert->subtitle))
-                                <p class="text-muted small mb-0 mt-1" style="font-size: 0.65rem; line-height: 1.3;">{{ $cert->subtitle }}</p>
+                                <p class="program-desc d-none d-sm-block">{{ $cert->subtitle }}</p>
                             @endif
                         </div>
                     </div>
@@ -428,33 +488,44 @@
             </div>
             @endif
 
-            <!-- 30 Day Plan -->
+            <!-- 30 Day Plan Section -->
             @if(count($planSteps) > 0)
-            <div class="p2-section-card bg-light-blue" style="margin-bottom:0;">
-                <div class="p2-section-title"><i class="bi bi-calendar3 text-darkblue"></i> خطة تطوير مقترحة</div>
+            <div class="mb-4">
+                <div class="p2-section-title mb-3"><i class="bi bi-calendar3 text-darkblue"></i> خطة تطوير مقترحة</div>
                 
-                <div class="row gx-2 gy-3 mt-4 justify-content-center align-items-stretch">
+                @if(!empty($roadmap_intro))
+                    <p class="mb-3" style="color: #1a2b56; line-height: 1.8; font-size: 0.95rem; text-align: justify;">
+                        {{ $roadmap_intro }}
+                    </p>
+                @endif
+
+                <div class="row gx-2 gy-3 mt-3 justify-content-center align-items-stretch">
                     @foreach($planSteps as $index => $step)
-                    <div class="col-lg-{{ count($planSteps) >= 4 ? '3' : (count($planSteps) == 3 ? '4' : (count($planSteps) == 2 ? '6' : '12')) }} col-md-6 col-12 d-flex align-items-center">
-                        <div class="plan-step shadow-sm border-0 w-100">
-                            <h6>{{ $step->period }}</h6>
-                            <p>{{ $step->title }}</p>
-                            <div class="plan-step-icon"><i class="bi {{ $step->icon }}"></i></div>
+                    <div class="col-lg-{{ count($planSteps) >= 4 ? '3' : (count($planSteps) == 3 ? '4' : (count($planSteps) == 2 ? '6' : '12')) }} col-md-6 col-4 d-flex align-items-stretch position-relative">
+                        <div class="plan-card w-100">
+                            <div class="plan-card-header d-flex justify-content-between align-items-center">
+                                <span class="plan-card-period">{{ $step->period }}</span>
+                                <div class="plan-card-icon"><i class="bi {{ $step->icon ?? 'bi-calendar-check' }}"></i></div>
+                            </div>
+                            <div class="plan-card-body">
+                                <p class="plan-card-text">{{ $step->title }}</p>
+                            </div>
                         </div>
                         @if(!$loop->last && count($planSteps) > 1 && count($planSteps) <= 4)
-                        <div class="plan-arrow d-none d-lg-flex ms-2"><i class="bi bi-chevron-left"></i></div>
+                        <div class="plan-arrow d-none d-lg-flex"><i class="bi bi-chevron-left text-muted"></i></div>
                         @endif
                     </div>
                     @endforeach
                 </div>
             </div>
             @endif
+
         </div>
 
         <!-- Footer Page 2 -->
-        <div class="mt-auto py-4 text-center" style="background-color: #f8fafc; border-top: 1px dashed #cbd5e1;">
+        <div class="mt-auto py-4 text-center quote-footer-card">
             <h6 class="text-darkblue fw-bold mb-2">رسالتنا لك</h6>
-            <p class="mb-0 mx-auto" style="color: #1e40af; font-size: 0.95rem; max-width: 600px; line-height: 1.6;">
+            <p class="mb-0 mx-auto quote-footer-text">
                 نتائج هذا المقياس تمثل نقطة بداية لفهم قدراتك. وننصحك بالاستفادة منها في وضع خطة تطوير مستمرة تتناسب مع أهدافك المهنية والشخصية.
             </p>
         </div>
