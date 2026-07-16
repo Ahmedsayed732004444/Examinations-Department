@@ -11,9 +11,13 @@ use Illuminate\Http\RedirectResponse;
 
 class AuthController extends Controller
 {
-    public function showLogin(): View
+    public function showLogin()
     {
-        return view('auth.login');
+        return response()
+            ->view('auth.login')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
     }
 
     public function login(Request $request): RedirectResponse
@@ -36,9 +40,13 @@ class AuthController extends Controller
         return back()->withErrors(['email' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.']);
     }
 
-    public function showRegister(): View
+    public function showRegister()
     {
-        return view('auth.register');
+        return response()
+            ->view('auth.register')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
     }
 
     public function register(Request $request): RedirectResponse
