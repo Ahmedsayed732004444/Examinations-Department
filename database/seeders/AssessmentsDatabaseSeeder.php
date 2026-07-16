@@ -16,14 +16,22 @@ class AssessmentsDatabaseSeeder extends Seeder
     public function run()
     {
         // Clear existing data (optional, but good if we want a fresh start)
-        DB::statement('PRAGMA foreign_keys=OFF;');
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys=OFF;');
+        } else {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        }
         Recommendation::truncate();
         DimensionInterpretation::truncate();
         AnswerOption::truncate();
         Question::truncate();
         Dimension::truncate();
         Assessment::truncate();
-        DB::statement('PRAGMA foreign_keys=ON;');
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys=ON;');
+        } else {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        }
         $this->call(Assessment1Seeder::class);
         $this->call(Assessment2Seeder::class);
         $this->call(Assessment3Seeder::class);

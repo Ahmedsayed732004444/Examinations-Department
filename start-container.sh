@@ -13,9 +13,22 @@ if [ "$IS_LARAVEL" = "true" ]; then
   php artisan view:clear
 
   if [ "$RAILPACK_SKIP_MIGRATIONS" != "true" ]; then
-    # Run migrations and seeding
-    echo "Running migrations and seeding database ..."
+    echo "Running migrations..."
     php artisan migrate --force
+
+    echo "Checking if database needs seeding..."
+    if [ -f "check-seed.php" ]; then
+      ASSESSMENT_COUNT=$(php check-seed.php 2>/dev/null || echo "0")
+      if [ "$ASSESSMENT_COUNT" = "0" ]; then
+        echo "Assessments table is empty. Running database seeders..."
+        php artisan db:seed --force
+      else
+        echo "Assessments table already has $ASSESSMENT_COUNT records. Skipping seeding."
+      fi
+    else
+      echo "check-seed.php not found, running database seeders..."
+      php artisan db:seed --force
+    fi
   fi
 
   php artisan storage:link

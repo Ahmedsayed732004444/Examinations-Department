@@ -21,8 +21,12 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Disable foreign keys for SQLite truncation
-        DB::statement('PRAGMA foreign_keys = OFF;');
+        // Disable foreign keys for truncation
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys = OFF;');
+        } else {
+            DB::statement('SET FOREIGN_KEY_CHECKS = 0;');
+        }
 
         // Truncate all tables in proper order
         DB::table('coupon_user')->delete();
@@ -40,7 +44,11 @@ class DatabaseSeeder extends Seeder
         Assessment::query()->delete();
 
         // Enable foreign keys
-        DB::statement('PRAGMA foreign_keys = ON;');
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys = ON;');
+        } else {
+            DB::statement('SET FOREIGN_KEY_CHECKS = 1;');
+        }
 
         // Admin User
         $admin = User::firstOrCreate(
