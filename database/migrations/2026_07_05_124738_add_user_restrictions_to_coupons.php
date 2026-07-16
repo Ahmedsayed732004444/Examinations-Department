@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('coupons', function (Blueprint $table) {
-            $table->boolean('applies_to_all_users')->default(true)->after('max_uses');
+            $table->boolean('applies_to_all_users')->default(true);
         });
 
         Schema::create('coupon_permitted_user', function (Blueprint $table) {
@@ -28,8 +28,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('coupon_permitted_user');
+
         Schema::table('coupons', function (Blueprint $table) {
-            //
+            $table->dropColumn('applies_to_all_users');
         });
     }
 };
