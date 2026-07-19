@@ -431,12 +431,28 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
 <!-- Category Filter -->
 <div class="category-filter">
     <a href="javascript:void(0)" class="cat-btn btn-category active" data-filter="all"><i class="bi bi-grid-fill"></i> جميع المقاييس</a>
-    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس معرفة الذات والشخصية"><i class="bi bi-person-bounding-box"></i> مقاييس معرفة الذات والشخصية</a>
-    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس الكفاءة الشخصية والنجاح المهني"><i class="bi bi-graph-up-arrow"></i> مقاييس الكفاءة الشخصية والنجاح المهني</a>
-    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس الاتصال والعلاقات المهنية"><i class="bi bi-chat-quote"></i> مقاييس الاتصال والعلاقات المهنية</a>
-    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس القيادة والإدارة"><i class="bi bi-award"></i> مقاييس القيادة والإدارة</a>
-    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس التوجيه والتوافق المهني"><i class="bi bi-compass"></i> مقاييس التوجيه والتوافق المهني</a>
-    <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="مقاييس الصحة المهنية"><i class="bi bi-heart-pulse"></i> مقاييس الصحة المهنية</a>
+    @php
+        // Extract unique categories from active assessments
+        $uniqueCategories = $assessments->pluck('category')->filter()->unique()->sort()->values();
+
+        // Icon map – add any new category here or fallback to default
+        $categoryIcons = [
+            'مقاييس معرفة الذات والشخصية'          => 'bi-person-bounding-box',
+            'مقاييس الكفاءة الشخصية والنجاح المهني' => 'bi-graph-up-arrow',
+            'مقاييس الاتصال والعلاقات المهنية'       => 'bi-chat-quote',
+            'مقاييس القيادة والإدارة'                => 'bi-award',
+            'مقاييس التوجيه والتوافق المهني'         => 'bi-compass',
+            'مقاييس الصحة المهنية'                   => 'bi-heart-pulse',
+        ];
+    @endphp
+    @foreach($uniqueCategories as $cat)
+        @php
+            $icon = $categoryIcons[$cat] ?? 'bi-bookmark';
+        @endphp
+        <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="{{ $cat }}">
+            <i class="bi {{ $icon }}"></i> {{ $cat }}
+        </a>
+    @endforeach
 </div>
 
 <!-- Stats Row -->
