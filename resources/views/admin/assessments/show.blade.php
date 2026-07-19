@@ -605,8 +605,16 @@
                                         <textarea class="form-control form-control-sm rec-textarea-certificates json-certificates-data" rows="3" placeholder="إضافة شهادة...">{{ is_array($rec->certificates_ar) ? json_encode($rec->certificates_ar) : $rec->certificates_ar }}</textarea>
                                     </div>
                                     <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">الجملة الافتتاحية للبرامج التدريبية (اختياري)</label>
+                                        <input type="text" class="form-control form-control-sm rec-input-programs-intro" placeholder="مثال: من أبرز البرامج التدريبية التي ننصحك بالالتحاق بها:" value="{{ $rec->programs_intro_ar }}">
+                                    </div>
+                                    <div class="mb-3">
                                         <label class="form-label small fw-medium text-muted">البرامج التدريبية المقترحة</label>
                                         <textarea class="form-control form-control-sm rec-textarea-programs json-programs-data" rows="3" placeholder="إضافة برنامج...">{{ is_array($rec->programs_ar) ? json_encode($rec->programs_ar) : $rec->programs_ar }}</textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">الجملة الختامية للبرامج التدريبية (اختياري)</label>
+                                        <input type="text" class="form-control form-control-sm rec-input-programs-outro" placeholder="مثال: يمكنك الاطلاع على هذه البرامج والتسجيل فيها عبر المنصات المعتمدة." value="{{ $rec->programs_outro_ar }}">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label small fw-medium text-muted">الجملة الافتتاحية لخطة التطوير (اختياري)</label>
@@ -674,8 +682,16 @@
                                     <textarea class="form-control form-control-sm rec-textarea-certificates json-certificates-data" rows="3" placeholder="إضافة شهادة..."></textarea>
                                 </div>
                                 <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">الجملة الافتتاحية للبرامج التدريبية (اختياري)</label>
+                                    <input type="text" class="form-control form-control-sm rec-input-programs-intro" placeholder="مثال: من أبرز البرامج التدريبية التي ننصحك بالالتحاق بها:">
+                                </div>
+                                <div class="mb-3">
                                     <label class="form-label small fw-medium text-muted">البرامج التدريبية المقترحة</label>
                                     <textarea class="form-control form-control-sm rec-textarea-programs json-programs-data" rows="3" placeholder="إضافة برنامج..."></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">الجملة الختامية للبرامج التدريبية (اختياري)</label>
+                                    <input type="text" class="form-control form-control-sm rec-input-programs-outro" placeholder="مثال: يمكنك الاطلاع على هذه البرامج والتسجيل فيها عبر المنصات المعتمدة.">
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label small fw-medium text-muted">الجملة الافتتاحية لخطة التطوير (اختياري)</label>
@@ -1570,7 +1586,9 @@ $(document).ready(function() {
             description_ar: form.find('.rec-textarea-desc').val().trim(),
             certificates_intro_ar: form.find('.rec-input-certs-intro').val().trim(),
             certificates_ar: certs,
+            programs_intro_ar: form.find('.rec-input-programs-intro').val().trim(),
             programs_ar: progs,
+            programs_outro_ar: form.find('.rec-input-programs-outro').val().trim(),
             plan_30_days_intro_ar: form.find('.rec-input-plan-intro').val().trim(),
             plan_30_days_ar: plan
         };
