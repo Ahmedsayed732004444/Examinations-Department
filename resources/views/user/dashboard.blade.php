@@ -613,7 +613,7 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
                     @endif
                 </div>
 
-                @if(!$isCompleted && !$isInProgress)
+                @if(!$isCompleted && !$isInProgress && !$assessment->hide_coupon_field)
                 <a href="#" class="btn-reveal-coupon w-100"
                    data-assessment-id="{{ $assessment->id }}"
                    data-assessment-title="{{ $assessment->title_ar }}"

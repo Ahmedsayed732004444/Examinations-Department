@@ -34,6 +34,11 @@ class ExamController extends Controller
         $user       = auth()->user();
         $assessment = Assessment::findOrFail($request->assessment_id);
 
+        // Block coupon usage if the admin has disabled it for this assessment
+        if ($assessment->hide_coupon_field) {
+            return response()->json(['valid' => false, 'message' => 'الكوبون غير مقبول لهذا المقياس.'], 422);
+        }
+
         $hasAnySession = ExamSession::where('user_id', $user->id)
             ->where('assessment_id', $assessment->id)
             ->exists();
@@ -77,6 +82,14 @@ class ExamController extends Controller
      */
     public function getCouponForAssessment(Assessment $assessment): JsonResponse
     {
+        // Block if the admin disabled the coupon field for this assessment
+        if ($assessment->hide_coupon_field) {
+            return response()->json([
+                'found'   => false,
+                'message' => 'الكوبون غير مقبول لهذا المقياس.',
+            ]);
+        }
+
         $user = auth()->user();
 
         $coupons = Coupon::where('is_active', true)
@@ -133,6 +146,11 @@ class ExamController extends Controller
             // New assessment — needs coupon or payment
             if (!$request->filled('coupon_code') && $assessment->price > 0) {
                 return redirect()->back()->with('error', 'يجب الدفع أو استخدام كوبون للوصول إلى هذا المقياس.');
+            }
+
+            // Block coupon usage if the admin has disabled it for this assessment
+            if ($request->filled('coupon_code') && $assessment->hide_coupon_field) {
+                return redirect()->back()->with('error', 'الكوبون غير مقبول لهذا المقياس.');
             }
 
             if ($request->filled('coupon_code')) {
