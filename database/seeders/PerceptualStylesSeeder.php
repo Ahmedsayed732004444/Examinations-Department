@@ -68,7 +68,12 @@ class PerceptualStylesSeeder extends Seeder
             Recommendation::create([
                 'assessment_id' => $assessment->id,
                 'level' => $recData['level'],
+                'title_ar' => $recData['title_ar'] ?? null,
                 'description_ar' => $recData['description_ar'],
+                'strengths_ar' => $recData['strengths_ar'] ?? null,
+                'development_areas_ar' => $recData['development_areas_ar'] ?? null,
+                'how_to_learn_ar' => $recData['how_to_learn_ar'] ?? null,
+                'practical_tips_ar' => $recData['practical_tips_ar'] ?? null,
                 'certificates_intro_ar' => $recData['certificates_intro_ar'] ?? null,
                 'certificates_ar' => $recData['certificates_ar'] ?? null,
                 'programs_intro_ar' => $recData['programs_intro_ar'] ?? null,
