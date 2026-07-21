@@ -49,6 +49,14 @@ class ResultFormatter
         if (!empty($roadmapIntro)) $response['roadmap_intro'] = $roadmapIntro;
         if (!empty($roadmap)) $response['roadmap'] = $roadmap;
 
+        if ($recommendation) {
+            if (!empty($recommendation->title_ar)) $response['recommendation_title'] = $recommendation->title_ar;
+            if (!empty($recommendation->strengths_ar)) $response['strengths'] = is_array($recommendation->strengths_ar) ? $recommendation->strengths_ar : $this->parseList($recommendation->strengths_ar);
+            if (!empty($recommendation->development_areas_ar)) $response['development_areas'] = is_array($recommendation->development_areas_ar) ? $recommendation->development_areas_ar : $this->parseList($recommendation->development_areas_ar);
+            if (!empty($recommendation->how_to_learn_ar)) $response['how_to_learn'] = is_array($recommendation->how_to_learn_ar) ? $recommendation->how_to_learn_ar : $this->parseList($recommendation->how_to_learn_ar);
+            if (!empty($recommendation->practical_tips_ar)) $response['practical_tips'] = is_array($recommendation->practical_tips_ar) ? $recommendation->practical_tips_ar : $this->parseList($recommendation->practical_tips_ar);
+        }
+
         $dimensions = [];
         $chartLabels = [];
         $chartData = [];

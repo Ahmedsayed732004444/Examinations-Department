@@ -76,6 +76,7 @@ class DatabaseSeeder extends Seeder
 
         // Include all finalized comprehensive assessments
         $this->call(AssessmentsDatabaseSeeder::class);
+        $this->call(PerceptualStylesSeeder::class);
 
         // Seed some demo coupons
         $assessment = Assessment::first();

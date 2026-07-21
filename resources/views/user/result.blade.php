@@ -249,6 +249,238 @@
                 </div>
             </div>
 
+            @if($assessmentObj->scoring_type === 'perceptual_styles')
+            @php
+                $styleScores = ['visual' => 0, 'auditory' => 0, 'kinesthetic' => 0];
+                foreach($resObj->dimensionScores as $ds) {
+                    $n = $ds->dimension->name_ar;
+                    if (mb_strpos($n, 'بصري') !== false) $styleScores['visual'] = $ds->score;
+                    elseif (mb_strpos($n, 'سمعي') !== false) $styleScores['auditory'] = $ds->score;
+                    elseif (mb_strpos($n, 'حسي') !== false) $styleScores['kinesthetic'] = $ds->score;
+                }
+
+                $recTitle = $recObj->title_ar ?? $recommendation_title ?? 'النمط الإدراكي الغالب';
+                $recDesc = $recObj->description_ar ?? $parsedRecommendation ?? '';
+                $howToLearn = is_array($recObj?->how_to_learn_ar) ? $recObj->how_to_learn_ar : ($how_to_learn ?? []);
+                $strengthsData = is_array($recObj?->strengths_ar) ? $recObj->strengths_ar : ($strengths ?? []);
+                $devAreasData = is_array($recObj?->development_areas_ar) ? $recObj->development_areas_ar : ($development_areas ?? []);
+                $practicalTips = is_array($recObj?->practical_tips_ar) ? $recObj->practical_tips_ar : ($practical_tips ?? []);
+                $progsData = is_array($recObj?->programs_ar) ? $recObj->programs_ar : ($programs ?? []);
+                $progsIntro = $recObj?->programs_intro_ar ?? 'البرامج التدريبية المقترحة لك';
+                $progsOutro = $recObj?->programs_outro_ar ?? '';
+
+                // Main icon for dominant style
+                $mainIcon = 'bi-brain';
+                if (mb_strpos($recTitle, 'بصري') !== false && mb_strpos($recTitle, 'سمعي') === false && mb_strpos($recTitle, 'حسي') === false) {
+                    $mainIcon = 'bi-eye-fill';
+                } elseif (mb_strpos($recTitle, 'سمعي') !== false && mb_strpos($recTitle, 'بصري') === false && mb_strpos($recTitle, 'حسي') === false) {
+                    $mainIcon = 'bi-headphones';
+                } elseif (mb_strpos($recTitle, 'حسي') !== false && mb_strpos($recTitle, 'بصري') === false && mb_strpos($recTitle, 'سمعي') === false) {
+                    $mainIcon = 'bi-hand-index-thumb-fill';
+                } elseif (mb_strpos($recTitle, 'متوازن') !== false) {
+                    $mainIcon = 'bi-diagram-3-fill';
+                } else {
+                    $mainIcon = 'bi-intersect';
+                }
+            @endphp
+
+            <!-- Perceptual Styles Custom Report View -->
+            <div class="perceptual-styles-report">
+                
+                <!-- Main Style Summary Banner -->
+                <div class="row g-4 mb-4 align-items-stretch">
+                    <!-- Dominant Style Info Card -->
+                    <div class="col-md-7 col-12 d-flex">
+                        <div class="main-score-card w-100 p-4 d-flex flex-column justify-content-between border-0 shadow-sm rounded-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: #ffffff;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-bold" style="font-size: 0.8rem;">
+                                        <i class="bi bi-star-fill text-warning me-1"></i> النمط الإدراكي الغالب لديك
+                                    </span>
+                                </div>
+                                <div class="fs-2 text-warning"><i class="bi {{ $mainIcon }}"></i></div>
+                            </div>
+
+                            <div class="my-2">
+                                <h2 class="fw-extrabold text-white mb-2" style="font-size: 1.8rem; font-family: 'Tajawal', sans-serif;">{{ $recTitle }}</h2>
+                                <p class="text-light opacity-90 lh-base mb-0" style="font-size: 0.92rem; text-align: justify;">
+                                    {{ $recDesc }}
+                                </p>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between pt-3 mt-2 border-top border-white border-opacity-10">
+                                <div class="small text-light opacity-75">مقياس ثلاثي الأنماط المعيارية (20 درجة لكل نمط)</div>
+                                <div class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold fs-6">
+                                    <i class="bi bi-check-circle-fill me-1"></i> تشخيص مؤكد
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scores Breakdown Card -->
+                    <div class="col-md-5 col-12 d-flex">
+                        <div class="card w-100 p-4 border-0 shadow-sm rounded-4 d-flex flex-column justify-content-between" style="background: #ffffff;">
+                            <h5 class="fw-bold text-darkblue mb-3">
+                                <i class="bi bi-bar-chart-steps text-primary me-2"></i> درجاتك في الأنماط الإدراكية
+                            </h5>
+
+                            <div class="d-flex flex-column gap-3 my-auto">
+                                <!-- Visual -->
+                                <div class="style-progress-item p-3 rounded-3" style="background: #f0f7ff; border: 1px solid #dbeafe;">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-bold text-navy"><i class="bi bi-eye-fill text-primary me-2"></i> النمط البصري</span>
+                                        <span class="fw-extrabold text-primary">{{ $styleScores['visual'] }} / 20</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px; background-color: #dbeafe; border-radius: 10px;">
+                                        <div class="progress-bar bg-primary rounded-pill" style="width: {{ round(($styleScores['visual'] / 20) * 100) }}%;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Auditory -->
+                                <div class="style-progress-item p-3 rounded-3" style="background: #f0fdf4; border: 1px solid #dcfce7;">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-bold text-navy"><i class="bi bi-headphones text-success me-2"></i> النمط السمعي</span>
+                                        <span class="fw-extrabold text-success">{{ $styleScores['auditory'] }} / 20</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px; background-color: #dcfce7; border-radius: 10px;">
+                                        <div class="progress-bar bg-success rounded-pill" style="width: {{ round(($styleScores['auditory'] / 20) * 100) }}%;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Kinesthetic -->
+                                <div class="style-progress-item p-3 rounded-3" style="background: #fffbebfb; border: 1px solid #fef3c7;">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-bold text-navy"><i class="bi bi-hand-index-thumb-fill text-warning me-2"></i> النمط الحسي (العملي)</span>
+                                        <span class="fw-extrabold text-warning-emphasis">{{ $styleScores['kinesthetic'] }} / 20</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px; background-color: #fef3c7; border-radius: 10px;">
+                                        <div class="progress-bar bg-warning rounded-pill" style="width: {{ round(($styleScores['kinesthetic'] / 20) * 100) }}%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How to Learn Best Section -->
+                @if(!empty($howToLearn))
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: #ffffff;">
+                    <h5 class="fw-bold text-darkblue mb-3">
+                        <i class="bi bi-lightbulb-fill text-warning me-2"></i> كيف تتعلم بشكل أفضل؟
+                    </h5>
+                    <div class="row g-3">
+                        @foreach($howToLearn as $item)
+                        <div class="col-md-6 col-12">
+                            <div class="d-flex align-items-center p-3 rounded-3 h-100" style="background: #f8fafc; border: 1px solid #f1f5f9;">
+                                <div class="badge bg-primary-subtle text-primary rounded-circle p-2 me-3" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i class="bi bi-check2-circle fs-5"></i>
+                                </div>
+                                <span class="fw-semibold text-dark fs-6" style="line-height: 1.4;">{{ is_array($item) ? ($item['title'] ?? json_encode($item)) : $item }}</span>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                <!-- Strengths & Development Areas Side-by-Side -->
+                <div class="row g-4 mb-4">
+                    <!-- Strengths -->
+                    @if(!empty($strengthsData))
+                    <div class="col-md-6 col-12 d-flex">
+                        <div class="card w-100 border-0 shadow-sm rounded-4 p-4" style="background: #ffffff; border-top: 4px solid #10b981 !important;">
+                            <h5 class="fw-bold text-success mb-3">
+                                <i class="bi bi-patch-check-fill me-2"></i> نقاط القوة لديك
+                            </h5>
+                            <div class="d-flex flex-column gap-2">
+                                @foreach($strengthsData as $s)
+                                @php $sText = is_array($s) ? ($s['title'] ?? $s['desc'] ?? json_encode($s)) : $s; @endphp
+                                <div class="d-flex align-items-start p-2 rounded-2" style="background: #f0fdf4;">
+                                    <i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>
+                                    <span class="fw-medium text-dark small" style="line-height: 1.5;">{{ $sText }}</span>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Development Areas -->
+                    @if(!empty($devAreasData))
+                    <div class="col-md-6 col-12 d-flex">
+                        <div class="card w-100 border-0 shadow-sm rounded-4 p-4" style="background: #ffffff; border-top: 4px solid #f59e0b !important;">
+                            <h5 class="fw-bold text-warning-emphasis mb-3">
+                                <i class="bi bi-graph-up-arrow me-2"></i> الجوانب التي يمكن تطويرها
+                            </h5>
+                            <div class="d-flex flex-column gap-2">
+                                @foreach($devAreasData as $d)
+                                @php $dText = is_array($d) ? ($d['title'] ?? $d['desc'] ?? json_encode($d)) : $d; @endphp
+                                <div class="d-flex align-items-start p-2 rounded-2" style="background: #fffbeb;">
+                                    <i class="bi bi-arrow-up-right-circle-fill text-warning me-2 mt-1"></i>
+                                    <span class="fw-medium text-dark small" style="line-height: 1.5;">{{ $dText }}</span>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+
+                <!-- Suggested Training Programs -->
+                @if(!empty($progsData))
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: #ffffff;">
+                    <h5 class="fw-bold text-darkblue mb-1">
+                        <i class="bi bi-journal-bookmark-fill text-primary me-2"></i> البرامج التدريبية المقترحة لك
+                    </h5>
+                    @if($progsIntro)
+                    <p class="text-muted small mb-3">{{ $progsIntro }}</p>
+                    @endif
+                    <div class="row g-3">
+                        @foreach($progsData as $prog)
+                        @php
+                            $pTitle = is_array($prog) ? ($prog['title'] ?? '') : $prog;
+                            $pIcon = is_array($prog) ? ($prog['icon'] ?? 'bi-book') : 'bi-book';
+                        @endphp
+                        <div class="col-md-4 col-sm-6 col-12">
+                            <div class="p-3 rounded-3 h-100 d-flex align-items-center gap-3 border shadow-2hover" style="background: #f8fafc; border-color: #e2e8f0 !important; transition: all 0.2s;">
+                                <div class="rounded-circle p-2 bg-white text-primary shadow-sm flex-shrink-0" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                                    <i class="bi {{ $pIcon }}"></i>
+                                </div>
+                                <span class="fw-bold text-navy small" style="line-height: 1.3;">{{ $pTitle }}</span>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    @if($progsOutro)
+                    <div class="alert alert-light border border-opacity-50 mt-3 mb-0 text-muted small text-center rounded-3" style="background: #f8fafc;">
+                        <i class="bi bi-info-circle text-primary me-1"></i> {{ $progsOutro }}
+                    </div>
+                    @endif
+                </div>
+                @endif
+
+                <!-- Practical Tips Section -->
+                @if(!empty($practicalTips))
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-2" style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #dbeafe !important;">
+                    <h5 class="fw-bold text-darkblue mb-3">
+                        <i class="bi bi-gear-wide-connected text-primary me-2"></i> نصائح عملية لك
+                    </h5>
+                    <div class="row g-3">
+                        @foreach($practicalTips as $tip)
+                        @php $tipText = is_array($tip) ? ($tip['title'] ?? json_encode($tip)) : $tip; @endphp
+                        <div class="col-md-6 col-12">
+                            <div class="d-flex align-items-start p-3 bg-white rounded-3 border shadow-sm">
+                                <i class="bi bi-shield-check text-primary fs-5 me-2 mt-0"></i>
+                                <span class="fw-semibold text-dark small" style="line-height: 1.4;">{{ $tipText }}</span>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+            </div>
+            @else
             <!-- Score & Summary side-by-side row -->
             <div class="row g-4 mb-4 align-items-start score-summary-row">
                 <!-- Score Card -->
@@ -518,6 +750,7 @@
                     @endforeach
                 </div>
             </div>
+            @endif
             @endif
 
         </div>
