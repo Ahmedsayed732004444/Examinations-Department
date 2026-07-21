@@ -185,7 +185,7 @@
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="recommendations-tab" data-bs-toggle="tab" data-bs-target="#tab-recommendations" type="button" role="tab" aria-controls="tab-recommendations" aria-selected="false">
-            <i class="bi bi-lightbulb me-1"></i>التوصيات
+            <i class="bi bi-lightbulb me-1"></i>ملخص التقرير
         </button>
     </li>
     <li class="nav-item" role="presentation">

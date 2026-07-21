@@ -44,29 +44,31 @@
                 <div class="card-header bg-transparent border-0 py-3">
                     <h6 class="fw-bold mb-0 text-warning-emphasis">
                         <i class="bi bi-1-circle-fill me-2 text-warning"></i>
-                        الخطوة الأولى: حدد عدد مرات الاستخدام المسموحة لكل مستخدم
+                        الخطوة الأولى: حدد عدد مرات الاستخدام المسموحة لكل مستخدم (اختياري)
                     </h6>
-                    <div class="text-muted small mt-1">سيظهر لك حقل خصم لكل مرة استخدام بعد تحديد العدد.</div>
+                    <div class="text-muted small mt-1">اتركه فارغاً إذا كنت تريد استخداماً غير محدود بنفس نسبة الخصم.</div>
                 </div>
                 <div class="card-body pt-0">
                     <div class="row align-items-center g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-5">
                             <label for="assessments_limit" class="form-label fw-semibold">
-                                عدد مرات الاستخدام <span class="text-danger">*</span>
+                                عدد مرات الاستخدام
                             </label>
                             <input type="number"
                                    class="form-control form-control-lg fw-bold text-center"
                                    id="assessments_limit"
                                    name="assessments_limit"
                                    value="{{ old('assessments_limit', $coupon->assessments_limit) }}"
-                                   min="1" max="10" required
+                                   min="1" max="10"
+                                   placeholder="اتركه فارغاً لعدد غير محدود"
                                    oninput="renderDiscountFields(this.value)">
-                            <div class="form-text">كم مرة يمكن لنفس الشخص استخدام هذا الكوبون؟</div>
+                            <div class="form-text">اتركه فارغاً للاستخدام غير المحدود، أو حدد عدداً (1-10) لخصم متدرج.</div>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-7">
                             <div class="p-3 rounded border bg-light text-muted small">
                                 <i class="bi bi-info-circle me-1 text-primary"></i>
-                                مثال: إذا أدخلت <strong>3</strong>، يمكن للمستخدم استخدام الكوبون 3 مرات، ويمكنك تحديد نسبة خصم مختلفة لكل مرة.
+                                <strong>غير محدود:</strong> اترك الحقل فارغاً ليستفيد المستخدم من نسبة الخصم دائماً بدون حد أقصى.<br>
+                                <strong>محدد:</strong> أدخل عدداً (مثال: 3) لربط الكوبون بتدرج خصم محدد بعدد المرات.
                             </div>
                         </div>
                     </div>

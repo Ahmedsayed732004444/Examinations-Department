@@ -52,7 +52,11 @@
                             </div>
                         </td>
                         <td class="text-center">
-                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2">{{ $coupon->assessments_limit }}</span>
+                            @if($coupon->assessments_limit !== null)
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2">{{ $coupon->assessments_limit }}</span>
+                            @else
+                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2" title="غير محدود"><i class="bi bi-infinity"></i> غير محدود</span>
+                            @endif
                         </td>
                         <td>
                             @if($coupon->applies_to_all_assessments)

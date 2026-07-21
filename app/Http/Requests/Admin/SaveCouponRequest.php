@@ -28,7 +28,7 @@ class SaveCouponRequest extends FormRequest
         return [
             'title' => 'required|string|max:255',
             'code' => ['required', 'string', 'max:50', Rule::unique('coupons')->ignore($couponId)],
-            'assessments_limit' => 'required|integer|min:1',
+            'assessments_limit' => 'nullable|integer|min:1',
             'expires_at' => 'nullable|date',
             'is_active' => 'boolean',
             'discount_percentage' => 'required|integer|min:0|max:100',

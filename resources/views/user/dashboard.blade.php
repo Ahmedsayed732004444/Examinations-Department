@@ -663,9 +663,10 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
     $hasActiveCoupon = false;
     foreach($myCoupons as $coupon) {
         $used = $coupon->pivot->used_count ?? 0;
-        $remaining = max(0, $coupon->assessments_limit - $used);
+        $isUnlimited = $coupon->assessments_limit === null;
+        $remaining = $isUnlimited ? null : max(0, $coupon->assessments_limit - $used);
         $isExpired = $coupon->expires_at && \Carbon\Carbon::parse($coupon->expires_at)->isPast();
-        if (!$isExpired && $remaining > 0) $hasActiveCoupon = true;
+        if (!$isExpired && ($isUnlimited || $remaining > 0)) $hasActiveCoupon = true;
     }
 @endphp
 
@@ -676,10 +677,11 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
         @foreach($myCoupons as $coupon)
             @php
                 $used = $coupon->pivot->used_count ?? 0;
-                $remaining = max(0, $coupon->assessments_limit - $used);
+                $isUnlimited = $coupon->assessments_limit === null;
+                $remaining = $isUnlimited ? null : max(0, $coupon->assessments_limit - $used);
                 $isExpired = $coupon->expires_at && \Carbon\Carbon::parse($coupon->expires_at)->isPast();
             @endphp
-            @if(!$isExpired && $remaining > 0)
+            @if(!$isExpired && ($isUnlimited || $remaining > 0))
             <div class="col-md-6 col-lg-4">
                 <div class="card border-0 shadow-sm h-100" style="border-radius: 10px; border: 1px solid #e2e8f0; background: #fff;">
                     <div class="card-body p-3">
@@ -690,7 +692,11 @@ body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
                             </div>
                             <div class="text-end">
                                 <span class="text-muted" style="font-size: 0.75rem;">المتبقي</span>
-                                <div class="fw-bold text-primary" style="font-size: 1.1rem;">{{ $remaining }} <span class="text-muted" style="font-size: 0.75rem;">/ {{ $coupon->assessments_limit }}</span></div>
+                                @if($coupon->assessments_limit !== null)
+                                    <div class="fw-bold text-primary" style="font-size: 1.1rem;">{{ $remaining }} <span class="text-muted" style="font-size: 0.75rem;">/ {{ $coupon->assessments_limit }}</span></div>
+                                @else
+                                    <div class="fw-bold text-primary" style="font-size: 1.1rem;"><i class="bi bi-infinity me-1"></i>غير محدود</div>
+                                @endif
                             </div>
                         </div>
                         
