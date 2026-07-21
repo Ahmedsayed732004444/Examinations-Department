@@ -259,15 +259,15 @@
                     elseif (mb_strpos($n, 'حسي') !== false) $styleScores['kinesthetic'] = $ds->score;
                 }
 
-                $recTitle = $recObj->title_ar ?? $recommendation_title ?? 'النمط الإدراكي الغالب';
-                $recDesc = $recObj->description_ar ?? $parsedRecommendation ?? '';
-                $howToLearn = is_array($recObj?->how_to_learn_ar) ? $recObj->how_to_learn_ar : ($how_to_learn ?? []);
-                $strengthsData = is_array($recObj?->strengths_ar) ? $recObj->strengths_ar : ($strengths ?? []);
-                $devAreasData = is_array($recObj?->development_areas_ar) ? $recObj->development_areas_ar : ($development_areas ?? []);
-                $practicalTips = is_array($recObj?->practical_tips_ar) ? $recObj->practical_tips_ar : ($practical_tips ?? []);
-                $progsData = is_array($recObj?->programs_ar) ? $recObj->programs_ar : ($programs ?? []);
-                $progsIntro = $recObj?->programs_intro_ar ?? 'البرامج التدريبية المقترحة لك';
-                $progsOutro = $recObj?->programs_outro_ar ?? '';
+                $recTitle = $recommendation_title ?? $recObj?->title_ar ?? 'النمط الإدراكي الغالب';
+                $recDesc = !empty($parsedRecommendation) ? $parsedRecommendation : ($recObj?->description_ar ?? '');
+                $howToLearn = !empty($how_to_learn) ? $how_to_learn : (is_array($recObj?->how_to_learn_ar) ? $recObj->how_to_learn_ar : []);
+                $strengthsData = !empty($strengths) ? $strengths : (is_array($recObj?->strengths_ar) ? $recObj->strengths_ar : []);
+                $devAreasData = !empty($development_areas) ? $development_areas : (is_array($recObj?->development_areas_ar) ? $recObj->development_areas_ar : []);
+                $practicalTips = !empty($practical_tips) ? $practical_tips : (is_array($recObj?->practical_tips_ar) ? $recObj->practical_tips_ar : []);
+                $progsData = !empty($programs) ? $programs : (is_array($recObj?->programs_ar) ? $recObj->programs_ar : []);
+                $progsIntro = $programs_intro ?? $recObj?->programs_intro_ar ?? 'البرامج التدريبية المقترحة لك';
+                $progsOutro = $programs_outro ?? $recObj?->programs_outro_ar ?? '';
 
                 $parseStringItem = function($val) {
                     if (is_object($val)) {
