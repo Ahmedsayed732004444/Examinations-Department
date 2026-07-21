@@ -190,7 +190,7 @@
                                 <div class="print-meta-icon print-meta-solid"><i class="bi bi-person-fill"></i></div>
                                 <div class="ms-3 text-end">
                                     <div class="print-meta-label">المستفيد</div>
-                                    <div class="print-meta-value">{{ auth()->user()->name }}</div>
+                                    <div class="print-meta-value">{{ auth()->user()?->name ?? 'معاينة بالنظام' }}</div>
                                 </div>
                             </div>
                         </td>
@@ -224,7 +224,7 @@
                             <div class="meta-icon-box meta-icon-solid mb-2 mb-sm-0"><i class="bi bi-person-fill"></i></div>
                             <div class="text-sm-end ms-sm-3">
                                 <div class="meta-label">المستفيد</div>
-                                <div class="meta-value" style="font-size: 0.8rem; white-space: normal;">{{ auth()->user()->name }}</div>
+                                <div class="meta-value" style="font-size: 0.8rem; white-space: normal;">{{ auth()->user()?->name ?? 'معاينة بالنظام' }}</div>
                             </div>
                         </div>
                     </div>

@@ -160,12 +160,18 @@
             
             <div class="dropdown">
                 <button class="btn btn-primary dropdown-toggle" type="button" id="previewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-eye me-1"></i>معاينة النتيجة
+                    <i class="bi bi-eye me-1"></i>معاينة نتائج المقياس
                 </button>
-                <ul class="dropdown-menu shadow-sm border-0" aria-labelledby="previewDropdown">
-                    <li><a class="dropdown-item" target="_blank" href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => 'high']) }}"><i class="bi bi-star-fill text-warning me-2"></i>مستوى مرتفع</a></li>
-                    <li><a class="dropdown-item" target="_blank" href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => 'medium']) }}"><i class="bi bi-star-half text-warning me-2"></i>مستوى متوسط</a></li>
-                    <li><a class="dropdown-item" target="_blank" href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => 'low']) }}"><i class="bi bi-star text-warning me-2"></i>مستوى منخفض</a></li>
+                <ul class="dropdown-menu shadow-sm border-0" aria-labelledby="previewDropdown" style="max-height: 350px; overflow-y: auto;">
+                    @forelse($assessment->recommendations as $rec)
+                        <li>
+                            <a class="dropdown-item py-2" target="_blank" href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => $rec->level]) }}">
+                                <i class="bi bi-file-earmark-bar-graph text-primary me-2"></i>{{ $rec->title_ar ?? $rec->level }}
+                            </a>
+                        </li>
+                    @empty
+                        <li><a class="dropdown-item disabled text-muted" href="#">لا توجد توصيات مسجلة</a></li>
+                    @endforelse
                 </ul>
             </div>
 
@@ -567,10 +573,13 @@
                                     </div>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <button class="btn btn-outline-primary btn-sm flex-grow-1 btn-toggle-rec-edit" data-level="{{ $key }}">
-                                        <i class="bi bi-pencil-square me-1"></i>تعديل التوصية
+                                    <a href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => $rec->level]) }}" target="_blank" class="btn btn-outline-success btn-sm flex-grow-1" title="معاينة التقرير لهذا النمط">
+                                        <i class="bi bi-eye me-1"></i>معاينة التقرير
+                                    </a>
+                                    <button class="btn btn-outline-primary btn-sm btn-toggle-rec-edit" data-level="{{ $key }}" title="تعديل التوصية">
+                                        <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <button class="btn btn-outline-danger btn-sm btn-delete-rec" data-url="{{ route('admin.recommendations.destroy', $rec->id) }}" data-name="{{ $rec->level }}">
+                                    <button class="btn btn-outline-danger btn-sm btn-delete-rec" data-url="{{ route('admin.recommendations.destroy', $rec->id) }}" data-name="{{ $rec->level }}" title="حذف التوصية">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>

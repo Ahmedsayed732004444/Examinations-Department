@@ -91,7 +91,7 @@
         <!-- User Menu -->
         <div class="d-flex align-items-center gap-2">
             <span class="fw-medium text-secondary" style="font-size: 0.9rem;">
-                <i class="bi bi-person-circle text-muted fs-5 align-middle me-1"></i> {{ auth()->user()->name }}
+                <i class="bi bi-person-circle text-muted fs-5 align-middle me-1"></i> {{ auth()->user()?->name ?? 'معاينة بالنظام' }}
             </span>
             <div class="dropdown">
                 <button class="btn btn-link text-secondary p-0 ms-1" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none;">

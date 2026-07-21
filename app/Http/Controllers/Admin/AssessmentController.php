@@ -128,47 +128,86 @@ class AssessmentController extends Controller
 
     public function previewResult(Assessment $assessment, string $level): View
     {
-        abort_unless(in_array($level, ['high', 'medium', 'low']), 422, 'مستوى غير صالح.');
+        // Find recommendation by level or ID
+        $recommendation = $assessment->recommendations()
+            ->where('level', $level)
+            ->orWhere('id', $level)
+            ->first();
 
-        // Find the recommendation for this level
-        $recommendation = $assessment->recommendations()->where('level', $level)->first();
-        
-        $score = $recommendation ? $recommendation->high_threshold : 100;
-        
-        // Mock a Result model
+        $levelKey = $recommendation ? $recommendation->level : $level;
+        $scoringType = $assessment->scoring_type ?? 'overall_score';
+
+        // Build mock scores based on scoring_type & level
+        $mockDimensionScores = collect();
+        $totalScore = 0;
+        $maxPossible = 0;
+
+        if ($scoringType === 'perceptual_styles') {
+            $presetScores = [
+                'visual'                    => ['النمط البصري' => 18, 'النمط السمعي' => 12, 'النمط الحسي' => 9],
+                'auditory'                  => ['النمط البصري' => 11, 'النمط السمعي' => 19, 'النمط الحسي' => 10],
+                'kinesthetic'               => ['النمط البصري' => 10, 'النمط السمعي' => 11, 'النمط الحسي' => 18],
+                'balanced'                  => ['النمط البصري' => 15, 'النمط السمعي' => 14, 'النمط الحسي' => 13],
+                'dual_visual_auditory'      => ['النمط البصري' => 17, 'النمط السمعي' => 16, 'النمط الحسي' => 10],
+                'dual_visual_kinesthetic'   => ['النمط البصري' => 17, 'النمط السمعي' => 10, 'النمط الحسي' => 16],
+                'dual_auditory_kinesthetic'  => ['النمط البصري' => 10, 'النمط السمعي' => 17, 'النمط الحسي' => 16],
+            ];
+
+            $scoresMap = $presetScores[$levelKey] ?? ['النمط البصري' => 15, 'النمط السمعي' => 14, 'النمط الحسي' => 13];
+
+            foreach ($assessment->dimensions as $dim) {
+                $scoreVal = $scoresMap[$dim->name_ar] ?? 12;
+                $totalScore += $scoreVal;
+                $maxPossible += 20;
+
+                $ds = new DimensionScore([
+                    'dimension_id' => $dim->id,
+                    'score' => $scoreVal,
+                    'max_score' => 20,
+                    'level' => $levelKey,
+                ]);
+                $clonedDim = clone $dim;
+                $ds->setRelation('dimension', $clonedDim);
+                $mockDimensionScores->push($ds);
+            }
+        } else {
+            $score = $recommendation ? ($recommendation->high_threshold ?? 85) : 85;
+            $totalScore = $score;
+            $maxPossible = 100;
+
+            foreach ($assessment->dimensions as $dim) {
+                $interp = $dim->interpretations()->where('level', $levelKey)->first();
+                $ds = new DimensionScore([
+                    'dimension_id' => $dim->id,
+                    'score' => $interp ? $interp->high_threshold : 10,
+                    'max_score' => 10,
+                    'level' => $levelKey,
+                ]);
+                $clonedDim = clone $dim;
+                $clonedDim->load('interpretations');
+                $ds->setRelation('dimension', $clonedDim);
+                $mockDimensionScores->push($ds);
+            }
+        }
+
+        // Mock Result model
         $result = new Result([
-            'id' => 'PREVIEW-'.time(),
+            'id' => 'PREVIEW-' . strtoupper(substr(md5($levelKey), 0, 8)),
             'assessment_id' => $assessment->id,
-            'total_score' => $score,
-            'max_possible_score' => 100,
-            'level' => $level,
+            'total_score' => $totalScore,
+            'max_possible_score' => $maxPossible ?: 60,
+            'level' => $levelKey,
             'calculated_at' => now(),
         ]);
-
-        // Mock DimensionScore models and load their related dimension
-        $result->setRelation('dimensionScores', $assessment->dimensions->map(function ($dim) use ($level, $assessment) {
-            $interp = $dim->interpretations()->where('level', $level)->first();
-            $ds = new DimensionScore([
-                'dimension_id' => $dim->id,
-                'score' => $interp ? $interp->high_threshold : 10,
-                'max_score' => 10,
-                'level' => $level,
-            ]);
-            
-            $clonedDim = clone $dim;
-            $clonedDim->load('interpretations');
-            $ds->setRelation('dimension', $clonedDim);
-            
-            return $ds;
-        }));
+        $result->setRelation('dimensionScores', $mockDimensionScores);
 
         $formatter = app(ResultFormatter::class);
         $formattedData = $formatter->format($assessment, $result, $recommendation);
-        
-        // Create a dummy session for the view
+
         $session = tap(new ExamSession([
-            'id' => 'PREVIEW-SESSION-'.time(),
+            'id' => 'PREVIEW-SESSION-' . time(),
             'status' => 'completed',
+            'created_at' => now(),
         ]))->setRelation('result', $result)
            ->setRelation('assessment', $assessment);
 
