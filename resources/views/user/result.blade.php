@@ -165,9 +165,9 @@
     <div class="a4-page">
         
         <!-- Header -->
-        <div class="report-header px-4 pt-3 d-flex justify-content-between align-items-center">
+        <div class="report-header px-4 pt-3">
             <div class="header-logo">
-                <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 55px; max-width: 220px; object-fit: contain; margin: 0;">
+                <img src="{{ asset('images/logo.png') }}" alt="dar al rouaa" style="height: 50px; filter: brightness(0) invert(1); margin: 0;">
             </div>
             <div class="header-badge">
                 <i class="bi bi-patch-check-fill me-1"></i> تقرير احترافي مدعوم بالتحليل العلمي
