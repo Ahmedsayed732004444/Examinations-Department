@@ -14,7 +14,9 @@ class PerceptualStylesSeeder extends Seeder
 {
     public function run(): void
     {
-        $dir = database_path('data/assessments/perceptual_styles');
+        $dir = is_dir(database_path('data/assessments/28'))
+            ? database_path('data/assessments/28')
+            : database_path('data/assessments/perceptual_styles');
         $meta = require $dir . '/meta.php';
         
         $adminUser = User::where('role', 'admin')->first() ?? User::first();
