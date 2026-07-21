@@ -269,6 +269,16 @@
                 $progsIntro = $recObj?->programs_intro_ar ?? 'البرامج التدريبية المقترحة لك';
                 $progsOutro = $recObj?->programs_outro_ar ?? '';
 
+                $parseStringItem = function($val) {
+                    if (is_object($val)) {
+                        return $val->title ?? $val->name ?? $val->desc ?? '';
+                    }
+                    if (is_array($val)) {
+                        return $val['title'] ?? $val['name'] ?? $val['desc'] ?? '';
+                    }
+                    return (string) $val;
+                };
+
                 // Main icon for dominant style
                 $mainIcon = 'bi-brain';
                 if (mb_strpos($recTitle, 'بصري') !== false && mb_strpos($recTitle, 'سمعي') === false && mb_strpos($recTitle, 'حسي') === false) {
@@ -375,7 +385,7 @@
                                 <div class="badge bg-primary-subtle text-primary rounded-circle p-2 me-3" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                     <i class="bi bi-check2-circle fs-5"></i>
                                 </div>
-                                <span class="fw-semibold text-dark fs-6" style="line-height: 1.4;">{{ is_array($item) ? ($item['title'] ?? json_encode($item)) : $item }}</span>
+                                <span class="fw-semibold text-dark fs-6" style="line-height: 1.4;">{{ $parseStringItem($item) }}</span>
                             </div>
                         </div>
                         @endforeach
@@ -394,10 +404,9 @@
                             </h5>
                             <div class="d-flex flex-column gap-2">
                                 @foreach($strengthsData as $s)
-                                @php $sText = is_array($s) ? ($s['title'] ?? $s['desc'] ?? json_encode($s)) : $s; @endphp
                                 <div class="d-flex align-items-start p-2 rounded-2" style="background: #f0fdf4;">
                                     <i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>
-                                    <span class="fw-medium text-dark small" style="line-height: 1.5;">{{ $sText }}</span>
+                                    <span class="fw-medium text-dark small" style="line-height: 1.5;">{{ $parseStringItem($s) }}</span>
                                 </div>
                                 @endforeach
                             </div>
@@ -414,10 +423,9 @@
                             </h5>
                             <div class="d-flex flex-column gap-2">
                                 @foreach($devAreasData as $d)
-                                @php $dText = is_array($d) ? ($d['title'] ?? $d['desc'] ?? json_encode($d)) : $d; @endphp
                                 <div class="d-flex align-items-start p-2 rounded-2" style="background: #fffbeb;">
                                     <i class="bi bi-arrow-up-right-circle-fill text-warning me-2 mt-1"></i>
-                                    <span class="fw-medium text-dark small" style="line-height: 1.5;">{{ $dText }}</span>
+                                    <span class="fw-medium text-dark small" style="line-height: 1.5;">{{ $parseStringItem($d) }}</span>
                                 </div>
                                 @endforeach
                             </div>
@@ -438,8 +446,8 @@
                     <div class="row g-3">
                         @foreach($progsData as $prog)
                         @php
-                            $pTitle = is_array($prog) ? ($prog['title'] ?? '') : $prog;
-                            $pIcon = is_array($prog) ? ($prog['icon'] ?? 'bi-book') : 'bi-book';
+                            $pTitle = $parseStringItem($prog);
+                            $pIcon = is_array($prog) ? ($prog['icon'] ?? 'bi-book') : (is_object($prog) ? ($prog->icon ?? 'bi-book') : 'bi-book');
                         @endphp
                         <div class="col-md-4 col-sm-6 col-12">
                             <div class="p-3 rounded-3 h-100 d-flex align-items-center gap-3 border shadow-2hover" style="background: #f8fafc; border-color: #e2e8f0 !important; transition: all 0.2s;">
@@ -467,11 +475,10 @@
                     </h5>
                     <div class="row g-3">
                         @foreach($practicalTips as $tip)
-                        @php $tipText = is_array($tip) ? ($tip['title'] ?? json_encode($tip)) : $tip; @endphp
                         <div class="col-md-6 col-12">
                             <div class="d-flex align-items-start p-3 bg-white rounded-3 border shadow-sm">
                                 <i class="bi bi-shield-check text-primary fs-5 me-2 mt-0"></i>
-                                <span class="fw-semibold text-dark small" style="line-height: 1.4;">{{ $tipText }}</span>
+                                <span class="fw-semibold text-dark small" style="line-height: 1.4;">{{ $parseStringItem($tip) }}</span>
                             </div>
                         </div>
                         @endforeach
