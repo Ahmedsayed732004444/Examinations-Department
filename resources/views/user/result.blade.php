@@ -259,15 +259,31 @@
                     elseif (mb_strpos($n, 'حسي') !== false) $styleScores['kinesthetic'] = $ds->score;
                 }
 
-                $recTitle = $recommendation_title ?? $recObj?->title_ar ?? 'النمط الإدراكي الغالب';
-                $recDesc = !empty($parsedRecommendation) ? $parsedRecommendation : ($recObj?->description_ar ?? '');
-                $howToLearn = !empty($how_to_learn) ? $how_to_learn : (is_array($recObj?->how_to_learn_ar) ? $recObj->how_to_learn_ar : []);
-                $strengthsData = !empty($strengths) ? $strengths : (is_array($recObj?->strengths_ar) ? $recObj->strengths_ar : []);
-                $devAreasData = !empty($development_areas) ? $development_areas : (is_array($recObj?->development_areas_ar) ? $recObj->development_areas_ar : []);
-                $practicalTips = !empty($practical_tips) ? $practical_tips : (is_array($recObj?->practical_tips_ar) ? $recObj->practical_tips_ar : []);
-                $progsData = !empty($programs) ? $programs : (is_array($recObj?->programs_ar) ? $recObj->programs_ar : []);
-                $progsIntro = $programs_intro ?? $recObj?->programs_intro_ar ?? 'البرامج التدريبية المقترحة لك';
-                $progsOutro = $programs_outro ?? $recObj?->programs_outro_ar ?? '';
+                $recTitle = $recObj?->title_ar ?? $recommendation_title ?? 'النمط الإدراكي الغالب';
+                $recDesc = $recObj?->description_ar ?? (!empty($parsedRecommendation) ? $parsedRecommendation : '');
+
+                $howToLearn = is_array($recObj?->how_to_learn_ar) && !empty($recObj->how_to_learn_ar) 
+                    ? $recObj->how_to_learn_ar 
+                    : (!empty($how_to_learn) && is_array($how_to_learn) ? $how_to_learn : []);
+
+                $strengthsData = is_array($recObj?->strengths_ar) && !empty($recObj->strengths_ar) 
+                    ? $recObj->strengths_ar 
+                    : (isset($strengths_list) && is_array($strengths_list) ? $strengths_list : []);
+
+                $devAreasData = is_array($recObj?->development_areas_ar) && !empty($recObj->development_areas_ar) 
+                    ? $recObj->development_areas_ar 
+                    : (!empty($development_areas) && is_array($development_areas) ? $development_areas : []);
+
+                $practicalTips = is_array($recObj?->practical_tips_ar) && !empty($recObj->practical_tips_ar) 
+                    ? $recObj->practical_tips_ar 
+                    : (!empty($practical_tips) && is_array($practical_tips) ? $practical_tips : []);
+
+                $progsData = is_array($recObj?->programs_ar) && !empty($recObj->programs_ar) 
+                    ? $recObj->programs_ar 
+                    : (!empty($programs) && is_array($programs) ? $programs : []);
+
+                $progsIntro = $recObj?->programs_intro_ar ?? $programs_intro ?? 'البرامج التدريبية المقترحة لك';
+                $progsOutro = $recObj?->programs_outro_ar ?? $programs_outro ?? '';
 
                 $parseStringItem = function($val) {
                     if (is_object($val)) {
