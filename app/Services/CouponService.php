@@ -112,6 +112,8 @@ class CouponService
             $discount = $coupon->discount_percentage_9th;
         } elseif ($totalUsed === 9 && $coupon->discount_percentage_10th !== null) {
             $discount = $coupon->discount_percentage_10th;
+        }
+
         // Fallback to base discount percentage if specific tier is not defined
         if ($discount === null) {
             $discount = $coupon->discount_percentage;
