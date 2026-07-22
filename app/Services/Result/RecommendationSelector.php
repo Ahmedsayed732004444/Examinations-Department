@@ -77,12 +77,21 @@ class RecommendationSelector
             elseif ($pair === 'auditory_kinesthetic') $targetLevel = 'dual_auditory_kinesthetic';
             else $targetLevel = 'dual_' . $pair;
         }
-        // Rule 3: Single Dominant Style
-        else {
-            $targetLevel = $s1['key'];
+        $rec = $assessment->recommendations->firstWhere('level', $targetLevel);
+        if (!$rec) {
+            $dataFile = database_path('data/assessments/28/recommendations.php');
+            if (!file_exists($dataFile)) {
+                $dataFile = database_path('data/assessments/perceptual_styles/recommendations.php');
+            }
+            if (file_exists($dataFile)) {
+                $allRecs = require $dataFile;
+                $found = collect($allRecs)->firstWhere('level', $targetLevel);
+                if ($found) {
+                    $rec = new Recommendation(array_merge($found, ['assessment_id' => $assessment->id]));
+                }
+            }
         }
-
-        return $assessment->recommendations->firstWhere('level', $targetLevel);
+        return $rec;
     }
 
     /**
