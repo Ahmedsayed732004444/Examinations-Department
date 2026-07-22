@@ -163,15 +163,36 @@
                     <i class="bi bi-eye me-1"></i>معاينة نتائج المقياس
                 </button>
                 <ul class="dropdown-menu shadow-sm border-0" aria-labelledby="previewDropdown" style="max-height: 350px; overflow-y: auto;">
-                    @forelse($assessment->recommendations as $rec)
-                        <li>
-                            <a class="dropdown-item py-2" target="_blank" href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => $rec->level]) }}">
-                                <i class="bi bi-file-earmark-bar-graph text-primary me-2"></i>{{ $rec->title_ar ?? $rec->level }}
-                            </a>
-                        </li>
-                    @empty
-                        <li><a class="dropdown-item disabled text-muted" href="#">لا توجد توصيات مسجلة</a></li>
-                    @endforelse
+                    @if($assessment->scoring_type === 'perceptual_styles')
+                        @php
+                            $perceptualReports = [
+                                'visual' => 'النمط البصري',
+                                'auditory' => 'النمط السمعي',
+                                'kinesthetic' => 'النمط الحسي (العملي)',
+                                'balanced' => 'نمط متوازن',
+                                'dual_visual_auditory' => 'نمط مزدوج (بصري – سمعي)',
+                                'dual_visual_kinesthetic' => 'نمط مزدوج (بصري – حسي)',
+                                'dual_auditory_kinesthetic' => 'نمط مزدوج (سمعي – حسي)',
+                            ];
+                        @endphp
+                        @foreach($perceptualReports as $lvlKey => $lvlTitle)
+                            <li>
+                                <a class="dropdown-item py-2" target="_blank" href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => $lvlKey]) }}">
+                                    <i class="bi bi-file-earmark-bar-graph text-primary me-2"></i>{{ $lvlTitle }}
+                                </a>
+                            </li>
+                        @endforeach
+                    @else
+                        @forelse($assessment->recommendations as $rec)
+                            <li>
+                                <a class="dropdown-item py-2" target="_blank" href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => $rec->level]) }}">
+                                    <i class="bi bi-file-earmark-bar-graph text-primary me-2"></i>{{ $rec->title_ar ?? $rec->level }}
+                                </a>
+                            </li>
+                        @empty
+                            <li><a class="dropdown-item disabled text-muted" href="#">لا توجد توصيات مسجلة</a></li>
+                        @endforelse
+                    @endif
                 </ul>
             </div>
 

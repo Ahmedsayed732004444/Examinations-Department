@@ -137,6 +137,21 @@ class AssessmentController extends Controller
         $levelKey = $recommendation ? $recommendation->level : $level;
         $scoringType = $assessment->scoring_type ?? 'overall_score';
 
+        // Fallback for perceptual styles if DB recommendations table is empty on server
+        if (!$recommendation && $scoringType === 'perceptual_styles') {
+            $dataFile = database_path('data/assessments/28/recommendations.php');
+            if (!file_exists($dataFile)) {
+                $dataFile = database_path('data/assessments/perceptual_styles/recommendations.php');
+            }
+            if (file_exists($dataFile)) {
+                $allRecs = require $dataFile;
+                $found = collect($allRecs)->firstWhere('level', $levelKey);
+                if ($found) {
+                    $recommendation = new Recommendation(array_merge($found, ['assessment_id' => $assessment->id]));
+                }
+            }
+        }
+
         // Build mock scores based on scoring_type & level
         $mockDimensionScores = collect();
         $totalScore = 0;
