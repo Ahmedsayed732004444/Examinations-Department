@@ -787,6 +787,7 @@
                                         <option value="overall_score" {{ ($assessment->scoring_type ?? 'overall_score') == 'overall_score' ? 'selected' : '' }}>بناءً على الدرجة الكلية (مثل: مرتفع/متوسط/منخفض)</option>
                                         <option value="highest_dimension" {{ ($assessment->scoring_type ?? 'overall_score') == 'highest_dimension' ? 'selected' : '' }}>بناءً على المحور الأعلى درجة (مثل: الأنماط القيادية)</option>
                                         <option value="dimension_only" {{ ($assessment->scoring_type ?? 'overall_score') == 'dimension_only' ? 'selected' : '' }}>لا يوجد تقييم كلي (تقييم الأبعاد فقط)</option>
+                                         <option value="perceptual_styles" {{ ($assessment->scoring_type ?? '') == 'perceptual_styles' ? 'selected' : '' }}>أنماط إدراكية (بصري، سمعي، حسي، أنماط مزدوجة ومتوازنة)</option>
                                     </select>
                                 </div>
                             </div>
