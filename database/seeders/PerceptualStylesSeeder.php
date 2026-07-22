@@ -23,12 +23,17 @@ class PerceptualStylesSeeder extends Seeder
         $meta['created_by'] = $adminUser?->id;
 
         // Delete old version if exists to ensure clean idempotent seed
-        $existing = Assessment::where('report_code', 'REP-PERCEPTUAL')
-            ->orWhere('title_ar', 'مقياس الأنماط الإدراكية')
-            ->first();
+        $existingList = Assessment::where('report_code', 'REP-PERCEPTUAL')
+            ->orWhere('report_code', 'REP-28')
+            ->orWhere('title_ar', 'LIKE', '%الأنماط الإدراكية%')
+            ->orWhere('scoring_type', 'perceptual_styles')
+            ->get();
 
-        if ($existing) {
-            $existing->delete();
+        foreach ($existingList as $oldAss) {
+            Recommendation::where('assessment_id', $oldAss->id)->delete();
+            Dimension::where('assessment_id', $oldAss->id)->delete();
+            Question::where('assessment_id', $oldAss->id)->delete();
+            $oldAss->delete();
         }
 
         $assessment = Assessment::create($meta);
