@@ -32,7 +32,7 @@ class PerceptualStylesSeeder extends Seeder
         foreach ($existingList as $oldAss) {
             $sessions = \App\Models\ExamSession::where('assessment_id', $oldAss->id)->get();
             foreach ($sessions as $s) {
-                \App\Models\UserAnswer::where('exam_session_id', $s->id)->delete();
+                \App\Models\UserAnswer::where('session_id', $s->id)->delete();
                 $res = \App\Models\Result::where('exam_session_id', $s->id)->first();
                 if ($res) {
                     \App\Models\DimensionScore::where('result_id', $res->id)->delete();
