@@ -61,8 +61,6 @@ class RecommendationSelector
         $s2 = $styles[1];
         $s3 = $styles[2];
 
-        $targetLevel = 'visual';
-
         // Rule 1: Balanced Style (difference across all 3 <= 2)
         if (($s1['score'] - $s3['score']) <= 2) {
             $targetLevel = 'balanced';
@@ -76,6 +74,10 @@ class RecommendationSelector
             elseif ($pair === 'kinesthetic_visual') $targetLevel = 'dual_visual_kinesthetic';
             elseif ($pair === 'auditory_kinesthetic') $targetLevel = 'dual_auditory_kinesthetic';
             else $targetLevel = 'dual_' . $pair;
+        }
+        // Rule 3: Single Dominant Style
+        else {
+            $targetLevel = $s1['key'];
         }
         $rec = $assessment->recommendations->firstWhere('level', $targetLevel);
         if (!$rec) {
