@@ -6,7 +6,14 @@
   "ignore": {
     "customPatterns": [
       "repomix-output.xml",
-      "repomix-output.md"
+      "repomix-output.md",
+      "repomix-migrations.md",
+      "database/data/assessments/**",
+      "database/database.sqlite",
+      "storage/**",
+      "composer.lock",
+      "package-lock.json",
+      "public/css/report-pdf.css"
     ]
   }
 }
