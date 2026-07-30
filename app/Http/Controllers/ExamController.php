@@ -28,7 +28,7 @@ class ExamController extends Controller
     {
         $request->validate([
             'code'          => 'required|string',
-            'assessment_id' => 'required|exists:assessments,id',
+            'assessment_id' => 'required|exists:assessments,id,deleted_at,NULL',
         ]);
 
         $user       = auth()->user();

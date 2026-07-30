@@ -15,8 +15,8 @@ class AnswerQuestionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'question_id' => 'required|uuid|exists:questions,id',
-            'selected_option_id' => 'required|uuid|exists:answer_options,id',
+            'question_id' => 'required|uuid|exists:questions,id,deleted_at,NULL',
+            'selected_option_id' => 'required|uuid|exists:answer_options,id,deleted_at,NULL',
         ];
     }
 }

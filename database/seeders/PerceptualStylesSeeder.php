@@ -14,9 +14,7 @@ class PerceptualStylesSeeder extends Seeder
 {
     public function run(): void
     {
-        $dir = is_dir(database_path('data/assessments/28'))
-            ? database_path('data/assessments/28')
-            : database_path('data/assessments/perceptual_styles');
+        $dir = database_path('data/assessments/perceptual_styles');
         $meta = require $dir . '/meta.php';
         
         $adminUser = User::where('role', 'admin')->first() ?? User::first();
@@ -32,18 +30,25 @@ class PerceptualStylesSeeder extends Seeder
         foreach ($existingList as $oldAss) {
             $sessions = \App\Models\ExamSession::where('assessment_id', $oldAss->id)->get();
             foreach ($sessions as $s) {
-                \App\Models\UserAnswer::where('session_id', $s->id)->delete();
+                \App\Models\UserAnswer::where('session_id', $s->id)->forceDelete();
                 $res = \App\Models\Result::where('exam_session_id', $s->id)->first();
                 if ($res) {
-                    \App\Models\DimensionScore::where('result_id', $res->id)->delete();
-                    $res->delete();
+                    \App\Models\DimensionScore::where('result_id', $res->id)->forceDelete();
+                    $res->forceDelete();
                 }
-                $s->delete();
+                $s->forceDelete();
             }
-            Recommendation::where('assessment_id', $oldAss->id)->delete();
-            Dimension::where('assessment_id', $oldAss->id)->delete();
-            Question::where('assessment_id', $oldAss->id)->delete();
-            $oldAss->delete();
+            Recommendation::where('assessment_id', $oldAss->id)->forceDelete();
+
+            $dimIds = Dimension::where('assessment_id', $oldAss->id)->pluck('id');
+            \App\Models\DimensionInterpretation::whereIn('dimension_id', $dimIds)->forceDelete();
+            Dimension::where('assessment_id', $oldAss->id)->forceDelete();
+
+            $qIds = Question::where('assessment_id', $oldAss->id)->pluck('id');
+            AnswerOption::whereIn('question_id', $qIds)->forceDelete();
+            Question::where('assessment_id', $oldAss->id)->forceDelete();
+
+            $oldAss->forceDelete();
         }
 
         $assessment = Assessment::create($meta);

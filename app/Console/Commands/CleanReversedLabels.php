@@ -1,16 +1,17 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
+class CleanReversedLabels extends Command
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    protected $signature = 'app:clean-reversed-labels';
+    protected $description = 'Clean legacy (عبارة معكوسة) notes from questions and assessments';
+
+    public function handle(): int
     {
-        // Remove (عبارة معكوسة) and variations from questions.text_ar
         $questions = DB::table('questions')
             ->where('text_ar', 'like', '%معكوس%')
             ->get();
@@ -27,7 +28,6 @@ return new class extends Migration
                 ->update(['text_ar' => trim($cleaned)]);
         }
 
-        // Clean assessment description if note exists
         $assessments = DB::table('assessments')
             ->where('description_ar', 'like', '%معكوس%')
             ->get();
@@ -38,13 +38,8 @@ return new class extends Migration
                 ->where('id', $assessment->id)
                 ->update(['description_ar' => trim($cleanedDesc)]);
         }
-    }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        // No-op
+        $this->info('Reversed labels cleaned successfully.');
+        return Command::SUCCESS;
     }
-};
+}

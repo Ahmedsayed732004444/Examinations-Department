@@ -15,8 +15,8 @@ class BulkStoreQuestionsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'assessment_id' => 'required|uuid|exists:assessments,id',
-            'dimension_id' => 'nullable|uuid|exists:dimensions,id',
+            'assessment_id' => 'required|uuid|exists:assessments,id,deleted_at,NULL',
+            'dimension_id' => 'nullable|uuid|exists:dimensions,id,deleted_at,NULL',
             'questions_text' => 'required|string',
         ];
     }

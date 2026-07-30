@@ -1,0 +1,12 @@
+{
+  "output": {
+    "filePath": "repomix-output.md",
+    "style": "markdown"
+  },
+  "ignore": {
+    "customPatterns": [
+      "repomix-output.xml",
+      "repomix-output.md"
+    ]
+  }
+}

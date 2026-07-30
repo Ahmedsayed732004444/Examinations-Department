@@ -16,7 +16,7 @@ class Assessment12Seeder extends Seeder
 {
     public function run()
     {
-        $dir = database_path('data/assessments/12');
+        $dir = database_path('data/assessments/career_success_readiness');
         $meta = require $dir . '/meta.php';
         $meta['created_by'] = \App\Models\User::first()->id ?? null;
 

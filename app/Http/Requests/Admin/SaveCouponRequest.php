@@ -27,7 +27,7 @@ class SaveCouponRequest extends FormRequest
 
         return [
             'title' => 'required|string|max:255',
-            'code' => ['required', 'string', 'max:50', Rule::unique('coupons')->ignore($couponId)],
+            'code' => ['required', 'string', 'max:50', Rule::unique('coupons')->ignore($couponId)->whereNull('deleted_at')],
             'assessments_limit' => 'nullable|integer|min:1',
             'expires_at' => 'nullable|date',
             'is_active' => 'boolean',
@@ -43,10 +43,10 @@ class SaveCouponRequest extends FormRequest
             'discount_percentage_10th' => 'nullable|integer|min:0|max:100',
             'applies_to_all_assessments' => 'boolean',
             'assessment_ids' => 'nullable|array',
-            'assessment_ids.*' => 'exists:assessments,id',
+            'assessment_ids.*' => 'exists:assessments,id,deleted_at,NULL',
             'applies_to_all_users' => 'boolean',
             'permitted_user_ids' => 'nullable|array',
-            'permitted_user_ids.*' => 'exists:users,id',
+            'permitted_user_ids.*' => 'exists:users,id,deleted_at,NULL',
         ];
     }
 }

@@ -16,7 +16,7 @@ class StoreRecommendationRequest extends FormRequest
     {
         return [
             'id' => 'nullable|uuid',
-            'assessment_id' => 'required|uuid|exists:assessments,id',
+            'assessment_id' => 'required|uuid|exists:assessments,id,deleted_at,NULL',
             'level' => 'required|string',
             'description_ar' => 'required|string',
             'certificates_ar' => 'nullable|array',

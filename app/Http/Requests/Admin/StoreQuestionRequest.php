@@ -15,8 +15,8 @@ class StoreQuestionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'assessment_id' => 'required|uuid|exists:assessments,id',
-            'dimension_id' => 'nullable|uuid|exists:dimensions,id',
+            'assessment_id' => 'required|uuid|exists:assessments,id,deleted_at,NULL',
+            'dimension_id' => 'nullable|uuid|exists:dimensions,id,deleted_at,NULL',
             'text_ar' => 'required|string',
             'is_reversed' => 'nullable|boolean',
             'options' => 'required|array|min:2',
