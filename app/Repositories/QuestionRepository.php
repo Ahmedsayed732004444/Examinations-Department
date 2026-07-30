@@ -22,6 +22,8 @@ class QuestionRepository implements QuestionRepositoryInterface
         $query = DB::table('questions as q')
             ->join('assessments as a', 'a.id', '=', 'q.assessment_id')
             ->leftJoin('dimensions as d', 'd.id', '=', 'q.dimension_id')
+            ->whereNull('a.deleted_at')
+            ->whereNull('q.deleted_at')
             ->select([
                 'q.id',
                 'q.text_ar',
@@ -34,7 +36,7 @@ class QuestionRepository implements QuestionRepositoryInterface
                 'd.name_ar  as dimension_name',
             ])
             ->selectSub(
-                DB::table('answer_options')->whereColumn('answer_options.question_id', 'q.id')->selectRaw('COUNT(*)'),
+                DB::table('answer_options')->whereNull('deleted_at')->whereColumn('answer_options.question_id', 'q.id')->selectRaw('COUNT(*)'),
                 'answer_options_count'
             );
 
@@ -104,12 +106,21 @@ class QuestionRepository implements QuestionRepositoryInterface
 
     public function delete(Question $question): void
     {
-        $question->delete();
+        DB::transaction(function () use ($question) {
+            $question->answerOptions()->delete();
+            $question->delete();
+        });
     }
 
     public function bulkDelete(array $ids): void
     {
-        Question::whereIn('id', $ids)->delete();
+        DB::transaction(function () use ($ids) {
+            $questions = Question::whereIn('id', $ids)->get();
+            foreach ($questions as $q) {
+                $q->answerOptions()->delete();
+                $q->delete();
+            }
+        });
     }
 
     public function reorder(array $orderedIds): void

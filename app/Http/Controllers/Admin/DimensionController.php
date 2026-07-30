@@ -53,7 +53,7 @@ class DimensionController extends Controller
     {
         $data = $request->validate([
             'order' => 'required|array',
-            'order.*' => 'required|uuid|exists:dimensions,id',
+            'order.*' => 'required|uuid|exists:dimensions,id,deleted_at,NULL',
         ]);
 
         $this->dimensionService->reorder($data['order']);

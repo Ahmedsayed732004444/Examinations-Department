@@ -1,4 +1,4 @@
-This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
+This file is a merged representation of a subset of the codebase, containing files not matching ignore patterns, combined into a single document by Repomix.
 
 # File Summary
 
@@ -28,7 +28,6 @@ The content is organized as follows:
 ## Notes
 - Some files may have been excluded based on .gitignore rules and Repomix's configuration
 - Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
-- Only files matching these patterns are included: app/**, routes/**, config/**, database/migrations/**, database/seeders/**, tests/**
 - Files matching these patterns are excluded: repomix-output.xml, repomix-output.md, repomix-migrations.md, database/data/assessments/**, database/database.sqlite, storage/**, composer.lock, package-lock.json, public/css/report-pdf.css
 - Files matching patterns in .gitignore are excluded
 - Files matching default ignore patterns are excluded
@@ -36,6 +35,9 @@ The content is organized as follows:
 
 # Directory Structure
 ```
+.editorconfig
+.gitattributes
+.gitignore
 app/Console/Commands/CleanReversedLabels.php
 app/Console/Commands/ConvertRecommendationsJson.php
 app/Http/Controllers/Admin/AnswerOptionController.php
@@ -66,6 +68,7 @@ app/Http/Requests/Admin/StoreRecommendationRequest.php
 app/Http/Requests/Admin/UpdateAssessmentRequest.php
 app/Http/Requests/Admin/UpdateSettingsRequest.php
 app/Http/Requests/AnswerQuestionRequest.php
+app/Http/Requests/RegisterRequest.php
 app/Models/AnswerOption.php
 app/Models/Assessment.php
 app/Models/Coupon.php
@@ -108,6 +111,12 @@ app/Services/Result/ScoreCalculator.php
 app/Services/StatisticsService.php
 app/Services/UserDashboardService.php
 app/Services/UserService.php
+artisan
+bootstrap/app.php
+bootstrap/cache/.gitignore
+bootstrap/providers.php
+check-seed.php
+composer.json
 config/app.php
 config/auth.php
 config/cache.php
@@ -118,6 +127,8 @@ config/mail.php
 config/queue.php
 config/services.php
 config/session.php
+database/.gitignore
+database/factories/UserFactory.php
 database/migrations/0001_01_01_000000_create_users_table.php
 database/migrations/0001_01_01_000001_create_cache_table.php
 database/migrations/0001_01_01_000002_create_jobs_table.php
@@ -183,15 +194,214 @@ database/seeders/Assessment9Seeder.php
 database/seeders/AssessmentsDatabaseSeeder.php
 database/seeders/DatabaseSeeder.php
 database/seeders/PerceptualStylesSeeder.php
+images/1.png
+images/10.png
+images/11.png
+images/12.png
+images/13.png
+images/14.png
+images/15.png
+images/16.png
+images/17.png
+images/18.png
+images/19.png
+images/2.png
+images/20.png
+images/21.png
+images/22.png
+images/23.png
+images/24.png
+images/25.png
+images/26.png
+images/27.png
+images/3.png
+images/4.png
+images/5.png
+images/6.png
+images/7.png
+images/8.png
+images/9.png
+nixpacks.toml
+package.json
+phpunit.xml
+Procfile
+public/.htaccess
+public/css/app.css
+public/favicon.ico
+public/images/dashboard/1.png
+public/images/dashboard/10.png
+public/images/dashboard/11.png
+public/images/dashboard/12.png
+public/images/dashboard/13.png
+public/images/dashboard/14.png
+public/images/dashboard/15.png
+public/images/dashboard/16.png
+public/images/dashboard/17.png
+public/images/dashboard/1782916324_6a4524e4d5bdb.png
+public/images/dashboard/1782990676_6a464754c7321.png
+public/images/dashboard/1784449882_6a5c8b5aa75c0.jpeg
+public/images/dashboard/1784449958_6a5c8ba66ba8a.jpeg
+public/images/dashboard/18.png
+public/images/dashboard/19.png
+public/images/dashboard/2.png
+public/images/dashboard/20.png
+public/images/dashboard/21.png
+public/images/dashboard/22.png
+public/images/dashboard/23.png
+public/images/dashboard/24.png
+public/images/dashboard/25.png
+public/images/dashboard/26.png
+public/images/dashboard/27.png
+public/images/dashboard/3.png
+public/images/dashboard/4.png
+public/images/dashboard/5.png
+public/images/dashboard/6.png
+public/images/dashboard/7.png
+public/images/dashboard/8.png
+public/images/dashboard/9.png
+public/images/dashboard/assess_career_1782904682194.png
+public/images/dashboard/assess_emotional_1782904669192.png
+public/images/dashboard/assess_time_1782904695583.png
+public/images/dashboard/default.png
+public/images/dashboard/hero_banner_1782904656284.png
+public/images/dashboard/hero_banner_new.jpg
+public/images/dashboard/khaleeji_career_guidance_1782909792723.png
+public/images/dashboard/khaleeji_communication_1782909834369.png
+public/images/dashboard/khaleeji_emotional_intelligence_1782909783914.png
+public/images/dashboard/khaleeji_innovation_1782909995331.png
+public/images/dashboard/khaleeji_leadership_1782909826341.png
+public/images/dashboard/khaleeji_personality_1782909817886.png
+public/images/dashboard/khaleeji_problem_solving_1782909986298.png
+public/images/dashboard/khaleeji_stress_management_1782910006048.png
+public/images/dashboard/khaleeji_teamwork_1782909977067.png
+public/images/dashboard/khaleeji_time_management_1782909803311.png
+public/images/icons/1783771711_6a52323f613aa.png
+public/images/icons/icon_1783783093_6a525eb51c3b0.png
+public/images/icons/icon_adaptability_1783774397258.png
+public/images/icons/icon_analytics_1783774390320.png
+public/images/icons/icon_career_1783774257271.png
+public/images/icons/icon_communication_1783774217744.png
+public/images/icons/icon_creativity_1783774266259.png
+public/images/icons/icon_emotional_intelligence_1783774210262.png
+public/images/icons/icon_leadership_1783774201755.png
+public/images/icons/icon_motivation_1783774364797.png
+public/images/icons/icon_negotiation_1783774374293.png
+public/images/icons/icon_planning_1783774241357.png
+public/images/icons/icon_problem_solving_1783774233646.png
+public/images/icons/icon_public_speaking_1783774382972.png
+public/images/icons/icon_stress_1783774355669.png
+public/images/icons/icon_teamwork_1783774249961.png
+public/images/icons/icon_tech_1783774273048.png
+public/images/icons/icon_time_management_1783774226905.png
+public/images/logo_backup.png
+public/images/logo_transparent.png
+public/images/logo.png
+public/images/Untitled - July 22, 2026 at 01.04.01.png
+public/index.php
+public/js/app.js
+public/js/json-lists.js
+public/robots.txt
+README.md
+repomix.config.json
+resources/css/app.css
+resources/js/app.js
+resources/js/bootstrap.js
+resources/views/admin/assessments/index.blade.php
+resources/views/admin/assessments/show.blade.php
+resources/views/admin/coupons/create.blade.php
+resources/views/admin/coupons/edit.blade.php
+resources/views/admin/coupons/index.blade.php
+resources/views/admin/dashboard.blade.php
+resources/views/admin/exams/create.blade.php
+resources/views/admin/icons/index.blade.php
+resources/views/admin/questions/index.blade.php
+resources/views/admin/recommendations/index.blade.php
+resources/views/admin/settings/index.blade.php
+resources/views/admin/statistics/index.blade.php
+resources/views/admin/users/index.blade.php
+resources/views/auth/login.blade.php
+resources/views/auth/register.blade.php
+resources/views/layouts/admin.blade.php
+resources/views/layouts/user.blade.php
+resources/views/user/dashboard.blade.php
+resources/views/user/exam.blade.php
+resources/views/user/result.blade.php
 routes/console.php
 routes/web.php
+start-container.sh
 tests/Feature/Architecture/NoDirectBuilderDeleteTest.php
+vite.config.js
 ```
 
 # Files
 
+## File: .editorconfig
+````
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[compose.yaml]
+indent_size = 4
+````
+
+## File: .gitattributes
+````
+* text=auto eol=lf
+
+*.blade.php diff=html
+*.css diff=css
+*.html diff=html
+*.md diff=markdown
+*.php diff=php
+
+/.github export-ignore
+CHANGELOG.md export-ignore
+.styleci.yml export-ignore
+````
+
+## File: .gitignore
+````
+*.log
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
+````
+
 ## File: app/Console/Commands/CleanReversedLabels.php
-```php
+````php
 <?php
 
 namespace App\Console\Commands;
@@ -237,10 +447,10 @@ class CleanReversedLabels extends Command
         return Command::SUCCESS;
     }
 }
-```
+````
 
 ## File: app/Console/Commands/ConvertRecommendationsJson.php
-```php
+````php
 <?php
 
 namespace App\Console\Commands;
@@ -316,10 +526,10 @@ class ConvertRecommendationsJson extends Command
         return Command::SUCCESS;
     }
 }
-```
+````
 
 ## File: app/Http/Controllers/Admin/DashboardController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -341,10 +551,10 @@ class DashboardController extends Controller
         return view('admin.dashboard', $data);
     }
 }
-```
+````
 
 ## File: app/Http/Controllers/Admin/DimensionController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -415,10 +625,10 @@ class DimensionController extends Controller
         return response()->json(['success' => true, 'message' => 'تم حفظ تفسيرات البُعد بنجاح.']);
     }
 }
-```
+````
 
 ## File: app/Http/Controllers/Admin/IconController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -488,10 +698,10 @@ class IconController extends Controller
         return back()->with('success', 'تم حذف الأيقونة بنجاح.');
     }
 }
-```
+````
 
 ## File: app/Http/Controllers/Controller.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers;
@@ -500,10 +710,10 @@ abstract class Controller
 {
     //
 }
-```
+````
 
 ## File: app/Http/Controllers/DashboardController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers;
@@ -524,10 +734,10 @@ class DashboardController extends Controller
         return view('user.dashboard', $data);
     }
 }
-```
+````
 
 ## File: app/Http/Middleware/AdminMiddleware.php
-```php
+````php
 <?php
 
 namespace App\Http\Middleware;
@@ -547,10 +757,10 @@ class AdminMiddleware
         return $next($request);
     }
 }
-```
+````
 
 ## File: app/Http/Middleware/UserMiddleware.php
-```php
+````php
 <?php
 
 namespace App\Http\Middleware;
@@ -574,10 +784,10 @@ class UserMiddleware
         return $next($request);
     }
 }
-```
+````
 
 ## File: app/Http/Requests/Admin/StoreDimensionRequest.php
-```php
+````php
 <?php
 
 namespace App\Http\Requests\Admin;
@@ -600,10 +810,43 @@ class StoreDimensionRequest extends FormRequest
         ];
     }
 }
-```
+````
+
+## File: app/Http/Requests/RegisterRequest.php
+````php
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class RegisterRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /** @return array<string, mixed> */
+    public function rules(): array
+    {
+        return [
+            'name'          => 'required|string|max:255',
+            'email'         => ['required', 'email', Rule::unique('users', 'email')->whereNull('deleted_at')],
+            'national_id'   => ['required', 'string', 'max:20', Rule::unique('users', 'national_id')->whereNull('deleted_at')],
+            'phone'         => ['required', 'string', 'max:20', Rule::unique('users', 'phone')->whereNull('deleted_at')],
+            'gender'        => 'required|string|in:male,female',
+            'qualification' => 'required|string|max:255',
+            'nationality'   => 'required|string|max:255',
+            'password'      => 'required|min:8|confirmed',
+        ];
+    }
+}
+````
 
 ## File: app/Models/DimensionScore.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -627,10 +870,10 @@ class DimensionScore extends Model
         return $this->belongsTo(Dimension::class);
     }
 }
-```
+````
 
 ## File: app/Models/Icon.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -649,10 +892,10 @@ class Icon extends Model
         'icon_url',
     ];
 }
-```
+````
 
 ## File: app/Models/Setting.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -663,10 +906,10 @@ class Setting extends Model
 {
     protected $fillable = ['key', 'value'];
 }
-```
+````
 
 ## File: app/Models/UserAnswer.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -695,10 +938,10 @@ class UserAnswer extends Model
         return $this->belongsTo(AnswerOption::class, 'selected_option_id');
     }
 }
-```
+````
 
 ## File: app/Repositories/Contracts/DimensionRepositoryInterface.php
-```php
+````php
 <?php
 
 namespace App\Repositories\Contracts;
@@ -747,10 +990,10 @@ interface DimensionRepositoryInterface
      */
     public function upsertInterpretations(Dimension $dimension, array $data): void;
 }
-```
+````
 
 ## File: app/Repositories/Contracts/ExamSessionRepositoryInterface.php
-```php
+````php
 <?php
 
 namespace App\Repositories\Contracts;
@@ -779,10 +1022,10 @@ interface ExamSessionRepositoryInterface
      */
     public function update(ExamSession $session, array $data): ExamSession;
 }
-```
+````
 
 ## File: app/Repositories/Contracts/QuestionRepositoryInterface.php
-```php
+````php
 <?php
 
 namespace App\Repositories\Contracts;
@@ -861,10 +1104,10 @@ interface QuestionRepositoryInterface
      */
     public function bulkImport(array $data): int;
 }
-```
+````
 
 ## File: app/Repositories/Contracts/RecommendationRepositoryInterface.php
-```php
+````php
 <?php
 
 namespace App\Repositories\Contracts;
@@ -893,37 +1136,10 @@ interface RecommendationRepositoryInterface
      */
     public function delete(Recommendation $recommendation): void;
 }
-```
-
-## File: app/Repositories/Contracts/UserRepositoryInterface.php
-```php
-<?php
-
-namespace App\Repositories\Contracts;
-
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
-
-interface UserRepositoryInterface
-{
-    /**
-     * Search and paginate users with their completed exam session count.
-     *
-     * @return LengthAwarePaginator
-     */
-    public function searchPaginated(?string $search, int $perPage = 15);
-
-    /**
-     * Retrieve completed exam sessions for a specific user.
-     *
-     * @return Collection
-     */
-    public function getUserResults(string $userId);
-}
-```
+````
 
 ## File: app/Repositories/DimensionRepository.php
-```php
+````php
 <?php
 
 namespace App\Repositories;
@@ -983,10 +1199,10 @@ class DimensionRepository implements DimensionRepositoryInterface
         }
     }
 }
-```
+````
 
 ## File: app/Repositories/ExamSessionRepository.php
-```php
+````php
 <?php
 
 namespace App\Repositories;
@@ -1016,10 +1232,10 @@ class ExamSessionRepository implements ExamSessionRepositoryInterface
         return $session->fresh();
     }
 }
-```
+````
 
 ## File: app/Repositories/QuestionRepository.php
-```php
+````php
 <?php
 
 namespace App\Repositories;
@@ -1187,10 +1403,10 @@ class QuestionRepository implements QuestionRepositoryInterface
         return $count;
     }
 }
-```
+````
 
 ## File: app/Services/AdminDashboardService.php
-```php
+````php
 <?php
 
 namespace App\Services;
@@ -1244,10 +1460,10 @@ class AdminDashboardService
         );
     }
 }
-```
+````
 
 ## File: app/Services/DimensionService.php
-```php
+````php
 <?php
 
 namespace App\Services;
@@ -1312,10 +1528,10 @@ class DimensionService
         $this->dimensions->upsertInterpretations($dimension, $data);
     }
 }
-```
+````
 
 ## File: app/Services/QuestionService.php
-```php
+````php
 <?php
 
 namespace App\Services;
@@ -1524,10 +1740,10 @@ class QuestionService
         return $rowCount;
     }
 }
-```
+````
 
 ## File: app/Services/RecommendationService.php
-```php
+````php
 <?php
 
 namespace App\Services;
@@ -1563,10 +1779,10 @@ class RecommendationService
         $this->recommendations->delete($recommendation);
     }
 }
-```
+````
 
 ## File: app/Services/Result/DimensionInterpreter.php
-```php
+````php
 <?php
 
 namespace App\Services\Result;
@@ -1592,10 +1808,10 @@ class DimensionInterpreter
         return null;
     }
 }
-```
+````
 
 ## File: app/Services/Result/ScoreCalculator.php
-```php
+````php
 <?php
 
 namespace App\Services\Result;
@@ -1664,10 +1880,10 @@ class ScoreCalculator
         ];
     }
 }
-```
+````
 
 ## File: app/Services/StatisticsService.php
-```php
+````php
 <?php
 
 namespace App\Services;
@@ -1878,36 +2094,153 @@ class StatisticsService
         return $csvContent;
     }
 }
-```
+````
 
-## File: app/Services/UserService.php
-```php
+## File: artisan
+````
+#!/usr/bin/env php
 <?php
 
-namespace App\Services;
+use Illuminate\Foundation\Application;
+use Symfony\Component\Console\Input\ArgvInput;
 
-use App\Repositories\Contracts\UserRepositoryInterface;
+define('LARAVEL_START', microtime(true));
 
-class UserService
-{
-    public function __construct(
-        private readonly UserRepositoryInterface $userRepository,
-    ) {}
+// Register the Composer autoloader...
+require __DIR__.'/vendor/autoload.php';
 
-    public function searchPaginated(?string $search, int $perPage = 15)
-    {
-        return $this->userRepository->searchPaginated($search, $perPage);
-    }
+// Bootstrap Laravel and handle the command...
+/** @var Application $app */
+$app = require_once __DIR__.'/bootstrap/app.php';
 
-    public function getUserResults(string $userId)
-    {
-        return $this->userRepository->getUserResults($userId);
-    }
+$status = $app->handleCommand(new ArgvInput);
+
+exit($status);
+````
+
+## File: bootstrap/cache/.gitignore
+````
+*
+!.gitignore
+````
+
+## File: bootstrap/providers.php
+````php
+<?php
+
+use App\Providers\AppServiceProvider;
+
+return [
+    AppServiceProvider::class,
+];
+````
+
+## File: check-seed.php
+````php
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
+try {
+    echo \App\Models\Assessment::count();
+} catch (\Exception $e) {
+    echo "0";
 }
-```
+````
+
+## File: composer.json
+````json
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "laravel/laravel",
+    "type": "project",
+    "description": "The skeleton application for the Laravel framework.",
+    "keywords": ["laravel", "framework"],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^12.0",
+        "laravel/tinker": "^2.10.1"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "laravel/pail": "^1.2.2",
+        "laravel/pint": "^1.24",
+        "laravel/sail": "^1.41",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "phpunit/phpunit": "^11.5.50"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "setup": [
+            "composer install",
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php artisan key:generate",
+            "@php artisan migrate --force",
+            "npm install",
+            "npm run build"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+        ],
+        "test": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test"
+        ],
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "@php artisan migrate --graceful --ansi"
+        ],
+        "pre-package-uninstall": [
+            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
+````
 
 ## File: config/app.php
-```php
+````php
 <?php
 
 return [
@@ -2034,10 +2367,10 @@ return [
     ],
 
 ];
-```
+````
 
 ## File: config/auth.php
-```php
+````php
 <?php
 
 use App\Models\User;
@@ -2155,10 +2488,10 @@ return [
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
 ];
-```
+````
 
 ## File: config/cache.php
-```php
+````php
 <?php
 
 use Illuminate\Support\Str;
@@ -2276,10 +2609,10 @@ return [
     'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
 
 ];
-```
+````
 
 ## File: config/database.php
-```php
+````php
 <?php
 
 use Illuminate\Support\Str;
@@ -2464,10 +2797,10 @@ return [
     ],
 
 ];
-```
+````
 
 ## File: config/filesystems.php
-```php
+````php
 <?php
 
 return [
@@ -2548,10 +2881,10 @@ return [
     ],
 
 ];
-```
+````
 
 ## File: config/logging.php
-```php
+````php
 <?php
 
 use Monolog\Handler\NullHandler;
@@ -2684,10 +3017,10 @@ return [
     ],
 
 ];
-```
+````
 
 ## File: config/mail.php
-```php
+````php
 <?php
 
 return [
@@ -2806,10 +3139,10 @@ return [
     ],
 
 ];
-```
+````
 
 ## File: config/queue.php
-```php
+````php
 <?php
 
 return [
@@ -2939,10 +3272,10 @@ return [
     ],
 
 ];
-```
+````
 
 ## File: config/services.php
-```php
+````php
 <?php
 
 return [
@@ -2981,10 +3314,10 @@ return [
     ],
 
 ];
-```
+````
 
 ## File: config/session.php
-```php
+````php
 <?php
 
 use Illuminate\Support\Str;
@@ -3202,10 +3535,64 @@ return [
     'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
 
 ];
-```
+````
+
+## File: database/.gitignore
+````
+*.sqlite*
+````
+
+## File: database/factories/UserFactory.php
+````php
+<?php
+
+namespace Database\Factories;
+
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
+/**
+ * @extends Factory<User>
+ */
+class UserFactory extends Factory
+{
+    /**
+     * The current password being used by the factory.
+     */
+    protected static ?string $password;
+
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'name' => fake()->name(),
+            'email' => fake()->unique()->safeEmail(),
+            'email_verified_at' => now(),
+            'password' => static::$password ??= Hash::make('password'),
+            'remember_token' => Str::random(10),
+        ];
+    }
+
+    /**
+     * Indicate that the model's email address should be unverified.
+     */
+    public function unverified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => null,
+        ]);
+    }
+}
+````
 
 ## File: database/migrations/0001_01_01_000001_create_cache_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3241,10 +3628,10 @@ return new class extends Migration
         Schema::dropIfExists('cache_locks');
     }
 };
-```
+````
 
 ## File: database/migrations/0001_01_01_000002_create_jobs_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3302,10 +3689,10 @@ return new class extends Migration
         Schema::dropIfExists('failed_jobs');
     }
 };
-```
+````
 
 ## File: database/migrations/2026_06_24_085954_add_performance_indexes_to_tables.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3354,10 +3741,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_06_25_120000_add_is_reversed_to_questions_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3381,10 +3768,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_01_122729_add_price_and_rating_to_assessments_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3415,10 +3802,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_01_140449_add_image_url_to_assessments_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3447,10 +3834,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_03_160643_add_subtitle_ar_to_assessments_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3479,10 +3866,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_05_153443_create_settings_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3512,10 +3899,10 @@ return new class extends Migration
         Schema::dropIfExists('settings');
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_05_161859_add_extra_discount_tiers_to_coupons_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3558,10 +3945,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_05_225427_add_details_to_users_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3592,10 +3979,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_06_005159_add_report_details_to_assessments_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3626,10 +4013,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_11_102607_move_report_details_to_recommendations.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3691,10 +4078,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_11_104237_add_intro_texts_to_recommendations.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3724,10 +4111,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_11_115159_create_icons_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3758,10 +4145,10 @@ return new class extends Migration
         Schema::dropIfExists('icons');
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_15_151418_add_report_code_to_assessments_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3790,10 +4177,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_21_170000_make_assessments_limit_nullable_on_coupons_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3822,10 +4209,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_21_234000_add_perceptual_fields_to_recommendations_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3868,10 +4255,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_08_01_000000_add_soft_deletes_to_all_core_tables.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3934,10 +4321,1954 @@ return new class extends Migration
         }
     }
 };
-```
+````
+
+## File: nixpacks.toml
+````toml
+# nixpacks.toml configuration for Laravel deployment on Railway
+
+[variables]
+    DOCUMENT_ROOT = "/public"
+
+[phases.build]
+cmds = [
+    "composer install --no-interaction --optimize-autoloader --no-dev",
+    "npm install && npm run build"
+]
+````
+
+## File: package.json
+````json
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.0.0",
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^2.0.0",
+        "tailwindcss": "^4.0.0",
+        "vite": "^7.0.7"
+    }
+}
+````
+
+## File: phpunit.xml
+````xml
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="DB_URL" value=""/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="PULSE_ENABLED" value="false"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="NIGHTWATCH_ENABLED" value="false"/>
+    </php>
+</phpunit>
+````
+
+## File: Procfile
+````
+web: php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
+````
+
+## File: public/.htaccess
+````
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+````
+
+## File: public/css/app.css
+````css
+/* ============================================
+   Dar Alroaya Exam System — Global Styles
+   ============================================ */
+
+:root {
+    --font-ar: 'Noto Kufi Arabic', sans-serif;
+}
+
+*, body {
+    font-family: var(--font-ar) !important;
+}
+
+/* Smooth transitions */
+.transition-all { transition: all .3s ease; }
+
+/* Card hover lift */
+.card {
+    transition: box-shadow .2s ease;
+}
+.card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,.08) !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f3f5; }
+::-webkit-scrollbar-thumb { background: #adb5bd; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #6c757d; }
+
+/* Badge subtle variants (Bootstrap 5.3 polyfill) */
+.bg-success-subtle { background-color: #d1e7dd !important; }
+.bg-warning-subtle { background-color: #fff3cd !important; }
+.bg-danger-subtle  { background-color: #f8d7da !important; }
+.bg-primary-subtle { background-color: #cfe2ff !important; }
+.bg-secondary-subtle { background-color: #e2e3e5 !important; }
+
+/* Progress bar animation */
+.progress-bar { transition: width 0.8s ease; }
+
+/* Alert container flash */
+#alert-container .alert {
+    animation: slideDown .3s ease;
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Exam page specific */
+.option-card {
+    cursor: pointer;
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    transition: all .2s ease;
+    padding: 14px 16px;
+}
+.option-card:hover {
+    border-color: #0d6efd;
+    background: #f0f5ff;
+    transform: translateX(-3px);
+}
+.option-card.selected {
+    border-color: #0d6efd;
+    background: #e8f0fe;
+}
+
+/* Sidebar active glow */
+.sidebar .nav-link.active {
+    box-shadow: 0 2px 10px rgba(13,110,253,.3);
+}
+
+/* Table improvements */
+.table th {
+    font-weight: 600;
+    font-size: .875rem;
+    color: #495057;
+}
+
+/* Form label */
+.form-label {
+    color: #495057;
+    margin-bottom: .4rem;
+}
+
+/* Print styles */
+@media print {
+    .navbar, .footer, .no-print, .sidebar, .topbar { display: none !important; }
+    .card { break-inside: avoid; }
+    body { background: #fff !important; }
+}
+````
+
+## File: public/index.php
+````php
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+// Determine if the application is in maintenance mode...
+if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+    require $maintenance;
+}
+
+// Register the Composer autoloader...
+require __DIR__.'/../vendor/autoload.php';
+
+// Bootstrap Laravel and handle the request...
+/** @var Application $app */
+$app = require_once __DIR__.'/../bootstrap/app.php';
+
+$app->handleRequest(Request::capture());
+````
+
+## File: public/js/app.js
+````javascript
+/**
+ * Dar Alroaya Exam System — Global JS Helpers
+ */
+
+$.ajaxSetup({
+    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+});
+
+/**
+ * Show a dismissible alert in #alert-container
+ */
+function showAlert(message, type = 'info') {
+    const icons = { success: 'check-circle', danger: 'exclamation-triangle', warning: 'exclamation-circle', info: 'info-circle' };
+    const icon  = icons[type] || 'info-circle';
+    const html  = `
+        <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-${icon} me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>`;
+    $('#alert-container').html(html);
+    // Auto-dismiss after 4s
+    setTimeout(() => $('#alert-container .alert').alert('close'), 4000);
+}
+
+/**
+ * Toggle loading state on a button
+ */
+function setLoading(btn, loading) {
+    const spinner = btn.find('.spinner-border');
+    const text    = btn.find('.btn-text');
+    if (loading) {
+        btn.prop('disabled', true);
+        text.addClass('d-none');
+        spinner.removeClass('d-none');
+    } else {
+        btn.prop('disabled', false);
+        text.removeClass('d-none');
+        spinner.addClass('d-none');
+    }
+}
+
+/**
+ * Confirm delete using the shared modal
+ */
+let _deleteCallback = null;
+let _deleteUrl      = null;
+
+function confirmDelete(message, url, onSuccess) {
+    _deleteUrl      = url;
+    _deleteCallback = onSuccess;
+    $('#confirmDeleteMessage').text(message);
+    new bootstrap.Modal(document.getElementById('confirmDeleteModal')).show();
+}
+
+$(document).on('click', '#confirmDeleteBtn', function() {
+    if (!_deleteUrl) return;
+    const btn = $(this);
+    btn.prop('disabled', true).text('جاري الحذف...');
+
+    $.ajax({
+        url: _deleteUrl,
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        success: function(res) {
+            bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal')).hide();
+            showAlert(res.message || 'تم الحذف بنجاح.', 'success');
+            btn.prop('disabled', false).text('حذف');
+            if (typeof _deleteCallback === 'function') _deleteCallback();
+        },
+        error: function(xhr) {
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ أثناء الحذف.', 'danger');
+            btn.prop('disabled', false).text('حذف');
+        }
+    });
+});
+````
+
+## File: public/robots.txt
+````
+User-agent: *
+Disallow:
+````
+
+## File: resources/css/app.css
+````css
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+````
+
+## File: resources/js/app.js
+````javascript
+import './bootstrap';
+````
+
+## File: resources/js/bootstrap.js
+````javascript
+import axios from 'axios';
+window.axios = axios;
+
+window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+````
+
+## File: resources/views/admin/exams/create.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'إنشاء اختبار جديد')
+@section('page-title', 'إنشاء اختبار جديد')
+
+@push('styles')
+<style>
+/* ── Layout ── */
+.sidebar-card  { position:sticky; top:80px; border-radius:16px; border:0; box-shadow:0 4px 20px rgba(0,0,0,.08); }
+.main-card     { border-radius:16px; border:0; box-shadow:0 4px 20px rgba(0,0,0,.08); }
+
+/* ── Question pool ── */
+.pool-scroll   { max-height:420px; overflow-y:auto; }
+.q-pool-item {
+    cursor:pointer; border:2px solid #e5e7eb; border-radius:10px;
+    transition:all .15s; background:#fff; padding:.6rem .9rem;
+}
+.q-pool-item:hover  { border-color:#6366f1; background:#f5f3ff; }
+.q-pool-item.selected { border-color:#6366f1; background:#ede9fe; }
+.q-pool-item .q-num { font-size:.72rem; color:#6366f1; font-weight:700; }
+
+/* ── Selected list ── */
+.sel-item {
+    background:#fff; border:1px solid #e5e7eb; border-radius:10px;
+    padding:.5rem .75rem; display:flex; align-items:center; gap:.5rem;
+}
+.sel-item .drag-handle { color:#9ca3af; cursor:grab; }
+.sel-num {
+    width:24px; height:24px; border-radius:50%;
+    background:linear-gradient(135deg,#6366f1,#8b5cf6);
+    color:#fff; font-size:.72rem; font-weight:700;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+#selected-list { min-height:80px; }
+
+/* ── New question inline ── */
+.option-row { background:#f9fafb; border-radius:8px; padding:.5rem; }
+
+/* ── Reversed badge ── */
+.rev-label {
+    background:#fef3c7; border:1px solid #fcd34d; border-radius:6px;
+    color:#92400e; font-size:.72rem; padding:.15rem .5rem;
+}
+
+/* ── Tab styling ── */
+.nav-pills .nav-link { border-radius:50px; font-size:.85rem; font-weight:600; color:#6b7280; }
+.nav-pills .nav-link.active {
+    background:linear-gradient(135deg,#6366f1,#8b5cf6);
+    color:#fff; box-shadow:0 2px 8px rgba(99,102,241,.35);
+}
+
+/* ── Save button ── */
+.btn-save-main {
+    border:0; border-radius:50px; padding:.65rem 2rem; font-weight:700;
+    background:linear-gradient(135deg,#6366f1,#8b5cf6);
+    color:#fff; width:100%;
+    box-shadow:0 4px 16px rgba(99,102,241,.35); transition:all .2s;
+}
+.btn-save-main:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(99,102,241,.45); color:#fff; }
+
+/* ── Category dropdown ── */
+.category-presets { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.4rem; }
+.preset-chip {
+    background:#f3f4f6; border:1px solid #e5e7eb; border-radius:50px;
+    font-size:.72rem; padding:.2rem .7rem; cursor:pointer; transition:all .15s;
+}
+.preset-chip:hover { background:#ede9fe; border-color:#6366f1; color:#6366f1; }
+</style>
+@endpush
+
+@section('content')
+<div class="row g-4">
+
+    {{-- ─── LEFT: Assessment info ─────────────────────────────── --}}
+    <div class="col-lg-4">
+        <div class="card sidebar-card">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-4">
+                    <i class="bi bi-info-circle-fill text-primary me-2"></i>بيانات المقياس
+                </h6>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">اسم المقياس *</label>
+                    <input type="text" class="form-control" id="e-title_ar"
+                           placeholder="مثال: مقياس معرفة الذات">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">المجال / الفئة *</label>
+                    <input type="text" class="form-control" id="e-category"
+                           placeholder="اختر أو اكتب...">
+                    <div class="category-presets">
+                        @foreach([
+                            'مقاييس معرفة الذات والشخصية',
+                            'مقاييس الكفاءة الشخصية والنجاح المهني',
+                            'مقاييس الاتصال والعلاقات المهنية',
+                            'مقاييس القيادة والإدارة',
+                            'مقاييس التوجيه والتوافق المهني',
+                            'مقاييس الصحة المهنية',
+                        ] as $cat)
+                        <span class="preset-chip" data-cat="{{ $cat }}">{{ $cat }}</span>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">وصف المقياس</label>
+                    <textarea class="form-control" id="e-description_ar" rows="3"
+                              placeholder="اكتب وصفاً موجزاً للمقياس وهدفه..."></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold">الوقت المحدد (دقائق)</label>
+                    <input type="number" class="form-control" id="e-time_limit_min"
+                           placeholder="فارغ = بلا حد زمني" min="1">
+                </div>
+
+                <hr>
+
+                {{-- Selected summary --}}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="small fw-semibold text-muted">الأسئلة المختارة</span>
+                    <span class="badge rounded-pill" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)"
+                          id="selected-count">0</span>
+                </div>
+
+                <div id="selected-list" class="d-flex flex-column gap-2 mb-4">
+                    <div class="text-center text-muted small py-3 empty-msg">
+                        <i class="bi bi-arrow-left-circle fs-5 d-block mb-1"></i>
+                        أضف أسئلة من القسم المجاور
+                    </div>
+                </div>
+
+                <button class="btn-save-main btn" id="btn-save-exam">
+                    <span class="btn-text"><i class="bi bi-save2 me-1"></i>حفظ المقياس</span>
+                    <span class="spinner-border spinner-border-sm d-none"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ─── RIGHT: Question sources ─────────────────────────── --}}
+    <div class="col-lg-8">
+        <div class="card main-card">
+            <div class="card-body p-4">
+
+                {{-- Tabs --}}
+                <ul class="nav nav-pills mb-4 gap-2" id="source-tabs">
+                    <li class="nav-item">
+                        <button class="nav-link active" data-tab="bank">
+                            <i class="bi bi-database me-1"></i>بنك الأسئلة
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-tab="new">
+                            <i class="bi bi-plus-circle me-1"></i>سؤال جديد
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-tab="bulk">
+                            <i class="bi bi-file-text me-1"></i>استيراد نصي
+                        </button>
+                    </li>
+                </ul>
+
+                {{-- ── Tab 1: Question Bank ── --}}
+                <div id="tab-bank">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">فلتر بالمقياس</label>
+                            <select class="form-select form-select-sm" id="pool-assessment-filter">
+                                <option value="">— كل المقاييس —</option>
+                                @foreach($assessments as $a)
+                                    <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">بحث في النص</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white">
+                                    <i class="bi bi-search text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control" id="pool-search"
+                                       placeholder="اكتب للبحث...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small text-muted" id="pool-count">اختر مقياساً أو ابحث</span>
+                        <button class="btn btn-sm btn-outline-primary rounded-pill" id="btn-select-all" style="display:none">
+                            تحديد الكل
+                        </button>
+                    </div>
+
+                    <div class="pool-scroll" id="questions-pool">
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-database fs-2 d-block mb-2 opacity-25"></i>
+                            اختر مقياساً أو ابحث لعرض الأسئلة
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ── Tab 2: New Question Inline ── --}}
+                <div id="tab-new" class="d-none">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">نص السؤال *</label>
+                        <textarea class="form-control" id="new-q-text" rows="3"
+                                  placeholder="اكتب نص السؤال هنا..."></textarea>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">المقياس *</label>
+                            <select class="form-select form-select-sm" id="new-q-assessment">
+                                <option value="">— اختر المقياس —</option>
+                                @foreach($assessments as $a)
+                                    <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">البُعد</label>
+                            <select class="form-select form-select-sm" id="new-q-dimension">
+                                <option value="">— بدون بُعد —</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="new-q-reversed">
+                        <label class="form-check-label small" for="new-q-reversed">
+                            سؤال معكوس
+                            <span class="rev-label ms-1">نعم=0 | لا=2</span>
+                        </label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">خيارات الإجابة</label>
+                        <div class="d-flex flex-column gap-2" id="new-options-container">
+                            <div class="option-row d-flex gap-2 align-items-center">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle small">نعم</span>
+                                <input type="number" class="form-control form-control-sm w-25" value="2" data-score-label="نعم" id="opt-score-0" placeholder="الدرجة">
+                            </div>
+                            <div class="option-row d-flex gap-2 align-items-center">
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle small">إلى حد ما</span>
+                                <input type="number" class="form-control form-control-sm w-25" value="1" data-score-label="إلى حد ما" id="opt-score-1" placeholder="الدرجة">
+                            </div>
+                            <div class="option-row d-flex gap-2 align-items-center">
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle small">لا</span>
+                                <input type="number" class="form-control form-control-sm w-25" value="0" data-score-label="لا" id="opt-score-2" placeholder="الدرجة">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-outline-primary rounded-pill px-4" id="btn-add-new-q">
+                        <i class="bi bi-plus-circle me-1"></i>إضافة وتأكيد السؤال
+                    </button>
+                    <div id="new-q-feedback" class="mt-2"></div>
+                </div>
+
+                {{-- ── Tab 3: Bulk Text Import ── --}}
+                <div id="tab-bulk" class="d-none">
+                    <div class="alert alert-info small py-2 mb-3">
+                        <i class="bi bi-lightbulb me-1"></i>
+                        اكتب كل سؤال في سطر منفصل. ستُضاف تلقائياً بخيارات (نعم=2 / إلى حد ما=1 / لا=0).
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">المقياس *</label>
+                            <select class="form-select form-select-sm" id="bulk-assessment">
+                                <option value="">— اختر المقياس —</option>
+                                @foreach($assessments as $a)
+                                    <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">البُعد</label>
+                            <select class="form-select form-select-sm" id="bulk-dimension">
+                                <option value="">— بدون بُعد —</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">الأسئلة (سطر لكل سؤال)</label>
+                        <textarea class="form-control" id="bulk-text" rows="10"
+                                  dir="rtl"
+                                  placeholder="أعرف نقاط قوتي بوضوح.&#10;أستطيع تحديد نقاط الضعف التي أحتاج إلى تطويرها.&#10;أفهم الأسباب التي تدفعني لاتخاذ قراراتي."></textarea>
+                    </div>
+
+                    <button class="btn btn-outline-success rounded-pill px-4" id="btn-bulk-import">
+                        <span class="btn-text"><i class="bi bi-cloud-upload me-1"></i>استيراد وإضافة للاختبار</span>
+                        <span class="spinner-border spinner-border-sm d-none"></span>
+                    </button>
+                    <div id="bulk-feedback" class="mt-2"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+/* ═══════════════════════════════════════════
+   State
+═══════════════════════════════════════════ */
+let allPoolQuestions = [];
+let selectedIds  = [];   // question IDs picked from bank
+let inlineQs     = [];   // questions created inline (not yet in DB)
+
+const CSRF = $('meta[name="csrf-token"]').attr('content');
+
+/* ═══════════════════════════════════════════
+   Tabs
+═══════════════════════════════════════════ */
+$('[data-tab]').on('click', function () {
+    $('[data-tab]').removeClass('active');
+    $(this).addClass('active');
+    $('#tab-bank, #tab-new, #tab-bulk').addClass('d-none');
+    $(`#tab-${$(this).data('tab')}`).removeClass('d-none');
+});
+
+/* ═══════════════════════════════════════════
+   Category presets
+═══════════════════════════════════════════ */
+$(document).on('click', '.preset-chip', function () {
+    $('#e-category').val($(this).data('cat'));
+});
+
+/* ═══════════════════════════════════════════
+   TAB 1 — Question Bank
+═══════════════════════════════════════════ */
+function loadPool() {
+    const assessmentId = $('#pool-assessment-filter').val();
+    const search = $('#pool-search').val().trim();
+
+    if (!assessmentId && !search) {
+        $('#questions-pool').html('<div class="text-center text-muted py-5"><i class="bi bi-database fs-2 d-block mb-2 opacity-25"></i>اختر مقياساً أو ابحث لعرض الأسئلة</div>');
+        $('#pool-count').text('اختر مقياساً أو ابحث');
+        $('#btn-select-all').hide();
+        return;
+    }
+
+    $('#questions-pool').html('<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>');
+
+    let url = '{{ route("admin.questions.index") }}?per_page=all';
+    if (assessmentId) url += `&assessment_id=${assessmentId}`;
+    if (search)       url += `&search=${encodeURIComponent(search)}`;
+
+    $.get(url, null, null, 'html').fail(function () {
+        // fallback: load JSON via by-assessment
+        if (assessmentId) {
+            $.get(`{{ url('admin/questions/by-assessment') }}/${assessmentId}`, function (data) {
+                allPoolQuestions = data;
+                const filtered = search ? data.filter(q => q.text_ar.includes(search)) : data;
+                renderPool(filtered);
+            });
+        }
+    });
+
+    // Direct JSON endpoint (by-assessment is JSON)
+    if (assessmentId) {
+        $.get(`{{ url('admin/questions/by-assessment') }}/${assessmentId}`, function (data) {
+            allPoolQuestions = data;
+            const filtered = search ? data.filter(q => q.text_ar.includes(search)) : data;
+            renderPool(filtered);
+        });
+    }
+}
+
+$('#pool-assessment-filter').on('change', loadPool);
+$('#pool-search').on('input', function () {
+    if ($('#pool-assessment-filter').val()) {
+        const q = $(this).val().trim();
+        renderPool(q ? allPoolQuestions.filter(x => x.text_ar.includes(q)) : allPoolQuestions);
+    } else {
+        loadPool();
+    }
+});
+
+function renderPool(questions) {
+    if (!questions.length) {
+        $('#questions-pool').html('<div class="text-center text-muted py-5"><i class="bi bi-search fs-2 d-block mb-2 opacity-25"></i>لا توجد أسئلة مطابقة</div>');
+        $('#pool-count').text('0 سؤال');
+        $('#btn-select-all').hide();
+        return;
+    }
+
+    $('#pool-count').text(`${questions.length} سؤال`);
+    $('#btn-select-all').show();
+
+    let html = '';
+    questions.forEach((q, i) => {
+        const sel = selectedIds.includes(q.id);
+        const rev = q.is_reversed ? '<span class="rev-label ms-1">معكوس</span>' : '';
+        html += `<div class="q-pool-item mb-2 ${sel ? 'selected' : ''}" data-id="${q.id}" data-text="${q.text_ar.replace(/"/g,'&quot;')}">
+            <div class="d-flex align-items-start gap-2">
+                <i class="bi ${sel ? 'bi-check-circle-fill text-primary' : 'bi-circle text-muted'} mt-1 flex-shrink-0 pool-icon"></i>
+                <div class="flex-grow-1">
+                    <div class="q-num">سؤال ${i+1}${rev}</div>
+                    <div class="small mt-1">${q.text_ar}</div>
+                </div>
+            </div>
+        </div>`;
+    });
+    $('#questions-pool').html(html);
+}
+
+// Select all visible
+$('#btn-select-all').on('click', function () {
+    $('.q-pool-item').each(function () {
+        const id   = $(this).data('id');
+        const text = $(this).data('text');
+        if (!selectedIds.includes(id)) addSelected(id, text);
+    });
+    syncPool();
+});
+
+$(document).on('click', '.q-pool-item', function () {
+    const id = $(this).data('id'), text = $(this).data('text');
+    selectedIds.includes(id) ? removeSelected(id) : addSelected(id, text);
+    syncPool();
+});
+
+function syncPool() {
+    $('.q-pool-item').each(function () {
+        const sel = selectedIds.includes($(this).data('id'));
+        $(this).toggleClass('selected', sel);
+        $(this).find('.pool-icon').attr('class', `bi ${sel ? 'bi-check-circle-fill text-primary' : 'bi-circle text-muted'} mt-1 flex-shrink-0 pool-icon`);
+    });
+}
+
+/* ═══════════════════════════════════════════
+   TAB 2 — Dimension loader for new Q
+═══════════════════════════════════════════ */
+function loadDimensions(assessmentId, targetSelect) {
+    $(targetSelect).html('<option value="">— جاري التحميل —</option>');
+    if (!assessmentId) { $(targetSelect).html('<option value="">— بدون بُعد —</option>'); return; }
+    $.get(`{{ url('admin/dimensions/by-assessment') }}/${assessmentId}`, function (data) {
+        let opts = '<option value="">— بدون بُعد —</option>';
+        data.forEach(d => { opts += `<option value="${d.id}">${d.name_ar}</option>`; });
+        $(targetSelect).html(opts);
+    });
+}
+
+$('#new-q-assessment').on('change', function () { loadDimensions($(this).val(), '#new-q-dimension'); });
+$('#bulk-assessment').on('change', function () { loadDimensions($(this).val(), '#bulk-dimension'); });
+
+/* ── Add inline question ── */
+$('#btn-add-new-q').on('click', function () {
+    const text       = $('#new-q-text').val().trim();
+    const assessmentId = $('#new-q-assessment').val();
+    const dimensionId  = $('#new-q-dimension').val();
+    const isReversed   = $('#new-q-reversed').is(':checked');
+    const options = [
+        { label_ar: 'نعم',        score_value: parseInt($('#opt-score-0').val()), order_index: 0 },
+        { label_ar: 'إلى حد ما', score_value: parseInt($('#opt-score-1').val()), order_index: 1 },
+        { label_ar: 'لا',         score_value: parseInt($('#opt-score-2').val()), order_index: 2 },
+    ];
+
+    if (!text)         { $('#new-q-feedback').html('<div class="alert alert-warning py-2 small">اكتب نص السؤال.</div>'); return; }
+    if (!assessmentId) { $('#new-q-feedback').html('<div class="alert alert-warning py-2 small">اختر المقياس.</div>'); return; }
+
+    const btn = $(this);
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> جاري الحفظ...');
+
+    $.ajax({
+        url: '{{ route("admin.questions.store") }}', method: 'POST', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': CSRF },
+        data: JSON.stringify({ assessment_id: assessmentId, dimension_id: dimensionId || null,
+                               text_ar: text, is_reversed: isReversed, options }),
+        success(res) {
+            btn.prop('disabled', false).html('<i class="bi bi-plus-circle me-1"></i>إضافة وتأكيد السؤال');
+            $('#new-q-feedback').html(`<div class="alert alert-success py-2 small"><i class="bi bi-check-circle me-1"></i>تم حفظ السؤال وإضافته للقائمة.</div>`);
+            addSelected(res.id, text);
+            $('#new-q-text').val('');
+            $('#new-q-reversed').prop('checked', false);
+        },
+        error(xhr) {
+            btn.prop('disabled', false).html('<i class="bi bi-plus-circle me-1"></i>إضافة وتأكيد السؤال');
+            const msg = xhr.responseJSON?.message || 'حدث خطأ.';
+            $('#new-q-feedback').html(`<div class="alert alert-danger py-2 small">${msg}</div>`);
+        }
+    });
+});
+
+/* ═══════════════════════════════════════════
+   TAB 3 — Bulk Import
+═══════════════════════════════════════════ */
+$('#btn-bulk-import').on('click', function () {
+    const assessmentId  = $('#bulk-assessment').val();
+    const dimensionId   = $('#bulk-dimension').val();
+    const questionsText = $('#bulk-text').val().trim();
+
+    if (!assessmentId)  { showAlert('اختر المقياس أولاً.', 'warning'); return; }
+    if (!questionsText) { showAlert('اكتب الأسئلة أولاً.', 'warning'); return; }
+
+    const btn = $(this);
+    setLoading(btn, true);
+
+    $.ajax({
+        url: '{{ route("admin.questions.bulk") }}', method: 'POST', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': CSRF },
+        data: JSON.stringify({ assessment_id: assessmentId, dimension_id: dimensionId || null,
+                               questions_text: questionsText }),
+        success(res) {
+            setLoading(btn, false);
+            $('#bulk-feedback').html(`<div class="alert alert-success py-2 small"><i class="bi bi-check-circle me-1"></i>${res.message}</div>`);
+            $('#bulk-text').val('');
+            // Reload pool from this assessment
+            $('#pool-assessment-filter').val(assessmentId).trigger('change');
+            $('[data-tab="bank"]').trigger('click');
+        },
+        error(xhr) {
+            setLoading(btn, false);
+            $('#bulk-feedback').html(`<div class="alert alert-danger py-2 small">${xhr.responseJSON?.message || 'حدث خطأ.'}</div>`);
+        }
+    });
+});
+
+/* ═══════════════════════════════════════════
+   Selected list management
+═══════════════════════════════════════════ */
+function addSelected(id, text) {
+    if (selectedIds.includes(id)) return;
+    selectedIds.push(id);
+    $('.empty-msg').remove();
+    const n = selectedIds.length;
+    $('#selected-list').append(
+        `<div class="sel-item" data-id="${id}">
+            <i class="bi bi-grip-vertical drag-handle"></i>
+            <span class="sel-num">${n}</span>
+            <span class="small flex-grow-1 text-truncate" style="max-width:200px" title="${text}">${text}</span>
+            <button type="button" class="btn btn-sm btn-link text-danger p-0 btn-remove-sel flex-shrink-0">
+                <i class="bi bi-x-circle"></i>
+            </button>
+        </div>`
+    );
+    updateCount();
+}
+
+function removeSelected(id) {
+    selectedIds = selectedIds.filter(x => x !== id);
+    $(`#selected-list .sel-item[data-id="${id}"]`).remove();
+    if (!selectedIds.length) $('#selected-list').html('<div class="text-center text-muted small py-3 empty-msg"><i class="bi bi-arrow-left-circle fs-5 d-block mb-1"></i>أضف أسئلة من القسم المجاور</div>');
+    renumberSelected();
+    updateCount();
+}
+
+function renumberSelected() {
+    $('#selected-list .sel-num').each(function (i) { $(this).text(i+1); });
+}
+
+$(document).on('click', '.btn-remove-sel', function () {
+    const id = $(this).closest('.sel-item').data('id');
+    removeSelected(id); syncPool();
+});
+
+function updateCount() { $('#selected-count').text(selectedIds.length); }
+
+// Sortable for selected
+new Sortable(document.getElementById('selected-list'), {
+    handle: '.drag-handle', animation: 150,
+    onEnd() {
+        const order = [];
+        $('#selected-list .sel-item').each(function () { order.push($(this).data('id')); });
+        selectedIds = order;
+        renumberSelected();
+    }
+});
+
+/* ═══════════════════════════════════════════
+   Save exam
+═══════════════════════════════════════════ */
+$('#btn-save-exam').on('click', function () {
+    const btn = $(this);
+    if (!selectedIds.length) { showAlert('أضف على الأقل سؤالاً واحداً.', 'warning'); return; }
+
+    const payload = {
+        title_ar:       $('#e-title_ar').val().trim(),
+        category:       $('#e-category').val().trim(),
+        description_ar: $('#e-description_ar').val().trim(),
+        time_limit_min: $('#e-time_limit_min').val() || null,
+        question_ids:   selectedIds,
+        dimensions:     [],
+    };
+
+    if (!payload.title_ar || !payload.category) { showAlert('اسم المقياس والمجال مطلوبان.', 'warning'); return; }
+
+    setLoading(btn, true);
+    $.ajax({
+        url: '{{ route("admin.exams.store") }}', method: 'POST', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': CSRF },
+        data: JSON.stringify(payload),
+        success(res) {
+            setLoading(btn, false);
+            showAlert(res.message, 'success');
+            setTimeout(() => window.location.href = '{{ route("admin.assessments.index") }}', 1200);
+        },
+        error(xhr) {
+            setLoading(btn, false);
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
+        }
+    });
+});
+</script>
+@endpush
+````
+
+## File: resources/views/admin/icons/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'إدارة الأيقونات')
+
+@section('content')
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1 fw-bold text-dark"><i class="bi bi-images me-2"></i>إدارة الأيقونات</h4>
+            <p class="text-muted small mb-0">قم برفع وإدارة الأيقونات المخصصة للشهادات، البرامج، وخطط التطوير.</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addIconModal">
+            <i class="bi bi-cloud-arrow-up me-1"></i> رفع أيقونة جديدة
+        </button>
+    </div>
+
+    @if(session('success'))
+    <div class="alert alert-success border-0 shadow-sm rounded-3">
+        <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
+    </div>
+    @endif
+    
+    @if($errors->any())
+    <div class="alert alert-danger border-0 shadow-sm rounded-3">
+        <ul class="mb-0 ps-3">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
+    <div class="row g-4">
+        @php
+            $cats = [
+                'certificates' => ['title' => 'أيقونات الشهادات الاحترافية', 'icon' => 'bi-award', 'color' => 'primary'],
+                'programs' => ['title' => 'أيقونات البرامج المقترحة', 'icon' => 'bi-journal-bookmark', 'color' => 'success'],
+                'plan_30_days' => ['title' => 'أيقونات خطة 30 يوم', 'icon' => 'bi-calendar-check', 'color' => 'info'],
+                'assessments' => ['title' => 'أيقونات المقاييس', 'icon' => 'bi-ui-radios', 'color' => 'warning'],
+                'system' => ['title' => 'أيقونات النظام والإحصائيات', 'icon' => 'bi-gear-wide-connected', 'color' => 'secondary']
+            ];
+        @endphp
+
+        @foreach($cats as $catKey => $catData)
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold text-{{ $catData['color'] }}">
+                        <i class="bi {{ $catData['icon'] }} me-2"></i>{{ $catData['title'] }}
+                    </h5>
+                </div>
+                <div class="card-body bg-light">
+                    @if(isset($icons[$catKey]) && $icons[$catKey]->count() > 0)
+                        <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3">
+                            @foreach($icons[$catKey] as $icon)
+                            <div class="col">
+                                <div class="card h-100 border-0 shadow-sm rounded-3 text-center position-relative overflow-hidden">
+                                    <div class="p-3 d-flex align-items-center justify-content-center" style="height: 100px; background-color: #f8fafc;">
+                                        <img src="{{ $icon->icon_url }}" alt="{{ $icon->name }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                    </div>
+                                    <div class="card-footer bg-white border-top-0 py-2">
+                                        <p class="mb-0 small fw-bold text-truncate" title="{{ $icon->name }}">{{ $icon->name }}</p>
+                                    </div>
+                                    <!-- Delete Button overlay -->
+                                    <form action="{{ route('admin.icons.destroy', $icon->id) }}" method="POST" class="position-absolute top-0 end-0 p-1 m-1 bg-white rounded-circle shadow-sm" style="z-index: 10; opacity: 0.9;" onsubmit="return confirm('هل أنت متأكد من حذف هذه الأيقونة؟');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm text-danger p-0 border-0 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;" title="حذف">
+                                            <i class="bi bi-x-circle-fill fs-5"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-inboxes fs-1 mb-2 d-block opacity-50"></i>
+                            <p class="mb-0">لا توجد أيقونات مضافة في هذا القسم بعد.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+
+<!-- Add Icon Modal -->
+<div class="modal fade" id="addIconModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form action="{{ route('admin.icons.store') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header bg-light border-bottom-0">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-cloud-arrow-up me-2"></i>رفع أيقونة جديدة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-medium">اسم الأيقونة *</label>
+                        <input type="text" name="name" class="form-control" required placeholder="مثال: أيقونة القيادة، شعار PMP...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-medium">التصنيف *</label>
+                        <select name="category" class="form-select" required>
+                            <option value="">-- اختر التصنيف --</option>
+                            <option value="certificates">الشهادات الاحترافية</option>
+                            <option value="programs">البرامج المقترحة</option>
+                            <option value="plan_30_days">خطة تطوير (30 يوماً)</option>
+                            <option value="assessments">المقاييس</option>
+                            <option value="system">أيقونات النظام (الإحصائيات)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-medium">ملف الأيقونة (صورة) *</label>
+                        <input type="file" name="icon_file" class="form-control" accept="image/png, image/jpeg, image/svg+xml, image/webp" required>
+                        <div class="form-text mt-2 text-primary">
+                            <i class="bi bi-info-circle me-1"></i> الحجم الأقصى المسموح به هو 500 كيلوبايت. يُفضل استخدام أبعاد مربعة (مثل 128x128 أو 256x256) بصيغة PNG شفافة أو SVG.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-lg me-1"></i>حفظ ورفع</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
+````
+
+## File: resources/views/admin/questions/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'بنك الأسئلة')
+@section('page-title', 'بنك الأسئلة')
+
+@section('content')
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('admin.questions.index') }}" class="row g-2 align-items-end" id="filter-form">
+            <input type="hidden" name="per_page" id="filter-per-page" value="{{ request('per_page', 25) }}">
+            <div class="col-md-4">
+                <label class="form-label small fw-medium">المقياس</label>
+                <select name="assessment_id" class="form-select form-select-sm" id="filter-assessment">
+                    <option value="">كل المقاييس</option>
+                    @foreach($assessments as $a)
+                        <option value="{{ $a->id }}" {{ request('assessment_id') == $a->id ? 'selected' : '' }}>
+                            {{ $a->title_ar }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-medium">البُعد</label>
+                <select name="dimension_id" class="form-select form-select-sm" id="filter-dimension">
+                    <option value="">كل الأبعاد</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-medium">بحث في النص</label>
+                <input type="text" name="search" class="form-control form-control-sm"
+                    value="{{ request('search') }}" placeholder="كلمة بحث...">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-search me-1"></i>بحث
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-2">
+        <span class="text-muted small">{{ $questions->total() }} سؤال</span>
+        <span class="text-muted small text-black-50">|</span>
+        <label class="small text-muted mb-0">عرض:</label>
+        <select id="per-page-select" class="form-select form-select-sm d-inline-block w-auto py-0 px-2" style="height: 28px;">
+            <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25</option>
+            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+            <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
+        </select>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#bulkModal">
+            <i class="bi bi-upload me-1"></i>استيراد بالجملة
+        </button>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#questionModal">
+            <i class="bi bi-plus-circle me-1"></i>إضافة سؤال
+        </button>
+    </div>
+</div>
+
+<div id="questions-table-wrapper">
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 40px;" class="text-center">
+                        <input type="checkbox" class="form-check-input" id="check-all">
+                    </th>
+                    @if(request('assessment_id'))
+                        <th style="width: 40px;"></th>
+                    @endif
+                    <th style="width:45%">نص السؤال</th>
+                    <th>المقياس</th>
+                    <th style="width:20%">البُعد</th>
+                    <th>الخيارات</th>
+                    <th class="text-end" style="width:100px;">العمليات</th>
+                </tr>
+            </thead>
+            <tbody id="sortable-questions">
+                @forelse($questions as $q)
+                <tr data-id="{{ $q->id }}">
+                    <td class="text-center">
+                        <input type="checkbox" class="form-check-input check-row" data-id="{{ $q->id }}">
+                    </td>
+                    @if(request('assessment_id'))
+                        <td>
+                            <span class="drag-handle text-muted">
+                                <i class="bi bi-grip-vertical fs-5"></i>
+                            </span>
+                        </td>
+                    @endif
+                    <td class="question-text-cell small" data-id="{{ $q->id }}">
+                        <span class="question-text-display">{{ $q->text_ar }}</span>
+                    </td>
+                    @php
+                        $currentAssessment = $assessments->firstWhere('id', $q->assessment_id);
+                    @endphp
+                    <td class="small text-muted">{{ $q->assessment_title }}</td>
+                    <td>
+                        @if(!$currentAssessment || $currentAssessment->dimensions->isEmpty())
+                            <span class="text-muted small">لا توجد أبعاد</span>
+                        @else
+                            <select class="form-select form-select-sm select-dimension" data-question-id="{{ $q->id }}">
+                                <option value="">بدون بُعد</option>
+                                @foreach($currentAssessment->dimensions as $d)
+                                    <option value="{{ $d->id }}" {{ $q->dimension_id == $d->id ? 'selected' : '' }}>
+                                        {{ $d->name_ar }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
+                    </td>
+                    <td><span class="badge bg-light text-dark border">{{ $q->answer_options_count }}</span></td>
+                    <td>
+                        <div class="d-flex gap-1 justify-content-end">
+                            <button class="btn btn-sm btn-outline-primary btn-edit-q" data-id="{{ $q->id }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger btn-delete-q"
+                                    data-id="{{ $q->id }}"
+                                    data-url="{{ route('admin.questions.destroy', $q->id) }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="{{ request('assessment_id') ? 7 : 6 }}" class="text-center text-muted py-4">
+                        لا توجد أسئلة.
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-transparent border-0">{{ $questions->appends(request()->query())->links() }}</div>
+</div>
+</div>
+
+<!-- Add Question Modal -->
+<div class="modal fade" id="questionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">إضافة سؤال جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">المقياس *</label>
+                        <select class="form-select" id="q-assessment_id">
+                            <option value="">اختر المقياس</option>
+                            @foreach($assessments as $a)
+                                <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">البُعد</label>
+                        <select class="form-select" id="q-dimension_id">
+                            <option value="">اختر البُعد</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">نص السؤال *</label>
+                        <textarea class="form-control" id="q-text_ar" rows="3" placeholder="اكتب نص السؤال هنا..."></textarea>
+                    </div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 fw-semibold">خيارات الإجابة</h6>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-add-option">
+                        <i class="bi bi-plus me-1"></i>إضافة خيار
+                    </button>
+                </div>
+                <div id="options-container"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="btn-save-question">
+                    <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ السؤال</span>
+                    <span class="spinner-border spinner-border-sm d-none"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Import Modal -->
+<div class="modal fade" id="bulkModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">استيراد أسئلة بالجملة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">المقياس *</label>
+                        <select class="form-select" id="bulk-assessment_id">
+                            <option value="">اختر المقياس</option>
+                            @foreach($assessments as $a)
+                                <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">البُعد</label>
+                        <select class="form-select" id="bulk-dimension_id">
+                            <option value="">اختر البُعد (اختياري)</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">الأسئلة (سؤال في كل سطر)</label>
+                        <textarea class="form-control" id="bulk-questions_text" rows="8"
+                            placeholder="السؤال الأول هنا&#10;السؤال الثاني هنا&#10;السؤال الثالث هنا"></textarea>
+                        <div class="form-text">سيتم إنشاء خيارات افتراضية: نعم (2) / إلى حد ما (1) / لا (0)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="btn-bulk-import">
+                    <span class="btn-text"><i class="bi bi-upload me-1"></i>استيراد</span>
+                    <span class="spinner-border spinner-border-sm d-none"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('styles')
+<style>
+    .drag-handle {
+        cursor: grab;
+    }
+    .drag-handle:active {
+        cursor: grabbing;
+    }
+    .fs-7 {
+        font-size: 0.8rem;
+    }
+    #bulk-action-bar {
+        transition: all 0.3s ease-in-out;
+    }
+    .question-edit-textarea {
+        min-height: 60px;
+        resize: none;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+let optIndex = 0;
+
+function addOptionRow(label='', score='') {
+    const idx = optIndex++;
+    $('#options-container').append(`
+        <div class="row g-2 mb-2 opt-row">
+            <div class="col-7">
+                <input type="text" class="form-control form-control-sm opt-label" placeholder="نص الخيار" value="${label}">
+            </div>
+            <div class="col-3">
+                <input type="number" class="form-control form-control-sm opt-score" placeholder="القيمة" value="${score}">
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-sm btn-outline-danger w-100 btn-remove-opt">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `);
+}
+
+// Default options on modal open
+$('#questionModal').on('show.bs.modal', function() {
+    $('#options-container').html('');
+    optIndex = 0;
+    addOptionRow('نعم', 2);
+    addOptionRow('إلى حد ما', 1);
+    addOptionRow('لا', 0);
+});
+
+$('#btn-add-option').on('click', () => addOptionRow());
+
+$(document).on('click', '.btn-remove-opt', function() {
+    $(this).closest('.opt-row').remove();
+});
+
+// Dynamic dimensions on assessment change
+function loadDimensions(assessmentId, targetSelect, selectedId='') {
+    let defaultText = 'بدون بُعد';
+    if (targetSelect.attr('id') === 'filter-dimension') {
+        defaultText = 'كل الأبعاد';
+    } else if (targetSelect.attr('id') === 'q-dimension_id') {
+        defaultText = 'اختر البُعد';
+    } else if (targetSelect.attr('id') === 'bulk-dimension_id') {
+        defaultText = 'اختر البُعد (اختياري)';
+    } else if (targetSelect.attr('id') === 'bulk-dimension-id') {
+        defaultText = 'تعيين البُعد للمحددة...';
+    }
+
+    if (!assessmentId) {
+        targetSelect.html(`<option value="">${defaultText}</option>`);
+        return;
+    }
+
+    $.get('{{ route('admin.dimensions.byAssessment', ':id') }}'.replace(':id', assessmentId), function(dims) {
+        let opts = `<option value="">${defaultText}</option>`;
+        dims.forEach(d => {
+            let label = d.name_ar;
+            if (targetSelect.attr('id') === 'filter-dimension' && d.questions_count !== undefined) {
+                label += ` (${d.questions_count})`;
+            }
+            opts += `<option value="${d.id}" ${d.id == selectedId ? 'selected' : ''}>${label}</option>`;
+        });
+        targetSelect.html(opts);
+    });
+}
+
+$('#q-assessment_id').on('change', function() {
+    loadDimensions($(this).val(), $('#q-dimension_id'));
+});
+
+$('#bulk-assessment_id').on('change', function() {
+    loadDimensions($(this).val(), $('#bulk-dimension_id'));
+});
+
+$('#filter-assessment').on('change', function() {
+    loadDimensions($(this).val(), $('#filter-dimension'), '');
+});
+
+// Initialize filter dimension if assessment already selected
+@if(request('assessment_id'))
+loadDimensions('{{ request('assessment_id') }}', $('#filter-dimension'), '{{ request('dimension_id') }}');
+@endif
+
+// Reload table container via AJAX
+function reloadTable() {
+    $('#questions-table-wrapper').css('opacity', 0.5);
+    $('#questions-table-wrapper').load(window.location.href + ' #questions-table-wrapper > *', function() {
+        $('#questions-table-wrapper').css('opacity', 1);
+        initSortable();
+        resetBulkActions();
+    });
+}
+
+// Bulk Actions selection logic
+$(document).on('change', '#check-all', function() {
+    const isChecked = $(this).is(':checked');
+    $('.check-row').prop('checked', isChecked);
+    updateBulkBar();
+});
+
+$(document).on('change', '.check-row', function() {
+    const allChecked = $('.check-row').length === $('.check-row:checked').length;
+    $('#check-all').prop('checked', allChecked);
+    updateBulkBar();
+});
+
+function updateBulkBar() {
+    const selectedIds = [];
+    $('.check-row:checked').each(function() {
+        selectedIds.push($(this).data('id'));
+    });
+
+    const count = selectedIds.length;
+    if (count > 0) {
+        $('#selected-count').text(count);
+        $('#bulk-action-bar').removeClass('d-none');
+    } else {
+        $('#bulk-action-bar').addClass('d-none');
+    }
+}
+
+function resetBulkActions() {
+    $('#check-all').prop('checked', false);
+    $('.check-row').prop('checked', false);
+    $('#bulk-action-bar').addClass('d-none');
+}
+
+// Bulk Delete Action
+$(document).on('click', '.btn-bulk-delete', function() {
+    const selectedIds = [];
+    $('.check-row:checked').each(function() {
+        selectedIds.push($(this).data('id'));
+    });
+
+    if (selectedIds.length === 0) return;
+
+    const url = '{{ route('admin.questions.bulkDelete') }}?' + selectedIds.map(id => `ids[]=${id}`).join('&');
+    confirmDelete(`هل تريد حذف ${selectedIds.length} سؤال محدد نهائياً؟`, url, function() {
+        reloadTable();
+    });
+});
+
+// Bulk Assign Dimension Action
+$(document).on('click', '.btn-bulk-assign', function() {
+    const selectedIds = [];
+    $('.check-row:checked').each(function() {
+        selectedIds.push($(this).data('id'));
+    });
+
+    if (selectedIds.length === 0) return;
+
+    const dimensionId = $('#bulk-dimension-id').val();
+    const payload = {
+        ids: selectedIds,
+        dimension_id: dimensionId === 'none' ? null : dimensionId
+    };
+
+    const btn = $(this);
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+
+    $.ajax({
+        url: '{{ route('admin.questions.bulkAssignDimension') }}',
+        method: 'PATCH',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        success: function(res) {
+            btn.prop('disabled', false).html('<i class="bi bi-tag me-1"></i>تعيين');
+            showAlert(res.message || 'تم تعيين البُعد بنجاح.', 'success');
+            reloadTable();
+        },
+        error: function(xhr) {
+            btn.prop('disabled', false).html('<i class="bi bi-tag me-1"></i>تعيين');
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
+        }
+    });
+});
+
+// Single inline dimension change
+$(document).on('change', '.select-dimension', function() {
+    const select = $(this);
+    const questionId = select.data('question-id');
+    const dimensionId = select.val();
+
+    select.prop('disabled', true);
+
+    $.ajax({
+        url: '{{ route('admin.questions.assignDimension', ':id') }}'.replace(':id', questionId),
+        method: 'PATCH',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: { dimension_id: dimensionId },
+        success: function(res) {
+            select.prop('disabled', false);
+            showAlert(res.message || 'تم تحديد البُعد.', 'success');
+        },
+        error: function(xhr) {
+            select.prop('disabled', false);
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
+        }
+    });
+});
+
+// Inline Edit Textarea Auto-resize
+$(document).on('input', '.question-edit-textarea', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+});
+
+// Inline Edit Click
+$(document).on('click', '.btn-edit-q', function() {
+    const row = $(this).closest('tr');
+    const qId = $(this).data('id');
+    const textCell = row.find('.question-text-cell');
+
+    if (textCell.find('.edit-mode-container').length > 0) return;
+
+    const displaySpan = textCell.find('.question-text-display');
+    const originalText = displaySpan.text().trim();
+    textCell.data('original-text', originalText);
+
+    textCell.html(`
+        <div class="edit-mode-container">
+            <textarea class="form-control form-control-sm question-edit-textarea">${originalText}</textarea>
+            <div class="d-flex gap-1 mt-1 justify-content-end">
+                <button class="btn btn-sm btn-success btn-save-inline py-0 px-2 fs-7" data-id="${qId}">حفظ</button>
+                <button class="btn btn-sm btn-secondary btn-cancel-inline py-0 px-2 fs-7" data-id="${qId}">إلغاء</button>
+            </div>
+        </div>
+    `);
+
+    row.find('.btn-edit-q, .btn-delete-q').addClass('d-none');
+
+    const textarea = textCell.find('.question-edit-textarea');
+    textarea.focus();
+    textarea.each(function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+});
+
+// Inline Edit Cancel
+$(document).on('click', '.btn-cancel-inline', function() {
+    const row = $(this).closest('tr');
+    const textCell = row.find('.question-text-cell');
+    const originalText = textCell.data('original-text');
+
+    textCell.html(`<span class="question-text-display">${originalText}</span>`);
+    row.find('.btn-edit-q, .btn-delete-q').removeClass('d-none');
+});
+
+// Inline Edit Save
+$(document).on('click', '.btn-save-inline', function() {
+    const btn = $(this);
+    const row = btn.closest('tr');
+    const qId = btn.data('id');
+    const textCell = row.find('.question-text-cell');
+    const newText = textCell.find('.question-edit-textarea').val().trim();
+
+    if (newText === '') {
+        showAlert('نص السؤال مطلوب.', 'warning');
+        return;
+    }
+
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+
+    $.ajax({
+        url: `{{ route('admin.questions.index') }}/${qId}`,
+        method: 'PATCH',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: { text_ar: newText },
+        success: function(res) {
+            showAlert(res.message || 'تم تحديث السؤال.', 'success');
+            textCell.html(`<span class="question-text-display">${newText}</span>`);
+            row.find('.btn-edit-q, .btn-delete-q').removeClass('d-none');
+        },
+        error: function(xhr) {
+            btn.prop('disabled', false).text('حفظ');
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
+        }
+    });
+});
+
+// Page size change
+$(document).on('change', '#per-page-select', function() {
+    $('#filter-per-page').val($(this).val());
+    $('#filter-form').submit();
+});
+
+// Save question modal
+$('#btn-save-question').on('click', function() {
+    const btn = $(this);
+    const options = [];
+    $('.opt-row').each(function(i) {
+        const label = $(this).find('.opt-label').val().trim();
+        const score = $(this).find('.opt-score').val();
+        if (label !== '') {
+            options.push({ label_ar: label, score_value: parseInt(score) || 0, order_index: i });
+        }
+    });
+
+    const payload = {
+        assessment_id: $('#q-assessment_id').val(),
+        dimension_id:  $('#q-dimension_id').val() || null,
+        text_ar:       $('#q-text_ar').val().trim(),
+        options:       options,
+    };
+
+    if (!payload.assessment_id || !payload.text_ar) {
+        showAlert('المقياس ونص السؤال مطلوبان.', 'warning'); return;
+    }
+
+    setLoading(btn, true);
+    $.ajax({
+        url: '{{ route('admin.questions.store') }}',
+        method: 'POST', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify(payload),
+        success: function(res) {
+            setLoading(btn, false);
+            bootstrap.Modal.getInstance($('#questionModal')).hide();
+            showAlert(res.message, 'success');
+            reloadTable();
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
+        }
+    });
+});
+
+// Bulk import modal
+$('#btn-bulk-import').on('click', function() {
+    const btn = $(this);
+    const payload = {
+        assessment_id:   $('#bulk-assessment_id').val(),
+        dimension_id:    $('#bulk-dimension_id').val() || null,
+        questions_text:  $('#bulk-questions_text').val().trim(),
+    };
+    if (!payload.assessment_id || !payload.questions_text) {
+        showAlert('اختر المقياس وأدخل الأسئلة.', 'warning'); return;
+    }
+    setLoading(btn, true);
+    $.ajax({
+        url: '{{ route('admin.questions.bulk') }}',
+        method: 'POST', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify(payload),
+        success: function(res) {
+            setLoading(btn, false);
+            bootstrap.Modal.getInstance($('#bulkModal')).hide();
+            showAlert(res.message, 'success');
+            reloadTable();
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
+        }
+    });
+});
+
+// Delete question
+$(document).on('click', '.btn-delete-q', function() {
+    const url = $(this).data('url');
+    confirmDelete('هل تريد حذف هذا السؤال نهائياً؟', url, () => reloadTable());
+});
+
+// SortableJS initialization
+function initSortable() {
+    @if(request('assessment_id'))
+    const el = document.getElementById('sortable-questions');
+    if (el) {
+        new Sortable(el, {
+            handle: '.drag-handle',
+            animation: 150,
+            onEnd: function (evt) {
+                const order = [];
+                $('#sortable-questions tr').each(function() {
+                    const id = $(this).data('id');
+                    if (id) {
+                        order.push(id);
+                    }
+                });
+
+                $.ajax({
+                    url: '{{ route('admin.questions.reorder') }}',
+                    method: 'PATCH',
+                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                    data: { order: order },
+                    success: function(res) {
+                        showAlert('تم تحديث ترتيب الأسئلة بنجاح.', 'success');
+                    },
+                    error: function(xhr) {
+                        showAlert('حدث خطأ أثناء إعادة الترتيب.', 'danger');
+                    }
+                });
+            }
+        });
+    }
+    @endif
+}
+
+// Initial calls
+$(document).ready(function() {
+    initSortable();
+});
+</script>
+@endpush
+````
+
+## File: resources/views/admin/statistics/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'الإحصائيات')
+@section('page-title', 'الإحصائيات والتقارير')
+
+@push('styles')
+<style>
+canvas { max-height: 320px; }
+</style>
+@endpush
+
+@section('content')
+<!-- Range selector & Export -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex gap-2">
+        @foreach([7=>'أسبوع', 30=>'شهر', 90=>'3 أشهر'] as $days => $label)
+            <button class="btn btn-sm {{ $days == 30 ? 'btn-primary' : 'btn-outline-secondary' }} btn-range" data-range="{{ $days }}">
+                {{ $label }}
+            </button>
+        @endforeach
+    </div>
+    <a href="{{ route('admin.statistics.exportCsv') }}" class="btn btn-sm btn-success shadow-sm">
+        <i class="bi bi-file-earmark-excel me-1"></i>تصدير جميع النتائج (CSV)
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Daily sessions chart -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-semibold mb-3"><i class="bi bi-bar-chart text-primary me-2"></i>الجلسات اليومية</h6>
+                <canvas id="dailyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level distribution -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-semibold mb-3"><i class="bi bi-pie-chart text-success me-2"></i>توزيع المستويات</h6>
+                <div class="mb-3">
+                    <label class="form-label small fw-medium">المقياس</label>
+                    <select class="form-select form-select-sm" id="level-assessment-filter">
+                        <option value="all">كل المقاييس</option>
+                    </select>
+                </div>
+                <canvas id="levelChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avg score per assessment -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-semibold mb-3"><i class="bi bi-graph-up text-warning me-2"></i>متوسط الدرجات</h6>
+                <canvas id="avgChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top users -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 py-3">
+                <h6 class="mb-0 fw-semibold"><i class="bi bi-trophy text-warning me-2"></i>أكثر المستخدمين نشاطاً</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small" id="top-users-table">
+                    <thead class="table-light">
+                        <tr><th>#</th><th>الاسم</th><th>البريد</th><th>الجلسات</th></tr>
+                    </thead>
+                    <tbody id="top-users-body">
+                        <tr><td colspan="4" class="text-center text-muted py-3">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+Chart.defaults.font.family = 'Noto Kufi Arabic';
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+let dailyChart, levelChart, avgChart;
+let currentRange = 30;
+let statsData = null;
+
+function initCharts() {
+    dailyChart = new Chart(document.getElementById('dailyChart'), {
+        type: 'bar',
+        data: { labels: [], datasets: [{ label: 'الجلسات', data: [], backgroundColor: 'rgba(13,110,253,.7)', borderRadius: 6 }] },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+
+    levelChart = new Chart(document.getElementById('levelChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['مرتفع', 'متوسط', 'منخفض'],
+            datasets: [{ data: [0,0,0], backgroundColor: ['#198754','#ffc107','#dc3545'], borderWidth: 2 }]
+        },
+        options: { cutout: '65%', plugins: { legend: { position: 'bottom' } } }
+    });
+
+    avgChart = new Chart(document.getElementById('avgChart'), {
+        type: 'bar',
+        data: { labels: [], datasets: [{ label: 'متوسط الدرجة', data: [], backgroundColor: 'rgba(255,193,7,.8)', borderRadius: 6 }] },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+    });
+}
+
+function loadStats(range) {
+    $.get('{{ route('admin.statistics.data') }}', { range }, function(data) {
+        statsData = data;
+
+        // Daily chart
+        dailyChart.data.labels = data.dailyData.map(d => d.date);
+        dailyChart.data.datasets[0].data = data.dailyData.map(d => d.count);
+        dailyChart.update();
+
+        // Populate assessment filter
+        const sel = $('#level-assessment-filter');
+        sel.find('option:not([value="all"])').remove();
+        data.assessments.forEach(a => sel.append(`<option value="${a.id}">${a.title}</option>`));
+
+        // Level chart (all)
+        updateLevelChart('all');
+
+        // Avg chart
+        avgChart.data.labels = data.avgScores.map(a => a.title);
+        avgChart.data.datasets[0].data = data.avgScores.map(a => a.avg);
+        avgChart.update();
+
+        // Top users
+        let rows = '';
+        data.topUsers.forEach((u, i) => {
+            rows += `<tr><td>${i+1}</td><td>${u.name}</td><td class="text-muted">${u.email}</td><td><span class="badge bg-primary">${u.exam_sessions_count}</span></td></tr>`;
+        });
+        $('#top-users-body').html(rows || '<tr><td colspan="4" class="text-center text-muted">لا بيانات.</td></tr>');
+    });
+}
+
+function updateLevelChart(assessmentId) {
+    if (!statsData) return;
+    let high = 0, medium = 0, low = 0;
+    statsData.assessments.forEach(a => {
+        if (assessmentId === 'all' || a.id === assessmentId) {
+            high   += a.high;
+            medium += a.medium;
+            low    += a.low;
+        }
+    });
+    levelChart.data.datasets[0].data = [high, medium, low];
+    levelChart.update();
+}
+
+$('#level-assessment-filter').on('change', function() { updateLevelChart($(this).val()); });
+
+$('.btn-range').on('click', function() {
+    currentRange = parseInt($(this).data('range'));
+    $('.btn-range').removeClass('btn-primary').addClass('btn-outline-secondary');
+    $(this).removeClass('btn-outline-secondary').addClass('btn-primary');
+    loadStats(currentRange);
+});
+
+$(document).ready(function() {
+    initCharts();
+    loadStats(currentRange);
+});
+</script>
+@endpush
+````
 
 ## File: routes/console.php
-```php
+````php
 <?php
 
 use Illuminate\Foundation\Inspiring;
@@ -3946,10 +6277,32 @@ use Illuminate\Support\Facades\Artisan;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
-```
+````
+
+## File: vite.config.js
+````javascript
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: ['resources/css/app.css', 'resources/js/app.js'],
+            refresh: true,
+        }),
+        tailwindcss(),
+    ],
+    server: {
+        watch: {
+            ignored: ['**/storage/framework/views/**'],
+        },
+    },
+});
+````
 
 ## File: app/Http/Controllers/Admin/AnswerOptionController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -4068,10 +6421,10 @@ class AnswerOptionController extends Controller
         ]);
     }
 }
-```
+````
 
 ## File: app/Http/Controllers/Admin/ExamController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -4131,10 +6484,10 @@ class ExamController extends Controller
         return response()->json(['success' => true, 'message' => 'تم إنشاء الاختبار.', 'id' => $assessment->id]);
     }
 }
-```
+````
 
 ## File: app/Http/Controllers/Admin/QuestionController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -4296,10 +6649,10 @@ class QuestionController extends Controller
         }, 'questions_import_template.csv', $headers);
     }
 }
-```
+````
 
 ## File: app/Http/Controllers/Admin/RecommendationController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -4341,10 +6694,10 @@ class RecommendationController extends Controller
         return response()->json(['success' => true, 'message' => 'تم حذف التوصية.']);
     }
 }
-```
+````
 
 ## File: app/Http/Controllers/Admin/StatisticsController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -4394,10 +6747,10 @@ class StatisticsController extends Controller
         }, 'exam_results_export.csv', $headers);
     }
 }
-```
+````
 
 ## File: app/Http/Controllers/Admin/UserController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -4455,10 +6808,10 @@ class UserController extends Controller
         ]);
     }
 }
-```
+````
 
 ## File: app/Http/Requests/Admin/BulkStoreQuestionsRequest.php
-```php
+````php
 <?php
 
 namespace App\Http\Requests\Admin;
@@ -4482,10 +6835,10 @@ class BulkStoreQuestionsRequest extends FormRequest
         ];
     }
 }
-```
+````
 
 ## File: app/Http/Requests/Admin/StoreInterpretationsRequest.php
-```php
+````php
 <?php
 
 namespace App\Http\Requests\Admin;
@@ -4510,10 +6863,10 @@ class StoreInterpretationsRequest extends FormRequest
         ];
     }
 }
-```
+````
 
 ## File: app/Http/Requests/Admin/StoreQuestionRequest.php
-```php
+````php
 <?php
 
 namespace App\Http\Requests\Admin;
@@ -4541,10 +6894,10 @@ class StoreQuestionRequest extends FormRequest
         ];
     }
 }
-```
+````
 
 ## File: app/Http/Requests/Admin/UpdateAssessmentRequest.php
-```php
+````php
 <?php
 
 namespace App\Http\Requests\Admin;
@@ -4574,10 +6927,10 @@ class UpdateAssessmentRequest extends FormRequest
         ];
     }
 }
-```
+````
 
 ## File: app/Http/Requests/AnswerQuestionRequest.php
-```php
+````php
 <?php
 
 namespace App\Http\Requests;
@@ -4600,10 +6953,10 @@ class AnswerQuestionRequest extends FormRequest
         ];
     }
 }
-```
+````
 
 ## File: app/Models/AnswerOption.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -4628,10 +6981,10 @@ class AnswerOption extends Model
         return $this->hasMany(UserAnswer::class, 'selected_option_id');
     }
 }
-```
+````
 
 ## File: app/Models/Dimension.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -4666,10 +7019,10 @@ class Dimension extends Model
         return $this->hasMany(DimensionInterpretation::class);
     }
 }
-```
+````
 
 ## File: app/Models/DimensionInterpretation.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -4695,10 +7048,10 @@ class DimensionInterpretation extends Model
         return $this->belongsTo(Dimension::class);
     }
 }
-```
+````
 
 ## File: app/Models/Question.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -4737,10 +7090,10 @@ class Question extends Model
         return $this->hasMany(UserAnswer::class);
     }
 }
-```
+````
 
 ## File: app/Models/Result.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -4771,10 +7124,10 @@ class Result extends Model
         return $this->hasMany(DimensionScore::class);
     }
 }
-```
+````
 
 ## File: app/Providers/AppServiceProvider.php
-```php
+````php
 <?php
 
 namespace App\Providers;
@@ -4819,10 +7172,10 @@ class AppServiceProvider extends ServiceProvider
         }
     }
 }
-```
+````
 
 ## File: app/Repositories/Contracts/AssessmentRepositoryInterface.php
-```php
+````php
 <?php
 
 namespace App\Repositories\Contracts;
@@ -4866,10 +7219,46 @@ interface AssessmentRepositoryInterface
      */
     public function toggle(Assessment $assessment): Assessment;
 }
-```
+````
+
+## File: app/Repositories/Contracts/UserRepositoryInterface.php
+````php
+<?php
+
+namespace App\Repositories\Contracts;
+
+use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+
+interface UserRepositoryInterface
+{
+    /**
+     * Create a new user record.
+     *
+     * @param array $data
+     * @return User
+     */
+    public function create(array $data): User;
+
+    /**
+     * Search and paginate users with their completed exam session count.
+     *
+     * @return LengthAwarePaginator
+     */
+    public function searchPaginated(?string $search, int $perPage = 15);
+
+    /**
+     * Retrieve completed exam sessions for a specific user.
+     *
+     * @return Collection
+     */
+    public function getUserResults(string $userId);
+}
+````
 
 ## File: app/Repositories/RecommendationRepository.php
-```php
+````php
 <?php
 
 namespace App\Repositories;
@@ -4918,52 +7307,10 @@ class RecommendationRepository implements RecommendationRepositoryInterface
         $recommendation->delete();
     }
 }
-```
-
-## File: app/Repositories/UserRepository.php
-```php
-<?php
-
-namespace App\Repositories;
-
-use App\Models\ExamSession;
-use App\Models\User;
-use App\Repositories\Contracts\UserRepositoryInterface;
-
-class UserRepository implements UserRepositoryInterface
-{
-    public function searchPaginated(?string $search, int $perPage = 15)
-    {
-        $query = User::query()
-            ->withCount(['examSessions as completed_exams_count' => function ($q) {
-                $q->where('status', 'completed');
-            }]);
-
-        if (! empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('national_id', 'like', "%{$search}%");
-            });
-        }
-
-        return $query->paginate($perPage);
-    }
-
-    public function getUserResults(string $userId)
-    {
-        return ExamSession::where('user_id', $userId)
-            ->where('status', 'completed')
-            ->with(['assessment', 'result'])
-            ->orderBy('completed_at', 'desc')
-            ->get();
-    }
-}
-```
+````
 
 ## File: app/Services/AssessmentService.php
-```php
+````php
 <?php
 
 namespace App\Services;
@@ -5049,10 +7396,75 @@ class AssessmentService
         return $this->assessments->toggle($assessment);
     }
 }
-```
+````
+
+## File: app/Services/UserService.php
+````php
+<?php
+
+namespace App\Services;
+
+use App\Models\User;
+use App\Repositories\Contracts\UserRepositoryInterface;
+use Illuminate\Support\Facades\Hash;
+
+class UserService
+{
+    public function __construct(
+        private readonly UserRepositoryInterface $userRepository,
+    ) {}
+
+    public function register(array $data): User
+    {
+        $data['password'] = Hash::make($data['password']);
+        $data['role'] = 'user';
+
+        return $this->userRepository->create($data);
+    }
+
+    public function searchPaginated(?string $search, int $perPage = 15)
+    {
+        return $this->userRepository->searchPaginated($search, $perPage);
+    }
+
+    public function getUserResults(string $userId)
+    {
+        return $this->userRepository->getUserResults($userId);
+    }
+}
+````
+
+## File: bootstrap/app.php
+````php
+<?php
+
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\UserMiddleware;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
+
+        $middleware->alias([
+            'admin' => AdminMiddleware::class,
+            'user' => UserMiddleware::class,
+        ]);
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        //
+    })->create();
+````
 
 ## File: database/migrations/0001_01_01_000000_create_users_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -5097,10 +7509,10 @@ return new class extends Migration
         Schema::dropIfExists('sessions');
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_10_164000_add_intro_and_outro_to_assessments_and_recommendations.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -5139,10 +7551,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_11_132219_add_icon_to_assessments_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -5171,10 +7583,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_17_014000_change_sessions_user_id_to_uuid.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -5203,10 +7615,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/seeders/AssessmentsDatabaseSeeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -5270,10 +7682,684 @@ class AssessmentsDatabaseSeeder extends Seeder
         $this->call(Assessment27Seeder::class);
     }
 }
-```
+````
+
+## File: public/js/json-lists.js
+````javascript
+$(document).ready(function() {
+    function initJsonList($textarea, fields) {
+        $textarea.addClass('d-none json-list-initialized');
+        
+        const $wrapper = $('<div class="json-list-wrapper border rounded p-3 mb-2 bg-light-subtle"></div>');
+        const $list = $('<div class="json-list-items mb-3"></div>');
+        
+        // Build input form based on fields
+        let inputsHtml = '<div class="row g-2 align-items-end"><div class="col-md-12 fw-bold text-muted small mb-1">إضافة عنصر جديد</div>';
+        fields.forEach(f => {
+            let width = f.width || 'col';
+            if (f.type === 'select') {
+                let options = f.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+                inputsHtml += `<div class="${width}"><label class="small text-muted">${f.label}</label><select class="form-select form-select-sm" data-key="${f.key}">${options}</select></div>`;
+            } else {
+                inputsHtml += `<div class="${width}"><label class="small text-muted">${f.label}</label><input type="text" class="form-control form-control-sm" data-key="${f.key}" placeholder="${f.placeholder}"></div>`;
+            }
+        });
+        inputsHtml += `<div class="col-auto"><button type="button" class="btn btn-sm btn-primary json-list-add"><i class="bi bi-plus"></i> إضافة</button></div></div>`;
+        
+        const $inputGroup = $(inputsHtml);
+        $wrapper.append($list).append($inputGroup);
+        $textarea.after($wrapper);
+        
+        function normalizeItem(item) {
+            if (typeof item === 'string') {
+                const normalized = {};
+                const hasTitle = fields.some(f => f.key === 'title');
+                fields.forEach(f => {
+                    if (f.key === 'title') {
+                        normalized[f.key] = item;
+                    } else if (!hasTitle && f.key === fields[0].key) {
+                        normalized[f.key] = item;
+                    } else {
+                        normalized[f.key] = f.type === 'select' ? (f.options[0]?.value || '') : '';
+                    }
+                });
+                return normalized;
+            }
+            return item;
+        }
+
+        // Load initial data
+        let initialData = [];
+        try {
+            const val = $textarea.val().trim();
+            if (val) {
+                initialData = JSON.parse(val);
+                if (!Array.isArray(initialData)) initialData = [];
+            }
+        } catch(e) {
+            console.error('Failed to parse JSON', e);
+        }
+        
+        initialData.forEach(item => {
+            addItem(normalizeItem(item));
+        });
+        
+        function updateTextarea() {
+            const currentItems = [];
+            $list.find('.json-list-item').each(function() {
+                currentItems.push($(this).data('item'));
+            });
+            $textarea.val(JSON.stringify(currentItems));
+        }
+        
+        function createItemRow(item) {
+            let displayHtml = '';
+            fields.forEach(f => {
+                if (item[f.key]) {
+                    if (f.key === 'icon' && (item[f.key].startsWith('http') || item[f.key].startsWith('/'))) {
+                        displayHtml += `<div class="me-3"><strong>${f.label}:</strong> <img src="${item[f.key]}" width="20" height="20" class="rounded"></div>`;
+                    } else if (f.key === 'icon' && item[f.key].startsWith('bi-')) {
+                        displayHtml += `<div class="me-3"><strong>${f.label}:</strong> <i class="bi ${item[f.key]}"></i></div>`;
+                    } else {
+                        displayHtml += `<div class="me-3"><strong>${f.label}:</strong> ${item[f.key]}</div>`;
+                    }
+                }
+            });
+            
+            const $itemRow = $(`
+                <div class="json-list-item d-flex justify-content-between align-items-center bg-white border shadow-sm rounded px-3 py-2 mb-2">
+                    <div class="d-flex flex-wrap small text-dark">${displayHtml}</div>
+                    <div>
+                        <button type="button" class="btn btn-sm text-primary btn-edit-item py-0 px-2 border-0" title="تعديل"><i class="bi bi-pencil"></i></button>
+                        <button type="button" class="btn btn-sm text-danger btn-remove-item py-0 px-2 border-0" title="حذف"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+            `);
+            $itemRow.data('item', item);
+            return $itemRow;
+        }
+
+        function addItem(item) {
+            // Validate at least one field has content
+            if (!fields.some(f => item[f.key] && item[f.key].toString().trim() !== '')) return;
+            $list.append(createItemRow(item));
+        }
+
+        
+        // Add/Save event
+        $inputGroup.find('.json-list-add').on('click', function() {
+            const newItem = {};
+            let hasData = false;
+            fields.forEach(f => {
+                const val = $inputGroup.find(`[data-key="${f.key}"]`).val().trim();
+                newItem[f.key] = val;
+                if (val) hasData = true;
+            });
+            
+            if (hasData) {
+                const $editingRow = $inputGroup.data('editing-row');
+                
+                if ($editingRow) {
+                    $editingRow.replaceWith(createItemRow(newItem));
+                    $inputGroup.removeData('editing-row');
+                    $(this).html('<i class="bi bi-plus"></i> إضافة').removeClass('btn-success').addClass('btn-primary');
+                } else {
+                    addItem(newItem);
+                }
+                
+                updateTextarea();
+                fields.forEach(f => {
+                    if (f.type !== 'select') {
+                        $inputGroup.find(`[data-key="${f.key}"]`).val('');
+                    }
+                });
+                $inputGroup.find(`input`).first().focus();
+            }
+        });
+
+        
+        // Remove event
+        $list.on('click', '.btn-remove-item', function() {
+            $(this).closest('.json-list-item').remove();
+            
+            // If deleting the currently edited row, reset the form
+            if ($inputGroup.data('editing-row') && $inputGroup.data('editing-row').is($(this).closest('.json-list-item'))) {
+                $inputGroup.removeData('editing-row');
+                $inputGroup.find('.json-list-add').html('<i class="bi bi-plus"></i> إضافة').removeClass('btn-success').addClass('btn-primary');
+                fields.forEach(f => { if (f.type !== 'select') $inputGroup.find(`[data-key="${f.key}"]`).val(''); });
+            }
+            
+            updateTextarea();
+        });
+        
+        // Edit event
+        $list.on('click', '.btn-edit-item', function() {
+            const $row = $(this).closest('.json-list-item');
+            const item = $row.data('item');
+            
+            fields.forEach(f => {
+                $inputGroup.find(`[data-key="${f.key}"]`).val(item[f.key] || '');
+            });
+            
+            $inputGroup.data('editing-row', $row);
+            $inputGroup.find('.json-list-add').html('<i class="bi bi-check-circle"></i> حفظ التعديل').removeClass('btn-primary').addClass('btn-success');
+        });
+        
+        // Provide clear function attached to textarea
+        $textarea.data('clearItems', function(newVal = null) {
+            $list.empty();
+            if (newVal) {
+                try {
+                    const parsed = JSON.parse(newVal);
+                    if (Array.isArray(parsed)) {
+                        parsed.forEach(i => addItem(normalizeItem(i)));
+                    }
+                } catch(e){}
+            }
+            updateTextarea();
+        });
+    }
+
+    // Build options from APP_ICONS
+    function getIconOptions(category, defaultOptions) {
+        if (window.APP_ICONS && window.APP_ICONS[category]) {
+            return window.APP_ICONS[category].map(icon => ({
+                value: icon.icon_url,
+                label: icon.name
+            }));
+        }
+        return defaultOptions;
+    }
+
+    window.initAllJsonLists = function(container = document) {
+        // Initialize specific textareas
+        // 1. Certificates
+        $(container).find('.json-certificates-data').not('.json-list-initialized').each(function() {
+            initJsonList($(this), [
+                { key: 'title', label: 'الشهادة', type: 'text', placeholder: 'مثال: PMP', width: 'col-md-4' },
+                { key: 'subtitle', label: 'الوصف', type: 'text', placeholder: 'مثال: إدارة المشاريع', width: 'col-md-5' },
+                { key: 'icon', label: 'الأيقونة', type: 'select', width: 'col-md-3', options: getIconOptions('certificates', [
+                    { value: 'blue-hexagon', label: 'سداسي أزرق (افتراضي)' }
+                ])}
+            ]);
+        });
+
+        // 2. Programs
+        $(container).find('.json-programs-data').not('.json-list-initialized').each(function() {
+            initJsonList($(this), [
+                { key: 'title', label: 'اسم البرنامج', type: 'text', placeholder: 'مثال: قيادة الفرق', width: 'col-md-7' },
+                { key: 'icon', label: 'الأيقونة', type: 'select', width: 'col-md-4', options: getIconOptions('programs', [
+                    { value: 'bi-journal-bookmark', label: 'كتاب (افتراضي)' }
+                ])}
+            ]);
+        });
+
+        // 3. Plan 30 Days
+        $(container).find('.json-plan-data').not('.json-list-initialized').each(function() {
+            initJsonList($(this), [
+                { key: 'period', label: 'الفترة', type: 'text', placeholder: 'مثال: الأسبوع الأول', width: 'col-md-3' },
+                { key: 'title', label: 'الخطوة/المهمة', type: 'text', placeholder: 'مثال: تحديد الأولويات', width: 'col-md-5' },
+                { key: 'icon', label: 'الأيقونة', type: 'select', width: 'col-md-3', options: getIconOptions('plan_30_days', [
+                    { value: 'bi-calendar-check', label: 'تقويم (افتراضي)' }
+                ])}
+            ]);
+        });
+    };
+
+    // Run on document load
+    window.initAllJsonLists();
+});
+````
+
+## File: repomix.config.json
+````json
+{
+  "output": {
+    "filePath": "repomix-output.md",
+    "style": "markdown"
+  },
+  "ignore": {
+    "customPatterns": [
+      "repomix-output.xml",
+      "repomix-output.md",
+      "repomix-migrations.md",
+      "database/data/assessments/**",
+      "database/database.sqlite",
+      "storage/**",
+      "composer.lock",
+      "package-lock.json",
+      "public/css/report-pdf.css"
+    ]
+  }
+}
+````
+
+## File: resources/views/admin/dashboard.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'لوحة الإدارة')
+@section('page-title', 'لوحة الإدارة')
+
+@section('content')
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                    <i class="bi bi-people text-primary fs-4"></i>
+                </div>
+                <div>
+                    <div class="fs-3 fw-bold">{{ $totalUsers }}</div>
+                    <div class="text-muted small">إجمالي المستخدمين</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                    <i class="bi bi-clipboard-check text-success fs-4"></i>
+                </div>
+                <div>
+                    <div class="fs-3 fw-bold">{{ $todaySessions }}</div>
+                    <div class="text-muted small">اختبارات اليوم</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                    <i class="bi bi-stars text-warning fs-4"></i>
+                </div>
+                <div>
+                    <div class="fs-5 fw-bold text-truncate" style="max-width:130px">
+                        {{ $mostUsedAssessment?->title_ar ?? '—' }}
+                    </div>
+                    <div class="text-muted small">الأكثر استخداماً</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                    <i class="bi bi-bar-chart text-info fs-4"></i>
+                </div>
+                <div>
+                    <div class="fs-3 fw-bold">{{ round($avgScore ?? 0, 1) }}</div>
+                    <div class="text-muted small">متوسط الدرجات</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-clock-history me-2 text-muted"></i>آخر الجلسات المكتملة</h6>
+        <a href="{{ route('admin.statistics.exportCsv') }}" class="btn btn-sm btn-outline-success shadow-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i>تصدير جميع النتائج (CSV)
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>المستخدم</th>
+                    <th>المقياس</th>
+                    <th>وقت الإتمام</th>
+                    <th>الدرجة</th>
+                    <th>المستوى</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($recentSessions as $session)
+                <tr>
+                    <td>
+                        <div class="fw-medium">{{ $session->user?->name ?? 'مستخدم محذوف' }}</div>
+                        <div class="text-muted small">{{ $session->user?->email ?? '-' }}</div>
+                    </td>
+                    <td>{{ $session->assessment?->title_ar ?? 'مقياس محذوف' }}</td>
+                    <td class="text-muted small">{{ $session->completed_at?->format('Y/m/d H:i') }}</td>
+                    <td>
+                        @if($session->result)
+                            {{ $session->result->total_score }}/{{ $session->result->max_possible_score }}
+                        @else — @endif
+                    </td>
+                    <td>
+                        @if($session->result)
+                            @php $lc = match($session->result->level) { 'high'=>'success','medium'=>'warning',default=>'danger' }; @endphp
+                            @php $ll = match($session->result->level) { 'high'=>'مرتفع','medium'=>'متوسط',default=>'منخفض' }; @endphp
+                            <span class="badge bg-{{ $lc }}-subtle text-{{ $lc }} border border-{{ $lc }}-subtle">{{ $ll }}</span>
+                        @else — @endif
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="5" class="text-center text-muted py-4">لا توجد جلسات بعد.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+@endsection
+````
+
+## File: resources/views/admin/users/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'المستخدمين والنتائج')
+@section('page-title', 'إدارة المستخدمين وجلسات الاختبار')
+
+@section('content')
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <!-- Search & Info -->
+        <div class="row g-3 justify-content-between align-items-center">
+            <div class="col-md-6">
+                <form method="GET" action="{{ route('admin.users.index') }}" class="d-flex gap-2">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="ابحث بالاسم أو البريد أو الجوال أو الهوية..." value="{{ $search }}">
+                        @if($search)
+                            <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary d-flex align-items-center"><i class="bi bi-x-lg"></i></a>
+                        @endif
+                    </div>
+                    <button type="submit" class="btn btn-primary px-4">بحث</button>
+                </form>
+            </div>
+            <div class="col-md-auto">
+                <span class="text-muted small">إجمالي المستخدمين: <strong>{{ $users->total() }}</strong></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>الاسم</th>
+                    <th>البريد الإلكتروني</th>
+                    <th>رقم الجوال</th>
+                    <th>رقم الهوية</th>
+                    <th>نوع الحساب</th>
+                    <th class="text-center">الاختبارات المؤداة</th>
+                    <th class="text-center">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($users as $index => $user)
+                    <tr>
+                        <td>{{ $users->firstItem() + $index }}</td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ $user->name }}</div>
+                        </td>
+                        <td class="text-muted small">{{ $user->email }}</td>
+                        <td class="text-muted small">{{ $user->phone ?? '—' }}</td>
+                        <td class="text-muted small">{{ $user->national_id ?? '—' }}</td>
+                        <td>
+                            @if($user->isAdmin())
+                                <span class="badge bg-danger-subtle text-danger px-2.5 py-1.5 rounded-pill small">مدير النظام</span>
+                            @else
+                                <span class="badge bg-primary-subtle text-primary px-2.5 py-1.5 rounded-pill small">مستخدم</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary rounded-pill px-3 py-1 fw-medium">
+                                {{ $user->completed_exams_count }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-primary px-3 rounded-pill btn-view-results" data-user-id="{{ $user->id }}">
+                                <i class="bi bi-eye me-1"></i> عرض النتائج
+                            </button>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-people fs-1 d-block mb-3 text-secondary"></i>
+                            لا يوجد مستخدمين يطابقون خيارات البحث.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    @if($users->hasPages())
+        <div class="card-footer bg-transparent border-0 py-3">
+            {{ $users->appends(['search' => $search])->links() }}
+        </div>
+    @endif
+</div>
+
+<!-- User Results Modal -->
+<div class="modal fade" id="resultsModal" tabindex="-1" aria-labelledby="resultsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0 py-3">
+                <h5 class="modal-title fw-bold" id="resultsModalLabel">
+                    <i class="bi bi-mortarboard me-2"></i> سجل اختبارات المستخدم
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- User Details Card -->
+                <div class="bg-light p-3 rounded-3 mb-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-1" id="modal-user-name">...</h6>
+                        <span class="text-muted small" id="modal-user-email">...</span>
+                    </div>
+                    <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-3" id="modal-results-count">0 اختبارات مؤداة</span>
+                </div>
+
+                <!-- Results Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="results-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>المقياس / الاختبار</th>
+                                <th class="text-center">الدرجة المحققة</th>
+                                <th class="text-center">المستوى المستحق</th>
+                                <th class="text-center">تاريخ الإكمال</th>
+                                <th class="text-center">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-results-body">
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                    جاري تحميل سجل النتائج...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light py-3">
+                <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    const resultsModal = new bootstrap.Modal(document.getElementById('resultsModal'));
+
+    $('.btn-view-results').on('click', function() {
+        const userId = $(this).data('user-id');
+        
+        // Reset modal to loading state
+        $('#modal-user-name').text('...');
+        $('#modal-user-email').text('...');
+        $('#modal-results-count').text('0 اختبارات مؤداة');
+        $('#modal-results-body').html(`
+            <tr>
+                <td colspan="5" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                    جاري تحميل سجل النتائج...
+                </td>
+            </tr>
+        `);
+
+        // Show modal immediately
+        resultsModal.show();
+
+        // Fetch data
+        $.ajax({
+            url: `{{ url('/admin/users') }}/${userId}/results`,
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    $('#modal-user-name').text(response.user.name);
+                    $('#modal-user-email').text(response.user.email);
+                    $('#modal-results-count').text(`${response.results.length} اختبارات مؤداة`);
+
+                    let rowsHtml = '';
+                    if (response.results.length === 0) {
+                        rowsHtml = `
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-info-circle fs-2 d-block mb-2 text-secondary"></i>
+                                    لا يوجد جلسات اختبار مكتملة لهذا المستخدم حتى الآن.
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        response.results.forEach(res => {
+                            let badgeClass = 'bg-secondary';
+                            if (res.level_raw === 'high') badgeClass = 'bg-success';
+                            else if (res.level_raw === 'medium') badgeClass = 'bg-warning text-dark';
+                            else if (res.level_raw === 'low') badgeClass = 'bg-danger';
+
+                            // Construct view result URL dynamically
+                            const resultUrl = `{{ url('/exam') }}/${res.id}/result`;
+
+                            rowsHtml += `
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-dark">${res.assessment_title}</div>
+                                    </td>
+                                    <td class="text-center fw-bold text-primary">${res.total_score} / ${res.max_possible_score}</td>
+                                    <td class="text-center">
+                                        <span class="badge ${badgeClass} px-2.5 py-1.5 rounded-3 fw-medium">${res.level}</span>
+                                    </td>
+                                    <td class="text-center text-muted small">${res.completed_at}</td>
+                                    <td class="text-center">
+                                        <a href="${resultUrl}" target="_blank" class="btn btn-sm btn-outline-secondary px-3 rounded-pill">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i> التقرير
+                                        </a>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    $('#modal-results-body').html(rowsHtml);
+                } else {
+                    $('#modal-results-body').html(`
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i> حدث خطأ أثناء تحميل البيانات.
+                            </td>
+                        </tr>
+                    `);
+                }
+            },
+            error: function() {
+                $('#modal-results-body').html(`
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i> فشل الاتصال بالخادم.
+                        </td>
+                    </tr>
+                `);
+            }
+        });
+    });
+});
+</script>
+@endpush
+````
+
+## File: resources/views/auth/login.blade.php
+````php
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول — دار الرؤى</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+</head>
+<body class="bg-light d-flex align-items-center min-vh-100">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+            <div class="text-center mb-4">
+                <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 70px; margin-bottom: 10px;">
+                <p class="text-muted">نظام مقاييس التميز الشخصي</p>
+            </div>
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4 fw-semibold">تسجيل الدخول</h5>
+
+                    @if($errors->any())
+                        <div class="alert alert-danger alert-sm py-2">
+                            <i class="bi bi-exclamation-circle me-1"></i>{{ $errors->first() }}
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('login.post') }}">
+                        @csrf
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">البريد الإلكتروني</label>
+                            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
+                                value="{{ old('email') }}" placeholder="example@email.com" required autofocus>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">كلمة المرور</label>
+                            <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" name="remember" id="remember">
+                            <label class="form-check-label small" for="remember">تذكرني</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>دخول
+                        </button>
+                    </form>
+                    <hr>
+                    <div class="text-center small">
+                        ليس لديك حساب؟
+                        <a href="{{ route('register') }}" class="text-primary text-decoration-none fw-medium">سجّل الآن</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+````
 
 ## File: tests/Feature/Architecture/NoDirectBuilderDeleteTest.php
-```php
+````php
 <?php
 
 namespace Tests\Feature\Architecture;
@@ -5325,10 +8411,10 @@ class NoDirectBuilderDeleteTest extends TestCase
         );
     }
 }
-```
+````
 
 ## File: app/Http/Controllers/Admin/SettingController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -5393,10 +8479,10 @@ class SettingController extends Controller
         return redirect()->back()->with('success', 'تم تحديث الإحصائيات والإعدادات بنجاح.');
     }
 }
-```
+````
 
 ## File: app/Http/Requests/Admin/SaveCouponRequest.php
-```php
+````php
 <?php
 
 namespace App\Http\Requests\Admin;
@@ -5449,10 +8535,10 @@ class SaveCouponRequest extends FormRequest
         ];
     }
 }
-```
+````
 
 ## File: app/Http/Requests/Admin/StoreAssessmentRequest.php
-```php
+````php
 <?php
 
 namespace App\Http\Requests\Admin;
@@ -5486,10 +8572,10 @@ class StoreAssessmentRequest extends FormRequest
         ];
     }
 }
-```
+````
 
 ## File: app/Models/ExamSession.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -5536,10 +8622,57 @@ class ExamSession extends Model
         return $this->hasOne(Result::class, 'session_id');
     }
 }
-```
+````
+
+## File: app/Repositories/UserRepository.php
+````php
+<?php
+
+namespace App\Repositories;
+
+use App\Models\ExamSession;
+use App\Models\User;
+use App\Repositories\Contracts\UserRepositoryInterface;
+
+class UserRepository implements UserRepositoryInterface
+{
+    public function create(array $data): User
+    {
+        return User::create($data);
+    }
+
+    public function searchPaginated(?string $search, int $perPage = 15)
+    {
+        $query = User::query()
+            ->withCount(['examSessions as completed_exams_count' => function ($q) {
+                $q->where('status', 'completed');
+            }]);
+
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('national_id', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->paginate($perPage);
+    }
+
+    public function getUserResults(string $userId)
+    {
+        return ExamSession::where('user_id', $userId)
+            ->where('status', 'completed')
+            ->with(['assessment', 'result'])
+            ->orderBy('completed_at', 'desc')
+            ->get();
+    }
+}
+````
 
 ## File: app/Services/ExamService.php
-```php
+````php
 <?php
 
 namespace App\Services;
@@ -5729,10 +8862,10 @@ class ExamService
         return $this->resultService->getFormattedResult($session);
     }
 }
-```
+````
 
 ## File: app/Services/Result/ResultFormatter.php
-```php
+````php
 <?php
 
 namespace App\Services\Result;
@@ -5908,10 +9041,10 @@ class ResultFormatter
         }, array_filter($items));
     }
 }
-```
+````
 
 ## File: app/Services/UserDashboardService.php
-```php
+````php
 <?php
 
 namespace App\Services;
@@ -6011,10 +9144,10 @@ class UserDashboardService
         return compact('assessments', 'userSessions', 'progressMap', 'activeCoupons', 'myCoupons', 'siteSettings');
     }
 }
-```
+````
 
 ## File: database/migrations/2024_01_01_000003_create_dimensions_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -6040,10 +9173,10 @@ return new class extends Migration
         Schema::dropIfExists('dimensions');
     }
 };
-```
+````
 
 ## File: database/migrations/2024_01_01_000004_create_questions_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -6069,10 +9202,10 @@ return new class extends Migration
         Schema::dropIfExists('questions');
     }
 };
-```
+````
 
 ## File: database/migrations/2024_01_01_000005_create_answer_options_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -6098,10 +9231,10 @@ return new class extends Migration
         Schema::dropIfExists('answer_options');
     }
 };
-```
+````
 
 ## File: database/migrations/2024_01_01_000006_create_exam_sessions_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -6128,10 +9261,10 @@ return new class extends Migration
         Schema::dropIfExists('exam_sessions');
     }
 };
-```
+````
 
 ## File: database/migrations/2024_01_01_000007_create_user_answers_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -6158,10 +9291,10 @@ return new class extends Migration
         Schema::dropIfExists('user_answers');
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_05_000000_upgrade_coupons_and_users_tables.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -6236,10 +9369,10 @@ return new class extends Migration
         });
     }
 };
-```
+````
 
 ## File: database/seeders/Assessment10Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -6344,10 +9477,10 @@ class Assessment10Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment11Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -6452,10 +9585,10 @@ class Assessment11Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment12Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -6560,10 +9693,10 @@ class Assessment12Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment13Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -6668,10 +9801,10 @@ class Assessment13Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment14Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -6776,10 +9909,10 @@ class Assessment14Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment15Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -6884,10 +10017,10 @@ class Assessment15Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment16Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -6992,10 +10125,10 @@ class Assessment16Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment17Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -7100,10 +10233,10 @@ class Assessment17Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment18Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -7208,10 +10341,10 @@ class Assessment18Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment19Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -7316,10 +10449,10 @@ class Assessment19Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment1Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -7424,10 +10557,10 @@ class Assessment1Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment20Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -7532,10 +10665,10 @@ class Assessment20Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment21Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -7640,10 +10773,10 @@ class Assessment21Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment22Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -7748,10 +10881,10 @@ class Assessment22Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment23Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -7856,10 +10989,10 @@ class Assessment23Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment24Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -7964,10 +11097,10 @@ class Assessment24Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment25Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -8072,10 +11205,10 @@ class Assessment25Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment26Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -8180,10 +11313,10 @@ class Assessment26Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment27Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -8288,10 +11421,10 @@ class Assessment27Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment2Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -8396,10 +11529,10 @@ class Assessment2Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment3Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -8504,10 +11637,10 @@ class Assessment3Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment4Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -8612,10 +11745,10 @@ class Assessment4Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment5Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -8720,10 +11853,10 @@ class Assessment5Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment6Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -8828,10 +11961,10 @@ class Assessment6Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment7Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -8936,10 +12069,10 @@ class Assessment7Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment8Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -9044,10 +12177,10 @@ class Assessment8Seeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/Assessment9Seeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -9152,10 +12285,1437 @@ class Assessment9Seeder extends Seeder
         }
     }
 }
-```
+````
+
+## File: README.md
+````markdown
+<div align="center">
+  <h1 align="center">نظام المقاييس والاختبارات المهنية</h1>
+  <p align="center">
+    <strong>نظام متكامل واحترافي لإدارة المقاييس والاختبارات النفسية والمهنية</strong>
+    <br />
+    <br />
+    <a href="#المميزات-الرئيسية">المميزات</a>
+    ·
+    <a href="#التقنيات-المستخدمة">التقنيات</a>
+    ·
+    <a href="#التثبيت-والتشغيل">التشغيل</a>
+  </p>
+</div>
+
+<hr />
+
+## 🌟 نبذة عن المشروع
+**نظام المقاييس والاختبارات المهنية** هو منصة ويب متطورة مبنية باستخدام إطار عمل Laravel. تهدف المنصة إلى توفير بيئة متكاملة للمؤسسات والأفراد لإدارة وإجراء المقاييس والاختبارات (النفسية، المهنية، وغيرها) بمرونة عالية، مع تقديم تقارير تفصيلية ورسومات بيانية تحليلية دقيقة للمستخدمين.
+
+## ✨ المميزات الرئيسية
+### 👨‍💼 لوحة تحكم الإدارة (Admin Dashboard)
+- **إدارة ديناميكية للمقاييس:** إضافة، تعديل، وحذف المقاييس بكل سهولة (اسم، وصف، صورة، مدة زمنية، سعر).
+- **بناء المقاييس بمرونة:** تقسيم المقياس إلى عدة أبعاد (Dimensions) وإضافة أسئلة لكل بعد مع تحديد خيارات الإجابات وأوزانها.
+- **التفسير الذكي للنتائج:** إضافة تفسيرات مخصصة لكل بعد بناءً على المستوى (مرتفع، متوسط، منخفض) وتحديد نقاط القوة وجوانب التطوير.
+- **نظام الكوبونات والتخفيضات:** إنشاء كوبونات خصم أو وصول مجاني للمقاييس وتحديد عدد الاستخدامات المسموحة وتواريخ الانتهاء.
+- **إحصائيات متقدمة:** واجهة رسومية توضح المبيعات، أعداد المستخدمين، المقاييس الأكثر استخداماً، وتحليلات تفصيلية للأداء.
+
+### 👤 بوابة المستخدم (User Portal)
+- **تصميم عصري (UI/UX):** واجهة مستخدم احترافية وسريعة الاستجابة على جميع الأجهزة (Mobile Friendly).
+- **التخزين المؤقت الذكي (Smart Caching):** أداء فائق السرعة عبر نظام Caching يعتمد على التحديث اللحظي للبيانات.
+- **إجراء المقاييس والتوقف المؤقت:** إمكانية بدء المقياس، التوقف في أي وقت، واستئناف الحل لاحقاً دون فقدان البيانات.
+- **نظام الدفع والكوبونات:** شاشة منبثقة (Modal) احترافية تتيح للمستخدم إدخال كوبون مجاني أو التوجه للدفع الإلكتروني للحصول على المقياس.
+- **تقارير نتائج احترافية:**
+  - عرض النتيجة النهائية كنسبة مئوية مع تقييم المستوى.
+  - رسم بياني شبكي (Radar Chart) ديناميكي يوضح درجات جميع الأبعاد بحلقات متدرجة.
+  - تحليل مفصل لنقاط القوة والضعف (Areas of Improvement) بناءً على درجات المستخدم.
+
+## 🛠️ التقنيات المستخدمة
+- **الواجهة الخلفية (Backend):** PHP 8.x, Laravel 11.x
+- **قواعد البيانات:** MySQL
+- **الواجهة الأمامية (Frontend):** Blade Templates, HTML5, CSS3, Vanilla JavaScript, Bootstrap 5
+- **الرسوم البيانية (Charts):** Chart.js
+- **الأيقونات (Icons):** Bootstrap Icons
+- **معايير الكود:** PSR-12, Laravel Pint (لضمان نظافة الكود Clean Code)
+
+## 🚀 التثبيت والتشغيل
+اتبع الخطوات التالية لتشغيل المشروع على بيئتك المحلية:
+
+1. **استنساخ المستودع (Clone):**
+   ```bash
+   git clone https://github.com/Ahmedsayed732004444/Examinations-Department.git
+   cd Examinations-Department
+   ```
+
+2. **تثبيت الحزم (Dependencies):**
+   ```bash
+   composer install
+   npm install
+   npm run build
+   ```
+
+3. **إعداد البيئة:**
+   قم بنسخ ملف `.env.example` إلى `.env` وقم بإعداد اتصال قاعدة البيانات الخاصة بك.
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+
+4. **تجهيز قاعدة البيانات (Migrations & Seeding):**
+   ```bash
+   php artisan migrate --seed
+   ```
+   *(ملاحظة: يقوم الـ Seeder بإضافة بيانات تجريبية وحسابات مدير لتتمكن من تجربة النظام فوراً)*
+
+5. **ربط مجلد الصور:**
+   ```bash
+   php artisan storage:link
+   ```
+
+6. **تشغيل الخادم المحلي:**
+   ```bash
+   php artisan serve
+   ```
+   يمكنك الآن زيارة الموقع عبر الرابط `http://localhost:8000`
+
+## 🔒 الصلاحيات والوصول
+- للوصول إلى لوحة الإدارة، يتم استخدام مسارات `admin/` المحمية بـ `AdminMiddleware`.
+- بوابة المستخدمين تعمل عبر المسارات الأساسية محمية بـ `UserMiddleware`.
+
+<hr />
+
+<div align="center">
+  <sub>تم تطوير هذا النظام باحترافية عالية لتقديم تجربة تقييم مميزة وسلسة.</sub>
+</div>
+````
+
+## File: resources/views/admin/assessments/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'إدارة المقاييس')
+@section('page-title', 'إدارة المقاييس')
+
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="text-muted small">إجمالي: {{ $assessments->total() }} مقياس</div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assessmentModal">
+        <i class="bi bi-plus-circle me-1"></i>إضافة مقياس جديد
+    </button>
+</div>
+
+<!-- Filter Section -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+        <form method="GET" action="{{ route('admin.assessments.index') }}" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">البحث</label>
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="ابحث باسم المقياس..." value="{{ request('search') }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">تصفية حسب المحور</label>
+                <select name="category" class="form-select form-select-sm">
+                    <option value="">جميع المحاور</option>
+                    <option value="مقاييس التوجيه والتوافق المهني" {{ request('category') == 'مقاييس التوجيه والتوافق المهني' ? 'selected' : '' }}>مقاييس التوجيه والتوافق المهني</option>
+                    <option value="الذات والشحصيه" {{ request('category') == 'الذات والشحصيه' ? 'selected' : '' }}>الذات والشخصية</option>
+                    <option value="الكفاءة الشخصية والنجاح المهني" {{ request('category') == 'الكفاءة الشخصية والنجاح المهني' ? 'selected' : '' }}>الكفاءة الشخصية والنجاح المهني</option>
+                    <option value="مقاييس الاتصال والعلاقات المهنية" {{ request('category') == 'مقاييس الاتصال والعلاقات المهنية' ? 'selected' : '' }}>مقاييس الاتصال والعلاقات المهنية</option>
+                    <option value="مقاييس الصحةاملهنية" {{ request('category') == 'مقاييس الصحةاملهنية' ? 'selected' : '' }}>مقاييس الصحة المهنية</option>
+                    <option value="مقاييس القيادة والإدارة" {{ request('category') == 'مقاييس القيادة والإدارة' ? 'selected' : '' }}>مقاييس القيادة والإدارة</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary btn-sm px-4">تصفية</button>
+                @if(request('search') || request('category'))
+                    <a href="{{ route('admin.assessments.index') }}" class="btn btn-outline-secondary btn-sm ms-2">إلغاء</a>
+                @endif
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>اسم المقياس</th>
+                    <th>المحور</th>
+                    <th>الأبعاد</th>
+                    <th>الأسئلة</th>
+                    <th>الوقت</th>
+                    <th>الحالة</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="assessments-tbody">
+                @forelse($assessments as $a)
+                <tr data-id="{{ $a->id }}">
+                    <td class="fw-medium">{{ $a->title_ar }}</td>
+                    <td class="text-muted small">{{ $a->category }}</td>
+                    <td>{{ $a->dimensions_count }}</td>
+                    <td>{{ $a->questions_count }}</td>
+                    <td>{{ $a->time_limit_min ? $a->time_limit_min.' د' : 'بلا حد' }}</td>
+                    <td>
+                        @if($a->is_active)
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">مفعّل</span>
+                        @else
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">موقوف</span>
+                        @endif
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-outline-secondary btn-toggle"
+                                    data-id="{{ $a->id }}"
+                                    data-url="{{ route('admin.assessments.toggle', $a->id) }}"
+                                    title="{{ $a->is_active ? 'إيقاف' : 'تفعيل' }}">
+                                <i class="bi {{ $a->is_active ? 'bi-pause-circle' : 'bi-play-circle' }}"></i>
+                            </button>
+                            <a href="{{ route('admin.assessments.show', $a->id) }}"
+                                class="btn btn-sm btn-outline-primary" title="عرض وتعديل المقياس">
+                                <i class="bi bi-list-ul"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger btn-delete"
+                                    data-id="{{ $a->id }}"
+                                    data-url="{{ route('admin.assessments.destroy', $a->id) }}"
+                                    data-name="{{ $a->title_ar }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="7" class="text-center text-muted py-4">لا توجد مقاييس بعد.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-transparent border-0">
+        {{ $assessments->links() }}
+    </div>
+</div>
+
+<!-- Assessment Modal -->
+<div class="modal fade" id="assessmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">إضافة مقياس جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="assessment-form-errors" class="alert alert-danger d-none"></div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">اسم المقياس *</label>
+                        <input type="text" class="form-control" id="f-title_ar" placeholder="مثال: مقياس معرفة الذات">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">العنوان الجذاب (وصف قصير)</label>
+                        <input type="text" class="form-control" id="f-subtitle_ar" placeholder="مثال: افهم ذاتك بعمق واكتشف نقاط قوتك">
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-medium">المحور / الفئة *</label>
+                        <input type="text" class="form-control" id="f-category"
+                               list="category-datalist"
+                               placeholder="اختر من القائمة أو اكتب مجالاً جديداً">
+                        <datalist id="category-datalist">
+                            <option value="مقاييس معرفة الذات والشخصية">
+                            <option value="مقاييس الكفاءة الشخصية والنجاح المهني">
+                            <option value="مقاييس الاتصال والعلاقات المهنية">
+                            <option value="مقاييس القيادة والإدارة">
+                            <option value="مقاييس التوجيه والتوافق المهني">
+                            <option value="مقاييس الصحة المهنية">
+                        </datalist>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            @foreach([
+                                'مقاييس معرفة الذات والشخصية',
+                                'مقاييس الكفاءة الشخصية والنجاح المهني',
+                                'مقاييس الاتصال والعلاقات المهنية',
+                                'مقاييس القيادة والإدارة',
+                                'مقاييس التوجيه والتوافق المهني',
+                                'مقاييس الصحة المهنية',
+                            ] as $cat)
+                            <span class="badge bg-light text-muted border small py-1 px-2"
+                                  style="cursor:pointer"
+                                  onclick="document.getElementById('f-category').value='{{ $cat }}'">
+                                {{ $cat }}
+                            </span>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">الوصف</label>
+                        <textarea class="form-control" id="f-description_ar" rows="2"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">صورة المقياس</label>
+                        <input type="file" class="form-control" id="f-image" accept="image/*">
+                        <div class="form-text" style="font-size:0.65rem;">اختياري: سيتم عرض صورة افتراضية إن لم تقم برفع صورة.</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">وقت الاختبار (دقائق)</label>
+                        <input type="number" class="form-control" id="f-time_limit_min" placeholder="بلا حد" min="1">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">سعر المقياس (ر.س)</label>
+                        <input type="number" class="form-control" id="f-price" placeholder="مثال: 149" step="0.01" min="0">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">التقييم الابتدائي (1-5)</label>
+                        <input type="number" class="form-control" id="f-rating" placeholder="مثال: 4.8" step="0.1" min="1" max="5">
+                    </div>
+                    <div class="col-12"><hr class="my-2"></div>
+                    <div class="col-12 text-primary fw-bold mb-0">بيانات التقرير المتقدمة (اختياري)</div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-medium">الشهادات الاحترافية المناسبة</label>
+                        <textarea class="form-control" id="f-certificates_ar" rows="2" placeholder="شهادة 1، شهادة 2..."></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-medium">البرامج التدريبية المقترحة</label>
+                        <textarea class="form-control" id="f-programs_ar" rows="2" placeholder="دورة 1، دورة 2..."></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-medium">خطة تطوير (30 يوماً)</label>
+                        <textarea class="form-control" id="f-plan_30_days_ar" rows="2" placeholder="الأسبوع 1: ..."></textarea>
+                    </div>
+                </div>
+
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-semibold mb-0">الأبعاد الفرعية</h6>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="btn-add-dimension">
+                        <i class="bi bi-plus-circle me-1"></i>إضافة بُعد
+                    </button>
+                </div>
+                <div id="dimensions-container"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="btn-save-assessment">
+                    <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ المقياس</span>
+                    <span class="spinner-border spinner-border-sm d-none"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+let dimIndex = 0;
+
+function addDimensionRow(name='', max='') {
+    const idx = dimIndex++;
+    $('#dimensions-container').append(`
+        <div class="row g-2 mb-2 dim-row" data-index="${idx}">
+            <div class="col-7">
+                <input type="text" class="form-control form-control-sm" placeholder="اسم البُعد مثلاً: الوعي بالذات"
+                    name="dim_name_${idx}" value="${name}">
+            </div>
+            <div class="col-3">
+                <input type="number" class="form-control form-control-sm" placeholder="الدرجة القصوى"
+                    name="dim_max_${idx}" value="${max}" min="1">
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-sm btn-outline-danger w-100 btn-remove-dim">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `);
+}
+
+// Init with one empty row
+addDimensionRow();
+
+$('#btn-add-dimension').on('click', () => addDimensionRow());
+
+$(document).on('click', '.btn-remove-dim', function() {
+    $(this).closest('.dim-row').remove();
+});
+
+$('#btn-save-assessment').on('click', function() {
+    const btn = $(this);
+    const dims = [];
+    let valid = true;
+
+    $('.dim-row').each(function() {
+        const idx = $(this).data('index');
+        const name = $(this).find(`[name=dim_name_${idx}]`).val().trim();
+        const max  = parseInt($(this).find(`[name=dim_max_${idx}]`).val());
+        if (name && max > 0) {
+            dims.push({ name_ar: name, max_score: max });
+        } else if (name || !isNaN(max)) {
+            valid = false;
+        }
+    });
+
+    if (!valid) {
+        showAlert('تأكد من ملء جميع بيانات الأبعاد بشكل صحيح.', 'warning');
+        return;
+    }
+
+    if (!$('#f-title_ar').val().trim() || !$('#f-category').val().trim()) {
+        showAlert('اسم المقياس والمحور مطلوبان.', 'warning');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('title_ar', $('#f-title_ar').val().trim());
+    formData.append('subtitle_ar', $('#f-subtitle_ar').val().trim());
+    formData.append('category', $('#f-category').val().trim());
+    
+    if ($('#f-description_ar').val().trim()) formData.append('description_ar', $('#f-description_ar').val().trim());
+    if ($('#f-time_limit_min').val()) formData.append('time_limit_min', $('#f-time_limit_min').val());
+    if ($('#f-price').val()) formData.append('price', $('#f-price').val());
+    if ($('#f-rating').val()) formData.append('rating', $('#f-rating').val());
+    if ($('#f-certificates_ar').val().trim()) formData.append('certificates_ar', $('#f-certificates_ar').val().trim());
+    if ($('#f-programs_ar').val().trim()) formData.append('programs_ar', $('#f-programs_ar').val().trim());
+    if ($('#f-plan_30_days_ar').val().trim()) formData.append('plan_30_days_ar', $('#f-plan_30_days_ar').val().trim());
+    
+    if ($('#f-image')[0].files.length > 0) {
+        formData.append('image', $('#f-image')[0].files[0]);
+    }
+
+    dims.forEach((d, i) => {
+        formData.append(`dimensions[${i}][name_ar]`, d.name_ar);
+        formData.append(`dimensions[${i}][max_score]`, d.max_score);
+    });
+
+    setLoading(btn, true);
+    $.ajax({
+        url: '{{ route('admin.assessments.store') }}',
+        method: 'POST',
+        processData: false,
+        contentType: false,
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: formData,
+        success: function(res) {
+            setLoading(btn, false);
+            bootstrap.Modal.getInstance($('#assessmentModal')).hide();
+            showAlert(res.message, 'success');
+            setTimeout(() => location.reload(), 1200);
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            const msg = xhr.responseJSON?.message || 'حدث خطأ، حاول مرة أخرى.';
+            showAlert(msg, 'danger');
+        }
+    });
+});
+
+// Toggle active
+$(document).on('click', '.btn-toggle', function() {
+    const btn = $(this);
+    const url = btn.data('url');
+    $.ajax({
+        url: url, method: 'POST',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        success: function(res) {
+            showAlert(res.message, 'success');
+            setTimeout(() => location.reload(), 800);
+        }
+    });
+});
+
+// Delete
+$(document).on('click', '.btn-delete', function() {
+    const url  = $(this).data('url');
+    const name = $(this).data('name');
+    confirmDelete(`هل تريد حذف مقياس "${name}"؟ سيتم حذف كل الأسئلة والجلسات المرتبطة به.`, url, () => {
+        location.reload();
+    });
+});
+</script>
+@endpush
+````
+
+## File: resources/views/admin/coupons/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'الكوبونات')
+@section('page-title', 'إدارة الكوبونات')
+
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-dark mb-0"><i class="bi bi-ticket-perforated me-2 text-primary"></i>الكوبونات</h2>
+    <a href="{{ route('admin.coupons.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i> إضافة كوبون
+    </a>
+</div>
+
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>اسم الكوبون</th>
+                        <th>رمز الكوبون</th>
+                        <th>الخصم المتدرج</th>
+                        <th class="text-center">الحد الأقصى</th>
+                        <th>النطاق</th>
+                        <th>الصلاحية</th>
+                        <th class="text-center">الحالة</th>
+                        <th class="text-center">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($coupons as $coupon)
+                    <tr>
+                        <td class="fw-bold">{{ $coupon->title }}</td>
+                        <td>
+                            <code class="bg-light border rounded px-2 py-1 text-dark small">{{ $coupon->code ?? '—' }}</code>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1 flex-wrap">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">{{ $coupon->discount_percentage }}%</span>
+                                @if($coupon->discount_percentage_2nd !== null)
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">{{ $coupon->discount_percentage_2nd }}%</span>
+                                @endif
+                                @if($coupon->discount_percentage_3rd !== null)
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill">{{ $coupon->discount_percentage_3rd }}%</span>
+                                @endif
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            @if($coupon->assessments_limit !== null)
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2">{{ $coupon->assessments_limit }}</span>
+                            @else
+                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2" title="غير محدود"><i class="bi bi-infinity"></i> غير محدود</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($coupon->applies_to_all_assessments)
+                                <span class="text-muted small"><i class="bi bi-globe2 me-1"></i>جميع المقاييس</span>
+                            @else
+                                <span class="text-muted small"><i class="bi bi-funnel me-1"></i>مقاييس محددة ({{ $coupon->assessments()->count() }})</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($coupon->expires_at)
+                                <span class="{{ $coupon->expires_at->isPast() ? 'text-danger' : 'text-success' }} small">
+                                    <i class="bi bi-calendar3 me-1"></i>{{ $coupon->expires_at->format('Y-m-d') }}
+                                </span>
+                            @else
+                                <span class="text-muted small"><i class="bi bi-infinity me-1"></i>مفتوح</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            @if($coupon->is_active && (!$coupon->expires_at || !$coupon->expires_at->isPast()))
+                                <span class="badge bg-success rounded-pill">نشط</span>
+                            @elseif($coupon->expires_at && $coupon->expires_at->isPast())
+                                <span class="badge bg-secondary rounded-pill">منتهي الصلاحية</span>
+                            @else
+                                <span class="badge bg-danger rounded-pill">متوقف</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ route('admin.coupons.edit', $coupon) }}" class="btn btn-sm btn-outline-primary me-1" title="تعديل">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form action="{{ route('admin.coupons.destroy', $coupon) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا الكوبون؟');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-5">
+                            <i class="bi bi-ticket display-4 d-block mb-3 text-secondary"></i>
+                            لا توجد كوبونات مضافة بعد.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if($coupons->hasPages())
+            <div class="p-3 border-top">
+                {{ $coupons->links() }}
+            </div>
+        @endif
+    </div>
+</div>
+@endsection
+````
+
+## File: resources/views/admin/settings/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'إعدادات الإحصائيات')
+
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h3 text-gray-800 fw-bold">إعدادات الإحصائيات</h2>
+</div>
+
+<div class="card shadow border-0 rounded-4 mb-4">
+    <div class="card-body p-4">
+        <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
+
+            <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-graph-up me-2"></i> إحصائيات لوحة تحكم المستخدم</h5>
+            
+            <div class="mb-4 bg-light p-3 rounded border">
+                <label class="form-label fw-bold mb-3">طريقة عرض الإحصائيات (في الرئيسية)</label>
+                <div class="d-flex gap-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="stats_mode" id="modeManual" value="manual" {{ ($settings['stats_mode'] ?? 'manual') == 'manual' ? 'checked' : '' }}>
+                        <label class="form-check-label fw-medium" for="modeManual">
+                            أرقام يدوية (تسويقية)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="stats_mode" id="modeAuto" value="auto" {{ ($settings['stats_mode'] ?? 'manual') == 'auto' ? 'checked' : '' }}>
+                        <label class="form-check-label fw-medium text-primary" for="modeAuto">
+                            أرقام تلقائية (حقيقية من قاعدة البيانات)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">مستخدم من الأفراد والجهات</label>
+                    <input type="text" name="stat_users" class="form-control mb-2" value="{{ old('stat_users', $settings['stat_users'] ?? '25,000+') }}" required>
+                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
+                    @if(isset($settings['stat_users_icon']) && $settings['stat_users_icon'])
+                        <img src="{{ asset($settings['stat_users_icon']) }}" class="mb-1 d-block" height="30">
+                    @endif
+                    <input type="file" name="stat_users_icon" class="form-control form-control-sm" accept="image/*">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">اختبار ومقياس تم إنجازه</label>
+                    <input type="text" name="stat_exams" class="form-control mb-2" value="{{ old('stat_exams', $settings['stat_exams'] ?? '10,000+') }}" required>
+                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
+                    @if(isset($settings['stat_exams_icon']) && $settings['stat_exams_icon'])
+                        <img src="{{ asset($settings['stat_exams_icon']) }}" class="mb-1 d-block" height="30">
+                    @endif
+                    <input type="file" name="stat_exams_icon" class="form-control form-control-sm" accept="image/*">
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">مقياس مهني وشخصي معتمد</label>
+                    <input type="text" name="stat_assessments" class="form-control mb-2" value="{{ old('stat_assessments', $settings['stat_assessments'] ?? '150+') }}" required>
+                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
+                    @if(isset($settings['stat_assessments_icon']) && $settings['stat_assessments_icon'])
+                        <img src="{{ asset($settings['stat_assessments_icon']) }}" class="mb-1 d-block" height="30">
+                    @endif
+                    <input type="file" name="stat_assessments_icon" class="form-control form-control-sm" accept="image/*">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">مجال ومهارة مختلفة</label>
+                    <input type="text" name="stat_fields" class="form-control mb-2" value="{{ old('stat_fields', $settings['stat_fields'] ?? '50+') }}" required>
+                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
+                    @if(isset($settings['stat_fields_icon']) && $settings['stat_fields_icon'])
+                        <img src="{{ asset($settings['stat_fields_icon']) }}" class="mb-1 d-block" height="30">
+                    @endif
+                    <input type="file" name="stat_fields_icon" class="form-control form-control-sm" accept="image/*">
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary px-4 py-2 fw-bold">
+                    <i class="bi bi-save me-1"></i> حفظ التعديلات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
+````
+
+## File: resources/views/auth/register.blade.php
+````php
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء حساب — دار الرؤى</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+</head>
+<body class="bg-light d-flex align-items-center min-vh-100">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+            <div class="text-center mb-4">
+                <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 70px; margin-bottom: 10px;">
+                <p class="text-muted">نظام مقاييس التميز الشخصي</p>
+            </div>
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4 fw-semibold">تسجيل حساب جديد</h5>
+
+                    @if($errors->any())
+                        <div class="alert alert-danger py-2">
+                            <ul class="mb-0 small">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('register.post') }}">
+                        @csrf
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">الاسم الكامل</label>
+                            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
+                                value="{{ old('name') }}" placeholder="الاسم الكامل" required autofocus>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">البريد الإلكتروني</label>
+                            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
+                                value="{{ old('email') }}" placeholder="example@email.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">رقم الجوال</label>
+                            <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
+                                value="{{ old('phone') }}" placeholder="05xxxxxxxx" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">رقم الهوية الوطنية / الإقامة</label>
+                            <input type="text" name="national_id" class="form-control @error('national_id') is-invalid @enderror"
+                                value="{{ old('national_id') }}" placeholder="1xxxxxxxxx" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">النوع</label>
+                            <select name="gender" class="form-control @error('gender') is-invalid @enderror" required>
+                                <option value="" disabled {{ old('gender') ? '' : 'selected' }}>اختر النوع</option>
+                                <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>ذكر</option>
+                                <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>أنثى</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">المؤهل</label>
+                            <input type="text" name="qualification" class="form-control @error('qualification') is-invalid @enderror"
+                                value="{{ old('qualification') }}" placeholder="مثال: بكالوريوس" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">الجنسية</label>
+                            <input type="text" name="nationality" class="form-control @error('nationality') is-invalid @enderror"
+                                value="{{ old('nationality') }}" placeholder="مثال: سعودي" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">كلمة المرور</label>
+                            <input type="password" name="password" class="form-control" placeholder="8 أحرف على الأقل" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-medium">تأكيد كلمة المرور</label>
+                            <input type="password" name="password_confirmation" class="form-control" placeholder="أعد كتابة كلمة المرور" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-person-plus me-1"></i>إنشاء الحساب
+                        </button>
+                    </form>
+                    <hr>
+                    <div class="text-center small">
+                        لديك حساب بالفعل؟
+                        <a href="{{ route('login') }}" class="text-primary text-decoration-none fw-medium">سجّل دخولك</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+````
+
+## File: resources/views/user/exam.blade.php
+````php
+@extends('layouts.user')
+@section('title', $assessment->title_ar)
+
+@push('styles')
+<style>
+/* ── Layout ── */
+.exam-wrapper {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+}
+
+/* ── Intro Card ── */
+#intro-card {
+    border: 0;
+    border-radius: 24px;
+    background: #ffffff;
+    box-shadow: 0 20px 60px -10px rgba(26, 43, 86, 0.12);
+    overflow: hidden;
+}
+
+.intro-header {
+    background: linear-gradient(135deg, #1a2b56 0%, #2d4a8a 60%, #1e3a7e 100%);
+    padding: 48px 40px 56px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.intro-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+}
+
+.intro-header::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -40px;
+    width: 250px; height: 250px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+}
+
+.intro-icon-wrap {
+    width: 90px; height: 90px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    backdrop-filter: blur(4px);
+    border: 2px solid rgba(255,255,255,0.2);
+    position: relative; z-index: 1;
+}
+
+.intro-title {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.3;
+    position: relative; z-index: 1;
+}
+
+.intro-subtitle {
+    color: rgba(255,255,255,0.75);
+    font-size: 0.95rem;
+    margin: 10px 0 0;
+    position: relative; z-index: 1;
+}
+
+.intro-body {
+    padding: 40px;
+}
+
+/* Chips in header */
+.intro-chips {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    position: relative;
+    z-index: 1;
+}
+
+.intro-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.92);
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+
+.intro-chip i { font-size: 0.8rem; }
+
+/* Guidelines box */
+.intro-guidelines {
+    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+    border: 1px solid #bfdbfe;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 32px;
+}
+
+.intro-guidelines-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a2b56;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.guideline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: #334155;
+    line-height: 1.6;
+}
+
+.guideline-item:last-child { margin-bottom: 0; }
+
+.guideline-dot {
+    width: 28px; height: 28px;
+    background: #1a2b56;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 1px;
+}
+
+/* Start button */
+.btn-start {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px 32px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fff;
+    border: 0;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 8px 24px -4px rgba(245, 158, 11, 0.4);
+    letter-spacing: 0.01em;
+}
+
+.btn-start:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px -4px rgba(245, 158, 11, 0.5);
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #fff;
+}
+
+.btn-start:active {
+    transform: translateY(0);
+}
+
+/* ── Progress ── */
+.progress-container { width: 100%; max-width: 250px; }
+.progress-track { height: 8px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
+.progress-fill {
+    height: 100%; border-radius: 999px;
+    background: #1a2b56;
+    transition: width .4s ease;
+}
+
+/* ── Options ── */
+.option-card {
+    cursor: pointer;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    transition: all .2s ease;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1rem;
+}
+.option-card:hover { border-color: #cbd5e1; background: #f8fafc; }
+.option-card.selected { border-color: #f59e0b; background: #fffbeb; }
+.option-card input[type=radio] { display: none; }
+
+.custom-radio {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    display: flex; align-items: center; justify-content: center;
+    margin-left: 15px;
+    transition: all .2s;
+    flex-shrink: 0;
+}
+.custom-radio::after {
+    content: '';
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #f59e0b;
+    transform: scale(0);
+    transition: transform .2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.option-card.selected .custom-radio { border-color: #f59e0b; }
+.option-card.selected .custom-radio::after { transform: scale(1); }
+
+.option-text {
+    flex-grow: 1;
+    font-size: 1.1rem;
+    color: #334155;
+    font-weight: 500;
+}
+.option-card.selected .option-text { color: #1a2b56; font-weight: 700; }
+
+/* ── Question card ── */
+#question-card {
+    border-radius: 20px; border: 0;
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+    padding: 40px;
+}
+
+/* ── Buttons ── */
+#btn-next {
+    background: #f59e0b;
+    color: #fff;
+    border: 0; border-radius: 8px; padding: .6rem 2.5rem;
+    font-weight: 700; font-size: 1rem;
+    transition: all .2s;
+}
+#btn-next:not(:disabled):hover { background: #d97706; transform: translateY(-1px); }
+#btn-next:disabled { opacity: .5; cursor: not-allowed; }
+
+.btn-prev {
+    color: #1a2b56; font-weight: 700; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+.btn-prev:hover { color: #0d6efd; }
+.btn-prev:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.timer-footer { font-size: 0.85rem; color: #64748b; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .intro-header { padding: 32px 20px 40px; }
+    .intro-body { padding: 24px 20px; }
+    .intro-title { font-size: 1.45rem; }
+    .intro-icon-wrap { width: 70px; height: 70px; }
+}
+
+@media (max-width: 576px) {
+    .exam-wrapper { padding: 0 0 24px; }
+    #intro-card { border-radius: 0 0 20px 20px; }
+    .intro-header { padding: 24px 16px 32px; }
+    .intro-body { padding: 18px 16px 24px; }
+    .intro-title { font-size: 1.2rem; }
+    .intro-icon-wrap { width: 56px; height: 56px; margin-bottom: 12px; }
+    .intro-chip { font-size: 0.72rem; padding: 4px 10px; }
+    .intro-guidelines { padding: 14px; }
+    .guideline-item { font-size: 0.85rem; }
+    .guideline-dot { width: 24px; height: 24px; font-size: 0.7rem; }
+    .btn-start { font-size: 0.95rem; padding: 14px 20px; }
+    #question-card { padding: 16px 12px; border-radius: 0; }
+    .header-desktop { display: none !important; }
+    .header-mobile { display: flex !important; }
+    .option-card { padding: 0.75rem 1rem; margin-bottom: 0.5rem; }
+    .option-text { font-size: 0.9rem; }
+    #question-text { font-size: 1.1rem; }
+    .alert { padding: 0.5rem 0.8rem; font-size: 0.82rem; }
+}
+</style>
+@endpush
+
+@section('content')
+<div class="exam-wrapper">
+
+    @if($progress['current'] == 1)
+    <div id="intro-card">
+
+        {{-- Coloured Header --}}
+        <div class="intro-header">
+            <div class="intro-icon-wrap">
+                <i class="bi bi-journal-text" style="font-size: 2rem; color: #fff;"></i>
+            </div>
+            <h1 class="intro-title">{{ $assessment->title_ar }}</h1>
+            @if($assessment->subtitle_ar)
+                <p class="intro-subtitle">{{ $assessment->subtitle_ar }}</p>
+            @endif
+
+            {{-- Small chips: questions count + time --}}
+            <div class="intro-chips">
+                <span class="intro-chip">
+                    <i class="bi bi-list-check"></i>
+                    {{ $progress['total'] }} سؤال
+                </span>
+                @if($assessment->time_limit_min)
+                <span class="intro-chip">
+                    <i class="bi bi-clock"></i>
+                    {{ $assessment->time_limit_min }} دقيقة
+                </span>
+                @endif
+                @if($assessment->category)
+                <span class="intro-chip">
+                    <i class="bi bi-tag"></i>
+                    {{ $assessment->category }}
+                </span>
+                @endif
+            </div>
+        </div>
+
+        {{-- Body --}}
+        <div class="intro-body">
+
+            {{-- Guidelines --}}
+            <div class="intro-guidelines">
+                <div class="intro-guidelines-title">
+                    <i class="bi bi-shield-check text-primary"></i>
+                    توجيهات هامة قبل البدء
+                </div>
+                <div class="guideline-item">
+                    <div class="guideline-dot">١</div>
+                    <span>كن صادقًا مع نفسك في إجاباتك؛ فكلما كانت إجاباتك أكثر دقة وواقعية، كانت نتائج المقياس أكثر فائدة لك.</span>
+                </div>
+                <div class="guideline-item">
+                    <div class="guideline-dot">٢</div>
+                    <span>لا توجد إجابات صحيحة أو خاطئة؛ صدقك مع نفسك هو مفتاح الحصول على نتائج تعكس واقعك وتفيدك حقًا.</span>
+                </div>
+                <div class="guideline-item">
+                    <div class="guideline-dot">٣</div>
+                    <span>اقرأ كل عبارة بعناية، ثم اختر الإجابة التي تعبر عنك فعلاً دون تفكير مبالغ فيه.</span>
+                </div>
+            </div>
+
+            {{-- Start Button --}}
+            <button type="button" class="btn-start" id="btn-start-exam">
+                <span>فهمت ذلك، ابدأ المقياس</span>
+                <i class="bi bi-arrow-left"></i>
+            </button>
+
+        </div>
+    </div>
+    @endif
+
+    <div class="card" id="question-card" style="{{ $progress['current'] == 1 ? 'display: none;' : '' }}">
+        {{-- Header Desktop --}}
+        <div class="d-none d-sm-flex justify-content-between align-items-start mb-5 header-desktop">
+            <div class="progress-container mt-2">
+                <div class="d-flex justify-content-between small text-muted mb-2">
+                    <span id="q-pct" class="fw-bold text-dark">{{ $progress['percentage'] }}%</span>
+                    <span>السؤال <strong id="q-current">{{ $progress['current'] }}</strong> من <strong>{{ $progress['total'] }}</strong></span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-bar" style="width:{{ $progress['percentage'] }}%"></div>
+                </div>
+            </div>
+
+            <div class="text-end">
+                <h4 class="fw-bold mb-1" style="color: #1a2b56;">{{ $assessment->title_ar }}</h4>
+            </div>
+
+        </div>
+
+        {{-- Header Mobile --}}
+        <div class="d-flex d-sm-none flex-column mb-3 header-mobile">
+            <div class="text-center mb-3">
+                <h6 class="fw-bold mb-1" style="color: #1a2b56;">{{ $assessment->title_ar }}</h6>
+            </div>
+
+            <div class="progress-container w-100 mx-auto" style="max-width: 100%;">
+                <div class="d-flex justify-content-between text-muted mb-1" style="font-size: 0.8rem;">
+                    <span id="q-pct-mobile" class="fw-bold text-dark">{{ $progress['percentage'] }}%</span>
+                    <span>السؤال <strong id="q-current-mobile">{{ $progress['current'] }}</strong> من <strong>{{ $progress['total'] }}</strong></span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-bar-mobile" style="width:{{ $progress['percentage'] }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Question Text --}}
+        <h3 class="text-center fw-bold mb-1 mt-4" id="question-text" style="color: #1a2b56;">{{ $nextQuestion->text_ar }}</h3>
+        <p class="text-center text-muted small mb-4" style="font-size: 0.8rem;">اختر الإجابة التي تعبر عن رأيك بدقة</p>
+
+        {{-- Options --}}
+        <div class="d-flex flex-column" id="options-container">
+            @foreach($nextQuestion->answerOptions as $i => $option)
+            <label class="option-card" data-option-id="{{ $option->id }}">
+                <input type="radio" name="selected_option" value="{{ $option->id }}">
+                <div class="custom-radio"></div>
+                <span class="option-text">{{ $option->label_ar }}</span>
+                @if(str_contains($option->label_ar, 'نعم') || str_contains($option->label_ar, 'أوافق'))
+                    <span class="fs-4 ms-2">👍</span>
+                @elseif(str_contains($option->label_ar, 'لا') || str_contains($option->label_ar, 'أرفض'))
+                    <span class="fs-4 ms-2">👎</span>
+                @elseif(str_contains($option->label_ar, 'حد ما') || str_contains($option->label_ar, 'محايد'))
+                    <span class="fs-4 ms-2">😐</span>
+                @endif
+            </label>
+            @endforeach
+        </div>
+
+        {{-- Error Banner --}}
+        <div id="error-banner" class="alert alert-danger py-2 mt-3 d-none text-center" role="alert">
+            <i class="bi bi-wifi-off me-1"></i>مشكلة في الاتصال.
+            <button class="btn btn-sm btn-danger ms-2" id="btn-retry">إعادة المحاولة</button>
+        </div>
+
+        {{-- Bottom Actions --}}
+        <div class="mt-4 d-flex justify-content-between align-items-center">
+            <button type="button" class="btn-prev" id="btn-prev" style="{{ $progress['current'] > 1 ? '' : 'visibility: hidden;' }}">
+                <i class="bi bi-arrow-right"></i> السابق
+            </button>
+            
+            <button type="button" class="btn ms-auto" id="btn-next" disabled>
+                <span id="btn-text">التالي <i class="bi bi-chevron-left ms-1" style="font-size: 0.8em;"></i></span>
+                <span id="btn-spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+            </button>
+        </div>
+
+        {{-- Footer Info --}}
+        <div class="text-center mt-5 timer-footer d-flex justify-content-center align-items-center gap-2">
+            @if($assessment->time_limit_min)
+                <span><i class="bi bi-stopwatch"></i> الوقت المتبقي: <span id="timer-text">{{ sprintf('%02d:%02d', $assessment->time_limit_min, 0) }}</span></span>
+                <span class="text-muted">|</span>
+            @endif
+            <span>تبقى <span id="q-remaining">{{ $progress['total'] - $progress['current'] }}</span> سؤال</span>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+const SESSION_ID  = '{{ $session->id }}';
+const ANSWER_URL  = '{{ route('exam.answer', $session->id) }}';
+const PREV_URL    = '{{ route('exam.previous', $session->id) }}';
+const CSRF        = $('meta[name="csrf-token"]').attr('content');
+const TIME_LIMIT  = {{ $assessment->time_limit_min ?? 'null' }};
+const TOTAL_Q     = {{ $progress['total'] }};
+const OPTION_LETTERS = ['أ','ب','ج','د','هـ','و','ز','ح'];
+
+let currentQuestion = {
+    id:             '{{ $nextQuestion->id }}',
+    text_ar:        {!! Js::from($nextQuestion->text_ar) !!},
+    is_reversed:    {{ $nextQuestion->is_reversed ? 'true' : 'false' }},
+    dimension_name: {!! Js::from($nextQuestion->dimension?->name_ar) !!},
+    options:        {!! json_encode($nextQuestion->answerOptions->map(fn($o) => ['id' => $o->id, 'label_ar' => $o->label_ar])) !!}
+};
+
+let selectedOptionId = null;
+let pendingAnswer    = null;
+let timerInterval    = null;
+let timeLeft         = TIME_LIMIT ? TIME_LIMIT * 60 : 0;
+const LS_KEY         = `exam_${SESSION_ID}`;
+
+/* ── Timer ── */
+let timerStarted = false;
+function startTimer() {
+    if (TIME_LIMIT && !timerStarted) {
+        timerStarted = true;
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            const m = String(Math.floor(timeLeft / 60)).padStart(2,'0');
+            const s = String(timeLeft % 60).padStart(2,'0');
+            $('#timer-text').text(`${m}:${s}`);
+            if (timeLeft <= 0) { clearInterval(timerInterval); submitCurrent(true); }
+        }, 1000);
+    }
+}
+
+if ($('#intro-card').length === 0) {
+    startTimer();
+}
+
+$('#btn-start-exam').on('click', function() {
+    $('#intro-card').fadeOut(250, function() {
+        $('#question-card').fadeIn(250);
+        startTimer();
+    });
+});
+
+/* ── Option selection ── */
+$(document).on('click', '.option-card', function () {
+    $('.option-card').removeClass('selected');
+    $('.option-card').find('input[type=radio]').prop('checked', false);
+    
+    $(this).addClass('selected');
+    $(this).find('input[type=radio]').prop('checked', true);
+    
+    selectedOptionId = $(this).data('option-id');
+    $('#btn-next').prop('disabled', false);
+});
+
+/* ── Next / Prev ── */
+$('#btn-next').on('click', function () { if (selectedOptionId) submitCurrent(false); });
+$('#btn-retry').on('click', function () {
+    if (pendingAnswer) { $('#error-banner').addClass('d-none'); doSubmit(pendingAnswer.qId, pendingAnswer.optId); }
+});
+
+$('#btn-prev').on('click', function () {
+    $(this).prop('disabled', true);
+    $.ajax({
+        url: PREV_URL, method: 'POST',
+        headers: { 'X-CSRF-TOKEN': CSRF },
+        success(res) {
+            updateProgressAndLoadQuestion(res);
+            $('#btn-prev').prop('disabled', false);
+        },
+        error() {
+            $('#btn-prev').prop('disabled', false);
+            alert('حدث خطأ أثناء العودة للسؤال السابق.');
+        }
+    });
+});
+
+function submitCurrent(isTimeout) {
+    const qId  = currentQuestion.id;
+    const optId = isTimeout ? (selectedOptionId || currentQuestion.options[0].id) : selectedOptionId;
+    pendingAnswer = { qId, optId };
+    try { const d = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); d[qId]=optId; localStorage.setItem(LS_KEY,JSON.stringify(d)); } catch(e){}
+    doSubmit(qId, optId);
+}
+
+function doSubmit(qId, optId) {
+    $('#btn-next').prop('disabled', true);
+    $('#btn-text').addClass('d-none');
+    $('#btn-spinner').removeClass('d-none');
+    $.ajax({
+        url: ANSWER_URL, method: 'POST', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': CSRF },
+        data: JSON.stringify({ question_id: qId, selected_option_id: optId }),
+        success(res) {
+            $('#btn-spinner').addClass('d-none'); $('#btn-text').removeClass('d-none');
+            updateProgressAndLoadQuestion(res);
+        },
+        error() {
+            $('#btn-spinner').addClass('d-none'); $('#btn-text').removeClass('d-none');
+            $('#btn-next').prop('disabled', false);
+            $('#error-banner').removeClass('d-none');
+        }
+    });
+}
+
+function updateProgressAndLoadQuestion(res) {
+    if (res.is_last) {
+        clearInterval(timerInterval);
+        localStorage.removeItem(LS_KEY);
+        window.location.href = res.redirect;
+        return;
+    }
+    // Update progress
+    const p = res.progress;
+    $('#progress-bar, #progress-bar-mobile').css('width', p.percentage + '%');
+    $('#q-current, #q-current-mobile').text(p.current);
+    $('#q-pct, #q-pct-mobile').text(p.percentage + '%');
+    $('#q-remaining').text(p.total - p.current);
+    
+    // Toggle Prev Button
+    if (p.current > 1) {
+        $('#btn-prev').css('visibility', 'visible');
+    } else {
+        $('#btn-prev').css('visibility', 'hidden');
+    }
+    
+    // Load next
+    currentQuestion = res.next_question;
+    selectedOptionId = null;
+    loadQuestion(res.next_question);
+}
+
+function loadQuestion(q) {
+    // Dimension badge (if any)
+    if (q.dimension_name) {
+        $('#dim-name').text(q.dimension_name);
+        $('#dim-badge, #dim-badge-wrapper').removeClass('d-none');
+    } else {
+        $('#dim-badge, #dim-badge-wrapper').addClass('d-none');
+    }
+    // Reversed notice
+    q.is_reversed ? $('#reversed-notice').removeClass('d-none') : $('#reversed-notice').addClass('d-none');
+    // Question text
+    $('#question-text').text(q.text_ar);
+    // Options
+    let html = '';
+    q.options.forEach((opt) => {
+        let emoji = '';
+        if(opt.label_ar.includes('نعم') || opt.label_ar.includes('أوافق')) emoji = '👍';
+        else if(opt.label_ar.includes('لا') || opt.label_ar.includes('أرفض')) emoji = '👎';
+        else if(opt.label_ar.includes('حد ما') || opt.label_ar.includes('محايد')) emoji = '😐';
+        
+        let emojiHtml = emoji ? `<span class="fs-4 ms-2">${emoji}</span>` : '';
+        
+        html += `<label class="option-card" data-option-id="${opt.id}">
+            <input type="radio" name="selected_option" value="${opt.id}">
+            <div class="custom-radio"></div>
+            <span class="option-text">${opt.label_ar}</span>
+            ${emojiHtml}
+        </label>`;
+    });
+    $('#options-container').html(html);
+    $('#btn-next').prop('disabled', true);
+    $('#error-banner').addClass('d-none');
+    pendingAnswer = null;
+    // Animate
+    $('#question-card').css('opacity', 0).animate({ opacity: 1 }, 280);
+}
+</script>
+@endpush
+````
+
+## File: start-container.sh
+````bash
+#!/bin/bash
+
+set -e
+
+if [ "$IS_LARAVEL" = "true" ]; then
+  # Clear any cached configurations, routes, and views created during build-time
+  # so that migrations and runtime queries read the correct environment variables.
+  # We avoid 'optimize:clear' because it triggers 'cache:clear', which fails if the
+  # database connection is not yet established (when using a database cache store).
+  echo "Clearing cached configurations, routes, and views..."
+  php artisan config:clear
+  php artisan route:clear
+  php artisan view:clear
+
+  if [ "$RAILPACK_SKIP_MIGRATIONS" != "true" ]; then
+    echo "Running migrations..."
+    php artisan migrate --force
+
+    echo "Checking if database needs seeding..."
+    if [ -f "check-seed.php" ]; then
+      ASSESSMENT_COUNT=$(php check-seed.php 2>/dev/null || echo "0")
+      if [ "$ASSESSMENT_COUNT" = "0" ]; then
+        echo "Assessments table is empty. Running database seeders..."
+        php artisan db:seed --force
+      else
+        echo "Assessments table already has $ASSESSMENT_COUNT records. Skipping seeding."
+      fi
+    else
+      echo "check-seed.php not found, running database seeders..."
+      php artisan db:seed --force
+    fi
+  fi
+
+  php artisan storage:link
+fi
+
+# Start the FrankenPHP server
+docker-php-entrypoint --config /Caddyfile --adapter caddyfile 2>&1
+````
 
 ## File: app/Http/Controllers/Admin/CouponController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -9237,10 +13797,10 @@ class CouponController extends Controller
         return redirect()->route('admin.coupons.index')->with('success', 'تم حذف الكوبون بنجاح');
     }
 }
-```
+````
 
 ## File: app/Http/Requests/Admin/StoreRecommendationRequest.php
-```php
+````php
 <?php
 
 namespace App\Http\Requests\Admin;
@@ -9282,10 +13842,10 @@ class StoreRecommendationRequest extends FormRequest
         ];
     }
 }
-```
+````
 
 ## File: app/Models/Coupon.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -9393,10 +13953,10 @@ class Coupon extends Model
         return $this->belongsToMany(User::class, 'coupon_permitted_user');
     }
 }
-```
+````
 
 ## File: app/Models/Recommendation.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -9433,10 +13993,10 @@ class Recommendation extends Model
         'plan_30_days_ar' => 'array',
     ];
 }
-```
+````
 
 ## File: app/Models/User.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -9553,10 +14113,10 @@ class User extends Authenticatable
         return $this->belongsToMany(Coupon::class, 'coupon_permitted_user');
     }
 }
-```
+````
 
 ## File: app/Repositories/AssessmentRepository.php
-```php
+````php
 <?php
 
 namespace App\Repositories;
@@ -9621,10 +14181,10 @@ class AssessmentRepository implements AssessmentRepositoryInterface
         return $assessment->fresh();
     }
 }
-```
+````
 
 ## File: app/Services/CouponService.php
-```php
+````php
 <?php
 
 namespace App\Services;
@@ -9779,10 +14339,10 @@ class CouponService
             ->count();
     }
 }
-```
+````
 
 ## File: app/Services/Result/RecommendationSelector.php
-```php
+````php
 <?php
 
 namespace App\Services\Result;
@@ -9929,10 +14489,10 @@ class RecommendationSelector
         return null;
     }
 }
-```
+````
 
 ## File: database/migrations/2024_01_01_000002_create_assessments_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -9961,10 +14521,10 @@ return new class extends Migration
         Schema::dropIfExists('assessments');
     }
 };
-```
+````
 
 ## File: database/migrations/2024_01_01_000008_create_results_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -9991,10 +14551,10 @@ return new class extends Migration
         Schema::dropIfExists('results');
     }
 };
-```
+````
 
 ## File: database/migrations/2024_01_01_000009_create_dimension_scores_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -10021,10 +14581,10 @@ return new class extends Migration
         Schema::dropIfExists('dimension_scores');
     }
 };
-```
+````
 
 ## File: database/migrations/2026_06_24_091932_create_dimension_interpretations_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -10053,10 +14613,10 @@ return new class extends Migration
         Schema::dropIfExists('dimension_interpretations');
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_01_154805_create_coupons_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -10099,104 +14659,700 @@ return new class extends Migration
         Schema::dropIfExists('coupons');
     }
 };
-```
+````
 
-## File: app/Http/Controllers/AuthController.php
-```php
-<?php
+## File: resources/views/admin/coupons/create.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'إضافة كوبون')
+@section('page-title', 'إدارة الكوبونات')
 
-namespace App\Http\Controllers;
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-dark mb-0">إضافة كوبون جديد</h2>
+    <a href="{{ route('admin.coupons.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-right"></i> عودة
+    </a>
+</div>
 
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
+@if($errors->any())
+    <div class="alert alert-danger mb-4">
+        <ul class="mb-0 small">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
-class AuthController extends Controller
-{
-    public function showLogin()
-    {
-        return response()
-            ->view('auth.login')
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        <form action="{{ route('admin.coupons.store') }}" method="POST" id="coupon-form">
+            @csrf
+
+            {{-- Basic Info --}}
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label for="title" class="form-label fw-semibold">اسم الكوبون <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ old('title') }}" required placeholder="مثال: مبادرة التميز">
+                    <div class="form-text">يظهر هذا الاسم للمستخدم عند التحقق من الكوبون.</div>
+                </div>
+                <div class="col-md-6">
+                    <label for="code" class="form-label fw-semibold">رمز الكوبون <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control text-start" dir="ltr" id="code" name="code" value="{{ old('code') }}" required placeholder="مثال: PROMO100">
+                    <div class="form-text">الرمز الذي يدخله المستخدم. يجب أن يكون فريداً.</div>
+                </div>
+            </div>
+
+            {{-- STEP 1: عدد مرات الاستخدام - يؤثر على حقول الخصم --}}
+            <div class="card border-warning border-opacity-50 mb-4" style="background: #fffdf0;">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h6 class="fw-bold mb-0 text-warning-emphasis">
+                        <i class="bi bi-1-circle-fill me-2 text-warning"></i>
+                        الخطوة الأولى: حدد عدد مرات الاستخدام المسموحة لكل مستخدم (اختياري)
+                    </h6>
+                    <div class="text-muted small mt-1">اتركه فارغاً إذا كنت تريد استخداماً غير محدود بنفس نسبة الخصم.</div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-5">
+                            <label for="assessments_limit" class="form-label fw-semibold">
+                                عدد مرات الاستخدام
+                            </label>
+                            <input type="number"
+                                   class="form-control form-control-lg fw-bold text-center"
+                                   id="assessments_limit"
+                                   name="assessments_limit"
+                                   value="{{ old('assessments_limit') }}"
+                                   min="1" max="10"
+                                   placeholder="اتركه فارغاً لعدد غير محدود"
+                                   oninput="renderDiscountFields(this.value)">
+                            <div class="form-text">اتركه فارغاً للاستخدام غير المحدود، أو حدد عدداً (1-10) لخصم متدرج.</div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="p-3 rounded border bg-light text-muted small">
+                                <i class="bi bi-info-circle me-1 text-primary"></i>
+                                <strong>غير محدود:</strong> اترك الحقل فارغاً ليستفيد المستخدم من نسبة الخصم دائماً بدون حد أقصى.<br>
+                                <strong>محدد:</strong> أدخل عدداً (مثال: 3) لربط الكوبون بتدرج خصم محدد بعدد المرات.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- STEP 2: نسب الخصم - تظهر ديناميكياً --}}
+            <div class="card border-primary border-opacity-25 mb-4" style="background: #f0f4ff;">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h6 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-2-circle-fill me-2 text-primary"></i>
+                        الخطوة الثانية: حدد نسبة الخصم لكل مرة استخدام
+                    </h6>
+                    <div class="text-muted small mt-1">حدد خصماً مختلفاً لكل مرة استخدام. مثال: الأولى 100%، الثانية 50%، الثالثة 10%</div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="row g-3" id="discount-fields-container">
+                        {{-- تُنشأ ديناميكياً بالـ JavaScript --}}
+                    </div>
+
+                    {{-- معاينة حية --}}
+                    <div id="discount-preview" class="mt-3 p-3 bg-white rounded border d-none">
+                        <div class="text-muted small fw-semibold mb-2">
+                            <i class="bi bi-eye me-1 text-primary"></i>معاينة التدرج:
+                        </div>
+                        <div id="preview-content" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Expiry --}}
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label for="expires_at" class="form-label fw-semibold">تاريخ انتهاء الصلاحية</label>
+                    <input type="date" class="form-control" id="expires_at" name="expires_at" value="{{ old('expires_at') }}">
+                    <div class="form-text">اختياري. بعد هذا التاريخ لن يكون الكوبون صالحاً.</div>
+                </div>
+            </div>
+
+            {{-- Assessment Scope --}}
+            <div class="mb-4">
+                <label class="form-label fw-semibold">نطاق تطبيق الكوبون</label>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="applies_to_all" name="applies_to_all_assessments" value="1" {{ old('applies_to_all_assessments', true) ? 'checked' : '' }} onchange="toggleAssessmentPicker()">
+                    <label class="form-check-label fw-medium" for="applies_to_all">ينطبق على جميع المقاييس</label>
+                </div>
+                <div id="assessment-picker" class="{{ old('applies_to_all_assessments', true) ? 'd-none' : '' }}">
+                    <label class="form-label text-muted small">اختر المقاييس التي ينطبق عليها الكوبون:</label>
+                    <div class="border rounded p-3" style="max-height: 260px; overflow-y: auto;">
+                        @foreach($assessments as $assessment)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="assessment_ids[]"
+                                    id="assessment_{{ $assessment->id }}" value="{{ $assessment->id }}"
+                                    {{ in_array($assessment->id, old('assessment_ids', [])) ? 'checked' : '' }}>
+                                <label class="form-check-label small" for="assessment_{{ $assessment->id }}">
+                                    {{ $assessment->title_ar }}
+                                    <span class="text-muted">({{ $assessment->category }})</span>
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            {{-- User Scope --}}
+            <div class="mb-4">
+                <label class="form-label fw-semibold">المستخدمين المسموح لهم</label>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="applies_to_all_users" name="applies_to_all_users" value="1" {{ old('applies_to_all_users', true) ? 'checked' : '' }} onchange="toggleUserPicker()">
+                    <label class="form-check-label fw-medium" for="applies_to_all_users">صالح لجميع المستخدمين</label>
+                </div>
+                <div id="user-picker" class="{{ old('applies_to_all_users', true) ? 'd-none' : '' }}">
+                    <label class="form-label text-muted small">اختر الأشخاص المعينين (يمكن البحث بالاسم/الجوال):</label>
+                    <div class="border rounded p-3" style="max-height: 260px; overflow-y: auto;">
+                        @foreach($users as $user)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="permitted_user_ids[]"
+                                    id="user_{{ $user->id }}" value="{{ $user->id }}"
+                                    {{ in_array($user->id, old('permitted_user_ids', [])) ? 'checked' : '' }}>
+                                <label class="form-check-label small" for="user_{{ $user->id }}">
+                                    {{ $user->name }}
+                                    <span class="text-muted">({{ $user->phone ?? $user->email }})</span>
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            {{-- Status --}}
+            <div class="mb-4 form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="is_active" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}>
+                <label class="form-check-label" for="is_active">الكوبون نشط (متاح للاستخدام)</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary px-5">
+                <i class="bi bi-save me-1"></i> حفظ الكوبون
+            </button>
+        </form>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+// ترتيب الأرقام بالعربية
+const ordinals = ['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة'];
+const fieldNames = ['discount_percentage','discount_percentage_2nd','discount_percentage_3rd',
+                    'discount_percentage_4th','discount_percentage_5th','discount_percentage_6th',
+                    'discount_percentage_7th','discount_percentage_8th','discount_percentage_9th','discount_percentage_10th'];
+const oldValues = {
+    discount_percentage:       '{{ old("discount_percentage", 100) }}',
+    discount_percentage_2nd:   '{{ old("discount_percentage_2nd", "") }}',
+    discount_percentage_3rd:   '{{ old("discount_percentage_3rd", "") }}',
+};
+
+const badgeColors = ['success','primary','warning','info','secondary','dark','danger','success','primary','warning'];
+
+function renderDiscountFields(count) {
+    count = parseInt(count) || 1;
+    count = Math.max(1, Math.min(10, count));
+
+    const container = document.getElementById('discount-fields-container');
+    const preview   = document.getElementById('discount-preview');
+    const previewContent = document.getElementById('preview-content');
+
+    container.innerHTML = '';
+    previewContent.innerHTML = '';
+
+    // حساب عرض الأعمدة
+    let colClass = 'col-md-4';
+    if (count === 1) colClass = 'col-md-4';
+    else if (count === 2) colClass = 'col-md-6';
+    else if (count <= 4) colClass = 'col-md-3';
+    else colClass = 'col-md-4';
+
+    for (let i = 0; i < count; i++) {
+        const name  = fieldNames[i] ?? `discount_percentage_${i + 1}`;
+        const label = `الاستخدام ${ordinals[i]}`;
+        const isFirst = i === 0;
+        const savedVal = oldValues[name] ?? '';
+        const badgeColor = badgeColors[i];
+
+        const col = document.createElement('div');
+        col.className = colClass;
+        col.innerHTML = `
+            <div class="position-relative">
+                <label for="${name}" class="form-label fw-semibold d-flex align-items-center gap-2">
+                    <span class="badge bg-${badgeColor} rounded-pill" style="min-width:26px;">${i + 1}</span>
+                    ${label}
+                    ${isFirst ? '<span class="text-danger">*</span>' : ''}
+                </label>
+                <div class="input-group">
+                    <input type="number"
+                           class="form-control discount-input"
+                           id="${name}"
+                           name="${name}"
+                           value="${savedVal || (isFirst ? 100 : '')}"
+                           min="0" max="100"
+                           ${isFirst ? 'required' : ''}
+                           placeholder="${isFirst ? '100' : 'مثال: 50'}"
+                           data-index="${i}"
+                           oninput="updatePreview()">
+                    <span class="input-group-text fw-bold">%</span>
+                </div>
+                ${isFirst ? '<div class="form-text text-success fw-medium"><i class="bi bi-check-circle me-1"></i>مطلوب</div>' : '<div class="form-text">اختياري</div>'}
+            </div>`;
+        container.appendChild(col);
     }
 
-    public function login(Request $request): RedirectResponse
-    {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
-
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-
-            if (Auth::user()->isAdmin()) {
-                return redirect()->route('admin.dashboard');
-            }
-
-            return redirect()->route('dashboard');
-        }
-
-        return back()->withErrors(['email' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.']);
-    }
-
-    public function showRegister()
-    {
-        return response()
-            ->view('auth.register')
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
-    }
-
-    public function register(Request $request): RedirectResponse
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'national_id' => 'required|string|unique:users|max:20',
-            'phone' => 'required|string|unique:users|max:20',
-            'gender' => 'required|string|in:male,female',
-            'qualification' => 'required|string|max:255',
-            'nationality' => 'required|string|max:255',
-            'password' => 'required|min:8|confirmed',
-        ]);
-
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'national_id' => $data['national_id'],
-            'phone' => $data['phone'],
-            'gender' => $data['gender'],
-            'qualification' => $data['qualification'],
-            'nationality' => $data['nationality'],
-            'password' => Hash::make($data['password']),
-            'role' => 'user',
-        ]);
-
-        Auth::login($user);
-
-        return redirect()->route('dashboard');
-    }
-
-    public function logout(Request $request): RedirectResponse
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('login');
-    }
+    preview.classList.toggle('d-none', count < 1);
+    updatePreview();
 }
-```
+
+function updatePreview() {
+    const inputs = document.querySelectorAll('.discount-input');
+    const previewContent = document.getElementById('preview-content');
+    previewContent.innerHTML = '';
+
+    inputs.forEach((input, i) => {
+        const val = input.value;
+        const badge = document.createElement('span');
+        const color = badgeColors[i];
+        badge.className = `badge bg-${color}-subtle text-${color}-emphasis border border-${color}-subtle px-3 py-2 rounded-pill fs-6`;
+        badge.style.fontFamily = 'monospace';
+        badge.innerHTML = `<span class="text-muted small ms-1">المرة ${ordinals[i]}:</span> ${val !== '' ? val + '%' : '—'}`;
+        previewContent.appendChild(badge);
+    });
+}
+
+function toggleAssessmentPicker() {
+    const all = document.getElementById('applies_to_all');
+    document.getElementById('assessment-picker').classList.toggle('d-none', all.checked);
+}
+
+function toggleUserPicker() {
+    const all = document.getElementById('applies_to_all_users');
+    document.getElementById('user-picker').classList.toggle('d-none', all.checked);
+}
+
+// تهيئة أولية
+const initCount = parseInt(document.getElementById('assessments_limit').value) || 1;
+renderDiscountFields(initCount);
+</script>
+@endpush
+````
+
+## File: resources/views/admin/recommendations/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'إدارة التوصيات')
+@section('page-title', 'إدارة التوصيات')
+
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="text-muted small mb-0">ضع توصية لكل مستوى (مرتفع / متوسط / منخفض) لكل مقياس.</p>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#recModal">
+        <i class="bi bi-plus-circle me-1"></i>إضافة توصية
+    </button>
+</div>
+
+@forelse($assessments as $assessment)
+    @php $recs = $recommendations[$assessment->id] ?? collect(); @endphp
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent border-0 py-3">
+            <h6 class="mb-0 fw-semibold">
+                <i class="bi bi-collection text-primary me-2"></i>{{ $assessment->title_ar }}
+                <span class="text-muted fw-normal small ms-2">{{ $assessment->category }}</span>
+            </h6>
+        </div>
+        <div class="card-body px-4 pb-4 pt-0">
+            @if($recs->isEmpty())
+                <p class="text-muted small mb-0">لا توجد توصيات لهذا المقياس بعد.</p>
+            @else
+                <div class="row g-3">
+                    @foreach($recs as $rec)
+                        @php
+                            $lc = match($rec->level) { 'high'=>'success', 'medium'=>'warning', default=>'danger' };
+                            $ll = match($rec->level) { 'high'=>'مرتفع', 'medium'=>'متوسط', default=>'منخفض' };
+                        @endphp
+                        <div class="col-md-4">
+                            <div class="border border-{{ $lc }} rounded-3 p-3 h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-{{ $lc }}-subtle text-{{ $lc }} border border-{{ $lc }}-subtle">{{ $ll }}</span>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-primary btn-edit-rec"
+                                                data-id="{{ $rec->id }}"
+                                                data-assessment="{{ $rec->assessment_id }}"
+                                                data-level="{{ $rec->level }}"
+                                                data-high="{{ $rec->high_threshold }}"
+                                                data-low="{{ $rec->low_threshold }}"
+                                                data-desc="{{ $rec->description_ar }}"
+                                                data-certificates_intro="{{ $rec->certificates_intro_ar }}"
+                                                data-certificates="{{ json_encode($rec->certificates_ar ?? []) }}"
+                                                data-programs="{{ json_encode($rec->programs_ar ?? []) }}"
+                                                data-plan_intro="{{ $rec->plan_30_days_intro_ar }}"
+                                                data-plan="{{ json_encode($rec->plan_30_days_ar ?? []) }}">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger btn-delete-rec"
+                                                data-id="{{ $rec->id }}"
+                                                data-url="{{ route('admin.recommendations.destroy', $rec->id) }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="small text-muted mb-2">{{ Str::limit($rec->description_ar, 100) }}</p>
+                                <div class="small text-muted">
+                                    <span class="badge bg-light text-dark border me-1">حد أعلى: {{ $rec->high_threshold }}</span>
+                                    <span class="badge bg-light text-dark border">حد أدنى: {{ $rec->low_threshold }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+@empty
+    <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>لا توجد مقاييس بعد.</div>
+@endforelse
+
+<!-- Recommendation Modal -->
+<div class="modal fade" id="recModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">إضافة / تحديث توصية</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="r-id" value="">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">المقياس *</label>
+                        <select class="form-select" id="r-assessment_id">
+                            <option value="">اختر المقياس</option>
+                            @foreach($assessments as $a)
+                                <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">المستوى *</label>
+                        <select class="form-select" id="r-level">
+                            <option value="">اختر المستوى</option>
+                            <option value="high">مرتفع</option>
+                            <option value="medium">متوسط</option>
+                            <option value="low">منخفض</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">حد الدرجة المرتفعة (%) *</label>
+                        <input type="number" class="form-control" id="r-high_threshold" placeholder="مثال: 70" min="0" max="100">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">حد الدرجة المنخفضة (%) *</label>
+                        <input type="number" class="form-control" id="r-low_threshold" placeholder="مثال: 33" min="0" max="100">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">وصف نتيجة هذا المستوى *</label>
+                        <textarea class="form-control" id="r-description_ar" rows="3"
+                            placeholder="وصف يظهر للمستخدم بناءً على مستواه..."></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">الجملة الافتتاحية للشهادات (اختياري)</label>
+                        <input type="text" class="form-control" id="r-certificates_intro_ar" placeholder="مثال: من أهم الشهادات التي ننصحك بالحصول عليها:">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">الشهادات الاحترافية المناسبة *</label>
+                        <textarea class="form-control json-certificates-data" id="r-certificates_ar" rows="3"
+                            placeholder="إضافة شهادة..."></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">البرامج والتوصيات المقترحة *</label>
+                        <textarea class="form-control json-programs-data" id="r-programs_ar" rows="5"
+                            placeholder="إضافة برنامج/توصية..."></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">الجملة الافتتاحية لخطة التطوير (اختياري)</label>
+                        <input type="text" class="form-control" id="r-plan_30_days_intro_ar" placeholder="مثال: نقترح عليك خلال الـ 30 يوماً القادمة اتباع الخطوات التالية:">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">خطة تطوير (30 يوماً) *</label>
+                        <textarea class="form-control json-plan-data" id="r-plan_30_days_ar" rows="3"
+                            placeholder="إضافة خطوة..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="btn-save-rec">
+                    <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ التوصية</span>
+                    <span class="spinner-border spinner-border-sm d-none"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    window.APP_ICONS = @json($icons ?? []);
+</script>
+<script>
+$('#btn-save-rec').on('click', function() {
+    const btn = $(this);
+    let certs = []; try { certs = JSON.parse($('#r-certificates_ar').val() || '[]'); } catch(e){}
+    let progs = []; try { progs = JSON.parse($('#r-programs_ar').val() || '[]'); } catch(e){}
+    let plan = []; try { plan = JSON.parse($('#r-plan_30_days_ar').val() || '[]'); } catch(e){}
+
+    const payload = {
+        id: $('#r-id').val() || null,
+        assessment_id: $('#r-assessment_id').val(),
+        level: $('#r-level').val(),
+        description_ar: $('#r-description_ar').val().trim(),
+        certificates_intro_ar: $('#r-certificates_intro_ar').val().trim(),
+        certificates_ar: certs,
+        programs_ar: progs,
+        plan_30_days_intro_ar: $('#r-plan_30_days_intro_ar').val().trim(),
+        plan_30_days_ar: plan,
+        high_threshold: parseInt($('#r-high_threshold').val()) || 0,
+        low_threshold:  parseInt($('#r-low_threshold').val()) || 0,
+    };
+
+    if (!payload.assessment_id || !payload.level || !payload.description_ar) {
+        showAlert('يرجى ملء جميع الحقول المطلوبة.', 'warning'); return;
+    }
+
+    setLoading(btn, true);
+    $.ajax({
+        url: '{{ route('admin.recommendations.store') }}',
+        method: 'POST', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify(payload),
+        success: function(res) {
+            setLoading(btn, false);
+            bootstrap.Modal.getInstance($('#recModal')).hide();
+            showAlert(res.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
+        }
+    });
+});
+
+$(document).on('click', '.btn-delete-rec', function() {
+    const url = $(this).data('url');
+    confirmDelete('هل تريد حذف هذه التوصية؟', url, () => location.reload());
+});
+
+$(document).on('click', '.btn-edit-rec', function() {
+    const btn = $(this);
+    $('#r-id').val(btn.data('id') || '');
+    $('#r-assessment_id').val(btn.data('assessment'));
+    $('#r-level').val(btn.data('level'));
+    $('#r-high_threshold').val(btn.data('high'));
+    $('#r-low_threshold').val(btn.data('low'));
+    $('#r-description_ar').val(btn.data('desc'));
+    $('#r-certificates_intro_ar').val(btn.data('certificates_intro'));
+    $('#r-plan_30_days_intro_ar').val(btn.data('plan_intro'));
+    
+    const certsVal = JSON.stringify(btn.data('certificates') || []);
+    const progsVal = JSON.stringify(btn.data('programs') || []);
+    const planVal = JSON.stringify(btn.data('plan') || []);
+    
+    $('#r-certificates_ar').val(certsVal);
+    $('#r-programs_ar').val(progsVal);
+    $('#r-plan_30_days_ar').val(planVal);
+    
+    if ($('#r-certificates_ar').data('clearItems')) {
+        $('#r-certificates_ar').data('clearItems')(certsVal);
+    }
+    if ($('#r-programs_ar').data('clearItems')) {
+        $('#r-programs_ar').data('clearItems')(progsVal);
+    }
+    if ($('#r-plan_30_days_ar').data('clearItems')) {
+        $('#r-plan_30_days_ar').data('clearItems')(planVal);
+    }
+    
+    $('.modal-title').text('تحديث التوصية');
+    new bootstrap.Modal(document.getElementById('recModal')).show();
+});
+
+$('[data-bs-target="#recModal"]').on('click', function() {
+    clearRecommendationModal();
+    $('.modal-title').text('إضافة / تحديث توصية');
+});
+
+function clearRecommendationModal() {
+    $('#r-id').val('');
+    $('#r-assessment_id').val('');
+    $('#r-level').val('');
+    $('#r-high_threshold').val('');
+    $('#r-low_threshold').val('');
+    $('#r-description_ar').val('');
+    $('#r-certificates_intro_ar').val('');
+    $('#r-plan_30_days_intro_ar').val('');
+    function clearJsonList(selector) {
+        const textarea = $(selector);
+        textarea.val('');
+        if (textarea.data('clearItems')) {
+            textarea.data('clearItems')();
+        }
+    }
+
+    clearJsonList('#r-certificates_ar');
+    clearJsonList('#r-programs_ar');
+    clearJsonList('#r-plan_30_days_ar');
+}
+</script>
+@endpush
+````
+
+## File: resources/views/layouts/admin.blade.php
+````php
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'لوحة الإدارة') — إدارة دار الرؤى</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <style>
+        .sidebar { width: 260px; min-height: 100vh; background: #1a1d23; flex-shrink: 0; }
+        .sidebar .nav-link { color: #adb5bd; border-radius: 8px; margin: 2px 8px; padding: 10px 16px; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background: #0d6efd; color: #fff; }
+        .sidebar .nav-link i { width: 20px; }
+        .main-content { flex: 1; overflow-x: hidden; }
+        .topbar { background: #fff; border-bottom: 1px solid #dee2e6; padding: 12px 24px; }
+        @media print { .sidebar, .topbar, .no-print { display: none !important; } }
+    </style>
+    @stack('styles')
+</head>
+<body class="bg-light">
+<div class="d-flex">
+
+    <!-- Sidebar -->
+    <nav class="sidebar d-flex flex-column py-3">
+        <div class="px-4 mb-3 text-center pt-2">
+            <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 55px; filter: brightness(0) invert(1);">
+            <div class="text-muted small mt-2">لوحة الإدارة</div>
+        </div>
+        <ul class="nav flex-column flex-grow-1">
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
+                    <i class="bi bi-speedometer2 me-2"></i>الرئيسية
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.assessments*') ? 'active' : '' }}" href="{{ route('admin.assessments.index') }}">
+                    <i class="bi bi-collection me-2"></i>إدارة المقاييس
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.questions*') ? 'active' : '' }}" href="{{ route('admin.questions.index') }}">
+                    <i class="bi bi-question-circle me-2"></i>بنك الأسئلة
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.exams.create') ? 'active' : '' }}" href="{{ route('admin.exams.create') }}">
+                    <i class="bi bi-plus-circle me-2"></i>إنشاء اختبار
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.recommendations*') ? 'active' : '' }}" href="{{ route('admin.recommendations.index') }}">
+                    <i class="bi bi-lightbulb me-2"></i>إدارة التوصيات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.coupons*') ? 'active' : '' }}" href="{{ route('admin.coupons.index') }}">
+                    <i class="bi bi-ticket-perforated me-2"></i>إدارة الكوبونات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.icons*') ? 'active' : '' }}" href="{{ route('admin.icons.index') }}">
+                    <i class="bi bi-images me-2"></i>إدارة الأيقونات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.statistics*') ? 'active' : '' }}" href="{{ route('admin.statistics.index') }}">
+                    <i class="bi bi-bar-chart-line me-2"></i>الإحصائيات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.settings*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}">
+                    <i class="bi bi-gear me-2"></i>إعدادات الموقع
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.users*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
+                    <i class="bi bi-people me-2"></i>المستخدمين والنتائج
+                </a>
+            </li>
+        </ul>
+        <div class="px-3 mt-auto">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                    <i class="bi bi-box-arrow-right me-1"></i>تسجيل الخروج
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <div class="main-content">
+        <div class="topbar d-flex align-items-center justify-content-between">
+            <h6 class="mb-0 fw-semibold">@yield('page-title', 'لوحة الإدارة')</h6>
+            <div class="text-muted small">
+                <i class="bi bi-person-circle me-1"></i>{{ auth()->user()->name }}
+            </div>
+        </div>
+
+        <div id="alert-container" class="px-4 pt-2"></div>
+
+        <div class="p-4">
+            @yield('content')
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i>تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="confirmDeleteMessage">هل أنت متأكد من الحذف؟ لا يمكن التراجع.</div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="{{ asset('js/app.js') }}"></script>
+<script src="{{ asset('js/json-lists.js') }}"></script>
+@stack('scripts')
+</body>
+</html>
+````
 
 ## File: database/migrations/2024_01_01_000010_create_recommendations_table.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -10224,10 +15380,10 @@ return new class extends Migration
         Schema::dropIfExists('recommendations');
     }
 };
-```
+````
 
 ## File: database/migrations/2026_07_05_124738_add_user_restrictions_to_coupons.php
-```php
+````php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -10265,10 +15421,319 @@ return new class extends Migration
         });
     }
 };
-```
+````
+
+## File: resources/views/admin/coupons/edit.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'تعديل كوبون')
+@section('page-title', 'إدارة الكوبونات')
+
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-dark mb-0">تعديل الكوبون: {{ $coupon->title }}</h2>
+    <a href="{{ route('admin.coupons.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-right"></i> عودة
+    </a>
+</div>
+
+@if($errors->any())
+    <div class="alert alert-danger mb-4">
+        <ul class="mb-0 small">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        <form action="{{ route('admin.coupons.update', $coupon) }}" method="POST">
+            @csrf
+            @method('PUT')
+
+            {{-- Basic Info --}}
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label for="title" class="form-label fw-semibold">اسم الكوبون <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ old('title', $coupon->title) }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="code" class="form-label fw-semibold">رمز الكوبون <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control text-start" dir="ltr" id="code" name="code" value="{{ old('code', $coupon->code) }}" required>
+                    <div class="form-text">الرمز الذي يدخله المستخدم. يجب أن يكون فريداً.</div>
+                </div>
+            </div>
+
+            {{-- STEP 1: عدد مرات الاستخدام - يؤثر على حقول الخصم --}}
+            <div class="card border-warning border-opacity-50 mb-4" style="background: #fffdf0;">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h6 class="fw-bold mb-0 text-warning-emphasis">
+                        <i class="bi bi-1-circle-fill me-2 text-warning"></i>
+                        الخطوة الأولى: حدد عدد مرات الاستخدام المسموحة لكل مستخدم (اختياري)
+                    </h6>
+                    <div class="text-muted small mt-1">اتركه فارغاً إذا كنت تريد استخداماً غير محدود بنفس نسبة الخصم.</div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-5">
+                            <label for="assessments_limit" class="form-label fw-semibold">
+                                عدد مرات الاستخدام
+                            </label>
+                            <input type="number"
+                                   class="form-control form-control-lg fw-bold text-center"
+                                   id="assessments_limit"
+                                   name="assessments_limit"
+                                   value="{{ old('assessments_limit', $coupon->assessments_limit) }}"
+                                   min="1" max="10"
+                                   placeholder="اتركه فارغاً لعدد غير محدود"
+                                   oninput="renderDiscountFields(this.value)">
+                            <div class="form-text">اتركه فارغاً للاستخدام غير المحدود، أو حدد عدداً (1-10) لخصم متدرج.</div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="p-3 rounded border bg-light text-muted small">
+                                <i class="bi bi-info-circle me-1 text-primary"></i>
+                                <strong>غير محدود:</strong> اترك الحقل فارغاً ليستفيد المستخدم من نسبة الخصم دائماً بدون حد أقصى.<br>
+                                <strong>محدد:</strong> أدخل عدداً (مثال: 3) لربط الكوبون بتدرج خصم محدد بعدد المرات.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- STEP 2: نسب الخصم - تظهر ديناميكياً --}}
+            <div class="card border-primary border-opacity-25 mb-4" style="background: #f0f4ff;">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h6 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-2-circle-fill me-2 text-primary"></i>
+                        الخطوة الثانية: حدد نسبة الخصم لكل مرة استخدام
+                    </h6>
+                    <div class="text-muted small mt-1">حدد خصماً مختلفاً لكل مرة استخدام. مثال: الأولى 100%، الثانية 50%، الثالثة 10%</div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="row g-3" id="discount-fields-container">
+                        {{-- تُنشأ ديناميكياً بالـ JavaScript --}}
+                    </div>
+
+                    {{-- معاينة حية --}}
+                    <div id="discount-preview" class="mt-3 p-3 bg-white rounded border d-none">
+                        <div class="text-muted small fw-semibold mb-2">
+                            <i class="bi bi-eye me-1 text-primary"></i>معاينة التدرج:
+                        </div>
+                        <div id="preview-content" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Limits & Expiry --}}
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label for="expires_at" class="form-label fw-semibold">تاريخ انتهاء الصلاحية</label>
+                    <input type="date" class="form-control" id="expires_at" name="expires_at" value="{{ old('expires_at', $coupon->expires_at?->format('Y-m-d')) }}">
+                </div>
+            </div>
+
+            {{-- Assessment Scope --}}
+            <div class="mb-4">
+                <label class="form-label fw-semibold">نطاق تطبيق الكوبون</label>
+                @php $appliesToAll = old('applies_to_all_assessments', $coupon->applies_to_all_assessments); @endphp
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="applies_to_all" name="applies_to_all_assessments" value="1" {{ $appliesToAll ? 'checked' : '' }} onchange="toggleAssessmentPicker()">
+                    <label class="form-check-label fw-medium" for="applies_to_all">ينطبق على جميع المقاييس</label>
+                </div>
+
+                <div id="assessment-picker" class="{{ $appliesToAll ? 'd-none' : '' }}">
+                    <label class="form-label text-muted small">اختر المقاييس التي ينطبق عليها الكوبون:</label>
+                    <div class="border rounded p-3" style="max-height: 260px; overflow-y: auto;">
+                        @foreach($assessments as $assessment)
+                            @php
+                                $checked = in_array($assessment->id, old('assessment_ids', $couponAssessmentIds));
+                            @endphp
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="assessment_ids[]"
+                                    id="assessment_{{ $assessment->id }}" value="{{ $assessment->id }}"
+                                    {{ $checked ? 'checked' : '' }}>
+                                <label class="form-check-label small" for="assessment_{{ $assessment->id }}">
+                                    {{ $assessment->title_ar }}
+                                    <span class="text-muted">({{ $assessment->category }})</span>
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            {{-- User Scope --}}
+            <div class="mb-4">
+                <label class="form-label fw-semibold">المستخدمين المسموح لهم</label>
+                @php $appliesToAllUsers = old('applies_to_all_users', $coupon->applies_to_all_users); @endphp
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="applies_to_all_users" name="applies_to_all_users" value="1" {{ $appliesToAllUsers ? 'checked' : '' }} onchange="toggleUserPicker()">
+                    <label class="form-check-label fw-medium" for="applies_to_all_users">صالح لجميع المستخدمين</label>
+                </div>
+
+                <div id="user-picker" class="{{ $appliesToAllUsers ? 'd-none' : '' }}">
+                    <label class="form-label text-muted small">اختر الأشخاص المعينين:</label>
+                    <div class="border rounded p-3" style="max-height: 260px; overflow-y: auto;">
+                        @foreach($users as $user)
+                            @php
+                                $userChecked = in_array($user->id, old('permitted_user_ids', $couponPermittedUserIds ?? []));
+                            @endphp
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="permitted_user_ids[]"
+                                    id="user_{{ $user->id }}" value="{{ $user->id }}"
+                                    {{ $userChecked ? 'checked' : '' }}>
+                                <label class="form-check-label small" for="user_{{ $user->id }}">
+                                    {{ $user->name }}
+                                    <span class="text-muted">({{ $user->phone ?? $user->email }})</span>
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            {{-- Usage Stats --}}
+            <div class="alert alert-light border mb-4">
+                <div class="fw-semibold small mb-1"><i class="bi bi-bar-chart me-1"></i>إحصاءات الاستخدام الحالية:</div>
+                @php
+                    $totalUsages = $coupon->users->sum('pivot.used_count');
+                    $uniqueUsers = $coupon->users->count();
+                @endphp
+                <div class="d-flex gap-4 small text-muted mt-2">
+                    <span><i class="bi bi-people me-1"></i>عدد المستخدمين: <strong class="text-dark">{{ $uniqueUsers }}</strong></span>
+                    <span><i class="bi bi-hash me-1"></i>إجمالي مرات الاستخدام: <strong class="text-dark">{{ $totalUsages }}</strong></span>
+                </div>
+            </div>
+
+            {{-- Status --}}
+            <div class="mb-4 form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="is_active" name="is_active" value="1" {{ old('is_active', $coupon->is_active) ? 'checked' : '' }}>
+                <label class="form-check-label" for="is_active">الكوبون نشط (متاح للاستخدام)</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary px-5">
+                <i class="bi bi-save me-1"></i> تحديث الكوبون
+            </button>
+        </form>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+// ترتيب الأرقام بالعربية
+const ordinals = ['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة'];
+const fieldNames = ['discount_percentage','discount_percentage_2nd','discount_percentage_3rd',
+                    'discount_percentage_4th','discount_percentage_5th','discount_percentage_6th',
+                    'discount_percentage_7th','discount_percentage_8th','discount_percentage_9th','discount_percentage_10th'];
+const oldValues = {
+    discount_percentage:       '{{ old("discount_percentage", $coupon->discount_percentage) }}',
+    discount_percentage_2nd:   '{{ old("discount_percentage_2nd", $coupon->discount_percentage_2nd) }}',
+    discount_percentage_3rd:   '{{ old("discount_percentage_3rd", $coupon->discount_percentage_3rd) }}',
+    discount_percentage_4th:   '{{ old("discount_percentage_4th", $coupon->discount_percentage_4th) }}',
+    discount_percentage_5th:   '{{ old("discount_percentage_5th", $coupon->discount_percentage_5th) }}',
+    discount_percentage_6th:   '{{ old("discount_percentage_6th", $coupon->discount_percentage_6th) }}',
+    discount_percentage_7th:   '{{ old("discount_percentage_7th", $coupon->discount_percentage_7th) }}',
+    discount_percentage_8th:   '{{ old("discount_percentage_8th", $coupon->discount_percentage_8th) }}',
+    discount_percentage_9th:   '{{ old("discount_percentage_9th", $coupon->discount_percentage_9th) }}',
+    discount_percentage_10th:  '{{ old("discount_percentage_10th", $coupon->discount_percentage_10th) }}',
+};
+
+const badgeColors = ['success','primary','warning','info','secondary','dark','danger','success','primary','warning'];
+
+function renderDiscountFields(count) {
+    count = parseInt(count) || 1;
+    count = Math.max(1, Math.min(10, count));
+
+    const container = document.getElementById('discount-fields-container');
+    const preview   = document.getElementById('discount-preview');
+    const previewContent = document.getElementById('preview-content');
+
+    container.innerHTML = '';
+    previewContent.innerHTML = '';
+
+    // حساب عرض الأعمدة
+    let colClass = 'col-md-4';
+    if (count === 1) colClass = 'col-md-4';
+    else if (count === 2) colClass = 'col-md-6';
+    else if (count <= 4) colClass = 'col-md-3';
+    else colClass = 'col-md-4';
+
+    for (let i = 0; i < count; i++) {
+        const name  = fieldNames[i] ?? `discount_percentage_${i + 1}`;
+        const label = `الاستخدام ${ordinals[i]}`;
+        const isFirst = i === 0;
+        const savedVal = oldValues[name] ?? '';
+        const badgeColor = badgeColors[i];
+
+        const col = document.createElement('div');
+        col.className = colClass;
+        col.innerHTML = `
+            <div class="position-relative">
+                <label for="${name}" class="form-label fw-semibold d-flex align-items-center gap-2">
+                    <span class="badge bg-${badgeColor} rounded-pill" style="min-width:26px;">${i + 1}</span>
+                    ${label}
+                    ${isFirst ? '<span class="text-danger">*</span>' : ''}
+                </label>
+                <div class="input-group">
+                    <input type="number"
+                           class="form-control discount-input"
+                           id="${name}"
+                           name="${name}"
+                           value="${savedVal || (isFirst ? 100 : '')}"
+                           min="0" max="100"
+                           ${isFirst ? 'required' : ''}
+                           placeholder="${isFirst ? '100' : 'مثال: 50'}"
+                           data-index="${i}"
+                           oninput="updatePreview()">
+                    <span class="input-group-text fw-bold">%</span>
+                </div>
+                ${isFirst ? '<div class="form-text text-success fw-medium"><i class="bi bi-check-circle me-1"></i>مطلوب</div>' : '<div class="form-text">اختياري</div>'}
+            </div>`;
+        container.appendChild(col);
+    }
+
+    preview.classList.toggle('d-none', count < 1);
+    updatePreview();
+}
+
+function updatePreview() {
+    const inputs = document.querySelectorAll('.discount-input');
+    const previewContent = document.getElementById('preview-content');
+    previewContent.innerHTML = '';
+
+    inputs.forEach((input, i) => {
+        const val = input.value;
+        const badge = document.createElement('span');
+        const color = badgeColors[i];
+        badge.className = `badge bg-${color}-subtle text-${color}-emphasis border border-${color}-subtle px-3 py-2 rounded-pill fs-6`;
+        badge.style.fontFamily = 'monospace';
+        badge.innerHTML = `<span class="text-muted small ms-1">المرة ${ordinals[i]}:</span> ${val !== '' ? val + '%' : '—'}`;
+        previewContent.appendChild(badge);
+    });
+}
+
+function toggleAssessmentPicker() {
+    const all = document.getElementById('applies_to_all');
+    document.getElementById('assessment-picker').classList.toggle('d-none', all.checked);
+}
+
+function toggleUserPicker() {
+    const all = document.getElementById('applies_to_all_users');
+    document.getElementById('user-picker').classList.toggle('d-none', all.checked);
+}
+
+// تهيئة أولية
+const initCount = parseInt(document.getElementById('assessments_limit').value) || 1;
+renderDiscountFields(initCount);
+</script>
+@endpush
+````
 
 ## File: app/Http/Controllers/Admin/AssessmentController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -10500,10 +15965,86 @@ class AssessmentController extends Controller
         return view('user.result', array_merge(['session' => $session], $formattedData));
     }
 }
-```
+````
+
+## File: app/Http/Controllers/AuthController.php
+````php
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\RegisterRequest;
+use App\Services\UserService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class AuthController extends Controller
+{
+    public function __construct(
+        private readonly UserService $userService,
+    ) {}
+
+    public function showLogin()
+    {
+        return response()
+            ->view('auth.login')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+    }
+
+    public function login(Request $request): RedirectResponse
+    {
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+
+            if (Auth::user()->isAdmin()) {
+                return redirect()->route('admin.dashboard');
+            }
+
+            return redirect()->route('dashboard');
+        }
+
+        return back()->withErrors(['email' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.']);
+    }
+
+    public function showRegister()
+    {
+        return response()
+            ->view('auth.register')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+    }
+
+    public function register(RegisterRequest $request): RedirectResponse
+    {
+        $user = $this->userService->register($request->validated());
+
+        Auth::login($user);
+
+        return redirect()->route('dashboard');
+    }
+
+    public function logout(Request $request): RedirectResponse
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login');
+    }
+}
+````
 
 ## File: app/Http/Controllers/ExamController.php
-```php
+````php
 <?php
 
 namespace App\Http\Controllers;
@@ -10767,10 +16308,169 @@ class ExamController extends Controller
         }
     }
 }
-```
+````
+
+## File: resources/views/layouts/user.blade.php
+````php
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'نظام المقاييس') — دار الرؤى</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Kufi Arabic', sans-serif;
+            background-color: #f8f9fa;
+            color: #1a2b56;
+        }
+
+        /* ── Top Navbar ── */
+        .top-navbar {
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 10px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+        .navbar-brand {
+            color: #1a2b56;
+            font-weight: 800;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+        }
+        .navbar-brand span {
+            color: #f59e0b; /* Accent color for the VR logo part */
+        }
+        .navbar-icons {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .icon-btn {
+            background: none;
+            border: none;
+            color: #4a5568;
+            font-size: 1.3rem;
+            position: relative;
+        }
+        .notification-dot {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 8px;
+            height: 8px;
+            background-color: #f59e0b;
+            border-radius: 50%;
+        }
+
+
+        /* ── Utilities ── */
+        .text-navy {
+            color: #1a2b56;
+        }
+        .bg-navy {
+            background-color: #1a2b56;
+        }
+        
+        @media (min-width: 992px) {
+            body {
+                padding-bottom: 0;
+            }
+        }
+    </style>
+    @stack('styles')
+</head>
+<body>
+
+<!-- Top Navbar -->
+<nav class="top-navbar">
+    <div class="container d-flex justify-content-between align-items-center px-3">
+        <!-- Logo -->
+        <a class="navbar-brand text-decoration-none" href="{{ route('dashboard') }}">
+            <div class="d-flex align-items-center">
+                <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 48px;">
+            </div>
+        </a>
+
+        <!-- User Menu -->
+        <div class="d-flex align-items-center gap-2">
+            <span class="fw-medium text-secondary" style="font-size: 0.9rem;">
+                <i class="bi bi-person-circle text-muted fs-5 align-middle me-1"></i> {{ auth()->user()?->name ?? 'معاينة بالنظام' }}
+            </span>
+            <div class="dropdown">
+                <button class="btn btn-link text-secondary p-0 ms-1" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none;">
+                    <i class="bi bi-three-dots-vertical fs-5"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="min-width: 150px; border-radius: 12px; padding: 8px;">
+                    <li>
+                        <form method="POST" action="{{ route('logout') }}" class="m-0">
+                            @csrf
+                            <button type="submit" class="dropdown-item text-danger fw-bold d-flex align-items-center gap-2 rounded" style="padding: 8px 12px;">
+                                <i class="bi bi-box-arrow-right"></i> تسجيل الخروج
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div id="alert-container" class="container mt-2"></div>
+
+<main>
+    @if(session('info'))
+        <div class="container mt-3">
+            <div class="alert alert-info alert-dismissible fade show border-0 shadow-sm" role="alert">
+                <i class="bi bi-info-circle me-2"></i>{{ session('info') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    @endif
+    @if(session('success'))
+        <div class="container mt-3">
+            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+                <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    @endif
+    @yield('content')
+</main>
+
+<footer class="text-center text-muted py-4 mt-5 mb-lg-0 mb-5 small bg-white border-top">
+    &copy; {{ date('Y') }} دار الرؤى — نظام مقاييس التميز الشخصي والاحتراف المهني
+</footer>
+
+
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('js/app.js') }}"></script>
+<script>
+window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+</script>
+@stack('scripts')
+</body>
+</html>
+````
 
 ## File: routes/web.php
-```php
+````php
 <?php
 
 use App\Http\Controllers\Admin;
@@ -10860,10 +16560,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');
     Route::get('/users/{user}/results', [Admin\UserController::class, 'userResults'])->name('users.results');
 });
-```
+````
 
 ## File: app/Http/Requests/Admin/UpdateSettingsRequest.php
-```php
+````php
 <?php
 
 namespace App\Http\Requests\Admin;
@@ -10908,10 +16608,10 @@ class UpdateSettingsRequest extends FormRequest
         ]);
     }
 }
-```
+````
 
 ## File: app/Models/Assessment.php
-```php
+````php
 <?php
 
 namespace App\Models;
@@ -10980,10 +16680,10 @@ class Assessment extends Model
         return $this->hasMany(Recommendation::class);
     }
 }
-```
+````
 
 ## File: app/Services/ExamResultService.php
-```php
+````php
 <?php
 
 namespace App\Services;
@@ -11084,10 +16784,10 @@ class ExamResultService
         return $this->resultFormatter->format($assessment, $result, $recommendation);
     }
 }
-```
+````
 
 ## File: database/seeders/PerceptualStylesSeeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -11197,10 +16897,10 @@ class PerceptualStylesSeeder extends Seeder
         }
     }
 }
-```
+````
 
 ## File: database/seeders/DatabaseSeeder.php
-```php
+````php
 <?php
 
 namespace Database\Seeders;
@@ -11327,4 +17027,4186 @@ class DatabaseSeeder extends Seeder
         }
     }
 }
-```
+````
+
+## File: resources/views/user/dashboard.blade.php
+````php
+@extends('layouts.user')
+@section('title', 'الرئيسية')
+
+@push('styles')
+<style>
+/* Reset container padding for full-width mobile experience */
+main.container { padding: 0 !important; max-width: 100% !important; background: #fff; }
+#alert-container.container { max-width: 100% !important; padding: 0 15px !important; }
+
+/* Global Fonts & Colors */
+body { font-family: 'Noto Kufi Arabic', sans-serif; background: #fff; }
+.text-primary-custom { color: #1a2b56; } /* Dark Blue */
+.text-warning-custom { color: #f59e0b; } /* Gold/Yellow */
+
+/* ── Hero Section ── */
+.hero-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 15px;
+    background-color: #f8f9fa;
+}
+.hero-text {
+    width: 60%;
+    padding-left: 10px;
+}
+.hero-text h1 {
+    color: #1a2b56;
+    font-weight: 800;
+    font-size: 1.4rem;
+    line-height: 1.3;
+    margin-bottom: 10px;
+}
+.hero-text p {
+    color: #4a5568;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    margin-bottom: 0;
+}
+.hero-image-wrap {
+    width: 40%;
+}
+.hero-image {
+    width: 100%;
+    border-radius: 12px;
+}
+
+/* ── Category Filter ── */
+.category-filter {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 10px;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.category-filter::-webkit-scrollbar { display: none; }
+.cat-btn {
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+    padding: 8px 6px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #4a5568;
+    font-weight: 700;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-decoration: none;
+}
+.cat-btn.active {
+    background: #1a2b56;
+    color: #ffffff;
+    border-color: #1a2b56;
+}
+
+/* ── Stats Row ── */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 15px 10px;
+    background: #fff;
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+}
+.stat-box {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.stat-box i { font-size: 1.4rem; color: #d97706; margin-bottom: 6px; }
+.stat-box h5 { margin: 0; font-weight: 800; color: #1a2b56; font-size: 0.9rem; }
+.stat-box p { margin: 0; font-size: 0.6rem; color: #64748b; line-height: 1.3; }
+
+/* ── Assessments Grid ── */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 15px 15px;
+    background: #fff;
+}
+.section-header h3 {
+    color: #1a2b56;
+    font-weight: 800;
+    font-size: 1.2rem;
+    margin: 0;
+}
+.section-header a {
+    color: #64748b;
+    font-size: 0.75rem;
+    text-decoration: none;
+    font-weight: 700;
+}
+.assessments-grid {
+    padding: 0 4px 20px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    align-items: stretch;
+    gap: 10px;
+    background: #fff;
+}
+.assessment-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+    border-top: 4px solid #00b4d8;
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    min-width: 0;
+}
+.card-header-top {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.card-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid #1a2b56;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1a2b56;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.card-title-area {
+    text-align: right;
+    flex-grow: 1;
+    min-height: 70px;
+}
+.card-title {
+    color: #1a2b56;
+    font-weight: bold;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    margin-bottom: 2px;
+    min-height: 32px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.card-desc {
+    color: #64748b;
+    font-size: 0.6rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.assessment-card img.cover {
+    width: 100%;
+    height: 60px;
+    object-fit: cover;
+    object-position: center 30%;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+.card-meta {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0;
+    margin-bottom: 12px;
+    font-size: 0.55rem;
+    color: #475569;
+    font-weight: 700;
+}
+.card-meta div {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.card-meta .divider {
+    color: #cbd5e1;
+    font-weight: 300;
+}
+.card-price-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+}
+.card-price {
+    color: #1e3a8a;
+    font-weight: 900;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+.card-price span { font-size: 0.55rem; font-weight: bold; color: #64748b; }
+.btn-primary-custom {
+    background: #1a2b56;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 0;
+    font-weight: 800;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(26, 43, 86, 0.15);
+}
+.btn-primary-custom:hover {
+    background: #0f172a;
+}
+.btn-secondary-custom {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    color: #3b82f6;
+    background: transparent;
+    border: none;
+    padding: 4px 0;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.btn-secondary-custom:hover {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+/* ── Desktop Overrides for Assessments Grid ── */
+@media (min-width: 768px) {
+    .stats-row { grid-template-columns: repeat(4, 1fr); }
+    .assessments-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        padding: 0 15px 20px;
+    }
+    .assessment-card { padding: 16px; }
+    .card-header-top { gap: 12px; margin-bottom: 12px; }
+    .card-icon { width: 32px; height: 32px; font-size: 0.9rem; margin-top: 2px; }
+    .card-title { font-size: 0.95rem; line-height: 1.3; min-height: auto; }
+    .card-desc { font-size: 0.65rem; -webkit-line-clamp: 2; line-height: 1.4; margin-bottom: 10px; }
+    .assessment-card img.cover { height: 90px; border-radius: 8px; margin-bottom: 16px; }
+    .card-meta { justify-content: space-between; font-size: 0.6rem; margin-bottom: 16px; gap: 8px; }
+    .card-price-row { margin-bottom: 12px; gap: 8px; }
+    .card-price { font-size: 1rem; }
+    .card-price span { font-size: 0.75rem; }
+    .btn-primary-custom { width: auto; padding: 6px 12px; font-size: 0.75rem; border-radius: 6px; }
+    .btn-secondary-custom { padding: 6px 12px; font-size: 0.75rem; border-radius: 6px; }
+}
+
+@media (min-width: 992px) {
+    .assessments-grid { grid-template-columns: repeat(4, 1fr); }
+    .assessment-card img.cover { height: 120px; }
+    .card-title { font-size: 1.1rem; }
+    .card-price { font-size: 1.2rem; }
+}
+
+/* ── Features Section ── */
+.features-section {
+    padding: 20px 15px;
+    background: #fff;
+    border-top: 1px solid #f1f5f9;
+}
+.features-title {
+    color: #1a2b56;
+    font-weight: 800;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+}
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+.feature-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+}
+.feature-box i { font-size: 1.5rem; color: #d97706; }
+.feature-box h6 { color: #1a2b56; font-weight: 800; margin-bottom: 2px; font-size: 0.75rem; }
+.feature-box p { color: #64748b; font-size: 0.55rem; margin: 0; line-height: 1.4; }
+
+/* ── Testimonials ── */
+.testimonials-section {
+    padding: 20px 15px;
+    background: #fff;
+    border-top: 1px solid #f1f5f9;
+}
+.testimonials-title {
+    color: #1a2b56;
+    font-weight: 800;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+.testimonial-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.testimonial-text {
+    font-size: 0.65rem;
+    color: #4a5568;
+    line-height: 1.6;
+    font-weight: 600;
+    margin-bottom: 15px;
+    text-align: center;
+}
+.testimonial-text::before { content: "❝"; font-size: 0.9rem; color: #f59e0b; margin-left: 2px; }
+.testimonial-text::after { content: "❞"; font-size: 0.9rem; color: #f59e0b; margin-right: 2px; }
+.testimonial-user {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 5px;
+}
+.testimonial-user img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.testimonial-user h6 { margin: 0; color: #1a2b56; font-weight: 800; font-size: 0.65rem; }
+.testimonial-user p { margin: 0; color: #64748b; font-size: 0.55rem; }
+.stars { color: #f59e0b; font-size: 0.6rem; margin-top: 4px; }
+
+/* ── Footer CTA ── */
+.footer-cta {
+    background: #1a2b56;
+    color: #ffffff;
+    padding: 20px 15px;
+    text-align: center;
+    border-radius: 16px 16px 0 0;
+    margin: 15px 15px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.footer-cta-text {
+    text-align: right;
+}
+.footer-cta h4 { font-weight: 800; margin-bottom: 6px; font-size: 1rem; }
+.footer-cta p { font-size: 0.65rem; opacity: 0.9; margin-bottom: 0; }
+.btn-cta {
+    background: #d97706;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+</style>
+@endpush
+
+@section('content')
+
+<!-- Hero Section -->
+<div class="hero-section" style="padding: 30px 20px; background: linear-gradient(to left, #ffffff, #f8f9fa); border-radius: 0 0 20px 20px; gap: 20px;">
+    <div class="hero-text" style="width: 55%; padding-left: 15px;">
+        <h1 class="fw-bolder" style="color: #1a2b56; font-size: clamp(1.6rem, 4vw, 3rem); line-height: 1.4; margin-bottom: 12px;">
+            المقاييس المهنية<br>والشخصية
+        </h1>
+        <p style="color: #4a5568; font-size: clamp(0.75rem, 1.5vw, 1.1rem); line-height: 1.6; margin-bottom: 0;">
+            اكتشف قدراتك ومهاراتك من خلال مقاييس علمية معتمدة وتقارير تفصيلية تساعدك على التطوير واتخاذ القرارات بثقة.
+        </p>
+    </div>
+    <div class="hero-image-wrap" style="width: 45%; text-align: left;">
+        <img src="{{ asset('images/dashboard/hero_banner_new.jpg') }}" alt="Hero Banner" class="hero-image" style="width: 100%; max-height: 400px; border-radius: 12px; object-fit: cover;">
+    </div>
+</div>
+
+<!-- Category Filter -->
+<div class="category-filter">
+    <a href="javascript:void(0)" class="cat-btn btn-category active" data-filter="all"><i class="bi bi-grid-fill"></i> جميع المقاييس</a>
+    @php
+        // Extract unique categories from active assessments
+        $uniqueCategories = $assessments->pluck('category')->filter()->unique()->sort()->values();
+
+        // Icon map – add any new category here or fallback to default
+        $categoryIcons = [
+            'مقاييس معرفة الذات والشخصية'          => 'bi-person-bounding-box',
+            'مقاييس الكفاءة الشخصية والنجاح المهني' => 'bi-graph-up-arrow',
+            'مقاييس الاتصال والعلاقات المهنية'       => 'bi-chat-quote',
+            'مقاييس القيادة والإدارة'                => 'bi-award',
+            'مقاييس التوجيه والتوافق المهني'         => 'bi-compass',
+            'مقاييس الصحة المهنية'                   => 'bi-heart-pulse',
+        ];
+    @endphp
+    @foreach($uniqueCategories as $cat)
+        @php
+            $icon = $categoryIcons[$cat] ?? 'bi-bookmark';
+        @endphp
+        <a href="javascript:void(0)" class="cat-btn btn-category" data-filter="{{ $cat }}">
+            <i class="bi {{ $icon }}"></i> {{ $cat }}
+        </a>
+    @endforeach
+</div>
+
+<!-- Stats Row -->
+<div class="stats-row">
+    <div class="stat-box">
+        @if(isset($siteSettings['stat_fields_icon']) && $siteSettings['stat_fields_icon'])
+            <img src="{{ asset($siteSettings['stat_fields_icon']) }}" style="height: 38px; width: auto; object-fit: contain; margin-bottom: 12px; display: inline-block;">
+        @else
+            <i class="bi bi-pie-chart"></i>
+        @endif
+        <h5>{{ $siteSettings['stat_fields'] ?? '50+' }}</h5>
+        <p>مجال ومهارة<br>مختلفة</p>
+    </div>
+    <div class="stat-box">
+        @if(isset($siteSettings['stat_assessments_icon']) && $siteSettings['stat_assessments_icon'])
+            <img src="{{ asset($siteSettings['stat_assessments_icon']) }}" style="height: 38px; width: auto; object-fit: contain; margin-bottom: 12px; display: inline-block;">
+        @else
+            <i class="bi bi-mortarboard"></i>
+        @endif
+        <h5>{{ $siteSettings['stat_assessments'] ?? '150+' }}</h5>
+        <p>مقياس مهني<br>وشخصي معتمد</p>
+    </div>
+    <div class="stat-box">
+        @if(isset($siteSettings['stat_exams_icon']) && $siteSettings['stat_exams_icon'])
+            <img src="{{ asset($siteSettings['stat_exams_icon']) }}" style="height: 38px; width: auto; object-fit: contain; margin-bottom: 12px; display: inline-block;">
+        @else
+            <i class="bi bi-journal-check"></i>
+        @endif
+        <h5>{{ $siteSettings['stat_exams'] ?? '10,000+' }}</h5>
+        <p>اختبار ومقياس<br>تم إنجازه</p>
+    </div>
+    <div class="stat-box">
+        @if(isset($siteSettings['stat_users_icon']) && $siteSettings['stat_users_icon'])
+            <img src="{{ asset($siteSettings['stat_users_icon']) }}" style="height: 38px; width: auto; object-fit: contain; margin-bottom: 12px; display: inline-block;">
+        @else
+            <i class="bi bi-people"></i>
+        @endif
+        <h5>{{ $siteSettings['stat_users'] ?? '25,000+' }}</h5>
+        <p>مستخدم من الأفراد<br>والجهات</p>
+    </div>
+</div>
+
+<!-- Assessments Section -->
+<div class="section-header">
+    <h3>أشهر المقاييس</h3>
+</div>
+
+<div class="assessments-grid" id="assessments-container">
+    @php
+        // Images are now loaded directly from $assessment->image_url
+        $icons = [
+            'معرفة الذات' => 'bi-person-bounding-box',
+            'الشخصية' => 'bi-person-lines-fill',
+            'الثقة' => 'bi-person-up',
+            'إيجابية' => 'bi-brightness-high',
+            'العاطفي' => 'bi-heart-pulse',
+            'النجاح' => 'bi-trophy',
+            'الإبداع' => 'bi-lightbulb',
+            'الوقت' => 'bi-hourglass-split',
+            'تخطط' => 'bi-calendar2-check',
+            'القرار' => 'bi-signpost-split',
+            'الاتصال' => 'bi-chat-right-quote',
+            'التفاوض' => 'bi-briefcase',
+            'فريق' => 'bi-people',
+            'القيادي' => 'bi-award',
+            'التحويلي' => 'bi-lightning-charge',
+            'الإدارة' => 'bi-diagram-3',
+            'تحفيز' => 'bi-stars',
+            'التوجيه' => 'bi-compass',
+            'حب العمل' => 'bi-heart',
+            'ولاؤك' => 'bi-bookmark-star',
+            'الرضا' => 'bi-emoji-smile',
+            'ضغوط' => 'bi-speedometer2',
+            'الاحتراق' => 'bi-fire',
+            'الإرهاق' => 'bi-battery-half',
+            'السلامة' => 'bi-shield-check',
+        ];
+        
+        $categoryColors = [
+            'مقاييس معرفة الذات والشخصية' => ['iconColor' => '#8b5cf6', 'iconBg' => '#f5f3ff', 'titleColor' => '#6d28d9'],
+            'مقاييس الكفاءة الشخصية والنجاح المهني' => ['iconColor' => '#3b82f6', 'iconBg' => '#eff6ff', 'titleColor' => '#1d4ed8'],
+            'مقاييس الاتصال والعلاقات المهنية' => ['iconColor' => '#14b8a6', 'iconBg' => '#f0fdfa', 'titleColor' => '#0f766e'],
+            'مقاييس القيادة والإدارة' => ['iconColor' => '#f59e0b', 'iconBg' => '#fffbeb', 'titleColor' => '#b45309'],
+            'مقاييس التوجيه والتوافق المهني' => ['iconColor' => '#f43f5e', 'iconBg' => '#fff1f2', 'titleColor' => '#be123c'],
+            'مقاييس الصحة المهنية' => ['iconColor' => '#10b981', 'iconBg' => '#ecfdf5', 'titleColor' => '#047857'],
+        ];
+    @endphp
+
+    @foreach($assessments as $index => $assessment)
+        @php
+            $imageName = $assessment->image_url ?: 'default.png'; // admin uploaded image or fallback
+            $iconName = $assessment->icon ?: 'bi-journal-text'; // dynamic from DB or default
+            
+            // Basic icon mapping (optional, but keep it minimal or remove entirely)
+            // If the user wants no hardcoding, we can just use a default icon for all
+            
+            $theme = $categoryColors[$assessment->category] ?? ['iconColor' => '#1a2b56', 'iconBg' => '#f8fafc', 'titleColor' => '#1a2b56'];
+        @endphp
+        <div class="assessment-card" data-category="{{ $assessment->category }}">
+            <div class="card-header-top">
+                <div class="card-icon" style="color: {{ $theme['iconColor'] }}; background-color: {{ $theme['iconBg'] }}; border: 1.5px solid {{ $theme['iconColor'] }};">
+                    @if(str_starts_with($iconName, '/') || str_starts_with($iconName, 'http'))
+                        <img src="{{ asset($iconName) }}" alt="Icon" style="width: 24px; height: 24px; object-fit: contain;">
+                    @else
+                        <i class="bi {{ $iconName }}"></i>
+                    @endif
+                </div>
+                <div class="card-title-area">
+                    @php $r = $assessment->rating ?: 0; @endphp
+                    @if($r > 0)
+                    <div class="d-flex align-items-center gap-1 mb-1" style="font-size: 0.55rem; color: #f59e0b;">
+                        <span class="fw-bold" style="color: #334155;">{{ number_format($r, 1) }}</span>
+                        <div class="d-flex" style="padding-top: 1px;">
+                            @for($i = 1; $i <= 5; $i++)
+                                @if($i <= $r)
+                                    <i class="bi bi-star-fill"></i>
+                                @elseif($i - 0.5 <= $r)
+                                    <i class="bi bi-star-half"></i>
+                                @else
+                                    <i class="bi bi-star"></i>
+                                @endif
+                            @endfor
+                        </div>
+                        <span style="color: #94a3b8;">({{ $assessment->rating_count ?: 0 }})</span>
+                    </div>
+                    @else
+                    <div style="height: 16px; margin-bottom: 4px;"></div>
+                    @endif
+                    <h4 class="card-title" style="color: {{ $theme['titleColor'] }};">{{ $assessment->title_ar }}</h4>
+                    <p class="card-desc">{{ $assessment->subtitle_ar ?: ($assessment->description_ar ?: 'لا يوجد وصف متاح') }}</p>
+                </div>
+            </div>
+            
+            @php
+                $userSession = $userSessions->firstWhere('assessment_id', $assessment->id);
+                $isCompleted = $userSession && $userSession->status === 'completed';
+                $isInProgress = $userSession && $userSession->status === 'in_progress';
+                $priceLabel = $assessment->price > 0 ? number_format($assessment->price, 0) . ' <span style="font-size:0.5rem; font-weight:normal;">ر.س</span>' : 'مجاني';
+            @endphp
+            
+            <div style="position: relative;">
+                <img src="{{ asset('images/dashboard/' . $imageName) }}" alt="{{ $assessment->title_ar }}" class="cover">
+            </div>
+            
+            <div class="card-meta">
+                <div><i class="bi bi-file-earmark-text"></i> تقرير مفصل</div>
+                <span class="divider">|</span>
+                <div><i class="bi bi-ui-checks"></i> {{ $assessment->questions_count ?: 0 }} سؤال</div>
+                <span class="divider">|</span>
+                <div><i class="bi bi-clock"></i> {{ $assessment->time_limit_min ? $assessment->time_limit_min . ' دقيقة' : 'مفتوح' }}</div>
+            </div>
+
+            <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px;">
+                <div class="card-price-row">
+                    @if($isCompleted)
+                        <form method="POST" action="{{ route('exam.start', $assessment->id) }}" class="m-0" style="flex: 1;">
+                            @csrf
+                            <button type="submit" class="btn-primary-custom w-100">إعادة المقياس</button>
+                        </form>
+                    @elseif($isInProgress)
+                        <form method="POST" action="{{ route('exam.start', $assessment->id) }}" class="m-0" style="flex: 1;">
+                            @csrf
+                            <button type="submit" class="btn-primary-custom w-100" style="background: #f59e0b;">استئناف المقياس</button>
+                        </form>
+                    @else
+                        <div style="flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                            <div class="card-price" style="white-space: nowrap;">
+                                {!! $assessment->price > 0 ? number_format($assessment->price, 0) . ' <span style="font-size:0.5rem; font-weight:normal;">ر.س</span>' : '<span style="background: #10b981; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">مجاني</span>' !!}
+                            </div>
+                            <button type="button" class="btn-primary-custom" style="flex: 1;" data-bs-toggle="modal" data-bs-target="#paymentCouponModal" data-assessment-id="{{ $assessment->id }}" data-assessment-title="{{ $assessment->title_ar }}" data-assessment-price="{{ $assessment->price > 0 ? number_format($assessment->price, 0) : '0' }}" data-hide-coupon="{{ $assessment->hide_coupon_field ? '1' : '0' }}">
+                                ابدأ المقياس
+                            </button>
+                        </div>
+                    @endif
+                </div>
+
+                @if(!$isCompleted && !$isInProgress && !$assessment->hide_coupon_field)
+                <a href="#" class="btn-reveal-coupon w-100"
+                   data-assessment-id="{{ $assessment->id }}"
+                   data-assessment-title="{{ $assessment->title_ar }}"
+                   data-assessment-price="{{ $assessment->price > 0 ? number_format($assessment->price, 0) : '0' }}"
+                   data-hide-coupon="{{ $assessment->hide_coupon_field ? '1' : '0' }}"
+                   style="background-color: #f0f7ff; border-radius: 8px; padding: 6px 8px; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; cursor: pointer; border: 1.2px dashed #2563eb; transition: all 0.2s;">
+                    <i class="bi bi-gift-fill" style="color: #2563eb; font-size: 0.95rem; flex-shrink: 0;"></i>
+                    <span style="color: #1e3a8a; font-size: 0.68rem; font-weight: 700; text-align: center; white-space: nowrap;">
+                        احصل على كوبون <span style="text-decoration: underline; color: #2563eb;">من هنا</span>
+                    </span>
+                </a>
+                @endif
+
+                @if($isCompleted)
+                    <a href="{{ route('exam.result', $userSession->id) }}" class="btn-secondary-custom">
+                        عرض التقرير <i class="bi bi-eye"></i>
+                    </a>
+                @else
+                    <a href="#" onclick="alert('ليس لديك نتيجة في هذا المقياس حتى الآن. يرجى أداء المقياس أولاً لاستخراج تقريرك.'); return false;" class="btn-secondary-custom" style="opacity: 0.7;">
+                        عرض التقرير <i class="bi bi-eye"></i>
+                    </a>
+                @endif
+            </div>
+        </div>
+    @endforeach
+</div>
+
+@if($myCoupons->count() > 0)
+@php
+    // Check if there's at least one active coupon to show the container
+    $hasActiveCoupon = false;
+    foreach($myCoupons as $coupon) {
+        $used = $coupon->pivot->used_count ?? 0;
+        $isUnlimited = $coupon->assessments_limit === null;
+        $remaining = $isUnlimited ? null : max(0, $coupon->assessments_limit - $used);
+        $isExpired = $coupon->expires_at && \Carbon\Carbon::parse($coupon->expires_at)->isPast();
+        if (!$isExpired && ($isUnlimited || $remaining > 0)) $hasActiveCoupon = true;
+    }
+@endphp
+
+@if($hasActiveCoupon)
+<div class="my-coupons-section mt-5 mb-5 p-4 rounded-4 shadow-sm" style="background-color: #fff; border: 1px solid #e2e8f0;">
+    <h4 class="fw-bold mb-4" style="color: #1a2b56;"><i class="bi bi-ticket-perforated text-warning me-2"></i> باقاتي (كوبوناتي النشطة)</h4>
+    <div class="row g-4">
+        @foreach($myCoupons as $coupon)
+            @php
+                $used = $coupon->pivot->used_count ?? 0;
+                $isUnlimited = $coupon->assessments_limit === null;
+                $remaining = $isUnlimited ? null : max(0, $coupon->assessments_limit - $used);
+                $isExpired = $coupon->expires_at && \Carbon\Carbon::parse($coupon->expires_at)->isPast();
+            @endphp
+            @if(!$isExpired && ($isUnlimited || $remaining > 0))
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100" style="border-radius: 10px; border: 1px solid #e2e8f0; background: #fff;">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-bold text-navy mb-1"><i class="bi bi-ticket-detailed me-1 text-warning"></i> {{ $coupon->title }}</h6>
+                                <span class="badge bg-success rounded-pill" style="font-size: 0.7rem;">فعال</span>
+                            </div>
+                            <div class="text-end">
+                                <span class="text-muted" style="font-size: 0.75rem;">المتبقي</span>
+                                @if($coupon->assessments_limit !== null)
+                                    <div class="fw-bold text-primary" style="font-size: 1.1rem;">{{ $remaining }} <span class="text-muted" style="font-size: 0.75rem;">/ {{ $coupon->assessments_limit }}</span></div>
+                                @else
+                                    <div class="fw-bold text-primary" style="font-size: 1.1rem;"><i class="bi bi-infinity me-1"></i>غير محدود</div>
+                                @endif
+                            </div>
+                        </div>
+                        
+                        @if($coupon->expires_at)
+                            <div class="countdown-timer d-flex justify-content-between align-items-center rounded-3 p-2 mt-2" style="background: #f8fafc; border: 1px solid #f1f5f9;" data-expires="{{ \Carbon\Carbon::parse($coupon->expires_at)->endOfDay()->toIso8601String() }}">
+                                <div class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-clock-history me-1"></i> ينتهي خلال:</div>
+                                <div class="d-flex gap-1 text-navy fw-bold" dir="ltr" style="font-size: 0.8rem;">
+                                    <div><span class="days">00</span><small class="text-muted ms-1" style="font-size:0.6rem">يوم</small></div>:
+                                    <div><span class="hours">00</span><small class="text-muted ms-1" style="font-size:0.6rem">س</small></div>:
+                                    <div><span class="minutes">00</span><small class="text-muted ms-1" style="font-size:0.6rem">د</small></div>:
+                                    <div><span class="seconds">00</span><small class="text-muted ms-1" style="font-size:0.6rem">ث</small></div>
+                                </div>
+                            </div>
+                        @else
+                            <div class="text-muted mt-2" style="font-size: 0.75rem;"><i class="bi bi-infinity me-1"></i> صلاحية الكوبون مفتوحة</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
+        @endforeach
+    </div>
+</div>
+@endif
+@endif
+
+<!-- Features Section -->
+<div class="features-section">
+    <h3 class="features-title">ماذا ستحصل بعد إكمال المقياس؟</h3>
+    <div class="features-grid">
+        <div class="feature-box">
+            <i class="bi bi-graph-up-arrow"></i>
+            <h6>توصيات عملية</h6>
+            <p>توصيات قابلة للتطبيق<br>في عملك وحياتك</p>
+        </div>
+        <div class="feature-box">
+            <i class="bi bi-shield-check"></i>
+            <h6>فرص التحسين</h6>
+            <p>اكتشف المهارات التي تحتاج<br>لتطوير وخطة التحسين</p>
+        </div>
+        <div class="feature-box">
+            <i class="bi bi-bullseye"></i>
+            <h6>نقاط القوة</h6>
+            <p>تعرف على نقاط قوتك<br>واستخدمها بذكاء</p>
+        </div>
+        <div class="feature-box">
+            <i class="bi bi-file-earmark-richtext"></i>
+            <h6>تقرير تفصيلي</h6>
+            <p>عن نقاط قوتك<br>وفرص التحسين</p>
+        </div>
+    </div>
+</div>
+
+<!-- Footer CTA -->
+<div class="footer-cta">
+    <h4>ابدأ رحلتك نحو تطوير ذاتك اليوم</h4>
+    <p>اختر المقياس المناسب لك واحصل على تقرير تفصيلي الآن</p>
+    <a href="#" class="btn-cta">استعرض جميع المقاييس</a>
+</div>
+
+<style>
+.custom-pills .nav-link {
+    color: #64748b;
+    background: #f8fafc;
+    border-radius: 10px;
+    margin: 0 4px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+.custom-pills .nav-link.active {
+    background: #1a2b56;
+    color: #fff;
+    border-color: #1a2b56;
+    box-shadow: 0 4px 6px -1px rgba(26, 43, 86, 0.2);
+}
+.custom-pills .nav-link:hover:not(.active) {
+    background: #f1f5f9;
+}
+</style>
+
+{{-- ============================================================
+     Coupon Reveal Modal  ("من هنا" button target)
+     ============================================================ --}}
+<div class="modal fade" id="couponRevealModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+
+            {{-- Header --}}
+            <div class="modal-header border-0 pb-0 pt-4 px-4" style="background: linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);">
+                <div>
+                    <h5 class="modal-title fw-bold mb-0" style="color:#1a2b56;" id="revealModalTitle">كوبون المقياس</h5>
+                    <p class="text-muted small mb-0" id="revealModalSub">اضغط لنسخ الكوبون ثم فعّله</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body px-4 pt-3 pb-4" style="background: linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);">
+
+                {{-- Loading --}}
+                <div id="revealLoading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-muted small mt-2 mb-0">جارٍ البحث عن كوبون...</p>
+                </div>
+
+                {{-- No coupon --}}
+                <div id="revealNoCoupon" class="d-none text-center py-3">
+                    <i class="bi bi-emoji-frown" style="font-size:2.5rem;color:#94a3b8;"></i>
+                    <p class="text-muted mt-2 mb-0 small">لا يوجد كوبون متاح لهذا المقياس حالياً.</p>
+                </div>
+
+                {{-- Coupons Container --}}
+                <div id="revealCouponsContainer" class="d-none" style="max-height: 450px; overflow-y: auto; padding-right: 5px;">
+                    <!-- Dynamically populated by JS -->
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ============================================================
+     Payment / Coupon Modal
+     ============================================================ --}}
+<div class="modal fade" id="paymentCouponModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pt-4 px-4 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold mb-1" style="color: #1a2b56;" id="modalAssessmentTitle">عنوان المقياس</h5>
+                    <div class="text-muted small" id="modalAssessmentPriceLabel"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body px-4 pb-4 pt-3">
+
+                {{-- Coupon section --}}
+                <div id="couponSection">
+                    <form method="POST" action="" id="couponStartForm">
+                        @csrf
+                        <input type="hidden" name="coupon_code" id="hiddenCouponCode">
+
+                        {{-- Step 1: Enter code --}}
+                        <div id="couponInputArea">
+                            <label class="form-label fw-semibold small text-dark">رمز الكوبون</label>
+                            <div class="input-group mb-2">
+                                <input type="text" id="couponCodeInput" class="form-control form-control-lg text-start" dir="ltr"
+                                    placeholder="أدخل رمز الكوبون..." style="border-radius: 10px 0 0 10px; letter-spacing: 1px;">
+                                <button type="button" id="btnVerifyCoupon" class="btn btn-primary px-3" style="border-radius: 0 10px 10px 0;">
+                                    <span id="verifyCouponText"><i class="bi bi-search me-1"></i>تحقق</span>
+                                    <span id="verifyCouponSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                                </button>
+                            </div>
+                            <div id="couponError" class="text-danger small d-none"></div>
+                        </div>
+
+                        {{-- Step 2: Discount breakdown --}}
+                        <div id="couponSuccessArea" class="d-none">
+                            <div class="rounded-3 p-3 mb-3" style="background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%); border: 1px solid #bbf7d0;">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;background:#10b981;color:#fff;font-size:1rem;flex-shrink:0;">
+                                        <i class="bi bi-check-lg"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold small text-success" id="couponSuccessMsg">الكوبون صالح!</div>
+                                        <div class="text-muted" style="font-size:0.7rem;" id="couponUsageLabel"></div>
+                                    </div>
+                                    <button type="button" id="btnChangeCoupon" class="btn btn-sm btn-outline-secondary ms-auto py-0 px-2" style="font-size:0.7rem;">تغيير</button>
+                                </div>
+
+                                <div id="pricingBreakdown" class="small pt-2 border-top border-success border-opacity-25">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">السعر الأصلي</span>
+                                        <span id="breakdownOriginal" class="fw-medium"></span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-success"><i class="bi bi-tag me-1"></i>خصم <span id="breakdownPct"></span>%</span>
+                                        <span class="text-success fw-medium" id="breakdownDiscount"></span>
+                                    </div>
+                                    <div class="d-flex justify-content-between fw-bold" style="border-top: 1px dashed #86efac; padding-top:6px; margin-top:4px;">
+                                        <span class="text-dark">المبلغ المستحق</span>
+                                        <span class="text-primary fs-6" id="breakdownFinal"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="btnStartFree" class="btn btn-success w-100 fw-bold py-2 d-none" style="border-radius: 10px;">
+                                <i class="bi bi-play-circle me-1"></i> ابدأ المقياس مجاناً
+                            </button>
+
+                            <div id="partialPayArea" class="d-none">
+                                <div class="alert alert-info small border-0 py-2 mb-2">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    يوجد مبلغ متبقٍ. سيُطبق الكوبون بعد إتمام الدفع التجريبي.
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 fw-bold py-2" style="border-radius: 10px;">
+                                    <i class="bi bi-credit-card me-1"></i> إتمام الدفع التجريبي وبدء المقياس
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <span class="text-muted small">لا يوجد لديك كوبون؟ </span>
+                        <button type="button" class="btn btn-link btn-sm small p-0 text-primary text-decoration-none" id="btnSwitchToPay">الدفع الإلكتروني</button>
+                    </div>
+                </div>
+
+                {{-- Direct Pay section --}}
+                <div id="paySection" class="d-none">
+                    <div class="text-center py-3">
+                        <div class="display-6 fw-bold mb-2" style="color:#1a2b56;" id="payDirectPrice">— ر.س</div>
+                        <p class="text-muted small">بوابة الدفع الإلكتروني قيد التجهيز حالياً.</p>
+                        <button type="button" class="btn btn-secondary w-100" disabled>متابعة الدفع (قريباً)</button>
+                    </div>
+                    <div id="btnSwitchToCouponWrap" class="text-center mt-2">
+                        <button type="button" class="btn btn-link btn-sm small p-0 text-muted text-decoration-none" id="btnSwitchToCoupon">
+                            <i class="bi bi-ticket-perforated me-1"></i>استخدام كوبون
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    /* ── Category filter ── */
+    const filterBtns = document.querySelectorAll('.btn-category');
+    const assessmentCards = document.querySelectorAll('.assessment-card');
+    
+    // Normalize string for better matching (handling ة/ه and أ/ا)
+    const normalize = (str) => {
+        return str.replace(/ة/g, 'ه')
+                  .replace(/[أإآ]/g, 'ا')
+                  .replace('مقاييس ', '')
+                  .replace('معرفة ', '')
+                  .trim();
+    };
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const filterValue = this.getAttribute('data-filter');
+            
+            assessmentCards.forEach(card => {
+                if (filterValue === 'all') {
+                    card.style.display = 'flex';
+                } else {
+                    const cardCat = card.getAttribute('data-category') || '';
+                    const searchStr = normalize(filterValue);
+                    const targetStr = normalize(cardCat);
+                    
+                    const show = targetStr.includes(searchStr) || searchStr.includes(targetStr);
+                    card.style.display = show ? 'flex' : 'none';
+                }
+            });
+        });
+    });
+
+    /* ── Modal logic ── */
+    let currentAssessmentId   = null;
+    let currentAssessmentPrice = 0;
+
+    const modal = document.getElementById('paymentCouponModal');
+    if (!modal) return;
+
+    modal.addEventListener('show.bs.modal', function (event) {
+        const btn       = event.relatedTarget;
+        if (!btn) return;
+        const title     = btn.getAttribute('data-assessment-title');
+        const price     = parseFloat(btn.getAttribute('data-assessment-price') || '0');
+        const aId       = btn.getAttribute('data-assessment-id');
+        const hideCoup  = btn.getAttribute('data-hide-coupon') === '1';
+
+        currentAssessmentId    = aId;
+        currentAssessmentPrice = price;
+
+        document.getElementById('modalAssessmentTitle').textContent = title;
+        document.getElementById('modalAssessmentPriceLabel').innerHTML =
+            price > 0 ? '<span style="color:#d97706;font-weight:700;">' + price + ' ر.س</span>' : '<span class="text-success fw-bold">مجاني</span>';
+        document.getElementById('payDirectPrice').innerHTML =
+            price > 0 ? price + ' <span class="fs-6">ر.س</span>' : '<span class="text-success">مجاني</span>';
+
+        resetCouponUI();
+
+        var couponSection = document.getElementById('couponSection');
+        var paySection    = document.getElementById('paySection');
+        var switchWrap    = document.getElementById('btnSwitchToCouponWrap');
+
+        if (hideCoup) {
+            couponSection.classList.add('d-none');
+            paySection.classList.remove('d-none');
+            switchWrap.classList.add('d-none');
+        } else {
+            couponSection.classList.remove('d-none');
+            paySection.classList.add('d-none');
+            switchWrap.classList.remove('d-none');
+        }
+
+        // Free assessment — quick start
+        if (price === 0 && !hideCoup) {
+            var form2 = document.getElementById('couponStartForm');
+            form2.action = '/exam/' + aId + '/start';
+            document.getElementById('couponInputArea').classList.add('d-none');
+            document.getElementById('couponSuccessArea').classList.remove('d-none');
+            document.getElementById('couponSuccessMsg').textContent = 'هذا المقياس مجاني!';
+            document.getElementById('couponUsageLabel').textContent = '';
+            document.getElementById('pricingBreakdown').classList.add('d-none');
+            document.getElementById('btnStartFree').classList.remove('d-none');
+            document.getElementById('partialPayArea').classList.add('d-none');
+            document.getElementById('hiddenCouponCode').value = '';
+        }
+    });
+
+    function resetCouponUI() {
+        document.getElementById('couponCodeInput').value = '';
+        document.getElementById('couponError').classList.add('d-none');
+        document.getElementById('couponError').textContent = '';
+        document.getElementById('couponInputArea').classList.remove('d-none');
+        document.getElementById('couponSuccessArea').classList.add('d-none');
+        document.getElementById('btnStartFree').classList.add('d-none');
+        document.getElementById('partialPayArea').classList.add('d-none');
+        document.getElementById('pricingBreakdown').classList.remove('d-none');
+        document.getElementById('hiddenCouponCode').value = '';
+    }
+
+    /* Verify coupon via AJAX */
+    document.getElementById('btnVerifyCoupon').addEventListener('click', async function () {
+        var code = document.getElementById('couponCodeInput').value.trim();
+        var errEl = document.getElementById('couponError');
+
+        if (!code) { errEl.textContent = 'يرجى إدخال رمز الكوبون.'; errEl.classList.remove('d-none'); return; }
+        errEl.classList.add('d-none');
+
+        var btnText = document.getElementById('verifyCouponText');
+        var spinner = document.getElementById('verifyCouponSpinner');
+        btnText.classList.add('d-none'); spinner.classList.remove('d-none');
+        this.disabled = true;
+
+        try {
+            var res = await fetch('/coupon/validate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ code: code, assessment_id: currentAssessmentId }),
+            });
+
+            var data = await res.json();
+
+            if (data.valid) {
+                document.getElementById('hiddenCouponCode').value = code;
+                document.getElementById('couponStartForm').action = '/exam/' + currentAssessmentId + '/start';
+
+                document.getElementById('couponSuccessMsg').textContent = data.message;
+                document.getElementById('couponUsageLabel').textContent = 'استخدام رقم ' + data.usage_number;
+                document.getElementById('breakdownPct').textContent = data.discount;
+                document.getElementById('breakdownOriginal').textContent = data.price + ' ر.س';
+                document.getElementById('breakdownDiscount').textContent = '‑' + data.discount_amount + ' ر.س';
+                document.getElementById('breakdownFinal').textContent = data.is_free ? 'مجاني 🎉' : data.final_price + ' ر.س';
+
+                document.getElementById('couponInputArea').classList.add('d-none');
+                document.getElementById('couponSuccessArea').classList.remove('d-none');
+
+                if (data.is_free) {
+                    document.getElementById('btnStartFree').classList.remove('d-none');
+                    document.getElementById('partialPayArea').classList.add('d-none');
+                } else {
+                    document.getElementById('btnStartFree').classList.add('d-none');
+                    document.getElementById('partialPayArea').classList.remove('d-none');
+                }
+            } else {
+                errEl.textContent = data.message || 'الكوبون غير صالح.';
+                errEl.classList.remove('d-none');
+            }
+        } catch (e) {
+            errEl.textContent = 'حدث خطأ أثناء الاتصال بالخادم. حاول مرة أخرى.';
+            errEl.classList.remove('d-none');
+        } finally {
+            btnText.classList.remove('d-none'); spinner.classList.add('d-none');
+            this.disabled = false;
+        }
+    });
+
+    document.getElementById('btnChangeCoupon').addEventListener('click', resetCouponUI);
+
+    document.getElementById('btnSwitchToPay').addEventListener('click', function () {
+        document.getElementById('couponSection').classList.add('d-none');
+        document.getElementById('paySection').classList.remove('d-none');
+    });
+    document.getElementById('btnSwitchToCoupon').addEventListener('click', function () {
+        document.getElementById('paySection').classList.add('d-none');
+        document.getElementById('couponSection').classList.remove('d-none');
+    });
+
+    /* ── Countdown Timers ── */
+    document.querySelectorAll('.countdown-timer').forEach(function(timer) {
+        var expiresAt = new Date(timer.getAttribute('data-expires')).getTime();
+        var daysEl    = timer.querySelector('.days');
+        var hoursEl   = timer.querySelector('.hours');
+        var minsEl    = timer.querySelector('.minutes');
+        var secsEl    = timer.querySelector('.seconds');
+
+        var tick = setInterval(function() {
+            var diff = expiresAt - Date.now();
+            if (diff < 0) {
+                clearInterval(tick);
+                timer.innerHTML = '<div class="alert alert-danger m-0 py-2 border-0"><i class="bi bi-exclamation-circle me-1"></i> انتهت صلاحية الكوبون</div>';
+                return;
+            }
+            daysEl.textContent  = String(Math.floor(diff / 86400000)).padStart(2, '0');
+            hoursEl.textContent = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
+            minsEl.textContent  = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+            secsEl.textContent  = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+        }, 1000);
+    });
+    /* ── Coupon Reveal Modal logic ── */
+    let revealAssessmentId   = null;
+    let revealAssessmentPrice = 0;
+    let revealAssessmentTitle = '';
+    let revealHideCoupon = false;
+    let revealedCouponCode = '';
+
+    document.querySelectorAll('.btn-reveal-coupon').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            revealAssessmentId    = this.getAttribute('data-assessment-id');
+            revealAssessmentPrice = parseFloat(this.getAttribute('data-assessment-price') || '0');
+            revealAssessmentTitle = this.getAttribute('data-assessment-title');
+            revealHideCoupon      = this.getAttribute('data-hide-coupon') === '1';
+
+            // Reset UI
+            document.getElementById('revealLoading').classList.remove('d-none');
+            document.getElementById('revealNoCoupon').classList.add('d-none');
+            document.getElementById('revealModalTitle').textContent = revealAssessmentTitle;
+            document.getElementById('revealModalSub').textContent = 'جارٍ البحث عن كوبون...';
+
+            var revealModal = new bootstrap.Modal(document.getElementById('couponRevealModal'));
+            revealModal.show();
+
+            // Fetch coupon(s)
+            fetch('/coupon/for-assessment/' + revealAssessmentId, {
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+            })
+            .then(r => r.json())
+            .then(function(data) {
+                document.getElementById('revealLoading').classList.add('d-none');
+                if (!data.found || !data.coupons || data.coupons.length === 0) {
+                    document.getElementById('revealNoCoupon').classList.remove('d-none');
+                    document.getElementById('revealModalSub').textContent = '';
+                    return;
+                }
+                
+                let html = '';
+                data.coupons.forEach(function(coupon) {
+                    html += `
+                    <div class="rounded-3 p-4 text-center mb-3" style="background:#fff; border: 2px dashed #1d4ed8; position:relative;">
+                        <div class="mb-2">
+                            <i class="bi bi-ticket-perforated" style="font-size:2rem; color:#1d4ed8;"></i>
+                        </div>
+                        <div class="text-muted small mb-1">${coupon.title || 'كوبون المقياس'}</div>
+                        <div class="fw-bold mb-2" style="font-size:0.85rem; color:#64748b;">خصم ${coupon.discount}%</div>
+                        <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                            <span style="font-size:1.6rem; font-weight:800; letter-spacing:4px; color:#1a2b56; font-family:monospace;">${coupon.code}</span>
+                        </div>
+                        <div class="text-muted mb-3" style="font-size:0.7rem;">${coupon.expires ? 'صالح حتى: ' + coupon.expires : 'بدون تاريخ انتهاء'}</div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-primary fw-semibold btn-copy-multi" data-code="${coupon.code}" style="border-radius:10px; flex:1;">
+                                <i class="bi bi-clipboard me-1"></i> نسخ
+                            </button>
+                            <button type="button" class="btn fw-bold btn-apply-multi" data-code="${coupon.code}" style="border-radius:10px; background:#f59e0b; color:#fff; border:none; flex:2;">
+                                <i class="bi bi-arrow-left-circle me-1"></i> تطبيق وبدء
+                            </button>
+                        </div>
+                    </div>`;
+                });
+                
+                const container = document.getElementById('revealCouponsContainer');
+                container.innerHTML = html;
+                document.getElementById('revealModalSub').textContent = 'انسخ الكود واضغط تطبيق وبدء';
+                container.classList.remove('d-none');
+                
+                // Add event listeners for dynamic buttons
+                container.querySelectorAll('.btn-copy-multi').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const code = this.getAttribute('data-code');
+                        navigator.clipboard.writeText(code).then(() => {
+                            const originalHtml = this.innerHTML;
+                            this.innerHTML = '<i class="bi bi-clipboard-check me-1"></i> تم';
+                            this.classList.remove('btn-outline-primary');
+                            this.classList.add('btn-success');
+                            setTimeout(() => {
+                                this.innerHTML = originalHtml;
+                                this.classList.add('btn-outline-primary');
+                                this.classList.remove('btn-success');
+                            }, 2000);
+                        });
+                    });
+                });
+                
+                container.querySelectorAll('.btn-apply-multi').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const code = this.getAttribute('data-code');
+                        bootstrap.Modal.getInstance(document.getElementById('couponRevealModal')).hide();
+                        
+                        setTimeout(function() {
+                            currentAssessmentId    = revealAssessmentId;
+                            currentAssessmentPrice = revealAssessmentPrice;
+                            var payModal = new bootstrap.Modal(document.getElementById('paymentCouponModal'));
+                            payModal.show();
+                            
+                            setTimeout(function() {
+                                document.getElementById('couponCodeInput').value = code;
+                                document.getElementById('btnVerifyCoupon').click();
+                            }, 500);
+                        }, 400);
+                    });
+                });
+            })
+            .catch(function() {
+                document.getElementById('revealLoading').classList.add('d-none');
+                document.getElementById('revealNoCoupon').classList.remove('d-none');
+            });
+        });
+    });
+
+    // Legacy coupon buttons were removed; dynamic handlers are defined inside the fetch promise above.
+
+});
+</script>
+
+@endsection
+````
+
+## File: resources/views/admin/assessments/show.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'تفاصيل المقياس: ' . $assessment->title_ar)
+@section('page-title', 'إدارة المقياس')
+
+@push('styles')
+<style>
+    /* Premium layout styles */
+    .nav-tabs-custom {
+        border-bottom: 2px solid #dee2e6;
+        gap: 8px;
+    }
+    .nav-tabs-custom .nav-link {
+        border: none;
+        border-bottom: 3px solid transparent;
+        color: #495057;
+        font-weight: 500;
+        padding: 12px 20px;
+        transition: all 0.2s ease-in-out;
+        font-size: 0.95rem;
+    }
+    .nav-tabs-custom .nav-link:hover {
+        color: #0d6efd;
+        background: rgba(13, 110, 253, 0.05);
+        border-radius: 8px 8px 0 0;
+    }
+    .nav-tabs-custom .nav-link.active {
+        color: #0d6efd;
+        border-bottom-color: #0d6efd;
+        background: transparent;
+        font-weight: 600;
+    }
+    
+    /* Sortable handles and rows */
+    .dim-drag-handle, .q-drag-handle {
+        cursor: grab;
+        color: #adb5bd;
+        padding: 4px 8px;
+        display: inline-flex;
+        align-items: center;
+        transition: color 0.15s;
+    }
+    .dim-drag-handle:hover, .q-drag-handle:hover {
+        color: #495057;
+    }
+    .dim-drag-handle:active, .q-drag-handle:active {
+        cursor: grabbing;
+    }
+    
+    /* Accordion Custom Styling */
+    .accordion-custom .accordion-item {
+        border: 1px solid #dee2e6;
+        border-radius: 12px !important;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+        overflow: hidden;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .accordion-custom .accordion-item:hover {
+        border-color: #b5d5ff;
+        box-shadow: 0 6px 12px rgba(13, 110, 253, 0.05);
+    }
+    .accordion-custom .accordion-header {
+        background-color: #f8fafd;
+        border-bottom: 1px solid #dee2e6;
+        border-right: 4px solid #cbd5e1;
+        transition: border-right-color 0.2s, background-color 0.2s;
+    }
+    .accordion-custom .accordion-item.is-expanded .accordion-header,
+    .accordion-custom .accordion-item:has(.accordion-collapse.show) .accordion-header {
+        background-color: #edf5ff;
+        border-right-color: #0d6efd;
+        border-bottom: 1px solid #b5d5ff;
+    }
+    .accordion-custom .accordion-button {
+        background-color: transparent;
+        box-shadow: none;
+        padding: 16px 20px;
+        color: #344054;
+        font-weight: 600;
+        transition: color 0.2s;
+    }
+    .accordion-custom .accordion-button:not(.collapsed) {
+        background-color: transparent;
+        color: #0959cc;
+    }
+    .accordion-custom .accordion-button::after {
+        margin-right: auto;
+        margin-left: 0;
+    }
+    .accordion-custom .accordion-collapse {
+        border-top: 1px solid #dee2e6;
+    }
+    
+    /* Question list item */
+    .question-row {
+        background: #fff;
+        border-bottom: 1px solid #f1f3f5;
+        padding: 12px 16px;
+        transition: background-color 0.15s;
+    }
+    .question-row:hover {
+        background-color: #fdfdfe;
+    }
+    .question-row:last-child {
+        border-bottom: none;
+    }
+    
+    /* Recommendation Cards */
+    .recommendation-card {
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+        height: 100%;
+        transition: transform 0.2s;
+    }
+    .recommendation-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    /* Custom input/textarea adjustments */
+    .auto-resize-textarea {
+        min-height: 60px;
+        resize: none;
+        overflow-y: hidden;
+    }
+    .no-caret::after {
+        display: none !important;
+    }
+</style>
+@endpush
+
+@section('content')
+<!-- Header Area -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h4 class="mb-0 fw-bold text-dark" id="header-assessment-title">{{ $assessment->title_ar }}</h4>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" id="header-assessment-category">
+                    {{ $assessment->category }}
+                </span>
+            </div>
+            <div class="text-muted small">
+                <i class="bi bi-clock me-1"></i>
+                <span id="header-assessment-time">{{ $assessment->time_limit_min ? $assessment->time_limit_min . ' دقيقة' : 'بلا حد للوقت' }}</span>
+                <span class="mx-2">•</span>
+                <i class="bi bi-calendar3 me-1"></i>
+                تاريخ الإنشاء: {{ $assessment->created_at->format('Y-m-d') }}
+            </div>
+        </div>
+        
+        <div class="d-flex align-items-center gap-3">
+            <div class="form-check form-switch ps-0 pe-5 fs-5">
+                <input class="form-check-input ms-0 me-2 cursor-pointer" type="checkbox" role="switch" id="header-is-active" 
+                       {{ $assessment->is_active ? 'checked' : '' }} 
+                       data-url="{{ route('admin.assessments.toggle', $assessment->id) }}">
+                <label class="form-check-label text-dark small fw-medium" for="header-is-active" id="header-active-label">
+                    {{ $assessment->is_active ? 'مفعّل' : 'موقف' }}
+                </label>
+            </div>
+            
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="previewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-eye me-1"></i>معاينة نتائج المقياس
+                </button>
+                <ul class="dropdown-menu shadow-sm border-0" aria-labelledby="previewDropdown" style="max-height: 350px; overflow-y: auto;">
+                    @if($assessment->scoring_type === 'perceptual_styles')
+                        @php
+                            $perceptualReports = [
+                                'visual' => 'النمط البصري',
+                                'auditory' => 'النمط السمعي',
+                                'kinesthetic' => 'النمط الحسي (العملي)',
+                                'balanced' => 'نمط متوازن',
+                                'dual_visual_auditory' => 'نمط مزدوج (بصري – سمعي)',
+                                'dual_visual_kinesthetic' => 'نمط مزدوج (بصري – حسي)',
+                                'dual_auditory_kinesthetic' => 'نمط مزدوج (سمعي – حسي)',
+                            ];
+                        @endphp
+                        @foreach($perceptualReports as $lvlKey => $lvlTitle)
+                            <li>
+                                <a class="dropdown-item py-2" target="_blank" href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => $lvlKey]) }}">
+                                    <i class="bi bi-file-earmark-bar-graph text-primary me-2"></i>{{ $lvlTitle }}
+                                </a>
+                            </li>
+                        @endforeach
+                    @else
+                        @forelse($assessment->recommendations as $rec)
+                            <li>
+                                <a class="dropdown-item py-2" target="_blank" href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => $rec->level]) }}">
+                                    <i class="bi bi-file-earmark-bar-graph text-primary me-2"></i>{{ $rec->title_ar ?? $rec->level }}
+                                </a>
+                            </li>
+                        @empty
+                            <li><a class="dropdown-item disabled text-muted" href="#">لا توجد توصيات مسجلة</a></li>
+                        @endforelse
+                    @endif
+                </ul>
+            </div>
+
+            <a href="{{ route('admin.assessments.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-right me-1"></i>العودة للمقاييس
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs Navigation -->
+<ul class="nav nav-tabs nav-tabs-custom mb-4" id="assessmentTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="dimensions-tab" data-bs-toggle="tab" data-bs-target="#tab-dimensions-questions" type="button" role="tab" aria-controls="tab-dimensions-questions" aria-selected="true">
+            <i class="bi bi-collection-play me-1"></i>الأبعاد والأسئلة
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="recommendations-tab" data-bs-toggle="tab" data-bs-target="#tab-recommendations" type="button" role="tab" aria-controls="tab-recommendations" aria-selected="false">
+            <i class="bi bi-lightbulb me-1"></i>ملخص التقرير
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#tab-settings" type="button" role="tab" aria-controls="tab-settings" aria-selected="false">
+            <i class="bi bi-gear-wide-connected me-1"></i>إعدادات المقياس
+        </button>
+    </li>
+</ul>
+
+<!-- Tabs Content -->
+<div class="tab-content" id="assessmentTabsContent">
+    
+    <!-- Tab 1: الأبعاد والأسئلة -->
+    <div class="tab-pane fade show active" id="tab-dimensions-questions" role="tabpanel" aria-labelledby="dimensions-tab">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-dark">هيكل الأبعاد والأسئلة</h5>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bulkImportModal">
+                <i class="bi bi-file-earmark-arrow-up me-1"></i>استيراد أسئلة بالجملة
+            </button>
+        </div>
+        
+        <!-- Dimensions Accordion List -->
+        <div class="accordion accordion-custom" id="dimensions-accordion">
+            @forelse($assessment->dimensions as $dim)
+                @php
+                    $dimRecs = $dim->interpretations->keyBy('level');
+                    $firstRec = $dim->interpretations->first();
+                    $lowThreshold = $firstRec ? $firstRec->low_threshold : '';
+                    $highThreshold = $firstRec ? $firstRec->high_threshold : '';
+                    $highText = $dimRecs->has('high') ? $dimRecs->get('high')->interpretation_text_ar : '';
+                    $mediumText = $dimRecs->has('medium') ? $dimRecs->get('medium')->interpretation_text_ar : '';
+                    $lowText = $dimRecs->has('low') ? $dimRecs->get('low')->interpretation_text_ar : '';
+                @endphp
+                <div class="accordion-item" data-id="{{ $dim->id }}">
+
+                    <div class="accordion-header d-flex align-items-center justify-content-between px-3">
+                        <div class="d-flex align-items-center flex-grow-1 py-1">
+                            <span class="dim-drag-handle me-2" title="اسحب لإعادة ترتيب الأبعاد">
+                                <i class="bi bi-grip-vertical fs-5"></i>
+                            </span>
+                            
+                            <!-- Dimension Display Mode -->
+                            <div class="dim-display-container d-flex align-items-center gap-2 flex-grow-1" id="dim-display-{{ $dim->id }}">
+                                <span class="accordion-button collapsed py-2 px-1 border-0 bg-transparent fw-semibold" 
+                                        type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $dim->id }}" 
+                                        aria-expanded="false" aria-controls="collapse-{{ $dim->id }}">
+                                    <span class="dim-name-text">{{ $dim->name_ar }}</span>
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-2 rounded-pill px-2 py-1 fs-xs dim-q-count">
+                                        {{ $dim->questions->count() }} سؤال
+                                    </span>
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle ms-2 rounded-pill px-2 py-1 fs-xs">
+                                        الدرجة القصوى: <span class="dim-max-score-text">{{ $dim->max_score }}</span>
+                                    </span>
+                                </span>
+                                
+                                <div class="ms-auto d-flex gap-1 align-items-center btn-actions-group">
+                                    <button class="btn btn-sm btn-outline-secondary btn-edit-dim" data-id="{{ $dim->id }}" title="تعديل البعد">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger btn-delete-dim" 
+                                            data-url="{{ route('admin.dimensions.destroy', $dim->id) }}" 
+                                            data-name="{{ $dim->name_ar }}" title="حذف البعد">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Dimension Edit Mode Form (Hidden by default) -->
+                            <div class="dim-edit-container d-none w-100 py-2 d-flex align-items-center gap-2" id="dim-edit-{{ $dim->id }}">
+                                <input type="text" class="form-control form-control-sm w-50 input-dim-name" value="{{ $dim->name_ar }}" placeholder="اسم البعد">
+                                <input type="number" class="form-control form-control-sm w-20 input-dim-max" value="{{ $dim->max_score }}" placeholder="الدرجة القصوى" min="1">
+                                <button class="btn btn-sm btn-success btn-save-dim" data-id="{{ $dim->id }}">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                                <button class="btn btn-sm btn-secondary btn-cancel-dim" data-id="{{ $dim->id }}">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="collapse-{{ $dim->id }}" class="accordion-collapse collapse" data-bs-parent="#dimensions-accordion">
+                        <div class="accordion-body p-0 bg-white">
+                            <!-- Questions List (Sortable) -->
+                            <div class="questions-list" data-dimension-id="{{ $dim->id }}">
+                                @forelse($dim->questions as $qIdx => $q)
+                                    <div class="question-row d-flex align-items-center justify-content-between" data-id="{{ $q->id }}">
+                                        <div class="d-flex align-items-center flex-grow-1">
+                                            <span class="q-drag-handle me-2" title="اسحب لإعادة ترتيب الأسئلة">
+                                                <i class="bi bi-grip-vertical"></i>
+                                            </span>
+                                            <span class="text-muted me-2 small fw-semibold q-number">{{ $qIdx + 1 }}.</span>
+                                            
+                                            <!-- Question Text Container -->
+                                            <div class="flex-grow-1 me-3">
+                                                <span class="q-display-text text-dark" id="q-display-{{ $q->id }}">{{ $q->text_ar }}</span>
+                                                @if($q->is_reversed)
+                                                    <span class="badge ms-2 rounded-pill"
+                                                          style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:.68rem"
+                                                          title="سؤال معكوس: نعم=0 | إلى حد ما=1 | لا=2">
+                                                        ⇄ معكوس
+                                                    </span>
+                                                @endif
+                                                <div class="q-edit-container d-none mt-1" id="q-edit-{{ $q->id }}">
+                                                    <textarea class="form-control form-control-sm auto-resize-textarea input-q-text">{{ $q->text_ar }}</textarea>
+                                                    <div class="mt-2 d-flex gap-1 justify-content-end">
+                                                        <button class="btn btn-sm btn-secondary btn-cancel-q" data-id="{{ $q->id }}">إلغاء</button>
+                                                        <button class="btn btn-sm btn-success btn-save-q" data-id="{{ $q->id }}">حفظ</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Actions -->
+                                        <div class="d-flex gap-1 align-items-center q-actions" id="q-actions-{{ $q->id }}">
+                                            <button class="btn btn-sm btn-outline-info border-0 btn-manage-options" data-id="{{ $q->id }}" title="خيارات الإجابة">
+                                                <i class="bi bi-list-check"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary border-0 btn-edit-q" data-id="{{ $q->id }}" title="تعديل نص السؤال">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-sm border-0 btn-toggle-reversed"
+                                                    data-id="{{ $q->id }}"
+                                                    data-reversed="{{ $q->is_reversed ? '1' : '0' }}"
+                                                    data-url="{{ route('admin.questions.update', $q->id) }}"
+                                                    title="{{ $q->is_reversed ? 'إلغاء العكس' : 'تفعيل كسؤال معكوس' }}"
+                                                    style="color:{{ $q->is_reversed ? '#d97706' : '#9ca3af' }}">
+                                                <i class="bi bi-arrow-left-right"></i>
+                                            </button>
+                                            
+                                            <!-- Move Dropdown -->
+                                            <div class="dropdown d-inline">
+                                                <button class="btn btn-sm btn-outline-secondary border-0 no-caret" data-bs-toggle="dropdown" title="نقل إلى بُعد آخر">
+                                                    <i class="bi bi-folder-symlink"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                    <li><h6 class="dropdown-header">نقل إلى البُعد:</h6></li>
+                                                    @foreach($assessment->dimensions as $dOption)
+                                                        @if($dOption->id != $dim->id)
+                                                            <li><button class="dropdown-item btn-move-q" data-question-id="{{ $q->id }}" data-dimension-id="{{ $dOption->id }}">{{ $dOption->name_ar }}</button></li>
+                                                        @endif
+                                                    @endforeach
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><button class="dropdown-item btn-move-q text-danger" data-question-id="{{ $q->id }}" data-dimension-id="">بدون بُعد (عام)</button></li>
+                                                </ul>
+                                            </div>
+                                            
+                                            <button class="btn btn-sm btn-outline-danger border-0 btn-delete-q" 
+                                                    data-url="{{ route('admin.questions.destroy', $q->id) }}" title="حذف السؤال">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="text-center text-muted py-3 small bg-light-subtle">لا توجد أسئلة في هذا البعد بعد.</div>
+                                @endforelse
+                            </div>
+                            
+                            <!-- Inline Add Question Form -->
+                            <div class="p-3 bg-light border-top d-flex gap-2 align-items-center">
+                                <input type="text" class="form-control form-control-sm flex-grow-1 input-add-q-text" placeholder="اكتب نص السؤال واضغط إضافة...">
+                                <button class="btn btn-sm btn-outline-primary px-3 btn-add-q-inline" data-dimension-id="{{ $dim->id }}">
+                                    <i class="bi bi-plus-lg me-1"></i>إضافة سؤال
+                                </button>
+                            </div>
+
+                            <!-- Dimension Interpretations Form -->
+                            <div class="p-4 border-top bg-light-subtle">
+                                <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-journal-text me-2 text-primary"></i>تفسيرات هذا البُعد ومستويات الدرجة</h6>
+                                <form class="dimension-interpretations-ajax-form" data-dimension-id="{{ $dim->id }}">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-medium text-muted">الحد الأقصى للمستوى المنخفض (%) *</label>
+                                            <input type="number" class="form-control form-control-sm input-dim-low-threshold" value="{{ $lowThreshold }}" required min="0" max="100" placeholder="مثال: 33">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-medium text-muted">الحد الأدنى للمستوى المرتفع (%) *</label>
+                                            <input type="number" class="form-control form-control-sm input-dim-high-threshold" value="{{ $highThreshold }}" required min="0" max="100" placeholder="مثال: 70">
+                                        </div>
+                                    </div>
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-medium text-success">تفسير المستوى المرتفع (High) *</label>
+                                            <textarea class="form-control form-control-sm auto-resize-textarea textarea-dim-high-text" rows="3" required placeholder="التفسير في حال كانت الدرجة مرتفعة...">{{ $highText }}</textarea>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-medium text-warning">تفسير المستوى المتوسط (Medium) *</label>
+                                            <textarea class="form-control form-control-sm auto-resize-textarea textarea-dim-medium-text" rows="3" required placeholder="التفسير في حال كانت الدرجة متوسطة...">{{ $mediumText }}</textarea>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-medium text-danger">تفسير المستوى المنخفض (Low) *</label>
+                                            <textarea class="form-control form-control-sm auto-resize-textarea textarea-dim-low-text" rows="3" required placeholder="التفسير في حال كانت الدرجة منخفضة...">{{ $lowText }}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-primary btn-sm px-4 btn-save-dim-interpretations">
+                                            <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ التفسيرات والحدود</span>
+                                            <span class="spinner-border spinner-border-sm d-none"></span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="card border-0 shadow-sm p-4 text-center text-muted mb-3">
+                    <i class="bi bi-folder2-open display-6 mb-2"></i>
+                    <div>لا توجد أبعاد فرعية لهذا المقياس بعد. يرجى إضافة بُعد بالأسفل للبدء.</div>
+                </div>
+            @endforelse
+        </div>
+        
+        <!-- Questions without Dimension Section -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom-0">
+                @if($assessment->dimensions->isEmpty())
+                    <h6 class="fw-bold text-dark mb-0"><i class="bi bi-question-square me-2 text-primary"></i>أسئلة المقياس</h6>
+                    <span class="badge bg-primary-subtle text-dark border border-primary-subtle rounded-pill px-2 py-1 small">
+                        {{ $assessment->questions->count() }} سؤال
+                    </span>
+                @else
+                    <h6 class="fw-bold text-dark mb-0"><i class="bi bi-question-square me-2 text-warning"></i>أسئلة بدون بُعد فرعي</h6>
+                    <span class="badge bg-warning-subtle text-dark border border-warning-subtle rounded-pill px-2 py-1 small">
+                        {{ $assessment->questions->count() }} سؤال معلّق
+                    </span>
+                @endif
+            </div>
+            <div class="card-body p-0">
+                <div class="unassigned-questions-list">
+                    @forelse($assessment->questions as $qIdx => $q)
+                        <div class="question-row d-flex align-items-center justify-content-between border-top">
+                            <div class="d-flex align-items-center flex-grow-1">
+                                <span class="text-muted me-2 small fw-semibold">{{ $qIdx + 1 }}.</span>
+                                
+                                <div class="flex-grow-1 me-3">
+                                    <span class="q-display-text text-dark" id="q-display-{{ $q->id }}">{{ $q->text_ar }}</span>
+                                    <div class="q-edit-container d-none mt-1" id="q-edit-{{ $q->id }}">
+                                        <textarea class="form-control form-control-sm auto-resize-textarea input-q-text">{{ $q->text_ar }}</textarea>
+                                        <div class="mt-2 d-flex gap-1 justify-content-end">
+                                            <button class="btn btn-sm btn-secondary btn-cancel-q" data-id="{{ $q->id }}">إلغاء</button>
+                                            <button class="btn btn-sm btn-success btn-save-q" data-id="{{ $q->id }}">حفظ</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex gap-1 align-items-center q-actions" id="q-actions-{{ $q->id }}">
+                                <button class="btn btn-sm btn-outline-info border-0 btn-manage-options" data-id="{{ $q->id }}" title="خيارات الإجابة">
+                                    <i class="bi bi-list-check"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary border-0 btn-edit-q" data-id="{{ $q->id }}" title="تعديل السؤال">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                
+                                @if(!$assessment->dimensions->isEmpty())
+                                    <!-- Move Dropdown -->
+                                    <div class="dropdown d-inline">
+                                        <button class="btn btn-sm btn-outline-secondary border-0 no-caret" data-bs-toggle="dropdown" title="تعيين لبعد">
+                                            <i class="bi bi-folder-symlink"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                            <li><h6 class="dropdown-header">تعيين للبُعد:</h6></li>
+                                            @foreach($assessment->dimensions as $dOption)
+                                                <li><button class="dropdown-item btn-move-q" data-question-id="{{ $q->id }}" data-dimension-id="{{ $dOption->id }}">{{ $dOption->name_ar }}</button></li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+                                
+                                <button class="btn btn-sm btn-outline-danger border-0 btn-delete-q" 
+                                        data-url="{{ route('admin.questions.destroy', $q->id) }}" title="حذف السؤال">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    @empty
+                        @if($assessment->dimensions->isEmpty())
+                            <div class="text-center text-muted py-4 small">لا توجد أسئلة في هذا المقياس بعد.</div>
+                        @else
+                            <div class="text-center text-muted py-4 small">جميع الأسئلة مسندة لأبعاد فرعية بشكل صحيح!</div>
+                        @endif
+                    @endforelse
+                </div>
+                
+                <!-- Inline Add Question Form for Unassigned Questions -->
+                <div class="p-3 bg-light border-top d-flex gap-2 align-items-center">
+                    <input type="text" class="form-control form-control-sm flex-grow-1 input-add-q-text-unassigned" placeholder="اكتب نص السؤال العام واضغط إضافة...">
+                    <button class="btn btn-sm btn-outline-warning px-3 btn-add-q-inline-unassigned">
+                        <i class="bi bi-plus-lg me-1"></i>إضافة سؤال عام
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add Dimension Form Inline -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom-0">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-plus-circle-dotted me-2 text-primary"></i>إنشاء بُعد فرعي جديد</h6>
+            </div>
+            <div class="card-body pt-0">
+                <div class="row g-3" id="add-dimension-inline-form">
+                    <div class="col-md-7">
+                        <input type="text" class="form-control form-control-sm" id="inline-dim-name" placeholder="اسم البعد الفرعي (مثال: الوعي العاطفي)">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" class="form-control form-control-sm" id="inline-dim-max" placeholder="الدرجة القصوى" min="1">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-sm w-100" id="btn-save-dim-inline">
+                            <span class="btn-text"><i class="bi bi-plus-lg me-1"></i>إضافة بُعد</span>
+                            <span class="spinner-border spinner-border-sm d-none"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab 2: التوصيات -->
+    <div class="tab-pane fade" id="tab-recommendations" role="tabpanel" aria-labelledby="recommendations-tab">
+        @php
+            $recs = $assessment->recommendations;
+        @endphp
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h5 class="mb-1 text-dark fw-bold"><i class="bi bi-star-fill text-warning me-2"></i>التوصيات وتفسيرات النتيجة</h5>
+                <p class="text-muted small mb-0">إدارة التوصيات التي تظهر للمستفيدين بناءً على المجموع أو النمط.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="addNewRecommendationCard()">
+                <i class="bi bi-plus-lg me-1"></i>إضافة توصية جديدة
+            </button>
+        </div>
+
+        <div class="row g-4" id="recommendations-container">
+            @forelse($recs as $index => $rec)
+                @php $key = $rec->id; @endphp
+                <div class="col-lg-4 rec-col" id="rec-col-{{ $key }}">
+                    <div class="card border-0 border-start border-4 border-primary recommendation-card shadow-sm h-100">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded">
+                                <i class="bi bi-bar-chart-fill me-1"></i>{{ $rec->level }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Saved Recommendation View -->
+                            <div class="rec-card-view-mode" id="rec-view-{{ $key }}">
+                                <div class="mb-3">
+                                    <label class="small text-muted mb-1 d-block">نطاق الدرجات</label>
+                                    <div class="fw-bold text-dark fs-5">
+                                        @if($rec->low_threshold !== null && $rec->high_threshold !== null)
+                                            من {{ $rec->low_threshold }} إلى {{ $rec->high_threshold }} درجة
+                                        @else
+                                            <span class="text-muted fs-6">يعتمد على النمط أو المحور الأعلى</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="small text-muted mb-1 d-block">الوصف العيادي</label>
+                                    <div class="text-dark whitespace-pre-wrap small bg-light p-3 rounded" style="min-height: 80px;">{{ $rec->description_ar }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="small text-muted mb-1 d-block">البرامج الإرشادية والتوصيات المقترحة</label>
+                                    <div class="text-dark small bg-light p-3 rounded" style="min-height: 80px;">
+                                        @php
+                                            $lines = is_array($rec->programs_ar) ? $rec->programs_ar : (is_string($rec->programs_ar) ? array_filter(array_map('trim', explode("\n", $rec->programs_ar))) : []);
+                                        @endphp
+                                        @if(count($lines) > 0)
+                                            <ul class="mb-0 ps-0 list-unstyled">
+                                                @foreach($lines as $line)
+                                                    <li class="mb-1"><i class="bi bi-check2 text-primary me-1"></i>{{ is_array($line) ? ($line['title'] ?? '') : (is_object($line) ? ($line->title ?? '') : $line) }}</li>
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <span class="text-muted">لا يوجد برامج مسجلة.</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('admin.assessments.preview', ['assessment' => $assessment->id, 'level' => $rec->level]) }}" target="_blank" class="btn btn-outline-success btn-sm flex-grow-1" title="معاينة التقرير لهذا النمط">
+                                        <i class="bi bi-eye me-1"></i>معاينة التقرير
+                                    </a>
+                                    <button class="btn btn-outline-primary btn-sm btn-toggle-rec-edit" data-level="{{ $key }}" title="تعديل التوصية">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm btn-delete-rec" data-url="{{ route('admin.recommendations.destroy', $rec->id) }}" data-name="{{ $rec->level }}" title="حذف التوصية">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Form container -->
+                            <div class="rec-form-container d-none" id="rec-form-{{ $key }}">
+                                <form class="recommendation-ajax-form" data-level="{{ $key }}">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">اسم المستوى / النمط (مثال: مستوى مرتفع، النمط الأوتوقراطي)</label>
+                                        <input type="text" class="form-control form-control-sm rec-input-level-name" value="{{ $rec->level }}" required>
+                                    </div>
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <label class="form-label small fw-medium text-muted">الحد الأدنى للدرجة</label>
+                                            <input type="number" class="form-control form-control-sm rec-input-low" value="{{ $rec->low_threshold }}" min="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small fw-medium text-muted">الحد الأقصى للدرجة</label>
+                                            <input type="number" class="form-control form-control-sm rec-input-high" value="{{ $rec->high_threshold }}" min="0">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">الوصف العيادي للتوصية</label>
+                                        <textarea class="form-control form-control-sm rec-textarea-desc" rows="4" required placeholder="ادخل تفاصيل تشخيص هذا المستوى..." style="min-height: 80px;">{{ $rec->description_ar }}</textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">الجملة الافتتاحية للشهادات (اختياري)</label>
+                                        <input type="text" class="form-control form-control-sm rec-input-certs-intro" placeholder="مثال: من أهم الشهادات التي ننصحك بالحصول عليها:" value="{{ $rec->certificates_intro_ar }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <textarea class="form-control form-control-sm rec-textarea-certificates json-certificates-data" rows="3" placeholder="إضافة شهادة...">{{ is_array($rec->certificates_ar) ? json_encode($rec->certificates_ar) : $rec->certificates_ar }}</textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">الجملة الافتتاحية للبرامج التدريبية (اختياري)</label>
+                                        <input type="text" class="form-control form-control-sm rec-input-programs-intro" placeholder="مثال: من أبرز البرامج التدريبية التي ننصحك بالالتحاق بها:" value="{{ $rec->programs_intro_ar }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">البرامج التدريبية المقترحة</label>
+                                        <textarea class="form-control form-control-sm rec-textarea-programs json-programs-data" rows="3" placeholder="إضافة برنامج...">{{ is_array($rec->programs_ar) ? json_encode($rec->programs_ar) : $rec->programs_ar }}</textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">الجملة الختامية للبرامج التدريبية (اختياري)</label>
+                                        <input type="text" class="form-control form-control-sm rec-input-programs-outro" placeholder="مثال: يمكنك الاطلاع على هذه البرامج والتسجيل فيها عبر المنصات المعتمدة." value="{{ $rec->programs_outro_ar }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">الجملة الافتتاحية لخطة التطوير (اختياري)</label>
+                                        <input type="text" class="form-control form-control-sm rec-input-plan-intro" placeholder="مثال: نقترح عليك خلال الـ 30 يوماً القادمة اتباع الخطوات التالية:" value="{{ $rec->plan_30_days_intro_ar }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-medium text-muted">خطة تطوير (30 يوماً)</label>
+                                        <textarea class="form-control form-control-sm rec-textarea-plan json-plan-data" rows="3" placeholder="إضافة خطوة...">{{ is_array($rec->plan_30_days_ar) ? json_encode($rec->plan_30_days_ar) : $rec->plan_30_days_ar }}</textarea>
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-success btn-sm flex-grow-1 btn-save-recommendation">
+                                            <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ التوصية</span>
+                                            <span class="spinner-border spinner-border-sm d-none"></span>
+                                        </button>
+                                        <button type="button" class="btn btn-secondary btn-sm btn-cancel-rec-edit" data-level="{{ $key }}">إلغاء</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="col-12 text-center py-5" id="no-recs-placeholder">
+                    <i class="bi bi-inbox text-muted display-4"></i>
+                    <p class="text-muted mt-3 mb-0">لا توجد توصيات لهذا المقياس حتى الآن.</p>
+                </div>
+            @endforelse
+        </div>
+
+        <!-- Template for new recommendation -->
+        <template id="new-rec-template">
+            <div class="col-lg-4 rec-col" id="rec-col-NEW_ID">
+                <div class="card border-0 border-start border-4 border-success recommendation-card shadow-sm h-100">
+                    <div class="card-header bg-white py-3">
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded">توصية جديدة</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="rec-form-container" id="rec-form-NEW_ID">
+                            <form class="recommendation-ajax-form" data-level="NEW_ID">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">اسم المستوى / النمط</label>
+                                    <input type="text" class="form-control form-control-sm rec-input-level-name" placeholder="مثال: مستوى مرتفع" required>
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label small fw-medium text-muted">الحد الأدنى للدرجة</label>
+                                        <input type="number" class="form-control form-control-sm rec-input-low" min="0">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small fw-medium text-muted">الحد الأقصى للدرجة</label>
+                                        <input type="number" class="form-control form-control-sm rec-input-high" min="0">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">الوصف العيادي للتوصية</label>
+                                    <textarea class="form-control form-control-sm rec-textarea-desc" rows="4" required style="min-height: 80px;"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">الجملة الافتتاحية للشهادات (اختياري)</label>
+                                    <input type="text" class="form-control form-control-sm rec-input-certs-intro" placeholder="مثال: من أهم الشهادات التي ننصحك بالحصول عليها:">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">الشهادات الاحترافية المناسبة</label>
+                                    <textarea class="form-control form-control-sm rec-textarea-certificates json-certificates-data" rows="3" placeholder="إضافة شهادة..."></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">الجملة الافتتاحية للبرامج التدريبية (اختياري)</label>
+                                    <input type="text" class="form-control form-control-sm rec-input-programs-intro" placeholder="مثال: من أبرز البرامج التدريبية التي ننصحك بالالتحاق بها:">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">البرامج التدريبية المقترحة</label>
+                                    <textarea class="form-control form-control-sm rec-textarea-programs json-programs-data" rows="3" placeholder="إضافة برنامج..."></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">الجملة الختامية للبرامج التدريبية (اختياري)</label>
+                                    <input type="text" class="form-control form-control-sm rec-input-programs-outro" placeholder="مثال: يمكنك الاطلاع على هذه البرامج والتسجيل فيها عبر المنصات المعتمدة.">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">الجملة الافتتاحية لخطة التطوير (اختياري)</label>
+                                    <input type="text" class="form-control form-control-sm rec-input-plan-intro" placeholder="مثال: نقترح عليك خلال الـ 30 يوماً القادمة اتباع الخطوات التالية:">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-muted">خطة تطوير (30 يوماً)</label>
+                                    <textarea class="form-control form-control-sm rec-textarea-plan json-plan-data" rows="3" placeholder="إضافة خطوة..."></textarea>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-success btn-sm flex-grow-1 btn-save-recommendation">
+                                        <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ التوصية</span>
+                                        <span class="spinner-border spinner-border-sm d-none"></span>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm btn-cancel-rec-edit" data-level="NEW_ID">إلغاء</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+        </div>
+    </div>
+    
+    <!-- Tab 3: إعدادات المقياس -->
+    <div class="tab-pane fade" id="tab-settings" role="tabpanel" aria-labelledby="settings-tab">
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Metadata settings -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h6 class="fw-bold text-dark mb-0"><i class="bi bi-sliders me-2 text-primary"></i>تعديل بيانات المقياس الأساسية</h6>
+                    </div>
+                    <div class="card-body">
+                        <form id="assessment-settings-form">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark">اسم المقياس العربي *</label>
+                                    <input type="text" class="form-control" id="settings-title" value="{{ $assessment->title_ar }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark">العنوان الجذاب (وصف قصير)</label>
+                                    <input type="text" class="form-control" id="settings-subtitle" value="{{ $assessment->subtitle_ar }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark">المحور / الفئة *</label>
+                                    <input type="text" class="form-control" id="settings-category" value="{{ $assessment->category }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark">أيقونة المقياس (اختياري)</label>
+                                    @if($assessment->icon && str_starts_with($assessment->icon, '/'))
+                                        <div class="mb-1">
+                                            <img src="{{ asset($assessment->icon) }}" alt="Icon" style="height: 30px; object-fit: contain;">
+                                        </div>
+                                    @endif
+                                    <input type="file" class="form-control text-start" dir="ltr" id="settings-icon-file" accept="image/*">
+                                    <div class="form-text" style="font-size:0.65rem;">ارفع صورة الأيقونة. يفضل خلفية شفافة (PNG).</div>
+                                </div>
+                                <div class="col-md-12 mt-3">
+                                    <label class="form-label small fw-semibold text-dark">طريقة حساب النتيجة والتوصية *</label>
+                                    <select class="form-select" id="settings-scoring-type">
+                                        <option value="overall_score" {{ ($assessment->scoring_type ?? 'overall_score') == 'overall_score' ? 'selected' : '' }}>بناءً على الدرجة الكلية (مثل: مرتفع/متوسط/منخفض)</option>
+                                        <option value="highest_dimension" {{ ($assessment->scoring_type ?? 'overall_score') == 'highest_dimension' ? 'selected' : '' }}>بناءً على المحور الأعلى درجة (مثل: الأنماط القيادية)</option>
+                                        <option value="dimension_only" {{ ($assessment->scoring_type ?? 'overall_score') == 'dimension_only' ? 'selected' : '' }}>لا يوجد تقييم كلي (تقييم الأبعاد فقط)</option>
+                                         <option value="perceptual_styles" {{ ($assessment->scoring_type ?? '') == 'perceptual_styles' ? 'selected' : '' }}>أنماط إدراكية (بصري، سمعي، حسي، أنماط مزدوجة ومتوازنة)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">وصف المقياس</label>
+                                <textarea class="form-control" id="settings-description" rows="4" placeholder="اكتب نبذة أو وصف عيادي قصير للمقياس...">{{ $assessment->description_ar }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">صورة المقياس</label>
+                                @if($assessment->image_url)
+                                    <div class="mb-2">
+                                        <img src="{{ asset('images/dashboard/' . $assessment->image_url) }}" alt="Current Image" style="height: 60px; border-radius: 4px; border: 1px solid #dee2e6;">
+                                    </div>
+                                @endif
+                                <input type="file" class="form-control text-start" dir="ltr" id="settings-image" accept="image/*">
+                                <div class="form-text" style="font-size:0.65rem;">اختر صورة جديدة إذا أردت استبدال الصورة الحالية. سيتم مسح الصورة القديمة (إن لم تكن من الصور الافتراضية).</div>
+                            </div>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold text-dark">وقت الاختبار (دقائق)</label>
+                                    <input type="number" class="form-control" id="settings-time-limit" value="{{ $assessment->time_limit_min }}" placeholder="بلا حد للوقت" min="1">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold text-dark">السعر (ر.س)</label>
+                                    <input type="number" class="form-control" id="settings-price" value="{{ $assessment->price }}" step="0.01" min="0">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold text-dark">التقييم (1-5)</label>
+                                    <input type="number" class="form-control" id="settings-rating" value="{{ $assessment->rating }}" step="0.1" min="1" max="5">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold text-dark">بادئة كود التقرير (مثال: VR)</label>
+                                    <input type="text" class="form-control" id="settings-report-code" value="{{ $assessment->report_code }}" placeholder="بادئة رقم التقرير" maxlength="50">
+                                </div>
+                                <div class="col-12 mt-2 d-flex align-items-end flex-wrap gap-3">
+                                    <div class="form-check form-switch ps-0 pe-5 mb-2 fs-6">
+                                        <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="settings-is-active" {{ $assessment->is_active ? 'checked' : '' }}>
+                                        <label class="form-check-label text-dark fw-medium" for="settings-is-active">
+                                            مفعّل وظاهر للمستفيدين
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-switch ps-0 pe-5 mb-2 fs-6">
+                                        <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="settings-hide-coupon" {{ $assessment->hide_coupon_field ? 'checked' : '' }}>
+                                        <label class="form-check-label text-dark fw-medium" for="settings-hide-coupon">
+                                            إخفاء حقل الكوبون في شاشة الدفع للمستخدمين
+                                        </label>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                            <hr class="my-4">
+
+                            <button type="submit" class="btn btn-primary" id="btn-save-settings">
+                                <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ التعديلات</span>
+                                <span class="spinner-border spinner-border-sm d-none"></span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <!-- Danger zone card -->
+                <div class="card border-danger border-opacity-25 bg-danger-subtle bg-opacity-10 shadow-sm">
+                    <div class="card-header bg-transparent border-danger border-opacity-10 py-3">
+                        <h6 class="fw-bold text-danger mb-0"><i class="bi bi-exclamation-octagon me-2"></i>منطقة الخطر</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small">
+                            عند حذف المقياس نهائياً، سيتم حذف جميع الأبعاد، الأسئلة، التوصيات، وجلسات الاختبار المرتبطة بالمقياس فوراً. هذا الإجراء لا يمكن التراجع عنه.
+                        </p>
+                        <button class="btn btn-danger w-100 btn-delete-assessment" 
+                                data-url="{{ route('admin.assessments.destroy', $assessment->id) }}" 
+                                data-name="{{ $assessment->title_ar }}">
+                            <i class="bi bi-trash3 me-1"></i>حذف المقياس بالكامل
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Answer Options Modal -->
+<div class="modal fade" id="optionsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">خيارات الإجابة للسؤال</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <p class="text-muted small mb-3">السؤال: <strong id="modal-q-text" class="text-dark"></strong></p>
+                
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold small">إضافة خيار جديد</span>
+                    </div>
+                    <div class="card-body py-2">
+                        <form id="add-option-form" class="row g-2 align-items-end">
+                            <input type="hidden" id="modal-q-id">
+                            <div class="col-sm-6">
+                                <label class="form-label small text-muted mb-1">نص الخيار (مثال: نعم، أحياناً)</label>
+                                <input type="text" id="add-opt-label" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label small text-muted mb-1">قيمة الدرجة (Score)</label>
+                                <input type="number" id="add-opt-score" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="submit" class="btn btn-primary btn-sm w-100">إضافة</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle mb-0" id="options-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>نص الخيار</th>
+                                    <th>الدرجة</th>
+                                    <th style="width: 100px;">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="options-tbody">
+                                <!-- Options injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-primary btn-sm" id="btn-sync-options">
+                    <i class="bi bi-files me-1"></i>تعميم هذه الخيارات على جميع أسئلة المقياس
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Import Modal -->
+<div class="modal fade" id="bulkImportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-file-earmark-arrow-up text-primary me-2"></i>استيراد أسئلة بالجملة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs mb-3" id="bulkImportTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active small py-2" id="import-text-tab" data-bs-toggle="tab" data-bs-target="#import-text" type="button" role="tab" aria-controls="import-text" aria-selected="true">استيراد نصي</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link small py-2" id="import-csv-tab" data-bs-toggle="tab" data-bs-target="#import-csv" type="button" role="tab" aria-controls="import-csv" aria-selected="false">استيراد ملف CSV</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="bulkImportTabsContent">
+                    <!-- Tab 1: Text Import -->
+                    <div class="tab-pane fade show active" id="import-text" role="tabpanel" aria-labelledby="import-text-tab">
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">المقياس المختار</label>
+                            <input type="text" class="form-control form-control-sm bg-light" value="{{ $assessment->title_ar }}" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">اسناد للأبعاد الفرعية</label>
+                            <select class="form-select form-select-sm" id="modal-bulk-dimension-id">
+                                <option value="">-- بدون بُعد (أسئلة عامة معلّقة) --</option>
+                                @foreach($assessment->dimensions as $d)
+                                    <option value="{{ $d->id }}">{{ $d->name_ar }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">الأسئلة (اكتب كل سؤال في سطر مستقل) *</label>
+                            <textarea class="form-control" id="modal-bulk-questions-text" rows="8" placeholder="مثال:&#10;هل تشعر بالتوتر بشكل متكرر؟&#10;هل تجد صعوبة في النوم ليلاً؟" required></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                            <button type="button" class="btn btn-sm btn-primary" id="modal-btn-bulk-import">
+                                <span class="btn-text"><i class="bi bi-cloud-arrow-down me-1"></i>بدء الاستيراد</span>
+                                <span class="spinner-border spinner-border-sm d-none"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: CSV Import -->
+                    <div class="tab-pane fade" id="import-csv" role="tabpanel" aria-labelledby="import-csv-tab">
+                        <form id="csv-import-form" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label class="form-label small fw-medium">المقياس المختار</label>
+                                <input type="text" class="form-control form-control-sm bg-light" value="{{ $assessment->title_ar }}" disabled>
+                            </div>
+                            <div class="mb-3 bg-light p-3 rounded border">
+                                <h6 class="small fw-bold text-dark mb-2"><i class="bi bi-info-circle me-1 text-primary"></i>تعليمات ملف CSV:</h6>
+                                <p class="small text-muted mb-2">تأكد من أن ملف CSV يحتوي على الأعمدة التالية وبنفس الترتيب:</p>
+                                <code class="small d-block mb-2 bg-white p-2 border rounded text-ltr text-start" style="font-family: monospace;">
+                                    اسم البعد,نص السؤال,معكوس,الخيارات
+                                </code>
+                                <p class="small text-muted mb-0">يمكنك ترك عمود الأبعاد فارغاً لإضافة أسئلة عامة. عمود الخيارات اختياري ويقبل الصيغة: <code class="bg-white px-1">نعم:2|لا:0</code></p>
+                                <a href="{{ route('admin.questions.template') }}" class="btn btn-sm btn-outline-secondary mt-2 px-3 py-1 small">
+                                    <i class="bi bi-download me-1"></i>تحميل قالب الاستيراد (CSV)
+                                </a>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-medium">اختر ملف CSV *</label>
+                                <input type="file" class="form-control form-control-sm" id="csv_file" name="csv_file" accept=".csv" required>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                <button type="submit" class="btn btn-sm btn-success" id="modal-btn-csv-import">
+                                    <span class="btn-text"><i class="bi bi-file-earmark-arrow-up me-1"></i>استيراد الملف</span>
+                                    <span class="spinner-border spinner-border-sm d-none"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    window.APP_ICONS = @json($icons ?? []);
+</script>
+<script>
+$(document).ready(function() {
+    
+    // Accordion active styling helper (class toggle)
+    $(document).on('show.bs.collapse', '.accordion-collapse', function () {
+        $(this).closest('.accordion-item').addClass('is-expanded');
+    });
+    $(document).on('hide.bs.collapse', '.accordion-collapse', function () {
+        $(this).closest('.accordion-item').removeClass('is-expanded');
+    });
+    
+    // Toggle active state from header
+    $('#header-is-active').on('change', function() {
+        const toggle = $(this);
+        const url = toggle.data('url');
+        
+        $.ajax({
+            url: url,
+            method: 'POST',
+            success: function(res) {
+                showAlert(res.message, 'success');
+                $('#header-active-label').text(res.is_active ? 'مفعّل' : 'موقف');
+                // Sync settings switch
+                $('#settings-is-active').prop('checked', res.is_active);
+            },
+            error: function() {
+                showAlert('فشل تغيير حالة المقياس.', 'danger');
+                toggle.prop('checked', !toggle.is(':checked'));
+            }
+        });
+    });
+
+    // Auto-sync settings switch changes to header switch
+    $('#settings-is-active').on('change', function() {
+        $('#header-is-active').prop('checked', $(this).is(':checked')).trigger('change');
+    });
+
+    /* ==========================================================================
+       TAB 1: DIMENSIONS & QUESTIONS ACTIONS
+       ========================================================================== */
+
+    // Initialize SortableJS
+    function initSortables() {
+        // Dimension reordering
+        const accordionEl = document.getElementById('dimensions-accordion');
+        if (accordionEl) {
+            new Sortable(accordionEl, {
+                handle: '.dim-drag-handle',
+                animation: 150,
+                onEnd: function() {
+                    const order = [];
+                    $('#dimensions-accordion > .accordion-item').each(function() {
+                        order.push($(this).data('id'));
+                    });
+                    
+                    $.ajax({
+                        url: '{{ route('admin.dimensions.reorder') }}',
+                        method: 'PATCH',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ order: order }),
+                        success: function(res) {
+                            showAlert(res.message, 'success');
+                        },
+                        error: function() {
+                            showAlert('فشل إعادة ترتيب الأبعاد.', 'danger');
+                        }
+                    });
+                }
+            });
+        }
+
+        // Question reordering per dimension
+        document.querySelectorAll('.questions-list').forEach(function(el) {
+            new Sortable(el, {
+                handle: '.q-drag-handle',
+                animation: 150,
+                onEnd: function() {
+                    const order = [];
+                    $(el).find('.question-row').each(function() {
+                        order.push($(this).data('id'));
+                    });
+                    
+                    $.ajax({
+                        url: '{{ route('admin.questions.reorder') }}',
+                        method: 'PATCH',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ order: order }),
+                        success: function() {
+                            showAlert('تم تحديث ترتيب الأسئلة بنجاح.', 'success');
+                            // Re-calculate visual indexes
+                            $(el).find('.question-row').each(function(index) {
+                                $(this).find('.q-number').text((index + 1) + '.');
+                            });
+                        },
+                        error: function() {
+                            showAlert('فشل إعادة ترتيب الأسئلة.', 'danger');
+                        }
+                    });
+                }
+            });
+        });
+    }
+    
+    initSortables();
+
+    // Reload tab 1 DOM section dynamically via AJAX and preserve accordion state
+    function reloadTab1() {
+        const openCollapseId = $('.accordion-collapse.show').attr('id');
+        
+        return $.ajax({
+            url: window.location.href,
+            method: 'GET',
+            success: function(html) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.querySelector('#tab-dimensions-questions');
+                
+                $('#tab-dimensions-questions').html(newContent.innerHTML);
+                
+                // Keep the active accordion item open
+                if (openCollapseId) {
+                    const collapseEl = document.getElementById(openCollapseId);
+                    if (collapseEl) {
+                        $(collapseEl).addClass('show');
+                        $(collapseEl).closest('.accordion-item').addClass('is-expanded');
+                        $(`[data-bs-target="#${openCollapseId}"]`).removeClass('collapsed').attr('aria-expanded', 'true');
+                    }
+                }
+                
+                initSortables();
+            }
+        });
+    }
+
+    // Inline Dimension Editing Toggle (Stop Propagation to prevent collapse trigger)
+    $(document).on('click', '.btn-edit-dim', function(e) {
+        e.stopPropagation();
+        const id = $(this).data('id');
+        $(`#dim-display-${id}`).addClass('d-none');
+        $(`#dim-edit-${id}`).removeClass('d-none');
+    });
+
+    $(document).on('click', '.btn-cancel-dim', function(e) {
+        e.stopPropagation();
+        const id = $(this).data('id');
+        $(`#dim-edit-${id}`).addClass('d-none');
+        $(`#dim-display-${id}`).removeClass('d-none');
+    });
+
+    // Save Dimension Inline Edit
+    $(document).on('click', '.btn-save-dim', function(e) {
+        e.stopPropagation();
+        const id = $(this).data('id');
+        const container = $(`#dim-edit-${id}`);
+        const name = container.find('.input-dim-name').val().trim();
+        const maxScore = container.find('.input-dim-max').val();
+        
+        if (!name || maxScore < 1) {
+            showAlert('اسم البعد والدرجة مطلوبان.', 'warning');
+            return;
+        }
+        
+        const btn = $(this);
+        btn.prop('disabled', true);
+        
+        $.ajax({
+            url: `/admin/dimensions/${id}`,
+            method: 'PATCH',
+            contentType: 'application/json',
+            data: JSON.stringify({ name_ar: name, max_score: maxScore }),
+            success: function(res) {
+                showAlert(res.message, 'success');
+                // Update display values
+                const display = $(`#dim-display-${id}`);
+                display.find('.dim-name-text').text(name);
+                display.find('.dim-max-score-text').text(maxScore);
+                
+                $(`#dim-edit-${id}`).addClass('d-none');
+                $(`#dim-display-${id}`).removeClass('d-none');
+            },
+            error: function(xhr) {
+                showAlert(xhr.responseJSON?.message || 'حدث خطأ أثناء حفظ التعديلات.', 'danger');
+            },
+            complete: function() {
+                btn.prop('disabled', false);
+            }
+        });
+    });
+
+    // Delete Dimension
+    $(document).on('click', '.btn-delete-dim', function(e) {
+        e.stopPropagation();
+        const url = $(this).data('url');
+        const name = $(this).data('name');
+        
+        confirmDelete(`هل تريد حذف بُعد "${name}"؟ سيتم نقل كافة الأسئلة التابعة له إلى قائمة (بدون بُعد).`, url, function() {
+            reloadTab1();
+        });
+    });
+
+    // Inline Add Dimension (Form at bottom of Tab 1)
+    $('#btn-save-dim-inline').on('click', function() {
+        const btn = $(this);
+        const name = $('#inline-dim-name').val().trim();
+        const max = $('#inline-dim-max').val();
+        
+        if (!name || !max) {
+            showAlert('اسم البعد والدرجة القصوى مطلوبان.', 'warning');
+            return;
+        }
+        
+        setLoading(btn, true);
+        
+        $.ajax({
+            url: `/admin/assessments/{{ $assessment->id }}/dimensions`,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ name_ar: name, max_score: max }),
+            success: function(res) {
+                showAlert(res.message, 'success');
+                $('#inline-dim-name').val('');
+                $('#inline-dim-max').val('');
+                reloadTab1();
+            },
+            error: function(xhr) {
+                showAlert(xhr.responseJSON?.message || 'فشل إضافة البعد.', 'danger');
+            },
+            complete: function() {
+                setLoading(btn, false);
+            }
+        });
+    });
+
+    // Inline Question Adding (Inside dimension accordion body)
+    $(document).on('click', '.btn-add-q-inline', function() {
+        const btn = $(this);
+        const dimId = btn.data('dimension-id');
+        const container = btn.closest('.accordion-body');
+        const input = container.find('.input-add-q-text');
+        const text = input.val().trim();
+        
+        if (!text) {
+            showAlert('نص السؤال مطلوب.', 'warning');
+            return;
+        }
+        
+        btn.prop('disabled', true);
+        
+        // Payload with default options: نعم (2), إلى حد ما (1), لا (0)
+        const payload = {
+            assessment_id: '{{ $assessment->id }}',
+            dimension_id: dimId,
+            text_ar: text,
+            options: [
+                { label_ar: 'نعم', score_value: 2, order_index: 0 },
+                { label_ar: 'إلى حد ما', score_value: 1, order_index: 1 },
+                { label_ar: 'لا', score_value: 0, order_index: 2 }
+            ]
+        };
+        
+        $.ajax({
+            url: '{{ route('admin.questions.store') }}',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function(res) {
+                showAlert(res.message, 'success');
+                input.val('');
+                reloadTab1();
+            },
+            error: function(xhr) {
+                showAlert(xhr.responseJSON?.message || 'حدث خطأ أثناء إضافة السؤال.', 'danger');
+            },
+            complete: function() {
+                btn.prop('disabled', false);
+            }
+        });
+    });
+
+    // Inline Question Adding for Unassigned Questions
+    $(document).on('click', '.btn-add-q-inline-unassigned', function() {
+        const btn = $(this);
+        const input = $('.input-add-q-text-unassigned');
+        const text = input.val().trim();
+        
+        if (!text) {
+            showAlert('نص السؤال مطلوب.', 'warning');
+            return;
+        }
+        
+        btn.prop('disabled', true);
+        
+        const payload = {
+            assessment_id: '{{ $assessment->id }}',
+            dimension_id: null,
+            text_ar: text,
+            options: [
+                { label_ar: 'نعم', score_value: 2, order_index: 0 },
+                { label_ar: 'إلى حد ما', score_value: 1, order_index: 1 },
+                { label_ar: 'لا', score_value: 0, order_index: 2 }
+            ]
+        };
+        
+        $.ajax({
+            url: '{{ route('admin.questions.store') }}',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function(res) {
+                showAlert(res.message, 'success');
+                input.val('');
+                reloadTab1();
+            },
+            error: function(xhr) {
+                showAlert(xhr.responseJSON?.message || 'حدث خطأ أثناء إضافة السؤال.', 'danger');
+            },
+            complete: function() {
+                btn.prop('disabled', false);
+            }
+        });
+    });
+
+    // Inline Question text Editing Toggle
+    $(document).on('click', '.btn-edit-q', function() {
+        const id = $(this).data('id');
+        $(`#q-display-${id}`).addClass('d-none');
+        $(`#q-actions-${id}`).addClass('d-none');
+        $(`#q-edit-${id}`).removeClass('d-none');
+        
+        // Auto-focus and auto-resize textarea
+        const textarea = $(`#q-edit-${id} textarea`);
+        textarea.focus();
+        textarea.css('height', 'auto').css('height', textarea[0].scrollHeight + 'px');
+    });
+
+    $(document).on('click', '.btn-cancel-q', function() {
+        const id = $(this).data('id');
+        $(`#q-edit-${id}`).addClass('d-none');
+        $(`#q-display-${id}`).removeClass('d-none');
+        $(`#q-actions-${id}`).removeClass('d-none');
+    });
+
+    // Auto-resize textareas as user types
+    $(document).on('input', '.auto-resize-textarea', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // Save Inline Question Edit
+    $(document).on('click', '.btn-save-q', function() {
+        const id = $(this).data('id');
+        const container = $(`#q-edit-${id}`);
+        const text = container.find('textarea').val().trim();
+        
+        if (!text) {
+            showAlert('نص السؤال مطلوب.', 'warning');
+            return;
+        }
+        
+        const btn = $(this);
+        btn.prop('disabled', true);
+        
+        $.ajax({
+            url: `/admin/questions/${id}`,
+            method: 'PATCH',
+            contentType: 'application/json',
+            data: JSON.stringify({ text_ar: text }),
+            success: function(res) {
+                showAlert(res.message, 'success');
+                $(`#q-display-${id}`).text(text);
+                $(`#q-edit-${id}`).addClass('d-none');
+                $(`#q-display-${id}`).removeClass('d-none');
+                $(`#q-actions-${id}`).removeClass('d-none');
+            },
+            error: function(xhr) {
+                showAlert(xhr.responseJSON?.message || 'فشل تحديث السؤال.', 'danger');
+            },
+            complete: function() {
+                btn.prop('disabled', false);
+            }
+        });
+    });
+
+    // Move / Assign Dimension Dropdown handler
+    $(document).on('click', '.btn-move-q', function(e) {
+        e.preventDefault();
+        const qId = $(this).data('question-id');
+        const dimId = $(this).data('dimension-id') || null;
+        
+        $.ajax({
+            url: `/admin/questions/${qId}/dimension`,
+            method: 'PATCH',
+            contentType: 'application/json',
+            data: JSON.stringify({ dimension_id: dimId }),
+            success: function(res) {
+                showAlert(res.message, 'success');
+                reloadTab1();
+            },
+            error: function() {
+                showAlert('حدث خطأ أثناء نقل السؤال.', 'danger');
+            }
+        });
+    });
+
+    // Delete Question
+    $(document).on('click', '.btn-delete-q', function() {
+        const url = $(this).data('url');
+        confirmDelete('هل تريد حذف هذا السؤال نهائياً؟', url, function() {
+            reloadTab1();
+        });
+    });
+
+    // Bulk Import Questions AJAX Submission
+    $('#modal-btn-bulk-import').on('click', function() {
+        const btn = $(this);
+        const dimId = $('#modal-bulk-dimension-id').val() || null;
+        const text = $('#modal-bulk-questions-text').val().trim();
+        
+        if (!text) {
+            showAlert('الرجاء كتابة أسئلة للاستيراد.', 'warning');
+            return;
+        }
+        
+        setLoading(btn, true);
+        
+        const payload = {
+            assessment_id: '{{ $assessment->id }}',
+            dimension_id: dimId,
+            questions_text: text
+        };
+        
+        $.ajax({
+            url: '{{ route('admin.questions.bulk') }}',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function(res) {
+                setLoading(btn, false);
+                bootstrap.Modal.getInstance(document.getElementById('bulkImportModal')).hide();
+                showAlert(res.message, 'success');
+                $('#modal-bulk-questions-text').val('');
+                reloadTab1();
+            },
+            error: function(xhr) {
+                setLoading(btn, false);
+                showAlert(xhr.responseJSON?.message || 'فشل استيراد الأسئلة.', 'danger');
+            }
+        });
+    });
+
+    // CSV Import Questions AJAX Submission
+    $('#csv-import-form').on('submit', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const btn = $('#modal-btn-csv-import');
+        const fileInput = $('#csv_file')[0];
+        
+        if (fileInput.files.length === 0) {
+            showAlert('الرجاء اختيار ملف CSV أولاً.', 'warning');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('csv_file', fileInput.files[0]);
+
+        setLoading(btn, true);
+
+        $.ajax({
+            url: '{{ route('admin.questions.importCsv', $assessment->id) }}',
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(res) {
+                setLoading(btn, false);
+                bootstrap.Modal.getInstance(document.getElementById('bulkImportModal')).hide();
+                showAlert(res.message, 'success');
+                form[0].reset();
+                reloadTab1();
+            },
+            error: function(xhr) {
+                setLoading(btn, false);
+                showAlert(xhr.responseJSON?.message || 'فشل استيراد ملف CSV.', 'danger');
+            }
+        });
+    });
+
+
+    /* ==========================================================================
+       TAB 2: RECOMMENDATIONS ACTIONS
+       ========================================================================== */
+
+    // Dynamically reload Tab 2 contents to reflect new models
+    function reloadTab2() {
+        return $.ajax({
+            url: window.location.href,
+            method: 'GET',
+            success: function(html) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.querySelector('#tab-recommendations');
+                $('#tab-recommendations').html(newContent.innerHTML);
+                
+                // Re-initialize dynamic lists and JSON lists after replacing DOM
+                if (typeof window.initDynamicLists === 'function') {
+                    window.initDynamicLists('#tab-recommendations');
+                }
+                if (typeof window.initAllJsonLists === 'function') {
+                    window.initAllJsonLists('#tab-recommendations');
+                }
+            }
+        });
+    }
+
+    window.addNewRecommendationCard = function() {
+        $('#no-recs-placeholder').addClass('d-none');
+        
+        if ($('#rec-col-NEW_ID').length > 0) {
+            $('#rec-col-NEW_ID').find('input').first().focus();
+            return;
+        }
+        
+        const template = document.getElementById('new-rec-template');
+        if (!template) return;
+        
+        const clone = template.content.cloneNode(true);
+        $('#recommendations-container').append(clone);
+        
+        if (typeof window.initAllJsonLists === 'function') {
+            window.initAllJsonLists('#rec-col-NEW_ID');
+        }
+        
+        $('html, body').animate({
+            scrollTop: $('#rec-col-NEW_ID').offset().top - 100
+        }, 300);
+        
+        $('#rec-col-NEW_ID').find('input').first().focus();
+    };
+
+    // Toggle forms
+    $(document).on('click', '.btn-expand-rec-form', function() {
+        const level = $(this).data('level');
+        $(`#rec-add-placeholder-${level}`).addClass('d-none');
+        $(`#rec-form-${level}`).removeClass('d-none');
+    });
+
+    $(document).on('click', '.btn-toggle-rec-edit', function() {
+        const level = $(this).data('level');
+        $(`#rec-view-${level}`).addClass('d-none');
+        $(`#rec-form-${level}`).removeClass('d-none');
+    });
+
+    $(document).on('click', '.btn-cancel-rec-edit', function() {
+        const level = $(this).data('level');
+        if (level === 'NEW_ID') {
+            $('#rec-col-NEW_ID').remove();
+            if ($('#recommendations-container').children('.rec-col').length === 0) {
+                $('#no-recs-placeholder').removeClass('d-none');
+            }
+        } else {
+            $(`#rec-form-${level}`).addClass('d-none');
+            $(`#rec-view-${level}`).removeClass('d-none');
+        }
+    });
+
+    // Delete recommendation
+    $(document).on('click', '.btn-delete-rec', function() {
+        const url = $(this).data('url');
+        const name = $(this).data('name');
+        
+        confirmDelete(`هل أنت متأكد من حذف التوصية الخاصة بمستوى "${name}"؟`, url, function() {
+            reloadTab2();
+        });
+    });
+
+    // Save/Update recommendation
+    $(document).on('submit', '.recommendation-ajax-form', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const levelData = form.data('level');
+        const levelName = form.find('.rec-input-level-name').val().trim();
+        const btn = form.find('.btn-save-recommendation');
+        
+        let certs = []; try { certs = JSON.parse(form.find('.rec-textarea-certificates').val() || '[]'); } catch(e){}
+        let progs = []; try { progs = JSON.parse(form.find('.rec-textarea-programs').val() || '[]'); } catch(e){}
+        let plan = []; try { plan = JSON.parse(form.find('.rec-textarea-plan').val() || '[]'); } catch(e){}
+
+        const payload = {
+            id: levelData !== 'NEW_ID' ? levelData : null,
+            assessment_id: '{{ $assessment->id }}',
+            level: levelName,
+            low_threshold: form.find('.rec-input-low').val(),
+            high_threshold: form.find('.rec-input-high').val(),
+            description_ar: form.find('.rec-textarea-desc').val().trim(),
+            certificates_intro_ar: form.find('.rec-input-certs-intro').val().trim(),
+            certificates_ar: certs,
+            programs_intro_ar: form.find('.rec-input-programs-intro').val().trim(),
+            programs_ar: progs,
+            programs_outro_ar: form.find('.rec-input-programs-outro').val().trim(),
+            plan_30_days_intro_ar: form.find('.rec-input-plan-intro').val().trim(),
+            plan_30_days_ar: plan
+        };
+        
+        setLoading(btn, true);
+        
+        $.ajax({
+            url: '{{ route('admin.recommendations.store') }}',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function(res) {
+                showAlert(res.message, 'success');
+                reloadTab2();
+            },
+            error: function(xhr) {
+                showAlert(xhr.responseJSON?.message || 'فشل حفظ التوصية.', 'danger');
+                setLoading(btn, false);
+            }
+        });
+    });
+
+
+    /* ==========================================================================
+       TAB 3: ASSESSMENT SETTINGS
+       ========================================================================== */
+
+    // Save Basic Assessment Settings
+    $('#assessment-settings-form').on('submit', function(e) {
+        e.preventDefault();
+        const btn = $('#btn-save-settings');
+        
+        const formData = new FormData();
+        formData.append('_method', 'PATCH');
+        formData.append('title_ar', $('#settings-title').val().trim());
+        formData.append('subtitle_ar', $('#settings-subtitle').val().trim());
+        formData.append('category', $('#settings-category').val().trim());
+        formData.append('scoring_type', $('#settings-scoring-type').val());
+        
+        if ($('#settings-description').val().trim()) formData.append('description_ar', $('#settings-description').val().trim());
+        if ($('#settings-time-limit').val()) formData.append('time_limit_min', $('#settings-time-limit').val());
+        if ($('#settings-price').val()) formData.append('price', $('#settings-price').val());
+        if ($('#settings-rating').val()) formData.append('rating', $('#settings-rating').val());
+        formData.append('is_active', $('#settings-is-active').is(':checked') ? 1 : 0);
+        formData.append('hide_coupon_field', $('#settings-hide-coupon').is(':checked') ? 1 : 0);
+        formData.append('report_code', $('#settings-report-code').val().trim());
+        
+        if ($('#settings-image')[0].files.length > 0) {
+            formData.append('image', $('#settings-image')[0].files[0]);
+        }
+
+        if ($('#settings-icon-file')[0].files.length > 0) {
+            formData.append('icon_file', $('#settings-icon-file')[0].files[0]);
+        }
+        
+        setLoading(btn, true);
+        
+        $.ajax({
+            url: '{{ route('admin.assessments.settings', $assessment->id) }}',
+            method: 'POST', // Must be POST with _method=PATCH for FormData
+            processData: false,
+            contentType: false,
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            data: formData,
+            success: function(res) {
+                showAlert(res.message, 'success');
+                // Dynamically update the header metadata
+                $('#header-assessment-title').text($('#settings-title').val().trim());
+                $('#header-assessment-category').text($('#settings-category').val().trim());
+                
+                const timeLimit = $('#settings-time-limit').val();
+                const timeText = timeLimit ? timeLimit + ' دقيقة' : 'بلا حد للوقت';
+                $('#header-assessment-time').text(timeText);
+                
+                const isActive = $('#settings-is-active').is(':checked');
+                $('#header-is-active').prop('checked', isActive);
+                $('#header-active-label').text(isActive ? 'مفعّل' : 'موقف');
+                
+                // If there's an image uploaded, reload to show it (or we could just let them see the success message)
+                if ($('#settings-image')[0].files.length > 0) {
+                    setTimeout(() => location.reload(), 1000);
+                }
+            },
+            error: function(xhr) {
+                showAlert(xhr.responseJSON?.message || 'فشل تحديث الإعدادات.', 'danger');
+            },
+            complete: function() {
+                setLoading(btn, false);
+            }
+        });
+    });
+
+    // Delete entire Assessment (Danger Zone)
+    $('.btn-delete-assessment').on('click', function() {
+        const url = $(this).data('url');
+        const name = $(this).data('name');
+        
+        confirmDelete(`هل أنت متأكد من حذف مقياس "${name}" بالكامل؟ سيؤدي ذلك إلى مسح كافة الأبعاد والأسئلة والتوصيات ومحاضر الجلسات نهائياً ولا يمكن الرجوع!`, url, function() {
+            window.location.href = '{{ route('admin.assessments.index') }}';
+        });
+    });
+
+    // Save Dimension Interpretations
+    $(document).on('submit', '.dimension-interpretations-ajax-form', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const dimId = form.data('dimension-id');
+        const btn = form.find('.btn-save-dim-interpretations');
+        
+        const payload = {
+            high_threshold: form.find('.input-dim-high-threshold').val(),
+            low_threshold: form.find('.input-dim-low-threshold').val(),
+            interpretations: {
+                high: form.find('.textarea-dim-high-text').val().trim(),
+                medium: form.find('.textarea-dim-medium-text').val().trim(),
+                low: form.find('.textarea-dim-low-text').val().trim()
+            }
+        };
+        
+        setLoading(btn, true);
+        
+        $.ajax({
+            url: `/admin/dimensions/${dimId}/interpretations`,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function(res) {
+                showAlert(res.message, 'success');
+                reloadTab1();
+            },
+            error: function(xhr) {
+                showAlert(xhr.responseJSON?.message || 'فشل حفظ التفسيرات.', 'danger');
+                setLoading(btn, false);
+            }
+        });
+    });
+});
+
+/* ── Toggle reversed question ── */
+$(document).on('click', '.btn-toggle-reversed', function () {
+    const btn      = $(this);
+    const qId      = btn.data('id');
+    const current  = btn.data('reversed') === 1 || btn.data('reversed') === '1';
+    const newVal   = !current;
+
+    $.ajax({
+        url: btn.data('url'), method: 'PATCH', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify({ is_reversed: newVal }),
+        success() {
+            btn.data('reversed', newVal ? '1' : '0');
+            btn.css('color', newVal ? '#d97706' : '#9ca3af');
+            btn.attr('title', newVal ? 'إلغاء العكس' : 'تفعيل كسؤال معكوس');
+            // Toggle badge next to question text
+            const badge = btn.closest('.question-row').find('.q-display-text').siblings('.badge');
+            if (newVal) {
+                if (!badge.length) {
+                    btn.closest('.question-row').find('.q-display-text').after(
+                        `<span class="badge ms-2 rounded-pill"
+                               style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:.68rem"
+                               title="سؤال معكوس: نعم=0 | إلى حد ما=1 | لا=2">⇄ معكوس</span>`
+                    );
+                }
+            } else {
+                badge.remove();
+            }
+            showAlert(newVal ? 'تم تفعيل السؤال المعكوس.' : 'تم إلغاء العكس.', 'success');
+        },
+        error() { showAlert('فشل تحديث السؤال.', 'danger'); }
+    });
+});
+
+/* ── Answer Options Management ── */
+let currentQuestionId = null;
+
+$(document).on('click', '.btn-manage-options', function () {
+    const btn = $(this);
+    currentQuestionId = btn.data('id');
+    const qText = $(`#q-display-${currentQuestionId}`).text();
+    
+    $('#modal-q-id').val(currentQuestionId);
+    $('#modal-q-text').text(qText);
+    
+    // Fetch options
+    loadOptions();
+    
+    const modal = new bootstrap.Modal(document.getElementById('optionsModal'));
+    modal.show();
+});
+
+function loadOptions() {
+    $('#options-tbody').html('<tr><td colspan="3" class="text-center text-muted">جاري التحميل...</td></tr>');
+    $.ajax({
+        url: `/admin/questions/${currentQuestionId}/options`,
+        method: 'GET',
+        success: function(options) {
+            let html = '';
+            if (options.length === 0) {
+                html = '<tr><td colspan="3" class="text-center text-muted small">لا توجد خيارات لهذا السؤال.</td></tr>';
+            } else {
+                options.forEach(opt => {
+                    html += `
+                        <tr data-id="${opt.id}">
+                            <td>
+                                <span class="opt-label-display">${opt.label_ar}</span>
+                                <input type="text" class="form-control form-control-sm opt-label-edit d-none" value="${opt.label_ar}">
+                            </td>
+                            <td>
+                                <span class="opt-score-display">${opt.score_value}</span>
+                                <input type="number" class="form-control form-control-sm opt-score-edit d-none" value="${opt.score_value}">
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm opt-actions-view">
+                                    <button type="button" class="btn btn-outline-secondary btn-edit-opt" title="تعديل"><i class="bi bi-pencil"></i></button>
+                                    <button type="button" class="btn btn-outline-danger btn-delete-opt" title="حذف"><i class="bi bi-trash"></i></button>
+                                </div>
+                                <div class="btn-group btn-group-sm opt-actions-edit d-none">
+                                    <button type="button" class="btn btn-success btn-save-opt"><i class="bi bi-check2"></i></button>
+                                    <button type="button" class="btn btn-secondary btn-cancel-opt"><i class="bi bi-x"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            $('#options-tbody').html(html);
+        },
+        error: function() {
+            $('#options-tbody').html('<tr><td colspan="3" class="text-center text-danger">فشل تحميل الخيارات.</td></tr>');
+        }
+    });
+}
+
+$('#add-option-form').on('submit', function(e) {
+    e.preventDefault();
+    const btn = $(this).find('button[type="submit"]');
+    
+    const payload = {
+        label_ar: $('#add-opt-label').val().trim(),
+        score_value: $('#add-opt-score').val()
+    };
+    
+    setLoading(btn, true);
+    
+    $.ajax({
+        url: `/admin/questions/${currentQuestionId}/options`,
+        method: 'POST',
+        contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify(payload),
+        success: function(res) {
+            setLoading(btn, false);
+            $('#add-opt-label').val('');
+            $('#add-opt-score').val('');
+            loadOptions();
+            showAlert(res.message, 'success');
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            showAlert(xhr.responseJSON?.message || 'فشل إضافة الخيار', 'danger');
+        }
+    });
+});
+
+$(document).on('click', '.btn-edit-opt', function() {
+    const tr = $(this).closest('tr');
+    tr.find('.opt-label-display, .opt-score-display, .opt-actions-view').addClass('d-none');
+    tr.find('.opt-label-edit, .opt-score-edit, .opt-actions-edit').removeClass('d-none');
+});
+
+$(document).on('click', '.btn-cancel-opt', function() {
+    const tr = $(this).closest('tr');
+    tr.find('.opt-label-display, .opt-score-display, .opt-actions-view').removeClass('d-none');
+    tr.find('.opt-label-edit, .opt-score-edit, .opt-actions-edit').addClass('d-none');
+});
+
+$(document).on('click', '.btn-save-opt', function() {
+    const tr = $(this).closest('tr');
+    const optId = tr.data('id');
+    const btn = $(this);
+    
+    const payload = {
+        label_ar: tr.find('.opt-label-edit').val().trim(),
+        score_value: tr.find('.opt-score-edit').val()
+    };
+    
+    const originalHtml = btn.html();
+    btn.html('<span class="spinner-border spinner-border-sm"></span>');
+    
+    $.ajax({
+        url: `/admin/options/${optId}`,
+        method: 'PUT',
+        contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify(payload),
+        success: function(res) {
+            btn.html(originalHtml);
+            loadOptions();
+            showAlert(res.message, 'success');
+        },
+        error: function(xhr) {
+            btn.html(originalHtml);
+            showAlert(xhr.responseJSON?.message || 'فشل التحديث', 'danger');
+        }
+    });
+});
+
+$(document).on('click', '.btn-delete-opt', function() {
+    const tr = $(this).closest('tr');
+    const optId = tr.data('id');
+    
+    if(!confirm('هل أنت متأكد من حذف هذا الخيار؟')) return;
+    
+    $.ajax({
+        url: `/admin/options/${optId}`,
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        success: function(res) {
+            loadOptions();
+            showAlert(res.message, 'success');
+        }
+    });
+});
+
+$('#btn-sync-options').on('click', function() {
+    if(!confirm('تحذير: سيتم مسح كافة خيارات الإجابة الحالية لجميع الأسئلة الأخرى في هذا المقياس، واستبدالها بالخيارات الحالية لهذا السؤال. هل تريد الاستمرار؟')) return;
+    
+    const btn = $(this);
+    const originalHtml = btn.html();
+    btn.html('<i class="bi bi-hourglass-split me-1"></i>جاري التعميم...');
+    btn.prop('disabled', true);
+    
+    $.ajax({
+        url: `/admin/questions/${currentQuestionId}/sync-options`,
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        success: function(res) {
+            btn.html(originalHtml);
+            btn.prop('disabled', false);
+            showAlert(res.message, 'success');
+        },
+        error: function(xhr) {
+            btn.html(originalHtml);
+            btn.prop('disabled', false);
+            showAlert('حدث خطأ أثناء التعميم.', 'danger');
+        }
+    });
+});
+
+
+    // Dynamic List Editor Initializer
+    window.initDynamicLists = function(container = document) {
+        $(container).find('.dynamic-list-data').not('.dynamic-list-initialized').each(function() {
+            const $textarea = $(this);
+            $textarea.addClass('dynamic-list-initialized d-none');
+            const placeholder = $textarea.attr('placeholder') || 'إضافة عنصر جديد...';
+            
+            // Create UI wrapper
+            const $wrapper = $('<div class="dynamic-list-wrapper"></div>');
+            const $list = $('<div class="dynamic-list-items mb-2"></div>');
+            const $inputGroup = $(`
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control dynamic-list-input" placeholder="${placeholder}">
+                    <button type="button" class="btn btn-primary dynamic-list-add"><i class="bi bi-plus"></i> إضافة</button>
+                </div>
+            `);
+            
+            $wrapper.append($list).append($inputGroup);
+            $textarea.after($wrapper);
+            
+            // Render initial items
+            const val = $textarea.val().trim();
+            const items = val ? val.split('\n') : [];
+            items.forEach(item => {
+                if(item.trim()) addItem(item.trim());
+            });
+            
+            function updateTextarea() {
+                const currentItems = [];
+                $list.find('.dynamic-list-item-text').each(function() {
+                    currentItems.push($(this).text().trim());
+                });
+                $textarea.val(currentItems.join('\n'));
+            }
+            
+            function addItem(text) {
+                const $item = $(`
+                    <div class="d-flex justify-content-between align-items-center bg-white border border-light-subtle shadow-sm rounded px-3 py-2 mb-2">
+                        <span class="dynamic-list-item-text text-dark fw-medium small"><i class="bi bi-check-circle-fill text-success me-2"></i>${text}</span>
+                        <button type="button" class="btn btn-sm text-danger btn-remove-item py-0 px-2 border-0"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                `);
+                $list.append($item);
+            }
+            
+            // Add event
+            $inputGroup.find('.dynamic-list-add').on('click', function() {
+                const $input = $inputGroup.find('.dynamic-list-input');
+                const newText = $input.val().trim();
+                if (newText) {
+                    addItem(newText);
+                    updateTextarea();
+                    $input.val('');
+                    $input.focus();
+                }
+            });
+            
+            $inputGroup.find('.dynamic-list-input').on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    $inputGroup.find('.dynamic-list-add').click();
+                }
+            });
+            
+            // Remove event
+            $list.on('click', '.btn-remove-item', function() {
+                $(this).closest('div').remove();
+                updateTextarea();
+            });
+        });
+    };
+
+    $(document).ready(function() {
+        window.initDynamicLists();
+    });
+</script>
+@endpush
+````
+
+## File: resources/views/user/result.blade.php
+````php
+@extends('layouts.user')
+@section('title', 'تقرير نتيجة المقياس - ' . (is_array($assessment) ? $assessment['title_ar'] : $assessment->title_ar))
+
+@push('styles')
+<link href="{{ asset('css/report-pdf.css') }}?v={{ filemtime(public_path('css/report-pdf.css')) }}" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+@endpush
+
+@section('content')
+@php
+    // 1. Recover Eloquent Models from Session
+    $assessmentObj = $session->assessment;
+    $resObj = $session->result;
+    $recObj = $assessmentObj->recommendations()->where('level', $resObj->level)->first();
+
+    // 2. Map basic variables
+    $pct = $max_score > 0 ? round($total_score / $max_score * 100) : 0;
+    
+    $lvlData = [
+        'excellent' => ['label' => 'متميز', 'degree' => 'متميز'],
+        'advanced'  => ['label' => 'متقدم', 'degree' => 'متقدم'],
+        'good'      => ['label' => 'جيد', 'degree' => 'جيد'],
+        'average'   => ['label' => 'متوسط', 'degree' => 'متوسط'],
+        'weak'      => ['label' => 'ضعيف', 'degree' => 'ضعيف'],
+        'high'   => ['label' => 'متميز', 'degree' => 'متميز'],
+        'medium' => ['label' => 'جيد', 'degree' => 'جيد'],
+        'low'    => ['label' => 'ضعيف', 'degree' => 'ضعيف'],
+    ];
+
+    $isHighestDimension = $assessmentObj->scoring_type === 'highest_dimension';
+    if ($isHighestDimension) {
+        $highestLabel = $level;
+        if (empty(trim($highestLabel))) {
+            $highestScore = -1;
+            foreach ($resObj->dimensionScores as $ds) {
+                if ($ds->score > $highestScore) {
+                    $highestScore = $ds->score;
+                    $highestLabel = trim(str_replace('محور', '', $ds->dimension->name_ar));
+                }
+            }
+        }
+        $mainLvl = ['label' => $highestLabel, 'degree' => $highestLabel];
+        
+        // Define levelKey based on the overall percentage score to align color themes (Green/Yellow/Red) with the gauge and progress bar
+        if ($pct >= 70) $levelKey = 'high';
+        elseif ($pct >= 40) $levelKey = 'medium';
+        else $levelKey = 'low';
+    } else {
+        $levelKey = $resObj->level ?? $level ?? 'medium';
+        if (!array_key_exists($levelKey, $lvlData)) {
+            if ($pct >= 70) $levelKey = 'high';
+            elseif ($pct >= 40) $levelKey = 'medium';
+            else $levelKey = 'low';
+        }
+        $mainLvl = $lvlData[$levelKey];
+    }
+
+    // 3. Strengths & Weaknesses
+    $strengths = [];
+    $weaknesses = [];
+    foreach($resObj->dimensionScores as $ds) {
+        $ds_score_pct = $ds->max_score > 0 ? round(($ds->score / $ds->max_score) * 100) : 0;
+        if (in_array($ds->level, ['excellent', 'advanced', 'high']) || $ds_score_pct >= 60) {
+            $strengths[] = (object)['title' => $ds->dimension->name_ar, 'desc' => 'تمتلك قدرة عالية في هذا الجانب.'];
+        } elseif (in_array($ds->level, ['weak', 'low']) || $ds_score_pct < 40) {
+            $weaknesses[] = (object)['title' => $ds->dimension->name_ar, 'desc' => 'تحتاج إلى تطوير واهتمام لتحسين الأداء.'];
+        } else {
+            $weaknesses[] = (object)['title' => $ds->dimension->name_ar, 'desc' => 'فرصة لتعزيز وتنمية المهارة.'];
+        }
+    }
+
+    // 4. Recommendation text parsing
+    $parsedRecommendation = '';
+    $improvementPoints = [];
+    if ($recObj && !empty($recObj->description_ar)) {
+        $text = strip_tags(Str::markdown($recObj->description_ar));
+        if (mb_strpos($text, ':') !== false) {
+            $parts = explode(':', $text, 2);
+            if (mb_strlen($parts[0]) < 100 && (mb_strpos($parts[0], 'درجة') !== false || mb_strpos($parts[0], 'مستوى') !== false)) {
+                $text = trim($parts[1]);
+            }
+        }
+        $introWords = ['تشير نتيجتك', 'تشير نتائجك', 'أنت مستثمر'];
+        foreach($introWords as $iw) {
+            $pos = mb_strpos($text, $iw);
+            if ($pos !== false && $pos < 50) {
+                $text = $iw . explode($iw, $text, 2)[1];
+                break;
+            }
+        }
+        if (!empty($text) && !in_array(mb_substr(trim($text), -1), ['.', '!', '؟', ':'])) {
+            $text = trim($text) . '.';
+        } else {
+            $text = trim($text);
+        }
+        $parsedRecommendation = $text;
+    }
+    // 5. Lists (Certificates, Programs, Roadmap)
+    // Convert arrays to objects for the views to consume seamlessly
+    $certs = json_decode(json_encode($certificates ?? []));
+    $progs = json_decode(json_encode($programs ?? []));
+    $planSteps = $roadmap ?? [];
+
+    $tempPlanSteps = json_decode(json_encode($planSteps), true);
+    $planSteps = [];
+    if (!empty($tempPlanSteps)) {
+        foreach($tempPlanSteps as $k => $step) {
+            if(is_array($step)) {
+                $planSteps[] = (object)[
+                    'period' => $step['period'] ?? ('الخطوة ' . ($k + 1)),
+                    'title' => $step['title'] ?? '',
+                    'icon' => $step['icon'] ?? 'bi-calendar-check',
+                ];
+            } else if (is_string($step)) {
+                $planSteps[] = (object)[
+                    'period' => 'الخطوة ' . ($k + 1),
+                    'title' => $step,
+                    'icon' => 'bi-calendar-check',
+                ];
+            }
+        }
+    }
+
+    $radarLabels = $chart_data['labels'] ?? [];
+    $radarData = $chart_data['data'] ?? [];
+
+    // Replace the global $assessment array with the Object!
+    $assessment = $assessmentObj;
+    $result = $resObj;
+
+    // Calculate colors based on result level
+    $circleColor = '#1a2b56';
+    $lc = 'primary'; 
+    if (isset($levelKey)) {
+        if ($levelKey === 'high' || $levelKey === 'excellent' || $levelKey === 'advanced') {
+            $circleColor = '#22c55e';
+            $lc = 'success';
+        } elseif ($levelKey === 'medium' || $levelKey === 'good' || $levelKey === 'average') {
+            $circleColor = '#f59e0b';
+            $lc = 'warning';
+        } elseif ($levelKey === 'low' || $levelKey === 'poor' || $levelKey === 'weak') {
+            $circleColor = '#ef4444';
+            $lc = 'danger';
+        }
+    } else {
+        // For highest_dimension scoring (e.g. Leadership Style)
+        $lbl = $mainLvl['label'] ?? '';
+        if (mb_strpos($lbl, 'ديمقراط') !== false || mb_strpos($lbl, 'متميز') !== false || mb_strpos($lbl, 'مرتفع') !== false) {
+            $circleColor = '#22c55e';
+            $lc = 'success';
+        } elseif (mb_strpos($lbl, 'أوتوقراط') !== false || mb_strpos($lbl, 'تسلط') !== false || mb_strpos($lbl, 'ضعيف') !== false || mb_strpos($lbl, 'منخفض') !== false) {
+            $circleColor = '#ef4444';
+            $lc = 'danger';
+        } else {
+            $circleColor = '#f59e0b';
+            $lc = 'warning';
+        }
+    }
+@endphp
+
+
+<div class="infographic-report">
+    <!-- ==================== PAGE 1 ==================== -->
+    <div class="a4-page">
+        
+        <!-- Header -->
+        <div class="report-header px-4 pt-3">
+            <div class="header-logo">
+                <img src="{{ asset('images/logo.png') }}" alt="dar al rouaa" style="height: 50px; filter: brightness(0) invert(1); margin: 0;">
+            </div>
+            <div class="header-badge">
+                <i class="bi bi-patch-check-fill me-1"></i> تقرير احترافي مدعوم بالتحليل العلمي
+            </div>
+        </div>
+
+        <div class="text-center mt-3 px-4">
+            <h1 class="report-main-title mb-2">تقرير نتائج {{ $assessment->title_ar }}</h1>
+            <p class="report-subtitle mb-0">{{ $assessment->subtitle_ar ?? 'تقرير احترافي يساعدك على فهم نتائجك واتخاذ قرارات تطوير أكثر وضوحاً.' }}</p>
+        </div>
+
+        <div class="page-padding mt-4">
+            
+            <!-- Metadata - Print View Only (1x3 Grid) -->
+            <div class="d-none d-print-block print-metadata-wrapper mb-4">
+                <table class="print-metadata-table w-100">
+                    <tr>
+                        <td style="width: 33.33%; border-left: 1px solid rgba(8, 145, 178, 0.08) !important;">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="print-meta-icon print-meta-solid"><i class="bi bi-person-fill"></i></div>
+                                <div class="ms-3 text-end">
+                                    <div class="print-meta-label">المستفيد</div>
+                                    <div class="print-meta-value">{{ auth()->user()?->name ?? 'معاينة بالنظام' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="width: 33.33%; border-left: 1px solid rgba(8, 145, 178, 0.08) !important;">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="print-meta-icon print-meta-soft"><i class="bi bi-calendar3-fill"></i></div>
+                                <div class="ms-3 text-end">
+                                    <div class="print-meta-label">تاريخ التنفيذ</div>
+                                    <div class="print-meta-value">{{ \Carbon\Carbon::parse($result->created_at ?? $result->calculated_at ?? now())->format('d M Y') }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="width: 33.33%;">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="print-meta-icon print-meta-soft"><i class="bi bi-clipboard-fill"></i></div>
+                                <div class="ms-3 text-end">
+                                    <div class="print-meta-label">رقم التقرير</div>
+                                    <div class="print-meta-value">{{ !empty($assessment->report_code) ? strtoupper($assessment->report_code) : 'REP' }}-{{ strtoupper(substr($result->id, 0, 8)) }}</div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Metadata - Screen View Only (3 horizontal cards with vertical dividers) -->
+            <div class="meta-container-card mb-4 d-print-none">
+                <div class="row g-0 align-items-center">
+                    <div class="col-4 py-2 border-left-divider">
+                        <div class="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center">
+                            <div class="meta-icon-box meta-icon-solid mb-2 mb-sm-0"><i class="bi bi-person-fill"></i></div>
+                            <div class="text-sm-end ms-sm-3">
+                                <div class="meta-label">المستفيد</div>
+                                <div class="meta-value" style="font-size: 0.8rem; white-space: normal;">{{ auth()->user()?->name ?? 'معاينة بالنظام' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4 py-2 border-left-divider">
+                        <div class="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center">
+                            <div class="meta-icon-box meta-icon-soft mb-2 mb-sm-0"><i class="bi bi-calendar3-fill"></i></div>
+                            <div class="text-sm-end ms-sm-3">
+                                <div class="meta-label">تاريخ التنفيذ</div>
+                                <div class="meta-value" style="font-size: 0.8rem; white-space: normal;">{{ \Carbon\Carbon::parse($result->created_at ?? $result->calculated_at ?? now())->format('d M Y') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4 py-2">
+                        <div class="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center">
+                            <div class="meta-icon-box meta-icon-soft mb-2 mb-sm-0"><i class="bi bi-clipboard-fill"></i></div>
+                            <div class="text-sm-end ms-sm-3">
+                                <div class="meta-label">رقم التقرير</div>
+                                <div class="meta-value" style="font-size: 0.8rem; white-space: normal;">{{ !empty($assessment->report_code) ? strtoupper($assessment->report_code) : 'REP' }}-{{ strtoupper(substr($result->id, 0, 8)) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if($assessmentObj->scoring_type === 'perceptual_styles')
+            @php
+                $styleScores = ['visual' => 0, 'auditory' => 0, 'kinesthetic' => 0];
+                foreach($resObj->dimensionScores as $ds) {
+                    $n = $ds->dimension->name_ar;
+                    if (mb_strpos($n, 'بصري') !== false) $styleScores['visual'] = $ds->score;
+                    elseif (mb_strpos($n, 'سمعي') !== false) $styleScores['auditory'] = $ds->score;
+                    elseif (mb_strpos($n, 'حسي') !== false) $styleScores['kinesthetic'] = $ds->score;
+                }
+
+                $recTitle = $recObj?->title_ar ?? $recommendation_title ?? 'النمط الإدراكي الغالب';
+                $recDesc = $recObj?->description_ar ?? (!empty($parsedRecommendation) ? $parsedRecommendation : '');
+
+                $howToLearn = is_array($recObj?->how_to_learn_ar) && !empty($recObj->how_to_learn_ar) 
+                    ? $recObj->how_to_learn_ar 
+                    : (!empty($how_to_learn) && is_array($how_to_learn) ? $how_to_learn : []);
+
+                $strengthsData = is_array($recObj?->strengths_ar) && !empty($recObj->strengths_ar) 
+                    ? $recObj->strengths_ar 
+                    : (isset($strengths_list) && is_array($strengths_list) ? $strengths_list : []);
+
+                $devAreasData = is_array($recObj?->development_areas_ar) && !empty($recObj->development_areas_ar) 
+                    ? $recObj->development_areas_ar 
+                    : (!empty($development_areas) && is_array($development_areas) ? $development_areas : []);
+
+                $practicalTips = is_array($recObj?->practical_tips_ar) && !empty($recObj->practical_tips_ar) 
+                    ? $recObj->practical_tips_ar 
+                    : (!empty($practical_tips) && is_array($practical_tips) ? $practical_tips : []);
+
+                $progsData = is_array($recObj?->programs_ar) && !empty($recObj->programs_ar) 
+                    ? $recObj->programs_ar 
+                    : (!empty($programs) && is_array($programs) ? $programs : []);
+
+                $progsIntro = $recObj?->programs_intro_ar ?? $programs_intro ?? 'البرامج التدريبية المقترحة لك';
+                $progsOutro = $recObj?->programs_outro_ar ?? $programs_outro ?? '';
+
+                $parseStringItem = function($val) {
+                    if (is_object($val)) {
+                        return $val->title ?? $val->name ?? $val->desc ?? '';
+                    }
+                    if (is_array($val)) {
+                        return $val['title'] ?? $val['name'] ?? $val['desc'] ?? '';
+                    }
+                    return (string) $val;
+                };
+
+                // Main icon for dominant style
+                $mainIcon = 'bi-brain';
+                if (mb_strpos($recTitle, 'بصري') !== false && mb_strpos($recTitle, 'سمعي') === false && mb_strpos($recTitle, 'حسي') === false) {
+                    $mainIcon = 'bi-eye-fill';
+                } elseif (mb_strpos($recTitle, 'سمعي') !== false && mb_strpos($recTitle, 'بصري') === false && mb_strpos($recTitle, 'حسي') === false) {
+                    $mainIcon = 'bi-headphones';
+                } elseif (mb_strpos($recTitle, 'حسي') !== false && mb_strpos($recTitle, 'بصري') === false && mb_strpos($recTitle, 'سمعي') === false) {
+                    $mainIcon = 'bi-hand-index-thumb-fill';
+                } elseif (mb_strpos($recTitle, 'متوازن') !== false) {
+                    $mainIcon = 'bi-diagram-3-fill';
+                } else {
+                    $mainIcon = 'bi-intersect';
+                }
+            @endphp
+
+            <!-- Perceptual Styles Custom Report View -->
+            <div class="perceptual-styles-report">
+                
+                <!-- Main Style Summary Banner -->
+                <div class="row g-4 mb-4 align-items-stretch">
+                    <!-- Dominant Style Info Card -->
+                    <div class="col-md-7 col-12 d-flex">
+                        <div class="main-score-card w-100 p-4 d-flex flex-column justify-content-between border-0 shadow-sm rounded-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: #ffffff;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-bold" style="font-size: 0.8rem;">
+                                        <i class="bi bi-star-fill text-warning me-1"></i> النمط الإدراكي الغالب لديك
+                                    </span>
+                                </div>
+                                <div class="fs-2 text-warning"><i class="bi {{ $mainIcon }}"></i></div>
+                            </div>
+
+                            <div class="my-2">
+                                <h2 class="fw-extrabold text-white mb-2" style="font-size: 1.8rem; font-family: 'Tajawal', sans-serif;">{{ $recTitle }}</h2>
+                                <p class="text-light opacity-90 lh-base mb-0" style="font-size: 0.92rem; text-align: justify;">
+                                    {{ $recDesc }}
+                                </p>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between pt-3 mt-2 border-top border-white border-opacity-10">
+                                <div class="small text-light opacity-75">مقياس ثلاثي الأنماط المعيارية (20 درجة لكل نمط)</div>
+                                <div class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold fs-6">
+                                    <i class="bi bi-check-circle-fill me-1"></i> تشخيص مؤكد
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scores Breakdown Card -->
+                    <div class="col-md-5 col-12 d-flex">
+                        <div class="card w-100 p-4 border-0 shadow-sm rounded-4 d-flex flex-column justify-content-between" style="background: #ffffff;">
+                            <h5 class="fw-bold text-darkblue mb-3">
+                                <i class="bi bi-bar-chart-steps text-primary me-2"></i> درجاتك في الأنماط الإدراكية
+                            </h5>
+
+                            <div class="d-flex flex-column gap-3 my-auto">
+                                <!-- Visual -->
+                                <div class="style-progress-item p-3 rounded-3" style="background: #f0f7ff; border: 1px solid #dbeafe;">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-bold text-navy"><i class="bi bi-eye-fill text-primary me-2"></i> النمط البصري</span>
+                                        <span class="fw-extrabold text-primary">{{ $styleScores['visual'] }} / 20</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px; background-color: #dbeafe; border-radius: 10px;">
+                                        <div class="progress-bar bg-primary rounded-pill" style="width: {{ round(($styleScores['visual'] / 20) * 100) }}%;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Auditory -->
+                                <div class="style-progress-item p-3 rounded-3" style="background: #f0fdf4; border: 1px solid #dcfce7;">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-bold text-navy"><i class="bi bi-headphones text-success me-2"></i> النمط السمعي</span>
+                                        <span class="fw-extrabold text-success">{{ $styleScores['auditory'] }} / 20</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px; background-color: #dcfce7; border-radius: 10px;">
+                                        <div class="progress-bar bg-success rounded-pill" style="width: {{ round(($styleScores['auditory'] / 20) * 100) }}%;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Kinesthetic -->
+                                <div class="style-progress-item p-3 rounded-3" style="background: #fffbebfb; border: 1px solid #fef3c7;">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-bold text-navy"><i class="bi bi-hand-index-thumb-fill text-warning me-2"></i> النمط الحسي (العملي)</span>
+                                        <span class="fw-extrabold text-warning-emphasis">{{ $styleScores['kinesthetic'] }} / 20</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px; background-color: #fef3c7; border-radius: 10px;">
+                                        <div class="progress-bar bg-warning rounded-pill" style="width: {{ round(($styleScores['kinesthetic'] / 20) * 100) }}%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How to Learn Best Section -->
+                @if(!empty($howToLearn))
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: #ffffff;">
+                    <h5 class="fw-bold text-darkblue mb-3">
+                        <i class="bi bi-lightbulb-fill text-warning me-2"></i> كيف تتعلم بشكل أفضل؟
+                    </h5>
+                    <div class="row g-3">
+                        @foreach($howToLearn as $item)
+                        <div class="col-md-6 col-12">
+                            <div class="d-flex align-items-center p-3 rounded-3 h-100" style="background: #f8fafc; border: 1px solid #f1f5f9;">
+                                <div class="badge bg-primary-subtle text-primary rounded-circle p-2 me-3" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i class="bi bi-check2-circle fs-5"></i>
+                                </div>
+                                <span class="fw-semibold text-dark fs-6" style="line-height: 1.4;">{{ $parseStringItem($item) }}</span>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                <!-- Strengths & Development Areas Side-by-Side -->
+                <div class="row g-4 mb-4">
+                    <!-- Strengths -->
+                    @if(!empty($strengthsData))
+                    <div class="col-md-6 col-12 d-flex">
+                        <div class="card w-100 border-0 shadow-sm rounded-4 p-4" style="background: #ffffff; border-top: 4px solid #10b981 !important;">
+                            <h5 class="fw-bold text-success mb-3">
+                                <i class="bi bi-patch-check-fill me-2"></i> نقاط القوة لديك
+                            </h5>
+                            <div class="d-flex flex-column gap-2">
+                                @foreach($strengthsData as $s)
+                                <div class="d-flex align-items-start p-2 rounded-2" style="background: #f0fdf4;">
+                                    <i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>
+                                    <span class="fw-medium text-dark small" style="line-height: 1.5;">{{ $parseStringItem($s) }}</span>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Development Areas -->
+                    @if(!empty($devAreasData))
+                    <div class="col-md-6 col-12 d-flex">
+                        <div class="card w-100 border-0 shadow-sm rounded-4 p-4" style="background: #ffffff; border-top: 4px solid #f59e0b !important;">
+                            <h5 class="fw-bold text-warning-emphasis mb-3">
+                                <i class="bi bi-graph-up-arrow me-2"></i> الجوانب التي يمكن تطويرها
+                            </h5>
+                            <div class="d-flex flex-column gap-2">
+                                @foreach($devAreasData as $d)
+                                <div class="d-flex align-items-start p-2 rounded-2" style="background: #fffbeb;">
+                                    <i class="bi bi-arrow-up-right-circle-fill text-warning me-2 mt-1"></i>
+                                    <span class="fw-medium text-dark small" style="line-height: 1.5;">{{ $parseStringItem($d) }}</span>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+
+                <!-- Suggested Training Programs -->
+                @if(!empty($progsData))
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: #ffffff;">
+                    <h5 class="fw-bold text-darkblue mb-1">
+                        <i class="bi bi-journal-bookmark-fill text-primary me-2"></i> البرامج التدريبية المقترحة لك
+                    </h5>
+                    @if($progsIntro)
+                    <p class="text-muted small mb-3">{{ $progsIntro }}</p>
+                    @endif
+                    <div class="row g-3">
+                        @foreach($progsData as $prog)
+                        @php
+                            $pTitle = $parseStringItem($prog);
+                            $pIcon = is_array($prog) ? ($prog['icon'] ?? 'bi-book') : (is_object($prog) ? ($prog->icon ?? 'bi-book') : 'bi-book');
+                        @endphp
+                        <div class="col-md-4 col-sm-6 col-12">
+                            <div class="p-3 rounded-3 h-100 d-flex align-items-center gap-3 border shadow-2hover" style="background: #f8fafc; border-color: #e2e8f0 !important; transition: all 0.2s;">
+                                <div class="rounded-circle p-2 bg-white text-primary shadow-sm flex-shrink-0" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                                    <i class="bi {{ $pIcon }}"></i>
+                                </div>
+                                <span class="fw-bold text-navy small" style="line-height: 1.3;">{{ $pTitle }}</span>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    @if($progsOutro)
+                    <div class="alert alert-light border border-opacity-50 mt-3 mb-0 text-muted small text-center rounded-3" style="background: #f8fafc;">
+                        <i class="bi bi-info-circle text-primary me-1"></i> {{ $progsOutro }}
+                    </div>
+                    @endif
+                </div>
+                @endif
+
+                <!-- Practical Tips Section -->
+                @if(!empty($practicalTips))
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-2" style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #dbeafe !important;">
+                    <h5 class="fw-bold text-darkblue mb-3">
+                        <i class="bi bi-gear-wide-connected text-primary me-2"></i> نصائح عملية لك
+                    </h5>
+                    <div class="row g-3">
+                        @foreach($practicalTips as $tip)
+                        <div class="col-md-6 col-12">
+                            <div class="d-flex align-items-start p-3 bg-white rounded-3 border shadow-sm">
+                                <i class="bi bi-shield-check text-primary fs-5 me-2 mt-0"></i>
+                                <span class="fw-semibold text-dark small" style="line-height: 1.4;">{{ $parseStringItem($tip) }}</span>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+            </div>
+            @else
+            <!-- Score & Summary side-by-side row -->
+            <div class="row g-4 mb-4 align-items-start score-summary-row">
+                <!-- Score Card -->
+                <div class="col-md-6 col-12 d-flex">
+                    <div class="main-score-card w-100 p-4 d-flex flex-column justify-content-between">
+                        <!-- Card Header -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="card-section-title mb-0">النتيجة العامة</h4>
+                            <div class="card-section-icon"><i class="bi bi-award"></i></div>
+                        </div>
+
+                        <div class="row align-items-center">
+                            <!-- Gauge -->
+                            <div class="col-sm-5 col-5 text-center py-2 d-flex justify-content-center align-items-center">
+                                <div class="rounded-circle d-flex justify-content-center align-items-center shadow-sm score-gauge-wrapper" 
+                                     style="width: 120px; height: 120px; background: conic-gradient({{ $circleColor }} 0% {{ $pct }}%, #f3f4f6 {{ $pct }}% 100%); padding: 9px; position: relative;">
+                                    <div class="rounded-circle bg-white d-flex flex-column justify-content-center align-items-center" style="width: 100%; height: 100%;">
+                                        <span style="font-size: 1.9rem; font-weight: 900; color: #1a2b56; line-height: 1;">{{ $pct }}%</span>
+                                        <span style="font-size: 0.58rem; color: #64748b; font-weight: bold; margin-top: 4px; white-space: nowrap;">النتيجة الكلية</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Level Info -->
+                            <div class="col-sm-7 col-7 py-2 text-start px-2">
+                                <div class="score-level-label">{{ $isHighestDimension ? 'النمط السائد:' : 'مستوى الجاهزية:' }}</div>
+                                <div class="score-level-value text-{{ $lc }} mb-1">{{ $mainLvl['label'] }}</div>
+                                <div class="score-level-range text-muted" style="font-size: 0.72rem; font-weight: 500;">
+                                    @if($lc === 'success')
+                                        النطاق (70 - 100)
+                                    @elseif($lc === 'warning')
+                                        النطاق (40 - 69)
+                                    @else
+                                        النطاق (0 - 39)
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="progress-container mt-4 mb-2">
+                            @php
+                                $pinPos = $pct; 
+                            @endphp
+                            <div class="progress-pin text-darkblue" style="right: {{ $pinPos }}%;"><i class="bi bi-geo-alt-fill"></i></div>
+                            <div class="progress-track">
+                                <div class="progress-segment" style="background-color: #ef4444;"></div>
+                                <div class="progress-segment" style="background-color: #f59e0b;"></div>
+                                <div class="progress-segment" style="background-color: #22c55e;"></div>
+                            </div>
+                            <div class="progress-labels d-flex justify-content-between mt-2" style="font-size: 0.68rem; font-weight: 500;">
+                                <div class="progress-label text-danger" style="text-align: right;">منخفض<br>(0 - 39)</div>
+                                <div class="progress-label text-warning" style="text-align: center;">متوسط<br>(40 - 69)</div>
+                                <div class="progress-label text-success" style="text-align: left;">مرتفع<br>(70 - 100)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Card -->
+                <div class="col-md-6 col-12 d-flex">
+                    <div class="summary-card w-100 p-4 d-flex flex-column">
+                        <!-- Card Header -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="card-section-title mb-0">ملخص التقرير</h4>
+                            <div class="card-section-icon"><i class="bi bi-file-text"></i></div>
+                        </div>
+                        <div class="flex-grow-1">
+                            @php
+                                $sentences = array_filter(array_map('trim', explode('.', $parsedRecommendation)));
+                            @endphp
+                            <div class="summary-text mb-0" style="text-align: justify; font-size: 0.88rem; line-height: 1.7; color: #475569;">
+                                @foreach($sentences as $sentence)
+                                    @if(!empty($sentence))
+                                        <div class="mb-2 d-flex align-items-start gap-2">
+                                            <span class="text-primary" style="font-weight: bold;">•</span>
+                                            <span>{{ $sentence }}.</span>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Radar Chart -->
+            @if(!$isHighestDimension && count($radarLabels) > 1)
+            <div class="row gx-4 mb-4">
+                @if(count($radarLabels) >= 3)
+                <div class="col-12 mb-4">
+                    <div class="radar-card text-center">
+                        <div class="fw-bold text-darkblue mb-3" style="font-size: 1.3rem;">مستوى المهارات</div>
+                        <div style="position: relative; height: 350px; max-width: 500px; margin: 0 auto; width: 100%;">
+                            <canvas id="skillsRadar"></canvas>
+                        </div>
+                    </div>
+                </div>
+                @endif
+            </div>
+            @endif
+
+            <!-- Dimensions Results Accordion -->
+            @if(!empty($dimensions) && count($dimensions) > 0)
+                @php
+                    $hasAnyInterpretation = false;
+                    foreach($dimensions as $d) {
+                        if(!empty($d['interpretation'])) {
+                            $hasAnyInterpretation = true;
+                            break;
+                        }
+                    }
+                @endphp
+                @if($hasAnyInterpretation)
+                <h2 class="p2-main-title mt-4 mb-3"><i class="bi bi-layers text-darkblue"></i>تفسير المهارات</h2>
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-body p-0">
+                        <div class="accordion" id="dimensionsAccordion">
+                            @foreach($dimensions as $index => $dim)
+                            @php $hasInterp = !empty($dim['interpretation']); @endphp
+                            <div class="accordion-item border-0 {{ !$loop->last ? 'border-bottom' : '' }} dimension-detail-item">
+                                @if($hasInterp)
+                                    <h2 class="accordion-header" id="heading{{ $index }}">
+                                        <button class="accordion-button collapsed px-4 py-3 fw-bold text-darkblue bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" aria-expanded="false" aria-controls="collapse{{ $index }}" style="box-shadow: none;">
+                                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center w-100 pe-3 gap-2">
+                                                <span style="font-size: 1.05rem;">{{ $dim['name'] }}</span>
+                                                <span class="badge bg-primary rounded-pill px-3 py-2" style="font-size: 0.85rem; font-weight: normal;">
+                                                     الدرجة: {{ $dim['score'] }} من {{ $dim['max_score'] }}@if(!$isHighestDimension) | المستوى: {{ $dim['display_level'] ?? $dim['level'] }}@endif
+                                                 </span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ $index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ $index }}" data-bs-parent="#dimensionsAccordion">
+                                        <div class="accordion-body px-4 pb-4 pt-1">
+                                            <p class="text-muted mb-0" style="line-height: 1.8; font-size: 0.95rem; text-align: justify;">
+                                                {{ $dim['interpretation'] }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="px-4 py-3 fw-bold text-darkblue bg-white d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center w-100 gap-2">
+                                        <span style="font-size: 1.05rem;">{{ $dim['name'] }}</span>
+                                        <span class="badge bg-primary rounded-pill px-3 py-2" style="font-size: 0.85rem; font-weight: normal; margin-left: 20px;">
+                                             الدرجة: {{ $dim['score'] }} من {{ $dim['max_score'] }}@if(!$isHighestDimension) | المستوى: {{ $dim['display_level'] ?? $dim['level'] }}@endif
+                                         </span>
+                                    </div>
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @endif
+            @endif
+
+        </div>
+    </div>
+
+
+    <!-- ==================== PAGE 2 ==================== -->
+    <div class="a4-page">
+        <div class="page-padding pt-5 mt-4">
+            
+            <!-- Training Programs Section -->
+            @if(!empty($progs))
+            <div class="mb-4">
+                <div class="p2-section-title mb-3"><i class="bi bi-mortarboard-fill text-darkblue"></i> البرامج التدريبية المقترحة</div>
+                
+                @if(!empty($programs_intro))
+                    <p class="mb-3" style="color: #1a2b56; line-height: 1.8; font-size: 0.95rem; text-align: justify;">
+                        {{ $programs_intro }}
+                    </p>
+                @endif
+
+                <!-- Training Programs Grid View (All Viewports) -->
+                <div>
+                    <div class="row row-cols-3 row-cols-sm-3 row-cols-md-4 g-2 g-md-3 justify-content-center">
+                        @foreach($progs as $prog)
+                        <div class="col">
+                            <div class="program-card h-100 text-center">
+                                <div class="program-icon-wrapper">
+                                    @if(isset($prog->icon) && (str_starts_with($prog->icon, 'http') || str_starts_with($prog->icon, '/')))
+                                        <img src="{{ str_starts_with($prog->icon, '/') ? asset($prog->icon) : $prog->icon }}" alt="{{ $prog->title ?? '' }}" class="program-img-icon">
+                                    @else
+                                        <i class="bi {{ $prog->icon ?? 'bi-journal-bookmark' }} program-bi-icon"></i>
+                                    @endif
+                                </div>
+                                <h5 class="program-title">{{ $prog->title ?? '' }}</h5>
+                                <p class="program-desc mb-0 d-none d-sm-block">{{ $prog->description ?? 'برنامج تدريبي مخصص لتنمية المهارات وتعزيز الكفاءة المهنية.' }}</p>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                @if(!empty($programs_outro))
+                    <p class="mt-3 mb-2" style="color: #1a2b56; line-height: 1.8; font-size: 0.95rem; text-align: justify;">
+                        {{ $programs_outro }}
+                    </p>
+                @endif
+            </div>
+            @endif
+
+            <!-- Certificates Section -->
+            @if(!empty($certs))
+            <div class="mb-4">
+                <div class="p2-section-title mb-3"><i class="bi bi-award-fill text-darkblue"></i> الشهادات الاحترافية المناسبة</div>
+                <div class="p2-section-subtitle mb-3 text-muted small">قد تكون مناسبة لك بناءً على نتائج هذا المقياس</div>
+                
+                @if(!empty($certificates_intro))
+                    <p class="mb-3" style="color: #1a2b56; line-height: 1.8; font-size: 0.95rem; text-align: justify;">
+                        {{ $certificates_intro }}
+                    </p>
+                @endif
+                
+                <div class="row row-cols-3 row-cols-sm-3 row-cols-md-4 g-2 g-md-3 justify-content-center pt-2">
+                    @foreach($certs as $cert)
+                    <div class="col">
+                        <div class="program-card h-100 text-center">
+                            <div class="program-icon-wrapper">
+                                @if(isset($cert->icon) && (str_starts_with($cert->icon, 'http') || str_starts_with($cert->icon, '/')))
+                                    <img src="{{ str_starts_with($cert->icon, '/') ? asset($cert->icon) : $cert->icon }}" alt="{{ $cert->title ?? '' }}" class="program-img-icon">
+                                @else
+                                    <div class="cert-icon-inner {{ $cert->icon ?? 'blue-hexagon' }}">
+                                        {{ substr(strtoupper($cert->title ?? ''), 0, 4) }}
+                                    </div>
+                                @endif
+                            </div>
+                            <h5 class="program-title">{{ $cert->title ?? '' }}</h5>
+                            @if(!empty($cert->subtitle))
+                                <p class="program-desc d-none d-sm-block">{{ $cert->subtitle }}</p>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            <!-- 30 Day Plan Section -->
+            @if(count($planSteps) > 0)
+            <div class="mb-4">
+                <div class="p2-section-title mb-3"><i class="bi bi-calendar3 text-darkblue"></i> خطة تطوير مقترحة</div>
+                
+                @if(!empty($roadmap_intro))
+                    <p class="mb-3" style="color: #1a2b56; line-height: 1.8; font-size: 0.95rem; text-align: justify;">
+                        {{ $roadmap_intro }}
+                    </p>
+                @endif
+
+                <div class="row gx-2 gy-3 mt-3 justify-content-center align-items-stretch">
+                    @foreach($planSteps as $index => $step)
+                    <div class="col-lg-{{ count($planSteps) >= 4 ? '3' : (count($planSteps) == 3 ? '4' : (count($planSteps) == 2 ? '6' : '12')) }} col-md-6 col-4 d-flex align-items-stretch position-relative">
+                        <div class="plan-card w-100">
+                            <div class="plan-card-header d-flex justify-content-between align-items-center">
+                                <span class="plan-card-period">{{ $step->period }}</span>
+                                <div class="plan-card-icon"><i class="bi {{ $step->icon ?? 'bi-calendar-check' }}"></i></div>
+                            </div>
+                            <div class="plan-card-body">
+                                <p class="plan-card-text">{{ $step->title }}</p>
+                            </div>
+                        </div>
+                        @if(!$loop->last && count($planSteps) > 1 && count($planSteps) <= 4)
+                        <div class="plan-arrow d-none d-lg-flex"><i class="bi bi-chevron-left text-muted"></i></div>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+            @endif
+
+        </div>
+
+        <!-- Footer Page 2 -->
+        <div class="mt-auto py-4 text-center quote-footer-card">
+            <h6 class="text-darkblue fw-bold mb-2">رسالتنا لك</h6>
+            <p class="mb-0 mx-auto quote-footer-text">
+                نتائج هذا المقياس تمثل نقطة بداية لفهم قدراتك. وننصحك بالاستفادة منها في وضع خطة تطوير مستمرة تتناسب مع أهدافك المهنية والشخصية.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4 mb-5 no-print d-flex justify-content-center" style="gap: 15px;">
+    <a href="{{ route('dashboard') }}" class="btn btn-light rounded-circle shadow-sm text-darkblue" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;" title="العودة للرئيسية">
+        <i class="bi bi-house-door-fill"></i>
+    </a>
+    <button onclick="window.print()" class="btn btn-primary rounded-circle shadow-lg" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;" title="طباعة التقرير">
+        <i class="bi bi-printer-fill"></i>
+    </button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('skillsRadar');
+    if(ctx) {
+        const labels = {!! json_encode($radarLabels) !!};
+        const data = {!! json_encode($radarData) !!};
+        
+        // If there are less than 3 dimensions, a radar chart won't render a polygon. Use bar instead.
+        const chartType = labels.length < 3 ? 'bar' : 'radar';
+        
+        const config = {
+            type: chartType,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'النسبة المئوية',
+                    data: data,
+                    backgroundColor: chartType === 'bar' ? '#1e3a8a' : 'rgba(196, 209, 228, 0.7)',
+                    borderColor: '#1e3a8a',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#1e3a8a',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverBackgroundColor: '#1e3a8a',
+                    pointHoverBorderColor: '#ffffff'
+                }]
+            },
+            options: {
+                layout: { padding: 35 },
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        display: false
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        };
+
+        if (chartType === 'radar') {
+            config.options.scales = {
+                r: {
+                    min: 0,
+                    max: 100,
+                    angleLines: { color: '#e2e8f0' },
+                    grid: { color: '#e2e8f0' },
+                    pointLabels: {
+                        font: { family: 'Tajawal', size: 11, weight: 'bold' },
+                        color: '#0f172a',
+                        callback: function(label, index) {
+                            if (typeof index !== 'undefined' && data && typeof data[index] !== 'undefined') {
+                                return [label, data[index] + '%'];
+                            }
+                            return label;
+                        }
+                    },
+                    ticks: { display: false, stepSize: 20 }
+                }
+            };
+        } else {
+            config.options.scales = {
+                y: {
+                    min: 0, max: 100,
+                    grid: { color: '#e2e8f0' },
+                    ticks: { font: { family: 'Tajawal' } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Tajawal', weight: 'bold' }, color: '#0f172a' }
+                }
+            };
+        }
+
+        new Chart(ctx, config);
+    }
+});
+</script>
+@endsection
+````

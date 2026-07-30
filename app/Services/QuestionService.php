@@ -41,7 +41,9 @@ class QuestionService
      */
     public function update(Question $question, array $data): Question
     {
-        return $this->questions->update($question, ['text_ar' => $data['text_ar']]);
+        $updateData = array_intersect_key($data, array_flip(['text_ar', 'is_reversed', 'dimension_id']));
+
+        return $this->questions->update($question, $updateData);
     }
 
     public function delete(Question $question): void

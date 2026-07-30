@@ -26,7 +26,7 @@ class ExamResultService
     public function calculate(ExamSession $session): Result
     {
         if ($session->result) {
-            return $session->result->load('dimensionScores.dimension');
+            return $session->result->load('dimensionScores.dimension.interpretations');
         }
 
         $session->load([

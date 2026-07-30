@@ -31,7 +31,7 @@ class ExamController extends Controller
             'description_ar' => 'nullable|string',
             'time_limit_min' => 'nullable|integer|min:1',
             'question_ids' => 'required|array|min:1',
-            'question_ids.*' => 'uuid|exists:questions,id',
+            'question_ids.*' => 'uuid|exists:questions,id,deleted_at,NULL',
         ]);
 
         $assessment = \Illuminate\Support\Facades\DB::transaction(function () use ($data) {

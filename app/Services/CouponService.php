@@ -10,6 +10,58 @@ use App\Models\User;
 class CouponService
 {
     /**
+     * Create a new coupon with pivot relationships inside a DB transaction.
+     */
+    public function createCoupon(array $data): Coupon
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            $coupon = Coupon::create($data);
+
+            if (! $coupon->applies_to_all_assessments && ! empty($data['assessment_ids'])) {
+                $coupon->assessments()->sync($data['assessment_ids']);
+            }
+
+            if (! $coupon->applies_to_all_users && ! empty($data['permitted_user_ids'])) {
+                $coupon->permittedUsers()->sync($data['permitted_user_ids']);
+            }
+
+            return $coupon;
+        });
+    }
+
+    /**
+     * Update an existing coupon with pivot relationships inside a DB transaction.
+     */
+    public function updateCoupon(Coupon $coupon, array $data): Coupon
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($coupon, $data) {
+            $coupon->update($data);
+
+            if ($coupon->applies_to_all_assessments) {
+                $coupon->assessments()->detach();
+            } else {
+                $coupon->assessments()->sync($data['assessment_ids'] ?? []);
+            }
+
+            if ($coupon->applies_to_all_users) {
+                $coupon->permittedUsers()->detach();
+            } else {
+                $coupon->permittedUsers()->sync($data['permitted_user_ids'] ?? []);
+            }
+
+            return $coupon->fresh();
+        });
+    }
+
+    /**
+     * Soft-delete a coupon.
+     */
+    public function deleteCoupon(Coupon $coupon): void
+    {
+        $coupon->delete();
+    }
+
+    /**
      * Validates a coupon code for a specific user and assessment.
      * Returns an array with validation status, message, and pricing details.
      */
@@ -83,6 +135,19 @@ class CouponService
         }
     }
 
+    private const TIER_FIELDS = [
+        'discount_percentage',
+        'discount_percentage_2nd',
+        'discount_percentage_3rd',
+        'discount_percentage_4th',
+        'discount_percentage_5th',
+        'discount_percentage_6th',
+        'discount_percentage_7th',
+        'discount_percentage_8th',
+        'discount_percentage_9th',
+        'discount_percentage_10th',
+    ];
+
     /**
      * Resolve the actual discount percentage a user should get for a given coupon.
      * Checks usage across all identities (email, phone, national_id) to prevent fraud.
@@ -91,33 +156,10 @@ class CouponService
     {
         $totalUsed = $this->countLinkedUsage($coupon, $user);
 
-        $discount = null;
-        if ($totalUsed === 0) {
-            $discount = $coupon->discount_percentage;
-        } elseif ($totalUsed === 1 && $coupon->discount_percentage_2nd !== null) {
-            $discount = $coupon->discount_percentage_2nd;
-        } elseif ($totalUsed === 2 && $coupon->discount_percentage_3rd !== null) {
-            $discount = $coupon->discount_percentage_3rd;
-        } elseif ($totalUsed === 3 && $coupon->discount_percentage_4th !== null) {
-            $discount = $coupon->discount_percentage_4th;
-        } elseif ($totalUsed === 4 && $coupon->discount_percentage_5th !== null) {
-            $discount = $coupon->discount_percentage_5th;
-        } elseif ($totalUsed === 5 && $coupon->discount_percentage_6th !== null) {
-            $discount = $coupon->discount_percentage_6th;
-        } elseif ($totalUsed === 6 && $coupon->discount_percentage_7th !== null) {
-            $discount = $coupon->discount_percentage_7th;
-        } elseif ($totalUsed === 7 && $coupon->discount_percentage_8th !== null) {
-            $discount = $coupon->discount_percentage_8th;
-        } elseif ($totalUsed === 8 && $coupon->discount_percentage_9th !== null) {
-            $discount = $coupon->discount_percentage_9th;
-        } elseif ($totalUsed === 9 && $coupon->discount_percentage_10th !== null) {
-            $discount = $coupon->discount_percentage_10th;
-        }
-
-        // Fallback to base discount percentage if specific tier is not defined
-        if ($discount === null) {
-            $discount = $coupon->discount_percentage;
-        }
+        $field = self::TIER_FIELDS[$totalUsed] ?? null;
+        $discount = ($field && $coupon->{$field} !== null)
+            ? (float) $coupon->{$field}
+            : (float) $coupon->discount_percentage;
 
         $exhausted = ($coupon->assessments_limit !== null) && ($totalUsed >= $coupon->assessments_limit);
 
@@ -136,13 +178,10 @@ class CouponService
     {
         $linkedUserIds = User::where(function ($q) use ($user) {
             $q->where('email', $user->email);
-            if ($user->name) {
-                $q->orWhere('name', $user->name);
-            }
-            if ($user->national_id) {
+            if (! empty($user->national_id)) {
                 $q->orWhere('national_id', $user->national_id);
             }
-            if ($user->phone) {
+            if (! empty($user->phone)) {
                 $q->orWhere('phone', $user->phone);
             }
         })->pluck('id');

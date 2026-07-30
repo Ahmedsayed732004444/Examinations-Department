@@ -4,14 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Icon;
+use App\Services\IconService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 
 class IconController extends Controller
 {
+    public function __construct(
+        private readonly IconService $iconService,
+    ) {}
+
     public function index()
     {
-        $icons = Icon::orderBy('created_at', 'desc')->get()->groupBy('category');
+        $icons = $this->iconService->getGroupedByCategory();
+
         return view('admin.icons.index', compact('icons'));
     }
 
@@ -27,24 +32,11 @@ class IconController extends Controller
         ]);
 
         if ($request->hasFile('icon_file')) {
-            $file = $request->file('icon_file');
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            
-            // Move to public/images/icons
-            $destinationPath = public_path('images/icons');
-            if (!File::exists($destinationPath)) {
-                File::makeDirectory($destinationPath, 0755, true);
-            }
-            
-            $file->move($destinationPath, $filename);
-            
-            $iconUrl = '/images/icons/' . $filename;
-
-            Icon::create([
-                'name' => $request->name,
-                'category' => $request->category,
-                'icon_url' => $iconUrl,
-            ]);
+            $this->iconService->store(
+                $request->name,
+                $request->category,
+                $request->file('icon_file')
+            );
 
             return back()->with('success', 'تم إضافة الأيقونة بنجاح.');
         }
@@ -54,15 +46,7 @@ class IconController extends Controller
 
     public function destroy(Icon $icon)
     {
-        // Extract filename from URL
-        $filename = basename($icon->icon_url);
-        $path = public_path('images/icons/' . $filename);
-        
-        if (File::exists($path)) {
-            File::delete($path);
-        }
-
-        $icon->delete();
+        $this->iconService->delete($icon);
 
         return back()->with('success', 'تم حذف الأيقونة بنجاح.');
     }

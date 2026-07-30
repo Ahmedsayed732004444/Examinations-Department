@@ -52,7 +52,12 @@ class AssessmentRepository implements AssessmentRepositoryInterface
 
     public function delete(Assessment $assessment): void
     {
-        $assessment->delete();
+        \Illuminate\Support\Facades\DB::transaction(function () use ($assessment) {
+            $assessment->dimensions()->get()->each->delete();
+            $assessment->questions()->get()->each->delete();
+            $assessment->recommendations()->delete();
+            $assessment->delete();
+        });
     }
 
     public function toggle(Assessment $assessment): Assessment

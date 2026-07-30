@@ -73,6 +73,7 @@ class StatisticsService
         $rows = DB::table('assessments as a')
             ->join('exam_sessions as es', 'es.assessment_id', '=', 'a.id')
             ->join('results as r', 'r.session_id', '=', 'es.id')
+            ->whereNull('a.deleted_at')
             ->select([
                 'a.id',
                 'a.title_ar as title',
@@ -102,6 +103,7 @@ class StatisticsService
         $rows = DB::table('assessments as a')
             ->leftJoin('exam_sessions as es', 'es.assessment_id', '=', 'a.id')
             ->leftJoin('results as r', 'r.session_id', '=', 'es.id')
+            ->whereNull('a.deleted_at')
             ->select([
                 'a.title_ar as title',
                 DB::raw('ROUND(AVG(r.total_score), 1) as avg'),
@@ -124,6 +126,7 @@ class StatisticsService
             ->leftJoin('exam_sessions as es', fn ($j) => $j->on('es.user_id', '=', 'u.id')->where('es.status', 'completed')
             )
             ->where('u.role', 'user')
+            ->whereNull('u.deleted_at')
             ->select([
                 'u.id',
                 'u.name',
@@ -146,6 +149,8 @@ class StatisticsService
             ->join('assessments as a', 'a.id', '=', 'es.assessment_id')
             ->join('results as r', 'r.session_id', '=', 'es.id')
             ->where('es.status', 'completed')
+            ->whereNull('u.deleted_at')
+            ->whereNull('a.deleted_at')
             ->select([
                 'es.id as session_id',
                 'u.name as user_name',
