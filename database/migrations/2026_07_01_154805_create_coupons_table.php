@@ -22,8 +22,8 @@ return new class extends Migration
 
         Schema::create('coupon_user', function (Blueprint $table) {
             $table->id();
-            $table->uuid('user_id')->index();
-            $table->unsignedBigInteger('coupon_id')->index();
+            $table->uuid('user_id');
+            $table->unsignedBigInteger('coupon_id');
             $table->integer('used_count')->default(0);
             $table->timestamps();
 

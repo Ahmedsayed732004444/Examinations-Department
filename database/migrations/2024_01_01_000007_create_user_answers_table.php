@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('user_answers', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('session_id')->index();
-            $table->uuid('question_id')->index();
-            $table->uuid('selected_option_id')->index();
+            $table->uuid('session_id');
+            $table->uuid('question_id');
+            $table->uuid('selected_option_id');
             $table->integer('score_earned');
             $table->timestamps();
             $table->unique(['session_id', 'question_id']);

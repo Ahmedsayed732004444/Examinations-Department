@@ -30,15 +30,15 @@ return new class extends Migration
 
         // 4. Update exam_sessions table
         Schema::table('exam_sessions', function (Blueprint $table) {
-            $table->unsignedBigInteger('coupon_id')->nullable()->index()->after('assessment_id');
+            $table->unsignedBigInteger('coupon_id')->nullable()->after('assessment_id');
             $table->integer('discount_applied')->nullable()->after('coupon_id');
         });
 
         // 5. Create coupon_assessment pivot table
         Schema::create('coupon_assessment', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('coupon_id')->index();
-            $table->uuid('assessment_id')->index();
+            $table->unsignedBigInteger('coupon_id');
+            $table->uuid('assessment_id');
             $table->timestamps();
 
             $table->unique(['coupon_id', 'assessment_id']);

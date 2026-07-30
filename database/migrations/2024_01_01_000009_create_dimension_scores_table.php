@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('dimension_scores', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('result_id')->index();
-            $table->uuid('dimension_id')->index();
+            $table->uuid('result_id');
+            $table->uuid('dimension_id');
             $table->integer('score');
             $table->integer('max_score');
             $table->string('level')->nullable();

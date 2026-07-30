@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('answer_options', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('question_id')->index();
+            $table->uuid('question_id');
             $table->string('label_ar');
             $table->integer('score_value');
             $table->integer('order_index')->default(0);

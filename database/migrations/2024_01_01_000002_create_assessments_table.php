@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('scoring_type')->default('overall_score');
             $table->integer('time_limit_min')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->uuid('created_by')->index();
+            $table->uuid('created_by');
             $table->timestamps();
         });
     }

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('results', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('session_id')->index();
+            $table->uuid('session_id');
             $table->integer('total_score');
             $table->integer('max_possible_score');
             $table->string('level')->nullable();

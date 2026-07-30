@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('dimension_interpretations', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('dimension_id')->index();
+            $table->uuid('dimension_id');
             $table->string('level');
             $table->text('interpretation_text_ar');
             $table->integer('high_threshold')->nullable();

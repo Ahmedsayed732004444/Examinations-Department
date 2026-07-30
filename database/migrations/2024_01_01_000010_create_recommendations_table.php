@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('recommendations', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('assessment_id')->index();
+            $table->uuid('assessment_id');
             $table->string('level');
             $table->text('description_ar');
             $table->text('programs_ar')->nullable();

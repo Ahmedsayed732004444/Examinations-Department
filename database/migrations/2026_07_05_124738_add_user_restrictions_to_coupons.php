@@ -17,8 +17,8 @@ return new class extends Migration
 
         Schema::create('coupon_permitted_user', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('coupon_id')->index();
-            $table->uuid('user_id')->index();
+            $table->unsignedBigInteger('coupon_id');
+            $table->uuid('user_id');
             $table->timestamps();
         });
     }
