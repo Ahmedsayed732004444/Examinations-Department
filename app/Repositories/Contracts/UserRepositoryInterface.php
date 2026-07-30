@@ -2,11 +2,20 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
 interface UserRepositoryInterface
 {
+    /**
+     * Create a new user record.
+     *
+     * @param array $data
+     * @return User
+     */
+    public function create(array $data): User;
+
     /**
      * Search and paginate users with their completed exam session count.
      *

@@ -8,6 +8,11 @@ use App\Repositories\Contracts\UserRepositoryInterface;
 
 class UserRepository implements UserRepositoryInterface
 {
+    public function create(array $data): User
+    {
+        return User::create($data);
+    }
+
     public function searchPaginated(?string $search, int $perPage = 15)
     {
         $query = User::query()

@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Http\Requests\RegisterRequest;
+use App\Services\UserService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private readonly UserService $userService,
+    ) {}
+
     public function showLogin()
     {
         return response()
@@ -49,30 +52,9 @@ class AuthController extends Controller
             ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
     }
 
-    public function register(Request $request): RedirectResponse
+    public function register(RegisterRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'national_id' => 'required|string|unique:users|max:20',
-            'phone' => 'required|string|unique:users|max:20',
-            'gender' => 'required|string|in:male,female',
-            'qualification' => 'required|string|max:255',
-            'nationality' => 'required|string|max:255',
-            'password' => 'required|min:8|confirmed',
-        ]);
-
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'national_id' => $data['national_id'],
-            'phone' => $data['phone'],
-            'gender' => $data['gender'],
-            'qualification' => $data['qualification'],
-            'nationality' => $data['nationality'],
-            'password' => Hash::make($data['password']),
-            'role' => 'user',
-        ]);
+        $user = $this->userService->register($request->validated());
 
         Auth::login($user);
 
