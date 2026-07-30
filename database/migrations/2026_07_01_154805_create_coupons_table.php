@@ -22,8 +22,8 @@ return new class extends Migration
 
         Schema::create('coupon_user', function (Blueprint $table) {
             $table->id();
-            $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('coupon_id')->constrained()->cascadeOnDelete();
+            $table->uuid('user_id')->index();
+            $table->unsignedBigInteger('coupon_id')->index();
             $table->integer('used_count')->default(0);
             $table->timestamps();
 

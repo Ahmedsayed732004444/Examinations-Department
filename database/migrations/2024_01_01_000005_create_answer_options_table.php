@@ -10,8 +10,7 @@ return new class extends Migration
     {
         Schema::create('answer_options', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('question_id');
-            $table->foreign('question_id')->references('id')->on('questions')->cascadeOnDelete();
+            $table->uuid('question_id')->index();
             $table->string('label_ar');
             $table->integer('score_value');
             $table->integer('order_index')->default(0);

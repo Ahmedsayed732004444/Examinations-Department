@@ -10,8 +10,7 @@ return new class extends Migration
     {
         Schema::create('results', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('session_id');
-            $table->foreign('session_id')->references('id')->on('exam_sessions')->cascadeOnDelete();
+            $table->uuid('session_id')->index();
             $table->integer('total_score');
             $table->integer('max_possible_score');
             $table->string('level')->nullable();
