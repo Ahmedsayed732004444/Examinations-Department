@@ -82,7 +82,7 @@
 <nav class="top-navbar">
     <div class="container d-flex justify-content-between align-items-center px-3">
         <!-- Logo -->
-        <a class="navbar-brand text-decoration-none" href="{{ route('dashboard') }}">
+        <a class="navbar-brand text-decoration-none" href="{{ route('selection') }}">
             <div class="d-flex align-items-center">
                 <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 48px;">
             </div>

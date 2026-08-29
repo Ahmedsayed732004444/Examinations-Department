@@ -147,7 +147,7 @@ class AssessmentController extends Controller
                 $allRecs = require $dataFile;
                 $found = collect($allRecs)->firstWhere('level', $levelKey);
                 if ($found) {
-                    $recommendation = new Recommendation(array_merge($found, ['assessment_id' => $assessment->id]));
+                    $recommendation = new \App\Models\Recommendation(array_merge($found, ['assessment_id' => $assessment->id]));
                 }
             }
         }

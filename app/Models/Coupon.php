@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class Coupon extends Model
 {
+    use \Illuminate\Database\Eloquent\SoftDeletes;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
@@ -95,12 +96,12 @@ class Coupon extends Model
         return $this->belongsToMany(User::class)->withPivot('used_count')->withTimestamps();
     }
 
-    public function assessments()
+    public function assessments(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Assessment::class, 'coupon_assessment');
     }
 
-    public function permittedUsers()
+    public function permittedUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class, 'coupon_permitted_user');
     }

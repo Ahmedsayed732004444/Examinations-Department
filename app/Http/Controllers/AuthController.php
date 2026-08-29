@@ -30,11 +30,13 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            if (Auth::user()->isAdmin()) {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+            if ($user->isAdmin()) {
                 return redirect()->route('admin.dashboard');
             }
 
-            return redirect()->route('dashboard');
+            return redirect()->route('selection');
         }
 
         return back()->withErrors(['email' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.']);
@@ -55,7 +57,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('dashboard');
+        return redirect()->route('selection');
     }
 
     public function logout(Request $request): RedirectResponse

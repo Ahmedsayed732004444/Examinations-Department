@@ -789,7 +789,7 @@
 </div>
 
 <div class="container mt-4 mb-5 no-print d-flex justify-content-center" style="gap: 15px;">
-    <a href="{{ route('dashboard') }}" class="btn btn-light rounded-circle shadow-sm text-darkblue" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;" title="العودة للرئيسية">
+    <a href="{{ route('dashboard.assessments') }}" class="btn btn-light rounded-circle shadow-sm text-darkblue" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;" title="العودة للرئيسية">
         <i class="bi bi-house-door-fill"></i>
     </a>
     <button onclick="window.print()" class="btn btn-primary rounded-circle shadow-lg" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;" title="طباعة التقرير">

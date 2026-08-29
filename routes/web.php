@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\User;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamController;
@@ -16,7 +17,16 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // User routes
 Route::middleware(['auth', 'user'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/selection', function () {
+        return view('user.selection');
+    })->name('selection');
+    
+    // Keep old dashboard route for backward compatibility, redirect to selection
+    Route::get('/dashboard', function () {
+        return redirect()->route('selection');
+    })->name('dashboard');
+    
+    Route::get('/assessments', [DashboardController::class, 'index'])->name('dashboard.assessments');
     Route::post('/coupon/validate', [ExamController::class, 'validateCoupon'])->name('coupon.validate');
     Route::get('/coupon/for-assessment/{assessment}', [ExamController::class, 'getCouponForAssessment'])->name('coupon.for-assessment');
     Route::post('/exam/{assessment}/start', [ExamController::class, 'start'])->name('exam.start');
@@ -24,6 +34,15 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/exam/{session}/answer', [ExamController::class, 'answer'])->name('exam.answer');
     Route::post('/exam/{session}/previous', [ExamController::class, 'previous'])->name('exam.previous');
     Route::get('/exam/{session}/result', [ExamController::class, 'result'])->name('exam.result');
+    
+    // Professional certificates (Graded Exams)
+    Route::prefix('certificates')->name('user.graded_exams.')->group(function () {
+        Route::get('/', [User\UserGradedExamController::class, 'index'])->name('index');
+        Route::post('/{exam}/start', [User\UserGradedExamController::class, 'start'])->name('start');
+        Route::get('/session/{session}', [User\UserGradedExamController::class, 'show'])->name('show');
+        Route::post('/session/{session}/answer', [User\UserGradedExamController::class, 'answer'])->name('answer');
+        Route::get('/session/{session}/result', [User\UserGradedExamController::class, 'result'])->name('result');
+    });
 });
 
 // Admin routes
@@ -86,4 +105,31 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');
     Route::get('/users/{user}/results', [Admin\UserController::class, 'userResults'])->name('users.results');
+
+    // Graded Exams Admin Routes
+    Route::prefix('graded-exams')->name('graded_exams.')->group(function () {
+        // Certificates and Units
+        Route::get('/', [Admin\GradedExamController::class, 'index'])->name('index');
+        Route::post('/', [Admin\GradedExamController::class, 'store'])->name('store');
+        Route::put('/{exam}', [Admin\GradedExamController::class, 'update'])->name('update');
+        Route::delete('/{exam}', [Admin\GradedExamController::class, 'destroy'])->name('destroy');
+        
+        // Settings
+        Route::get('/{exam}/settings', [Admin\GradedExamController::class, 'settings'])->name('settings');
+        Route::put('/{exam}/settings', [Admin\GradedExamController::class, 'updateSettings'])->name('settings.update');
+        
+        Route::get('/{exam}/units', [Admin\GradedExamController::class, 'showUnits'])->name('units.show');
+        Route::post('/{exam}/units', [Admin\GradedExamController::class, 'storeUnit'])->name('units.store');
+        Route::put('/units/{unit}', [Admin\GradedExamController::class, 'updateUnit'])->name('units.update');
+        Route::delete('/units/{unit}', [Admin\GradedExamController::class, 'destroyUnit'])->name('units.destroy');
+
+        // Questions
+        Route::get('/questions', [Admin\GradedExamQuestionController::class, 'index'])->name('questions.index');
+        Route::post('/questions', [Admin\GradedExamQuestionController::class, 'store'])->name('questions.store');
+        Route::patch('/questions/{question}', [Admin\GradedExamQuestionController::class, 'update'])->name('questions.update');
+        Route::delete('/questions/{question}', [Admin\GradedExamQuestionController::class, 'destroy'])->name('questions.destroy');
+        Route::get('/questions/{question}/options', [Admin\GradedExamQuestionController::class, 'options'])->name('questions.options');
+        
+        Route::get('/api-units', [Admin\GradedExamQuestionController::class, 'getUnits'])->name('units.byExam');
+    });
 });

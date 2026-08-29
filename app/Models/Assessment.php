@@ -46,7 +46,7 @@ class Assessment extends Model
         return $this->belongsToMany(Coupon::class, 'coupon_assessment');
     }
 
-    public function dimensions()
+    public function dimensions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Dimension::class)->orderBy('order_index');
     }

@@ -30,11 +30,16 @@
             <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 55px; filter: brightness(0) invert(1);">
             <div class="text-muted small mt-2">لوحة الإدارة</div>
         </div>
-        <ul class="nav flex-column flex-grow-1">
+        <ul class="nav flex-column flex-grow-1 pb-3">
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
                     <i class="bi bi-speedometer2 me-2"></i>الرئيسية
                 </a>
+            </li>
+
+            <!-- قسم المقاييس -->
+            <li class="nav-item mt-3 mb-1 px-3">
+                <span class="text-secondary small fw-bold" style="font-size: 0.75rem;">نظام المقاييس</span>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.assessments*') ? 'active' : '' }}" href="{{ route('admin.assessments.index') }}">
@@ -55,6 +60,26 @@
                 <a class="nav-link {{ request()->routeIs('admin.recommendations*') ? 'active' : '' }}" href="{{ route('admin.recommendations.index') }}">
                     <i class="bi bi-lightbulb me-2"></i>إدارة التوصيات
                 </a>
+            </li>
+
+            <!-- قسم الشهادات الاحترافية -->
+            <li class="nav-item mt-3 mb-1 px-3">
+                <span class="text-secondary small fw-bold" style="font-size: 0.75rem;">الشهادات الاحترافية</span>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.graded_exams.index') ? 'active' : '' }}" href="{{ route('admin.graded_exams.index') }}">
+                    <i class="bi bi-award me-2"></i>إدارة الشهادات والوحدات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.graded_exams.questions.*') ? 'active' : '' }}" href="{{ route('admin.graded_exams.questions.index') }}">
+                    <i class="bi bi-question-circle me-2"></i>بنك أسئلة الشهادات
+                </a>
+            </li>
+
+            <!-- قسم الإدارة العامة -->
+            <li class="nav-item mt-3 mb-1 px-3">
+                <span class="text-secondary small fw-bold" style="font-size: 0.75rem;">الإدارة العامة</span>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.coupons*') ? 'active' : '' }}" href="{{ route('admin.coupons.index') }}">

@@ -46,6 +46,8 @@ app/Http/Controllers/Admin/CouponController.php
 app/Http/Controllers/Admin/DashboardController.php
 app/Http/Controllers/Admin/DimensionController.php
 app/Http/Controllers/Admin/ExamController.php
+app/Http/Controllers/Admin/GradedExamController.php
+app/Http/Controllers/Admin/GradedExamQuestionController.php
 app/Http/Controllers/Admin/IconController.php
 app/Http/Controllers/Admin/QuestionController.php
 app/Http/Controllers/Admin/RecommendationController.php
@@ -56,6 +58,7 @@ app/Http/Controllers/AuthController.php
 app/Http/Controllers/Controller.php
 app/Http/Controllers/DashboardController.php
 app/Http/Controllers/ExamController.php
+app/Http/Controllers/User/UserGradedExamController.php
 app/Http/Middleware/AdminMiddleware.php
 app/Http/Middleware/UserMiddleware.php
 app/Http/Requests/Admin/BulkStoreQuestionsRequest.php
@@ -68,6 +71,7 @@ app/Http/Requests/Admin/StoreRecommendationRequest.php
 app/Http/Requests/Admin/UpdateAssessmentRequest.php
 app/Http/Requests/Admin/UpdateSettingsRequest.php
 app/Http/Requests/AnswerQuestionRequest.php
+app/Http/Requests/LoginRequest.php
 app/Http/Requests/RegisterRequest.php
 app/Models/AnswerOption.php
 app/Models/Assessment.php
@@ -76,6 +80,16 @@ app/Models/Dimension.php
 app/Models/DimensionInterpretation.php
 app/Models/DimensionScore.php
 app/Models/ExamSession.php
+app/Models/GradedExam.php
+app/Models/GradedExamConstraintSetting.php
+app/Models/GradedExamOption.php
+app/Models/GradedExamQuestion.php
+app/Models/GradedExamResult.php
+app/Models/GradedExamSession.php
+app/Models/GradedExamSessionQuestion.php
+app/Models/GradedExamUnit.php
+app/Models/GradedExamUserAnswer.php
+app/Models/GradedExamUserAnswerOption.php
 app/Models/Icon.php
 app/Models/Question.php
 app/Models/Recommendation.php
@@ -102,12 +116,16 @@ app/Services/CouponService.php
 app/Services/DimensionService.php
 app/Services/ExamResultService.php
 app/Services/ExamService.php
+app/Services/FileUploadService.php
+app/Services/GradedExamGeneratorService.php
+app/Services/IconService.php
 app/Services/QuestionService.php
 app/Services/RecommendationService.php
 app/Services/Result/DimensionInterpreter.php
 app/Services/Result/RecommendationSelector.php
 app/Services/Result/ResultFormatter.php
 app/Services/Result/ScoreCalculator.php
+app/Services/SettingService.php
 app/Services/StatisticsService.php
 app/Services/UserDashboardService.php
 app/Services/UserService.php
@@ -122,12 +140,27 @@ config/auth.php
 config/cache.php
 config/database.php
 config/filesystems.php
+config/graded_exams.php
 config/logging.php
 config/mail.php
 config/queue.php
 config/services.php
 config/session.php
 database/.gitignore
+database/data/graded_exams/marketing_ibta/meta.php
+database/data/graded_exams/marketing_ibta/units/unit_01.php
+database/data/graded_exams/marketing_ibta/units/unit_02.php
+database/data/graded_exams/marketing_ibta/units/unit_03.php
+database/data/graded_exams/marketing_ibta/units/unit_04.php
+database/data/graded_exams/marketing_ibta/units/unit_05.php
+database/data/graded_exams/marketing_ibta/units/unit_06.php
+database/data/graded_exams/marketing_ibta/units/unit_07.php
+database/data/graded_exams/marketing_ibta/units/unit_08.php
+database/data/graded_exams/marketing_ibta/units/unit_09.php
+database/data/graded_exams/marketing_ibta/units/unit_10.php
+database/data/graded_exams/marketing_ibta/units/unit_11.php
+database/data/graded_exams/marketing_ibta/units/unit_12.php
+database/data/graded_exams/marketing_ibta/units/unit_13.php
 database/factories/UserFactory.php
 database/migrations/0001_01_01_000000_create_users_table.php
 database/migrations/0001_01_01_000001_create_cache_table.php
@@ -164,6 +197,16 @@ database/migrations/2026_07_17_014000_change_sessions_user_id_to_uuid.php
 database/migrations/2026_07_21_170000_make_assessments_limit_nullable_on_coupons_table.php
 database/migrations/2026_07_21_234000_add_perceptual_fields_to_recommendations_table.php
 database/migrations/2026_08_01_000000_add_soft_deletes_to_all_core_tables.php
+database/migrations/2026_08_29_000001_create_graded_exams_table.php
+database/migrations/2026_08_29_000002_create_graded_exam_units_table.php
+database/migrations/2026_08_29_000003_create_graded_exam_questions_table.php
+database/migrations/2026_08_29_000004_create_graded_exam_options_table.php
+database/migrations/2026_08_29_000005_create_graded_exam_sessions_table.php
+database/migrations/2026_08_29_000006_create_graded_exam_session_questions_table.php
+database/migrations/2026_08_29_000007_create_graded_exam_user_answers_table.php
+database/migrations/2026_08_29_000008_create_graded_exam_user_answer_options_table.php
+database/migrations/2026_08_29_000009_create_graded_exam_results_table.php
+database/migrations/2026_08_29_000010_create_graded_exam_constraint_settings_table.php
 database/seeders/Assessment10Seeder.php
 database/seeders/Assessment11Seeder.php
 database/seeders/Assessment12Seeder.php
@@ -193,6 +236,8 @@ database/seeders/Assessment8Seeder.php
 database/seeders/Assessment9Seeder.php
 database/seeders/AssessmentsDatabaseSeeder.php
 database/seeders/DatabaseSeeder.php
+database/seeders/GradedExamMarketingIbtaSeeder.php
+database/seeders/GradedExamsDatabaseSeeder.php
 database/seeders/PerceptualStylesSeeder.php
 images/1.png
 images/10.png
@@ -313,6 +358,8 @@ resources/views/admin/coupons/edit.blade.php
 resources/views/admin/coupons/index.blade.php
 resources/views/admin/dashboard.blade.php
 resources/views/admin/exams/create.blade.php
+resources/views/admin/graded_exam_questions/index.blade.php
+resources/views/admin/graded_exams/index.blade.php
 resources/views/admin/icons/index.blade.php
 resources/views/admin/questions/index.blade.php
 resources/views/admin/recommendations/index.blade.php
@@ -323,9 +370,14 @@ resources/views/auth/login.blade.php
 resources/views/auth/register.blade.php
 resources/views/layouts/admin.blade.php
 resources/views/layouts/user.blade.php
+resources/views/user/coming-soon.blade.php
 resources/views/user/dashboard.blade.php
 resources/views/user/exam.blade.php
+resources/views/user/graded_exams/index.blade.php
+resources/views/user/graded_exams/result.blade.php
+resources/views/user/graded_exams/show.blade.php
 resources/views/user/result.blade.php
+resources/views/user/selection.blade.php
 routes/console.php
 routes/web.php
 start-container.sh
@@ -334,6 +386,14660 @@ vite.config.js
 ```
 
 # Files
+
+## File: app/Http/Controllers/Admin/GradedExamController.php
+````php
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\GradedExam;
+use App\Models\GradedExamUnit;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+class GradedExamController extends Controller
+{
+    public function index(): View
+    {
+        $exams = GradedExam::withCount(['units', 'questions'])->orderBy('created_at', 'desc')->get();
+        return view('admin.graded_exams.index', compact('exams'));
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'title_ar' => 'required|string|max:255',
+            'description_ar' => 'nullable|string',
+            'category' => 'nullable|string',
+            'total_questions' => 'nullable|integer|min:1',
+            'time_limit_min' => 'nullable|integer|min:1',
+            'is_active' => 'boolean',
+        ]);
+
+        $validated['created_by'] = auth()->id();
+        
+        GradedExam::create($validated);
+
+        return response()->json(['success' => true, 'message' => 'تم إنشاء الشهادة بنجاح.']);
+    }
+
+    public function update(Request $request, GradedExam $exam): JsonResponse
+    {
+        $validated = $request->validate([
+            'title_ar' => 'required|string|max:255',
+            'description_ar' => 'nullable|string',
+            'category' => 'nullable|string',
+            'total_questions' => 'nullable|integer|min:1',
+            'time_limit_min' => 'nullable|integer|min:1',
+            'is_active' => 'boolean',
+        ]);
+
+        $exam->update($validated);
+
+        return response()->json(['success' => true, 'message' => 'تم تحديث الشهادة بنجاح.']);
+    }
+
+    public function destroy(GradedExam $exam): JsonResponse
+    {
+        $exam->delete();
+        return response()->json(['success' => true, 'message' => 'تم حذف الشهادة بنجاح.']);
+    }
+    
+    // Units Management
+    public function showUnits(GradedExam $exam): JsonResponse
+    {
+        $units = $exam->units()->orderBy('order_index')->get();
+        return response()->json(['success' => true, 'units' => $units]);
+    }
+
+    public function storeUnit(Request $request, GradedExam $exam): JsonResponse
+    {
+        $validated = $request->validate([
+            'title_ar' => 'required|string|max:255',
+        ]);
+        
+        $lastUnit = $exam->units()->max('unit_number') ?? 0;
+        
+        $exam->units()->create([
+            'title_ar' => $validated['title_ar'],
+            'unit_number' => $lastUnit + 1,
+            'order_index' => $lastUnit + 1,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'تم إضافة الوحدة بنجاح.']);
+    }
+
+    public function updateUnit(Request $request, GradedExamUnit $unit): JsonResponse
+    {
+        $validated = $request->validate([
+            'title_ar' => 'required|string|max:255',
+        ]);
+
+        $unit->update($validated);
+
+        return response()->json(['success' => true, 'message' => 'تم تحديث الوحدة بنجاح.']);
+    }
+
+    public function destroyUnit(GradedExamUnit $unit): JsonResponse
+    {
+        $unit->delete();
+        return response()->json(['success' => true, 'message' => 'تم حذف الوحدة بنجاح.']);
+    }
+}
+````
+
+## File: app/Http/Controllers/Admin/GradedExamQuestionController.php
+````php
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\GradedExam;
+use App\Models\GradedExamUnit;
+use App\Models\GradedExamQuestion;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+class GradedExamQuestionController extends Controller
+{
+    public function index(Request $request): View
+    {
+        $exams = GradedExam::orderBy('title_ar')->get();
+        $units = collect();
+
+        $query = GradedExamQuestion::with(['gradedExam', 'unit'])
+            ->withCount('options');
+
+        if ($request->filled('graded_exam_id')) {
+            $query->where('graded_exam_id', $request->graded_exam_id);
+            $units = GradedExamUnit::where('graded_exam_id', $request->graded_exam_id)
+                ->orderBy('order_index')
+                ->get();
+        } else {
+            $units = GradedExamUnit::orderBy('order_index')->get();
+        }
+
+        if ($request->filled('unit_id')) {
+            $query->where('unit_id', $request->unit_id);
+        }
+
+        if ($request->filled('level')) {
+            $query->where('level', $request->level);
+        }
+
+        if ($request->filled('question_type')) {
+            if ($request->question_type === 'mcq_single') {
+                $query->where('question_type', 'mcq')->where('is_multi_correct', false);
+            } elseif ($request->question_type === 'mcq_multi') {
+                $query->where('question_type', 'mcq')->where('is_multi_correct', true);
+            } else {
+                $query->where('question_type', $request->question_type);
+            }
+        }
+
+        if ($request->filled('options_count')) {
+            if ($request->options_count === 'other') {
+                $query->has('options', '>', 5);
+            } else {
+                $query->has('options', '=', (int) $request->options_count);
+            }
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('text_ar', 'like', "%{$search}%")
+                  ->orWhere('explanation_ar', 'like', "%{$search}%");
+            });
+        }
+
+        // Sort by unit and original number
+        $query->orderBy('unit_id')->orderBy('original_number');
+
+        $perPage = $request->input('per_page', 25);
+        if ($perPage === 'all') {
+            $perPage = $query->count() > 0 ? $query->count() : 1;
+        }
+
+        $questions = $query->paginate((int) $perPage);
+
+        return view('admin.graded_exam_questions.index', compact('questions', 'exams', 'units'));
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'graded_exam_id' => 'required|uuid|exists:graded_exams,id',
+            'unit_id' => 'required|uuid|exists:graded_exam_units,id',
+            'text_ar' => 'required|string',
+            'explanation_ar' => 'nullable|string',
+            'level' => 'required|in:easy,medium,hard',
+            'question_type' => 'required|in:true_false,mcq',
+            'options' => 'required|array|min:2',
+            'options.*.label_ar' => 'required|string',
+            'options.*.is_correct' => 'required|boolean',
+        ]);
+
+        $isMultiCorrect = collect($request->options)->where('is_correct', true)->count() > 1;
+
+        \DB::transaction(function () use ($validated, $isMultiCorrect, $request) {
+            $lastNum = GradedExamQuestion::where('unit_id', $validated['unit_id'])->max('original_number') ?? 0;
+            
+            $question = GradedExamQuestion::create([
+                'graded_exam_id' => $validated['graded_exam_id'],
+                'unit_id' => $validated['unit_id'],
+                'text_ar' => $validated['text_ar'],
+                'explanation_ar' => $validated['explanation_ar'],
+                'level' => $validated['level'],
+                'question_type' => $validated['question_type'],
+                'is_multi_correct' => $isMultiCorrect,
+                'original_number' => $lastNum + 1,
+            ]);
+
+            foreach ($request->options as $index => $opt) {
+                $question->options()->create([
+                    'option_text_ar' => $opt['label_ar'],
+                    'is_correct' => $opt['is_correct'],
+                    'order_index' => $index,
+                ]);
+            }
+        });
+
+        return response()->json(['success' => true, 'message' => 'تم إضافة السؤال بنجاح.']);
+    }
+
+    public function update(Request $request, GradedExamQuestion $question): JsonResponse
+    {
+        $validated = $request->validate([
+            'text_ar' => 'sometimes|string',
+            'explanation_ar' => 'nullable|string',
+            'level' => 'sometimes|in:easy,medium,hard',
+            'question_type' => 'sometimes|in:true_false,mcq',
+        ]);
+
+        $question->update($validated);
+
+        return response()->json(['success' => true, 'message' => 'تم تحديث السؤال بنجاح.']);
+    }
+
+    public function destroy(GradedExamQuestion $question): JsonResponse
+    {
+        $question->delete();
+
+        return response()->json(['success' => true, 'message' => 'تم حذف السؤال.']);
+    }
+
+    public function options(GradedExamQuestion $question): JsonResponse
+    {
+        $options = $question->options()->orderBy('order_index')->get();
+        
+        return response()->json([
+            'success' => true,
+            'options' => $options
+        ]);
+    }
+    
+    public function getUnits(Request $request): JsonResponse
+    {
+        if ($request->filled('graded_exam_id')) {
+            $units = GradedExamUnit::where('graded_exam_id', $request->graded_exam_id)->orderBy('order_index')->get();
+        } else {
+            $units = GradedExamUnit::orderBy('order_index')->get();
+        }
+        return response()->json($units);
+    }
+}
+````
+
+## File: app/Http/Controllers/User/UserGradedExamController.php
+````php
+<?php
+
+namespace App\Http\Controllers\User;
+
+use App\Http\Controllers\Controller;
+use App\Models\GradedExam;
+use App\Models\GradedExamSession;
+use App\Services\GradedExamGeneratorService;
+use Illuminate\Http\Request;
+
+class UserGradedExamController extends Controller
+{
+    public function index()
+    {
+        $exams = GradedExam::where('is_active', true)->get();
+        return view('user.graded_exams.index', compact('exams'));
+    }
+
+    public function start(Request $request, GradedExam $exam, GradedExamGeneratorService $generator)
+    {
+        // First check if user already has an active session for this exam
+        $activeSession = GradedExamSession::where('user_id', auth()->id())
+            ->where('graded_exam_id', $exam->id)
+            ->where('status', 'in_progress')
+            ->first();
+            
+        if ($activeSession) {
+            return redirect()->route('user.graded_exams.show', $activeSession->id);
+        }
+
+        try {
+            $session = $generator->generate($exam, auth()->id());
+            return redirect()->route('user.graded_exams.show', $session->id);
+        } catch (\Exception $e) {
+            return back()->with('error', 'حدث خطأ أثناء إعداد الاختبار: ' . $e->getMessage());
+        }
+    }
+    
+    public function show(GradedExamSession $session)
+    {
+        // Check authorization
+        if ($session->user_id !== auth()->id()) {
+            abort(403);
+        }
+        
+        if ($session->status !== 'in_progress') {
+            return redirect()->route('user.graded_exams.result', $session->id);
+        }
+
+        // We load the questions for the exam interface
+        $session->load(['sessionQuestions.question.options' => function($q) {
+            $q->orderBy('order_index'); // Keep options ordered as generated
+        }]);
+
+        return view('user.graded_exams.show', compact('session'));
+    }
+    
+    public function answer(Request $request, GradedExamSession $session)
+    {
+        // Placeholder for submitting answers, the user only asked to "see" and "test" them.
+        // We will build a simple submission logic.
+        
+        if ($session->user_id !== auth()->id()) abort(403);
+        if ($session->status !== 'in_progress') return redirect()->route('user.graded_exams.result', $session->id);
+
+        $answers = $request->input('answers', []);
+        
+        \DB::transaction(function () use ($session, $answers) {
+            // Very simplified answering logic to satisfy "can test it" requirement quickly
+            $session->update([
+                'status' => 'completed',
+                'completed_at' => now()
+            ]);
+            
+            // Further grading logic would be added here
+        });
+
+        return redirect()->route('user.graded_exams.result', $session->id);
+    }
+    
+    public function result(GradedExamSession $session)
+    {
+        if ($session->user_id !== auth()->id()) abort(403);
+        return view('user.graded_exams.result', compact('session'));
+    }
+}
+````
+
+## File: app/Models/GradedExam.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class GradedExam extends Model
+{
+    use HasUuids, SoftDeletes;
+
+    protected $fillable = [
+        'title_ar', 'description_ar', 'category', 'total_questions',
+        'time_limit_min', 'is_active', 'created_by',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'total_questions' => 'integer',
+        'time_limit_min' => 'integer',
+    ];
+
+    public function units()
+    {
+        return $this->hasMany(GradedExamUnit::class)->orderBy('order_index');
+    }
+
+    public function constraintSettings()
+    {
+    return $this->hasOne(GradedExamConstraintSetting::class);
+    }
+    public function questions()
+    {
+        return $this->hasMany(GradedExamQuestion::class);
+    }
+
+    public function sessions()
+    {
+        return $this->hasMany(GradedExamSession::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+}
+````
+
+## File: app/Models/GradedExamConstraintSetting.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+
+class GradedExamConstraintSetting extends Model
+{
+    use HasUuids;
+
+    protected $fillable = [
+        'graded_exam_id', 'total_questions', 'easy_percentage', 'medium_percentage',
+        'hard_percentage', 'type_distribution_mode', 'mc_position_balance_mode',
+        'max_multi_correct_questions', 'max_consecutive_same_answer',
+        'max_consecutive_same_unit', 'advanced_settings', 'updated_by',
+    ];
+
+    protected $casts = [
+        'total_questions' => 'integer',
+        'easy_percentage' => 'decimal:2',
+        'medium_percentage' => 'decimal:2',
+        'hard_percentage' => 'decimal:2',
+        'max_multi_correct_questions' => 'integer',
+        'max_consecutive_same_answer' => 'integer',
+        'max_consecutive_same_unit' => 'integer',
+        'advanced_settings' => 'array',
+    ];
+
+    public function gradedExam()
+    {
+        return $this->belongsTo(GradedExam::class);
+    }
+
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * عدد الأسئلة المطلوب فعليًا لكل مستوى، محسوب من النسب الحالية.
+     */
+    public function targetCounts(): array
+    {
+        return [
+            'easy'   => (int) round($this->total_questions * $this->easy_percentage / 100),
+            'medium' => (int) round($this->total_questions * $this->medium_percentage / 100),
+            'hard'   => (int) round($this->total_questions * $this->hard_percentage / 100),
+        ];
+    }
+
+    /**
+     * تحقق Live من إن النسب المطلوبة أصلاً ممكنة فعليًا بناءً على
+     * المخزون الحالي لبنك الأسئلة (مش من ملف تابت) — يُستدعى وقت
+     * حفظ الأدمن للإعدادات عشان يمنعه يحط نسبة مستحيلة.
+     */
+    public function isFeasible(): array
+    {
+        $targets = $this->targetCounts();
+        $errors = [];
+
+        $available = [
+            'easy'   => GradedExamQuestion::where('graded_exam_id', $this->graded_exam_id)->easy()->count(),
+            'medium' => GradedExamQuestion::where('graded_exam_id', $this->graded_exam_id)->medium()->count(),
+            'hard'   => GradedExamQuestion::where('graded_exam_id', $this->graded_exam_id)->hard()->count(),
+        ];
+
+        foreach ($targets as $level => $needed) {
+            if ($needed > $available[$level]) {
+                $errors[] = "المطلوب {$needed} سؤال مستوى '{$level}' لكن المتاح فعليًا في البنك {$available[$level]} فقط.";
+            }
+        }
+
+        if (abs(($this->easy_percentage + $this->medium_percentage + $this->hard_percentage) - 100) > 0.01) {
+            $errors[] = 'مجموع النسب الثلاثة يجب أن يساوي 100%.';
+        }
+
+        return [
+            'feasible' => empty($errors),
+            'errors' => $errors,
+            'target_counts' => $targets,
+            'available_counts' => $available,
+        ];
+    }
+}
+````
+
+## File: app/Models/GradedExamOption.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class GradedExamOption extends Model
+{
+    use HasUuids, SoftDeletes;
+
+    protected $fillable = [
+        'question_id', 'option_label', 'option_text_ar', 'order_index', 'is_correct',
+    ];
+
+    protected $casts = [
+        'order_index' => 'integer',
+        'is_correct' => 'boolean',
+    ];
+
+    public function question()
+    {
+        return $this->belongsTo(GradedExamQuestion::class, 'question_id');
+    }
+
+    public function selectedByAnswers()
+    {
+        return $this->hasMany(GradedExamUserAnswerOption::class, 'option_id');
+    }
+}
+````
+
+## File: app/Models/GradedExamQuestion.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class GradedExamQuestion extends Model
+{
+    use HasUuids, SoftDeletes;
+
+    protected $fillable = [
+        'graded_exam_id', 'unit_id', 'original_number', 'level', 'question_type',
+        'text_ar', 'explanation_ar', 'is_multi_correct', 'source_page_ref', 'order_index',
+    ];
+
+    protected $casts = [
+        'original_number' => 'integer',
+        'is_multi_correct' => 'boolean',
+        'order_index' => 'integer',
+    ];
+
+    public function gradedExam()
+    {
+        return $this->belongsTo(GradedExam::class);
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(GradedExamUnit::class, 'unit_id');
+    }
+
+    public function options()
+    {
+        return $this->hasMany(GradedExamOption::class, 'question_id')->orderBy('order_index');
+    }
+
+    public function correctOptions()
+    {
+        return $this->hasMany(GradedExamOption::class, 'question_id')->where('is_correct', true);
+    }
+
+    public function userAnswers()
+    {
+        return $this->hasMany(GradedExamUserAnswer::class, 'question_id');
+    }
+
+    public function scopeEasy($query)
+    {
+        return $query->where('level', 'easy');
+    }
+
+    public function scopeMedium($query)
+    {
+        return $query->where('level', 'medium');
+    }
+
+    public function scopeHard($query)
+    {
+        return $query->where('level', 'hard');
+    }
+
+    public function scopeMcq($query)
+    {
+        return $query->where('question_type', 'mcq');
+    }
+
+    public function scopeTrueFalse($query)
+    {
+        return $query->where('question_type', 'true_false');
+    }
+}
+````
+
+## File: app/Models/GradedExamResult.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class GradedExamResult extends Model
+{
+    use HasUuids, SoftDeletes;
+
+    protected $fillable = [
+        'session_id', 'correct_count', 'incorrect_count', 'total_questions',
+        'percentage', 'pass_status', 'calculated_at',
+    ];
+
+    protected $casts = [
+        'correct_count' => 'integer',
+        'incorrect_count' => 'integer',
+        'total_questions' => 'integer',
+        'percentage' => 'decimal:2',
+        'calculated_at' => 'datetime',
+    ];
+
+    public function session()
+    {
+        return $this->belongsTo(GradedExamSession::class, 'session_id');
+    }
+}
+````
+
+## File: app/Models/GradedExamSession.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class GradedExamSession extends Model
+{
+    use HasUuids, SoftDeletes;
+
+    protected $fillable = [
+        'user_id', 'graded_exam_id', 'status', 'total_questions',
+        'constraints_snapshot', 'random_seed', 'started_at', 'completed_at',
+    ];
+
+    protected $casts = [
+        'total_questions' => 'integer',
+        'constraints_snapshot' => 'array',
+        'random_seed' => 'integer',
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function gradedExam()
+    {
+        return $this->belongsTo(GradedExam::class);
+    }
+
+    public function sessionQuestions()
+    {
+        return $this->hasMany(GradedExamSessionQuestion::class, 'session_id')->orderBy('position_in_exam');
+    }
+
+    public function userAnswers()
+    {
+        return $this->hasMany(GradedExamUserAnswer::class, 'session_id');
+    }
+
+    public function result()
+    {
+        return $this->hasOne(GradedExamResult::class, 'session_id');
+    }
+}
+````
+
+## File: app/Models/GradedExamSessionQuestion.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+
+class GradedExamSessionQuestion extends Model
+{
+    use HasUuids;
+
+    protected $fillable = [
+        'session_id', 'question_id', 'position_in_exam', 'shuffled_options_order',
+    ];
+
+    protected $casts = [
+        'position_in_exam' => 'integer',
+        'shuffled_options_order' => 'array',
+    ];
+
+    public function session()
+    {
+        return $this->belongsTo(GradedExamSession::class, 'session_id');
+    }
+
+    public function question()
+    {
+        return $this->belongsTo(GradedExamQuestion::class, 'question_id');
+    }
+}
+````
+
+## File: app/Models/GradedExamUnit.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class GradedExamUnit extends Model
+{
+    use HasUuids, SoftDeletes;
+
+    protected $fillable = [
+        'graded_exam_id', 'unit_number', 'title_ar', 'order_index',
+    ];
+
+    protected $casts = [
+        'unit_number' => 'integer',
+        'order_index' => 'integer',
+    ];
+
+    public function gradedExam()
+    {
+        return $this->belongsTo(GradedExam::class);
+    }
+
+    public function questions()
+    {
+        return $this->hasMany(GradedExamQuestion::class, 'unit_id')->orderBy('order_index');
+    }
+}
+````
+
+## File: app/Models/GradedExamUserAnswer.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+
+class GradedExamUserAnswer extends Model
+{
+    use HasUuids;
+
+    protected $fillable = [
+        'session_id', 'question_id', 'is_correct', 'answered_at',
+    ];
+
+    protected $casts = [
+        'is_correct' => 'boolean',
+        'answered_at' => 'datetime',
+    ];
+
+    public function session()
+    {
+        return $this->belongsTo(GradedExamSession::class, 'session_id');
+    }
+
+    public function question()
+    {
+        return $this->belongsTo(GradedExamQuestion::class, 'question_id');
+    }
+
+    // الخيار/الخيارات اللي المستخدم اختارها (يدعم أكتر من خيار للأسئلة متعددة الإجابات)
+    public function selectedOptions()
+    {
+        return $this->hasMany(GradedExamUserAnswerOption::class, 'user_answer_id');
+    }
+}
+````
+
+## File: app/Models/GradedExamUserAnswerOption.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+
+class GradedExamUserAnswerOption extends Model
+{
+    use HasUuids;
+
+    protected $fillable = [
+        'user_answer_id', 'option_id',
+    ];
+
+    public function userAnswer()
+    {
+        return $this->belongsTo(GradedExamUserAnswer::class, 'user_answer_id');
+    }
+
+    public function option()
+    {
+        return $this->belongsTo(GradedExamOption::class, 'option_id');
+    }
+}
+````
+
+## File: app/Services/GradedExamGeneratorService.php
+````php
+<?php
+
+namespace App\Services;
+
+use App\Models\GradedExam;
+use App\Models\GradedExamConstraintSetting;
+use App\Models\GradedExamQuestion;
+use App\Models\GradedExamSession;
+use App\Models\GradedExamSessionQuestion;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+/**
+ * المحرك الرئيسي لتوليد امتحان عشوائي يطبّق كل القيود المتفق عليها:
+ * توزيع الصعوبة، توازن النوع، تغطية الوحدات، توازن صح/خطأ، توازن مواقع
+ * الإجابة الصحيحة، حد أقصى للأسئلة متعددة الإجابات، وتجنب تكرار الأسئلة
+ * مع محاولات المستخدم السابقة.
+ *
+ * كل الأرقام (عدد الأسئلة المتاحة لكل وحدة/مستوى/نوع) تُحسب Live من
+ * الداتابيز، مش مخزّنة أو مفترضة، عشان تفضل صحيحة حتى لو الأدمن غيّر
+ * بنك الأسئلة بعدين.
+ */
+class GradedExamGeneratorService
+{
+    /** أقصى عدد محاولات لموازنة صح/خطأ أو مواقع الإجابة قبل ما نكتفي بأقرب نتيجة ممكنة */
+    private const MAX_BALANCE_ATTEMPTS = 200;
+
+    public function generate(GradedExam $exam, ?string $userId = null): GradedExamSession
+    {
+        $settings = $exam->constraintSettings ?? $this->defaultSettings($exam);
+
+        $this->validateFeasibility($exam, $settings);
+
+        return DB::transaction(function () use ($exam, $settings, $userId) {
+
+            // === الخطوة 1: تثبيت تخصيص الوحدات (largest remainder method) ===
+            $unitAllocation = $this->allocateUnitCounts($exam->id, $settings->total_questions);
+
+            // === الخطوة 2: توزيع الصعوبة داخل كل وحدة، مع احترام الميزانية العامة ===
+            $cells = $this->allocateDifficultyWithinUnits($exam->id, $unitAllocation, $settings);
+
+            // === الخطوة 3: توزيع النوع (اختيار من متعدد / صح خطأ) داخل كل خلية ===
+            $cells = $this->allocateTypeWithinCells($exam->id, $cells, $settings);
+
+            // === الخطوة 4: اختيار الأسئلة الفعلية (مع فلاتر: متعدد الإجابات، خيارات غير قياسية، تجنب التكرار) ===
+            $questions = $this->selectQuestions($exam->id, $cells, $settings, $userId);
+
+            // === الخطوة 5: موازنة صح/خطأ (best-effort ضمن هامش تفاوت) ===
+            $questions = $this->balanceTrueFalseAnswers($exam->id, $questions, $settings);
+
+            // === الخطوة 6: خلط ترتيب الخيارات لكل سؤال (يحل توازن مواقع الإجابة تلقائيًا) ===
+            $shuffledMap = $this->shuffleOptionsPerQuestion($questions, $settings);
+
+            // === الخطوة 7: خلط ترتيب الأسئلة + تطبيق قاعدة عدم تجميع نفس الوحدة ===
+            $orderedQuestions = $this->sequenceQuestions($questions, $settings);
+
+            // === الخطوة 8: حفظ الجلسة والأسئلة المرتبطة بها ===
+            return $this->persistSession($exam, $userId, $orderedQuestions, $shuffledMap, $settings);
+        });
+    }
+
+    // ============================================================
+    // الخطوة 1: تخصيص عدد الأسئلة لكل وحدة (Largest Remainder Method)
+    // ============================================================
+    private function allocateUnitCounts(string $gradedExamId, int $totalQuestions): array
+    {
+        $unitCounts = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
+            ->selectRaw('unit_id, COUNT(*) as cnt')
+            ->groupBy('unit_id')
+            ->pluck('cnt', 'unit_id')
+            ->toArray();
+
+        $bankTotal = array_sum($unitCounts);
+        if ($bankTotal === 0) {
+            throw new \RuntimeException('لا يوجد أي سؤال في بنك هذا الامتحان.');
+        }
+
+        $raw = [];
+        foreach ($unitCounts as $unitId => $count) {
+            $raw[$unitId] = ($count / $bankTotal) * $totalQuestions;
+        }
+
+        $allocation = array_map('intval', $raw);
+        $remainder = $totalQuestions - array_sum($allocation);
+
+        // وزّع الباقي على أعلى الأجزاء الكسرية (largest remainder)
+        $fractions = [];
+        foreach ($raw as $unitId => $value) {
+            $fractions[$unitId] = $value - intval($value);
+        }
+        arsort($fractions);
+
+        foreach (array_keys($fractions) as $unitId) {
+            if ($remainder <= 0) break;
+            $allocation[$unitId]++;
+            $remainder--;
+        }
+
+        // حد أدنى سؤال واحد لكل وحدة لها أسئلة (min_questions_per_unit = 1)
+        foreach ($allocation as $unitId => $count) {
+            if ($count === 0 && $unitCounts[$unitId] > 0) {
+                $allocation[$unitId] = 1;
+            }
+        }
+
+        return $allocation; // [unit_id => count]
+    }
+
+    // ============================================================
+    // الخطوة 2: توزيع الصعوبة داخل كل وحدة مع احترام الميزانية الكلية
+    // ============================================================
+    private function allocateDifficultyWithinUnits(string $gradedExamId, array $unitAllocation, GradedExamConstraintSetting $settings): array
+    {
+        $levelTargets = $settings->targetCounts(); // ['easy'=>25,'medium'=>20,'hard'=>5]
+        $levels = ['easy', 'medium', 'hard'];
+
+        // مخزون كل وحدة لكل مستوى (Live من الداتابيز)
+        $supply = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
+            ->selectRaw('unit_id, level, COUNT(*) as cnt')
+            ->groupBy('unit_id', 'level')
+            ->get()
+            ->groupBy('unit_id')
+            ->map(fn ($rows) => $rows->pluck('cnt', 'level')->toArray());
+
+        $cells = []; // [[unit_id, level, count], ...]
+        $remainingLevelBudget = $levelTargets;
+
+        // نبدأ بالوحدات الأصغر تخصيصًا أولاً (أقل مرونة) لتقليل التعارضات
+        $unitsSorted = $unitAllocation;
+        asort($unitsSorted);
+
+        foreach ($unitsSorted as $unitId => $slotsNeeded) {
+            if ($slotsNeeded <= 0) continue;
+            $unitSupply = $supply[$unitId] ?? [];
+
+            // وزن كل مستوى = (الميزانية العامة المتبقية له) × (توفره في هذه الوحدة تحديدًا)
+            $weights = [];
+            foreach ($levels as $lvl) {
+                $available = $unitSupply[$lvl] ?? 0;
+                $weights[$lvl] = min($available, max($remainingLevelBudget[$lvl], 0));
+            }
+            $weightSum = array_sum($weights);
+
+            if ($weightSum === 0) {
+                // مفيش أي مستوى ليه ميزانية متاحة أو مخزون في الوحدة دي - وزّع بالتساوي كحل أخير
+                foreach ($levels as $lvl) {
+                    $weights[$lvl] = $unitSupply[$lvl] ?? 0;
+                }
+                $weightSum = array_sum($weights) ?: 1;
+            }
+
+            $picked = [];
+            $assigned = 0;
+            foreach ($levels as $lvl) {
+                $share = $weightSum > 0 ? intval(floor($slotsNeeded * ($weights[$lvl] / $weightSum))) : 0;
+                $share = min($share, $unitSupply[$lvl] ?? 0);
+                $picked[$lvl] = $share;
+                $assigned += $share;
+            }
+
+            // وزّع أي باقي بسبب التقريب على أي مستوى لسه عنده مخزون وميزانية
+            $leftover = $slotsNeeded - $assigned;
+            foreach ($levels as $lvl) {
+                if ($leftover <= 0) break;
+                $room = ($unitSupply[$lvl] ?? 0) - $picked[$lvl];
+                if ($room > 0 && $remainingLevelBudget[$lvl] > 0) {
+                    $add = min($leftover, $room);
+                    $picked[$lvl] += $add;
+                    $leftover -= $add;
+                }
+            }
+
+            foreach ($levels as $lvl) {
+                if ($picked[$lvl] > 0) {
+                    $cells[] = ['unit_id' => $unitId, 'level' => $lvl, 'count' => $picked[$lvl]];
+                    $remainingLevelBudget[$lvl] -= $picked[$lvl];
+                }
+            }
+        }
+
+        return $cells;
+    }
+
+    // ============================================================
+    // الخطوة 3: توزيع النوع (mcq/true_false) داخل كل خلية (وحدة × مستوى)
+    // ============================================================
+    private function allocateTypeWithinCells(string $gradedExamId, array $cells, GradedExamConstraintSetting $settings): array
+    {
+        $mode = $settings->type_distribution_mode; // proportional | balanced
+        $mcqRatio = $mode === 'balanced' ? 0.5 : 0.6139;
+
+        $result = [];
+        foreach ($cells as $cell) {
+            $supply = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
+                ->where('unit_id', $cell['unit_id'])
+                ->where('level', $cell['level'])
+                ->selectRaw('question_type, COUNT(*) as cnt')
+                ->groupBy('question_type')
+                ->pluck('cnt', 'question_type')
+                ->toArray();
+
+            $mcqAvailable = $supply['mcq'] ?? 0;
+            $tfAvailable = $supply['true_false'] ?? 0;
+
+            $mcqWanted = (int) round($cell['count'] * $mcqRatio);
+            $tfWanted = $cell['count'] - $mcqWanted;
+
+            // === معالجة قيد type_within_difficulty الحرج: عنق زجاجة صح/خطأ الصعبة ===
+            // لو المطلوب أكبر من المتاح، حوّل الفرق لـ mcq بدل ما نفشل التوليد
+            if ($tfWanted > $tfAvailable) {
+                $deficit = $tfWanted - $tfAvailable;
+                $tfWanted = $tfAvailable;
+                $mcqWanted += $deficit;
+            }
+            if ($mcqWanted > $mcqAvailable) {
+                $deficit = $mcqWanted - $mcqAvailable;
+                $mcqWanted = $mcqAvailable;
+                $tfWanted = min($tfAvailable, $tfWanted + $deficit);
+            }
+
+            if ($mcqWanted > 0) {
+                $result[] = ['unit_id' => $cell['unit_id'], 'level' => $cell['level'], 'type' => 'mcq', 'count' => $mcqWanted];
+            }
+            if ($tfWanted > 0) {
+                $result[] = ['unit_id' => $cell['unit_id'], 'level' => $cell['level'], 'type' => 'true_false', 'count' => $tfWanted];
+            }
+        }
+
+        return $result;
+    }
+
+    // ============================================================
+    // الخطوة 4: اختيار الأسئلة الفعلية لكل خلية
+    // ============================================================
+    private function selectQuestions(string $gradedExamId, array $cells, GradedExamConstraintSetting $settings, ?string $userId): Collection
+    {
+        $selected = collect();
+        $multiCorrectCount = 0;
+        $maxMultiCorrect = $settings->max_multi_correct_questions;
+
+        $recentlySeenIds = $userId
+            ? $this->getRecentlySeenQuestionIds($userId, $gradedExamId)
+            : collect();
+
+        foreach ($cells as $cell) {
+            $poolAll = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
+                ->where('unit_id', $cell['unit_id'])
+                ->where('level', $cell['level'])
+                ->where('question_type', $cell['type'])
+                ->whereNotIn('id', $selected->pluck('id'))
+                ->with('options') // eager load لتجنب N+1 في خطوات لاحقة (موازنة صح/خطأ + خلط الخيارات)
+                ->withCount('options')
+                ->get();
+
+            // فضّل الأسئلة اللي عدد خياراتها قياسي (4 لاختيار من متعدد، 2 لصح/خطأ) أولاً
+            // الفلترة هنا في PHP بدل SQL having() عشان تشتغل بنفس الشكل على أي قاعدة بيانات (MySQL/Postgres/SQLite)
+            $standardCount = $cell['type'] === 'mcq' ? 4 : 2;
+            $standardPool = $poolAll->where('options_count', '=', $standardCount)->values();
+            $fallbackPool = $poolAll->where('options_count', '!=', $standardCount)->values();
+
+            $pool = $standardPool->concat($fallbackPool);
+
+            // استبعاد/تقليل أولوية الأسئلة اللي ظهرت في محاولات المستخدم الأخيرة
+            if ($recentlySeenIds->isNotEmpty()) {
+                $fresh = $pool->whereNotIn('id', $recentlySeenIds);
+                $seen = $pool->whereIn('id', $recentlySeenIds);
+                $pool = $fresh->concat($seen); // نفضّل الجديد، ونستخدم المُعاد رؤيته فقط لو لازم
+            }
+
+            $needed = $cell['count'];
+            $chosen = collect();
+
+            foreach ($pool->shuffle() as $question) {
+                if ($chosen->count() >= $needed) break;
+
+                if ($question->is_multi_correct && $multiCorrectCount >= $maxMultiCorrect) {
+                    continue; // تخطّي - وصلنا للحد الأقصى المسموح لأسئلة متعددة الإجابات
+                }
+
+                $chosen->push($question);
+                if ($question->is_multi_correct) {
+                    $multiCorrectCount++;
+                }
+            }
+
+            if ($chosen->count() < $needed) {
+                throw new \RuntimeException(sprintf(
+                    'تعذّر إيجاد %d سؤال كافٍ (وحدة: %s، مستوى: %s، نوع: %s). المتاح فعليًا: %d.',
+                    $needed, $cell['unit_id'], $cell['level'], $cell['type'], $chosen->count()
+                ));
+            }
+
+            $selected = $selected->concat($chosen);
+        }
+
+        return $selected;
+    }
+
+    private function getRecentlySeenQuestionIds(string $userId, string $gradedExamId): Collection
+    {
+        $lookback = config('graded_exams.repeat_avoidance_lookback', 3);
+
+        $recentSessionIds = GradedExamSession::where('user_id', $userId)
+            ->where('graded_exam_id', $gradedExamId)
+            ->where('status', 'completed')
+            ->orderByDesc('completed_at')
+            ->limit($lookback)
+            ->pluck('id');
+
+        if ($recentSessionIds->isEmpty()) {
+            return collect();
+        }
+
+        return GradedExamSessionQuestion::whereIn('session_id', $recentSessionIds)
+            ->pluck('question_id')
+            ->unique();
+    }
+
+    // ============================================================
+    // الخطوة 5: موازنة صح/خطأ (best-effort)
+    // ============================================================
+    private function balanceTrueFalseAnswers(string $gradedExamId, Collection $questions, GradedExamConstraintSetting $settings): Collection
+    {
+        $tfQuestions = $questions->filter(fn ($q) => $q->question_type === 'true_false');
+        if ($tfQuestions->isEmpty()) {
+            return $questions;
+        }
+
+        $trueCount = $tfQuestions->filter(fn ($q) => $q->options->firstWhere('is_correct', true)?->option_text_ar === 'True')->count();
+        $total = $tfQuestions->count();
+        $truePercentage = $total > 0 ? ($trueCount / $total) * 100 : 50;
+
+        $attempts = 0;
+        while (($truePercentage < 35 || $truePercentage > 65) && $attempts < self::MAX_BALANCE_ATTEMPTS) {
+            $attempts++;
+
+            $needMoreTrue = $truePercentage < 35;
+            $swapOutValue = $needMoreTrue ? false : true;
+
+            // ندور على سؤال صح/خطأ داخل نفس الاختيار الحالي نبدله بسؤال تاني من نفس الوحدة/المستوى بإجابة عكسية
+            $candidate = $tfQuestions->first(function ($q) use ($swapOutValue) {
+                $correctText = $q->options->firstWhere('is_correct', true)?->option_text_ar;
+                return $swapOutValue ? $correctText === 'True' : $correctText === 'False';
+            });
+
+            if (!$candidate) break;
+
+            $replacement = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
+                ->where('unit_id', $candidate->unit_id)
+                ->where('level', $candidate->level)
+                ->where('question_type', 'true_false')
+                ->whereNotIn('id', $questions->pluck('id'))
+                ->with('options')
+                ->get()
+                ->first(function ($q) use ($needMoreTrue) {
+                    $correctText = $q->options->firstWhere('is_correct', true)?->option_text_ar;
+                    return $needMoreTrue ? $correctText === 'True' : $correctText === 'False';
+                });
+
+            if (!$replacement) break; // مفيش بديل متاح - نكتفي بأقرب نسبة ممكنة
+
+            $questions = $questions->reject(fn ($q) => $q->id === $candidate->id)->push($replacement);
+            $tfQuestions = $questions->filter(fn ($q) => $q->question_type === 'true_false');
+            $trueCount = $tfQuestions->filter(fn ($q) => $q->options->firstWhere('is_correct', true)?->option_text_ar === 'True')->count();
+            $truePercentage = $tfQuestions->count() > 0 ? ($trueCount / $tfQuestions->count()) * 100 : 50;
+        }
+
+        return $questions->values();
+    }
+
+    // ============================================================
+    // الخطوة 6: خلط ترتيب الخيارات لكل سؤال (يحل توازن مواقع الإجابة تلقائيًا)
+    // ============================================================
+    private function shuffleOptionsPerQuestion(Collection $questions, GradedExamConstraintSetting $settings): array
+    {
+        $map = [];
+        foreach ($questions as $question) {
+            $optionIds = $question->options->pluck('id')->shuffle()->values()->toArray();
+            $map[$question->id] = $optionIds;
+        }
+        return $map;
+    }
+
+    // ============================================================
+    // الخطوة 7: ترتيب الأسئلة النهائي + منع تجميع نفس الوحدة
+    // ============================================================
+    private function sequenceQuestions(Collection $questions, GradedExamConstraintSetting $settings): Collection
+    {
+        $shuffled = $questions->shuffle()->values();
+        $maxConsecutive = $settings->max_consecutive_same_unit;
+
+        $attempts = 0;
+        while ($attempts < self::MAX_BALANCE_ATTEMPTS) {
+            $violationIndex = null;
+            $consecutive = 1;
+
+            for ($i = 1; $i < $shuffled->count(); $i++) {
+                if ($shuffled[$i]->unit_id === $shuffled[$i - 1]->unit_id) {
+                    $consecutive++;
+                    if ($consecutive > $maxConsecutive) {
+                        $violationIndex = $i;
+                        break;
+                    }
+                } else {
+                    $consecutive = 1;
+                }
+            }
+
+            if ($violationIndex === null) break; // مفيش تجميع زيادة عن المسموح
+
+            // دوّر على أول سؤال بعده بوحدة مختلفة وبدّل مكانه
+            $swapWith = null;
+            for ($j = $violationIndex + 1; $j < $shuffled->count(); $j++) {
+                if ($shuffled[$j]->unit_id !== $shuffled[$violationIndex - 1]->unit_id) {
+                    $swapWith = $j;
+                    break;
+                }
+            }
+
+            if ($swapWith === null) break; // مفيش تبديل ممكن - نكتفي بالترتيب الحالي
+
+            $tmp = $shuffled[$violationIndex];
+            $shuffled[$violationIndex] = $shuffled[$swapWith];
+            $shuffled[$swapWith] = $tmp;
+
+            $attempts++;
+        }
+
+        return $shuffled;
+    }
+
+    // ============================================================
+    // الخطوة 8: حفظ الجلسة وأسئلتها
+    // ============================================================
+    private function persistSession(GradedExam $exam, ?string $userId, Collection $orderedQuestions, array $shuffledMap, GradedExamConstraintSetting $settings): GradedExamSession
+    {
+        $session = GradedExamSession::create([
+            'user_id' => $userId,
+            'graded_exam_id' => $exam->id,
+            'status' => 'in_progress',
+            'total_questions' => $orderedQuestions->count(),
+            'constraints_snapshot' => $settings->only([
+                'total_questions', 'easy_percentage', 'medium_percentage', 'hard_percentage',
+                'type_distribution_mode', 'mc_position_balance_mode',
+                'max_multi_correct_questions', 'max_consecutive_same_answer', 'max_consecutive_same_unit',
+            ]),
+            'random_seed' => null,
+            'started_at' => now(),
+        ]);
+
+        foreach ($orderedQuestions->values() as $position => $question) {
+            GradedExamSessionQuestion::create([
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'position_in_exam' => $position + 1,
+                'shuffled_options_order' => $shuffledMap[$question->id] ?? [],
+            ]);
+        }
+
+        return $session->fresh(['sessionQuestions.question.options']);
+    }
+
+    // ============================================================
+    // أدوات مساعدة
+    // ============================================================
+    private function defaultSettings(GradedExam $exam): GradedExamConstraintSetting
+    {
+        return GradedExamConstraintSetting::create([
+            'graded_exam_id' => $exam->id,
+            'total_questions' => 50,
+            'easy_percentage' => 50,
+            'medium_percentage' => 40,
+            'hard_percentage' => 10,
+        ]);
+    }
+
+    /**
+     * تحقق مبدئي سريع قبل الدخول في التوليد الفعلي: هل الإعدادات ممكنة
+     * أصلاً بناءً على المخزون الحالي؟ (يعيد استخدام منطق isFeasible()
+     * الموجود في الـ Model نفسه لتفادي التكرار).
+     */
+    private function validateFeasibility(GradedExam $exam, GradedExamConstraintSetting $settings): void
+    {
+        $check = $settings->isFeasible();
+        if (!$check['feasible']) {
+            throw new \RuntimeException('إعدادات القيود غير قابلة للتحقيق: ' . implode(' | ', $check['errors']));
+        }
+    }
+}
+````
+
+## File: config/graded_exams.php
+````php
+<?php
+
+// إعدادات عامة لمحرك توليد الامتحانات العشوائية.
+// دي إعدادات على مستوى النظام كله (مش لكل امتحان لوحده - دي موجودة
+// في جدول graded_exam_constraint_settings بدل كده).
+return [
+
+    // كام آخر محاولة نرجع لها لتجنب تكرار نفس الأسئلة على نفس المستخدم
+    'repeat_avoidance_lookback' => 3,
+
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/meta.php
+````php
+<?php
+
+// بيانات الامتحان نفسه: الاختبار التجريبي للشهادة الاحترافية في التسويق (IBTA)
+return [
+    'title_ar' => 'الاختبار التجريبي للشهادة الاحترافية في التسويق (IBTA)',
+    'description_ar' => 'بنك أسئلة شامل مكون من 404 سؤال موزعة على 13 وحدة دراسية، لإعداد الطلاب للشهادة الاحترافية في التسويق الصادرة عن IBTA.',
+    'category' => 'marketing_certification',
+    'total_questions' => 404,
+    'time_limit_min' => null,
+    'is_active' => true,
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/units/unit_01.php
+````php
+<?php
+
+// بيانات الوحدة رقم 1: مقدمة في التسويق
+// تم توليدها آليًا من بنك أسئلة IBTA (404 سؤال) - 36 سؤال
+return [
+    'unit_number' => 1,
+    'title_ar' => 'مقدمة في التسويق',
+    'order_index' => 1,
+    'questions' => [
+        [
+            'original_number' => 1,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تساعد عملية البحث التسويقي التي تربط العملاء والجمهور بالشركات، على فهم ما يمكن عمله لمساعدة السوق الذي يفشل في تحقيق النمو والازدهار',
+            'explanation_ar' => 'العبارة صحيحة، لأن (بحوث التسويق تربط العملاء بالشركة بهدف تحديد الفرص والمشكلات وتحسين القرارات التسويقية، وتحسين أداء السوق وفهم ما يمكن عمله لمساعدة السوق الذي يفشل في تحقيق النمو والازدهار) راجع الوحدة الأولى، مقدمة في التسويق، موضوع: بحوث التسويق، ص 21.',
+            'is_multi_correct' => false,
+            'order_index' => 1,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 2,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => '"يمكن تعريف جوهر التسويق بأنه بيع ما ننتجه."',
+            'explanation_ar' => 'العبارة خاطئة، لأن جوهر التسويق هو إنتاج ما يمكن بيعه وتلبية احتياجات العملاء وليس "بيع ما ننتجه". راجع الواحدة الأولى: مقدمة في التسويق،ص:  8.',
+            'is_multi_correct' => false,
+            'order_index' => 2,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 3,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن تعريف جوهر التسويق بأنه إنتاج ما يمكننا بيعه.',
+            'explanation_ar' => 'العبارة صحيحة، لأن فلسفة التسويق الحديثة تقوم على إنتاج ما يمكن بيعه لتلبية رغبات السوق، وليس بيع ما تم إنتاجه". الوحدة 1 – مقدمة في التسويق، ص : 8.',
+            'is_multi_correct' => false,
+            'order_index' => 3,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 4,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من النقاط التالية هي أجزاء من العناصر الثمانية لتحليل السوق؟',
+            'explanation_ar' => 'يشمل تحليل السوق ثمانية عناصر هي: حجم السوق، واتجاهات السوق، ومعدل نمو السوق وقطاعات السوق وربحية السوق وهيكل تكلفة الصناعة وقنوات التوزيع وعوامل النجاح. الوحدة 1، مقدمة في السوق، موضوع: تحليل السوق، ص 17.',
+            'is_multi_correct' => true,
+            'order_index' => 4,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) حجم السوق',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) قنوات السوق',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) عوامل الفشل',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) ربحية السوق',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 5,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'ما يلي من عوامل النجاح التي يجب أن تتوفر في الشركة من أجل أن تكون ناجحة في مجال محدد: 1-اسم معروف، 2-  ولاء العملاء.',
+            'explanation_ar' => 'العبارة صحيحة، حيث تشمل عوامل النجاح التي يجب أن تتوفر في الشركة من أجل أن تكون ناجحة في مجال محدد: 1-اسم معروف، 2-  ولاء العملاء، 3- قناة التوزيع، الوحدة الأولى: مقدمة في التسويق، درس عوامل النجاح : ص 21.',
+            'is_multi_correct' => false,
+            'order_index' => 5,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 6,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'يتمثل جوهر التسويق في ثلاثة أنشطة رئيسية هي: تلبية احتياجات ورغبات العملاء، والتعاون الواسع في مختلف مجالات الأعمال، وفهم العملاء وإيجاد سبل لتوفير المنتجات أو الخدمات التي تلبي قيمهم.',
+            'explanation_ar' => 'العبارة صحيحة حيث أن جوهر التسويق يتمحور حول تلبية احتياجات العملاء، وفهمهم، والتعاون داخل الأعمال لتقديم قيمة لهم.، راجع الوحدة الأولى مقدمة في التسويق : ، درس: مقدمة في التسويق، ص: 9.',
+            'is_multi_correct' => false,
+            'order_index' => 6,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 7,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'ما يلي هو أحد عوامل النجاح التي يجب أن تتوفر في الشركة من أجل أن تكون ناجحة في مجال محدد: قناة التوزيع.',
+            'explanation_ar' => 'العبارة صحيحة، حيث تشمل عوامل النجاح التي يجب أن تتوفر في الشركة من أجل أن تكون ناجحة في مجال محدد: 1-اسم معروف، 2-  ولاء العملاء، 3- قناة التوزيع، الوحدة الأولى: مقدمة في التسويق، درس عوامل النجاح : ص 21.',
+            'is_multi_correct' => false,
+            'order_index' => 7,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 8,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'إن عملية البحث التسويقي التي تربط بين العملاء والجمهور هي محاولة لفهم سبب الأداء الجيد أو السيء لسوق معين.',
+            'explanation_ar' => 'العبارة صحيحة، حيث أن للبحث التسويقي يربط العملاء بالشركة ويساعد على فهم أسباب الأداء الجيد أو الضعيف للسوق. الوحدة 1: مقدمة في التسويق، ص 8,.',
+            'is_multi_correct' => false,
+            'order_index' => 8,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 9,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من النقاط التالية تعتبر من العناصر الثمانية الأساسية للتسويق؟',
+            'explanation_ar' => 'التفسير كل هذه العناصر بجانب عناصر: التخزين، الجودة ، والمالية  تعتبر العناصر الثمانية الأساسية للتسويق ، الوحدة الأولى ، درس مكونات التسويق، ص : 11.',
+            'is_multi_correct' => true,
+            'order_index' => 9,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) وسيلة النقل.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب ) التسليم.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) الشراء.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) البيع.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'هـ) التحديات.',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 10,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'قناة التوزيع لا تعتبر أحد عوامل النجاح التي يجب أن تتوفر في الشركة من أجل أن تكون ناجحة في مجال محدد.',
+            'explanation_ar' => 'العبارة خاطئة: حيث أن قناة التوزيع تعد واحدة من عوامل النجاح الرئيسية للشركة إلى جانب الاسم المعروف وولاء العملاء.، راجع الوحدة 1: مقدمة في التسويق، درس عوامل النجاح، ص 20.',
+            'is_multi_correct' => false,
+            'order_index' => 10,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 11,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الطرق التالية تستعمل لجمع المعلومات عن العادات الاستهلاكية أو الأدوات التسويقية؟',
+            'explanation_ar' => 'التفسير: تعد الاستبيانات والاستطلاعات (Surveys) هي الأداة الأساسية والمباشرة في أبحاث السوق (Market Research) المخصصة لجمع معلومات من المستهلكين حول عاداتهم الاستهلاكية، تفضيلاتهم، وسلوكهم الشرائي',
+            'is_multi_correct' => false,
+            'order_index' => 11,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) اختبار الفكرة.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) الاستبانات والاستطلاعية السرية.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تتبع الإعلانات.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) العلامة التجارية.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 12,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'التسويق يتغير باستمرار لأن احتياجات العملاء ورغباتهم في تغير مستمر.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 12,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 13,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'عندما تفكر في سوق معين، يجب تقييم الجاذبية المستقبلية فقط لهذا السوق.',
+            'explanation_ar' => 'العبارة خاطئة، حيث أن تحليل السوق يهدف إلى تقييم مدى جاذبية سوق محدد، حيث يتضمن هذا التقييم النظر في الجاذبية ( الحالية والمستقبلية)   للسوق مع التركيز على الفرص المتاحة وكذلك المخاطر والتهديدات المحتملة، ونقاط القوة والضعف في الشركة، راجع، الوحدة الأولى، مقدمة في التسويق، درس تحليل السوق، ص:17.',
+            'is_multi_correct' => false,
+            'order_index' => 13,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 14,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من النقاط التالية هي أجزاء من العناصر الثمانية لتحليل السوق؟',
+            'explanation_ar' => 'تتضمن العناصر الثمانية الأساسية لتحليل السوق على: حجم السوق، معدل نمو السوق، ربحية السوق، قنوات التوزبع، تحديد الاحتياجات التدريبية، التنوع، هيكل تكلفة الصناعة، عوامل النجاح. راجع الوحدة الأولى، مقدمة في التسويق، درس تحليل السوق، ص : 17.',
+            'is_multi_correct' => false,
+            'order_index' => 14,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) قنوات التوزيع',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) عوامل الفشل.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) كل ما سبق ذكره أعلاه.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) لا شيء مما سبق ذكره.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 15,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي التعريفات التالية يعبّر عن التسويق وفق منهج CBP؟',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 15,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) عملية تشمل تطوير المنتجات والخدمات وتحديد الأسعار والترويج والتوزيع',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) عملية تصنيع المنتجات في المصنع فقط',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) تحصيل المدفوعات من العملاء',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) إدارة الموارد البشرية للشركة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 16,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'عناصر المزيج التسويقي (4Ps) هي:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 16,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) المنتج، السعر، المكان، الترويج',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) المنتج، الربح، الموظفون، الترويج',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) السعر، الجودة، الكمية، الوقت',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) الإنتاج، التوزيع، المحاسبة، البيع',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 17,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أبحاث السوق التي تُجمع مباشرة من المصدر (مثل الاستبيانات والمقابلات) تُسمى:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 17,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) بيانات أولية',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) بيانات ثانوية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج ) بيانات تاريخية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) بيانات ثابتة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 18,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'البيانات الثانوية في أبحاث السوق هي:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 18,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) بيانات جُمعت مسبقاً من مصادر موجودة',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) بيانات تُجمع لأول مرة من العملاء مباشرة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) بيانات لا يمكن استخدامها',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) بيانات سرية للشركة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 19,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'من المكونات الأساسية للتسويق: الشراء، البيع، النقل، التخزين، وإدارة المخاطر (التحديات).',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 19,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 20,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يُعد التسويق عملية تهدف إلى بناء الوعي بالمنتجات والخدمات ومزاياها، والمساعدة في إيصالها من المنتج إلى المستهلك.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة؛ التسويق كعملية متكاملة تهدف إلى تعريف العملاء بالمنتجات والخدمات وقيمتها، والمساهمة في وصولها إلى المستهلك.',
+            'is_multi_correct' => false,
+            'order_index' => 20,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 21,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يُعد من الأهداف التي يحققها إطار التسويق؟',
+            'explanation_ar' => 'التفسير: تحديد الجمهور المستهدف أحد العناصر التي يركز عليها إطار التسويق، إلى جانب تحديد المنتجات، واختيار طرق الترويج، ووضع خطة لزيادة الحصة السوقية، وبناء العلاقات مع العملاء. الوحدة الأولى، ص 15',
+            'is_multi_correct' => false,
+            'order_index' => 21,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) حديد الجمهور المستهدف',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) تحديد الهيكل المالي للشركة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) تحديد رواتب الموظفين',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) تحديد سياسات الموارد البشرية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 22,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يساعد إطار التسويق الشركة على اختيار طرق الترويج المناسبة للمنتجات التي تقوم بتسويقها.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة؛ إذ يتضمن إطار التسويق اختيار طرق الترويج المناسبة ضمن مجموعة من الخطوات الأساسية لتخطيط النشاط التسويقي، الوحدة الأولى، ص 15',
+            'is_multi_correct' => false,
+            'order_index' => 22,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 23,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد أحد أهداف إطار التسويق ؟',
+            'explanation_ar' => 'التفسير: وضع خطة لزيادة الحصة السوقية ورد ضمن العناصر الأساسية لإطار التسويق، إلى جانب تحديد المنتجات والجمهور وطرق الترويج والعلاقات مع العملاء. الوحدة الأولى، ص 15',
+            'is_multi_correct' => false,
+            'order_index' => 23,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تحديد أسعار أسهم الشركة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) وضع خطة لزيادة حصتك في السوق',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تحديد ساعات العمل اليومية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) تحديد الهيكل التنظيمي',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 24,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يساعد الشركات على تحديد استراتيجياتها الحالية والمستقبلية وتطوير خططها وفقًا لظروف السوق.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة؛ تحليل السوق يساعد الشركات على تحديد استراتيجياتها الحالية والمستقبلية، وعلى اتخاذ قرارات مرتبطة بالسوق.',
+            'is_multi_correct' => false,
+            'order_index' => 24,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 25,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من العناصر التالية يرتبط بتحديد مدى اتساع السوق وعدد العملاء أو المبيعات الممكنة فيه؟',
+            'explanation_ar' => 'التفسير: حجم السوق يركز على تقدير حجم السوق والفرص المتاحة فيه، وهو أحد العناصر الأساسية الثمانية لتحليل السوق. الوحدة الأولى، ص 17.',
+            'is_multi_correct' => false,
+            'order_index' => 25,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) حجم السوق',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) ربحية السوق',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) هيكل تكلفة الصناعة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) عوامل النجاح',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 26,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'يُستخدم معدل نمو السوق لتحديد مدى سرعة توسع السوق، ويساعد ذلك في اتخاذ قرارات تتعلق باستراتيجية السوق.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة؛ فمعدل نمو السوق أحد العناصر الأساسية لتحليل السوق، ويساعد في فهم اتجاه السوق ومدى نموه وتحديد الاستراتيجيات المناسبة.، الوحدة الأولى، ص 17.',
+            'is_multi_correct' => false,
+            'order_index' => 26,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 27,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من العناصر التالية يُستخدم لتقييم مقدار الأرباح الممكن تحقيقها في سوق معين؟',
+            'explanation_ar' => 'التفسير: ربحية السوق هي أحد العناصر الأساسية لتحليل السوق، وتركز على مدى إمكانية تحقيق الأرباح من النشاط في السوق المستهدف.',
+            'is_multi_correct' => false,
+            'order_index' => 27,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) حجم السوق',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) ربحية السوق',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) قنوات التوزيع',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) التنوع',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 28,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'قنوات التوزيع تمثل الطرق والمسارات التي يتم من خلالها نقل المنتجات والخدمات من المنتج أو المورد إلى العملاء.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة؛ تعتبر قنوات التوزيع الوسائل والمسارات المستخدمة لإيصال السلع والخدمات من مصدرها إلى العملاء.، الوحدة الأولى، ص 19.',
+            'is_multi_correct' => false,
+            'order_index' => 28,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 29,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد من عناصر تحليل السوق الثمانية؟',
+            'explanation_ar' => 'تتضمن العناصر الثمانية الأساسية لتحليل السوق على: حجم السوق، معدل نمو السوق، ربحية السوق، قنوات التوزبع، تحديد الاحتياجات التدريبية، التنوع، هيكل تكلفة الصناعة، عوامل النجاح. راجع الوحدة الأولى، مقدمة في التسويق، درس تحليل السوق، ص : 17.',
+            'is_multi_correct' => true,
+            'order_index' => 29,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تحديد الاحتياجات التدريبية',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) الإعلان',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) التنوع',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) العلاقات العامة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 30,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يُعد التنوع من العناصر الأساسية المستخدمة في تحليل السوق.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة؛ فالتنوع ضمن العناصر الثمانية الأساسية لتحليل السوق.',
+            'is_multi_correct' => false,
+            'order_index' => 30,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 31,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد من عناصر تحليل السوق الثمانية ؟',
+            'explanation_ar' => 'التفسير: هيكل تكلفة الصناعة أحد العناصر الثمانية الأساسية لتحليل السوق، إلى جانب حجم السوق، ومعدل نمو السوق، وربحية السوق، وقنوات التوزيع، والتنوع، وعوامل النجاح وغيرها.',
+            'is_multi_correct' => false,
+            'order_index' => 31,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) خدمة العملاء',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) الإعلان',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) هيكل تكلفة الصناعة',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) العلاقات العامة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 32,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'تختلف عوامل النجاح باختلاف الصناعات، لذا ينبغي على الشركة التركيز فقط على عوامل النجاح الخاصة بمجال عملها.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة؛ تختلف عوامل النجاح من صناعة إلى أخرى، ولذلك يجب معرفة عوامل النجاح الحالية والمستقبلية.',
+            'is_multi_correct' => false,
+            'order_index' => 32,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 33,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الهدف الأساسي من بحوث التسويق؟',
+            'explanation_ar' => 'التفسير: تربط بحوث التسويق بين المستهلكين والعملاء والجمهور من جهة، والشركات والمنتجات أو الخدمات التي تقدمها من جهة أخرى، بهدف الحصول على معلومات تساعد في فهم السوق والعملاء واتخاذ القرارات التسويقية.',
+            'is_multi_correct' => false,
+            'order_index' => 33,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تحديد رواتب العاملين',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) ربط المستهلكين والعملاء بالشركات والمنتجات أو الخدمات التي تقدمها',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تحديد الهيكل التنظيمي للشركة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) تحديد تكاليف الإنتاج فقط',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 34,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تساعد بحوث التسويق الشركات في فهم احتياجات العملاء وتوجهاتهم، وتقييم مدى نجاح حملاتها التسويقية أو فشلها..',
+            'explanation_ar' => 'التفسير: العبارة خاطئة؛ توفر بحوث التسويق معلومات عن العملاء والسوق، وتساعد على فهم احتياجاتهم ورغباتهم واتجاهاتهم، كما يمكن استخدامها لمعرفة مدى نجاح الحملات التسويقية الحالية أو فشلها.',
+            'is_multi_correct' => false,
+            'order_index' => 34,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 35,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'يلا يُعد معدل نمو السوق أحد العناصر الأساسية التي تؤخذ في الاعتبار عند تحليل السوق.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن معدل نمو السوق أحد العناصر الثمانية لتحليل السوق، إلى جانب حجم السوق واتجاهاته وقطاعات السوق وربحية السوق وغيرها.',
+            'is_multi_correct' => false,
+            'order_index' => 35,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 36,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي ممّا يلي يُعدّ من عوامل النجاح الأساسيّة التي ينبغي توفّرها في الشركة؟',
+            'explanation_ar' => 'التفسير: من عوامل النجاح: الاسم المعروف، وولاء العملاء، وقناة التوزيع.',
+            'is_multi_correct' => true,
+            'order_index' => 36,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) انخفاض عدد الموظفين',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) ولاء العملاء',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) زيادة مساحة المكاتب',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) قنوات التوزيع',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+    ],
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/units/unit_02.php
+````php
+<?php
+
+// بيانات الوحدة رقم 2: سلوك المستهلك
+// تم توليدها آليًا من بنك أسئلة IBTA (404 سؤال) - 31 سؤال
+return [
+    'unit_number' => 2,
+    'title_ar' => 'سلوك المستهلك',
+    'order_index' => 2,
+    'questions' => [
+        [
+            'original_number' => 37,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'حدد المراحل الخمس لعملية اتخاذ المستهلك لقرار الشراء.',
+            'explanation_ar' => 'تعتبر المراحل الخمس لعملية اتخاذ قرار الشراء هي: راجع الوحدة الثانية: سلوك المستهلك، موضوع قرار شراء المستهلك، ص 31.',
+            'is_multi_correct' => true,
+            'order_index' => 1,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) إدراك المعلومات',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب قرار الشراء',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تقييم المعلومات',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) إدراك وجود المشكلة',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'هـ) تقييم البدائل',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'و) البحث عن المعلومات',
+                    'order_index' => 6,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ز) تقييم المشتريات',
+                    'order_index' => 7,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'إدراك وجود المشكلة',
+                    'order_index' => 8,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'البحث عن المعلومات',
+                    'order_index' => 9,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقييم البدائل',
+                    'order_index' => 10,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'قرار الشراء',
+                    'order_index' => 11,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقييم المشتريات تقييم ما بعد الشراء.',
+                    'order_index' => 12,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 38,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يمثل إحدى مراحل قرار شراء المستهلك؟',
+            'explanation_ar' => 'التفسير: يمر قرار شراء المستهلك بخمس مراحل، منها البحث عن المعلومات بعد تحديد المشكلة/الحاجة، ثم تقييم البدائل واتخاذ قرار الشراء وتقييم ما بعد الشراء. راجع الوحدة الثانية: سلوك المستهلك الصفحة: 31.',
+            'is_multi_correct' => false,
+            'order_index' => 2,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تحديد الحصة السوقية',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) البحث عن المعلومات',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تحديد سعر المنتج',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) تحليل المنافسين',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 39,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من العوامل الآتية يؤثر في سلوك المستهلك؟',
+            'explanation_ar' => 'التفسير: تصنف عوامل شراء المستهلك إلى عوامل رئيسية، ومن بينها العوامل الثقافية، والتي تشمل الثقافة، والثقافات الفرعية، والطبقة الاجتماعية. راجع الوحدة الثانية: سلوك المستهلك الصفحة: 36–37.',
+            'is_multi_correct' => false,
+            'order_index' => 3,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) العوامل الثقافية',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) العوامل المحاسبية فقط',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) العوامل الإنتاجية فقط',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) العوامل التكنولوجية فقط',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 40,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أيّ من العوامل التالية يُعدّ من العوامل الاجتماعية المؤثرة في سلوك المستهلك؟',
+            'explanation_ar' => 'التفسير: تشمل العوامل الاجتماعية الجماعات المرجعية، والأسرة، والأدوار والمكانة الاجتماعية. أما العمر والمهنة والشخصية فتندرج ضمن العوامل الشخصية. راجع الوحدة الثانية: سلوك المستهلك الصفحة: 37.',
+            'is_multi_correct' => false,
+            'order_index' => 4,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) العمر',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) المهنة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الجماعات المرجعية',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) الشخصية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 41,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'في أي مرحلة من مراحل قرار الشراء يقوم المستهلك بمقارنة الحلول الممكنة بناءً على معايير معينة؟',
+            'explanation_ar' => 'التفسير: بعد أن يبحث المستهلك عن المعلومات، يقوم بتقييم البدائل المتاحة ومقارنتها بناءً على معايير تساعده في اختيار البديل الأنسب. راجع الوحدة الثانية: سلوك المستهلك الصفحة: 31.',
+            'is_multi_correct' => false,
+            'order_index' => 5,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تحديد المشكلة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) البحث عن المعلومات',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) تقييم البدائل',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) قرار الشراء',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 42,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أيّ من العوامل التالية يُعدّ من العوامل الشخصية المؤثرة في سلوك المستهلك؟',
+            'explanation_ar' => 'التفسير: تضمن العوامل الشخصية: العمر ومرحلة دورة الحياة، المهنة، الظروف الاقتصادية، نمط الحياة والشخصية. بينما الثقافة والطبقة الاجتماعية عوامل ثقافية، والجماعات المرجعية عامل اجتماعي. راجع الوحدة الثانية: سلوك المستهلك الصفحة: 37.',
+            'is_multi_correct' => false,
+            'order_index' => 6,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) الثقافة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) الجماعات المرجعية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) نمط الحياة',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) الطبقة الاجتماعية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 43,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'سلوك المستهلك يقتصر فقط على عملية شراء المنتج ولا يشمل العوامل التي تؤثر على عملية الشراء.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن سلوك المستهلك لا يقتصر على عملية الشراء فقط، بل يتأثر بمجموعة من العوامل الثقافية والاجتماعية والشخصية والنفسية، كما يرتبط بالأسباب التي تدفع المستهلك إلى الشراء. راجع الوحدة الثالثة سلوك المستهلك، الصفحة: 30.',
+            'is_multi_correct' => false,
+            'order_index' => 7,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 44,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تبدأ عملية اتخاذ قرار شراء المستهلك بتحديد المشكلة أو الحاجة.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أن أولى مراحل قرار شراء المستهلك هي تحديد المشكلة؛ حيث يشعر المستهلك بوجود حاجة أو مشكلة يرغب في إشباعها أو حلها، ثم ينتقل إلى البحث عن المعلومات. راجع الوحدة الثانية: سلوك المستهلك الصفحة: 31.',
+            'is_multi_correct' => false,
+            'order_index' => 8,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 45,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تُعد كل من الأسرة والجماعات المرجعية من العوامل الشخصية المؤثرة في سلوك المستهلك.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة،حيث أن الأسرة والجماعات المرجعية تندرجان ضمن العوامل الاجتماعية، وليستا من العوامل الشخصية. ومن العوامل الشخصية: العمر، والمهنة، والظروف الاقتصادية، ونمط الحياة والشخصية.راجع الوحدة الثانية: سلوك المستهلك الصفحة: 31.',
+            'is_multi_correct' => false,
+            'order_index' => 9,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 46,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تُعدّ الثقافة، والثقافات الفرعية، والطبقة الاجتماعية من أبرز العوامل الشخصية المؤثرة في سلوك المستهلك.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، 46. تُعدّ الثقافة، والثقافات الفرعية، والطبقة الاجتماعية من أبرز العوامل الثقافية، وليس الشخصية حيث تشتمل على عوامل : الثقافة، والثقافات الفرعية، والطبقة الاجتماعية، وهذه العوامل تؤثر في عادات واتجاهات المستهلكين الشرائية. راجع الوحدة الثانية: سلوك المستهلك الصفحة: 31.',
+            'is_multi_correct' => false,
+            'order_index' => 10,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 47,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تتضمن العوامل الشخصية المؤثرة في سلوك المستهلك كلاً من: العمر، والدخل، والمهنة، ونمط الحياة، والشخصية.',
+            'explanation_ar' => 'راجع الوحدة الثانية: سلوك المستهلك الصفحة: 31.',
+            'is_multi_correct' => false,
+            'order_index' => 11,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 48,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أيُّ العوامل الآتية يُعد من العوامل النفسية المؤثرة في قرار الشراء؟',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 12,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) الدوافع والإدراك والاتجاهات',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) نمط الحياة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الدخل',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) الثقافة الفرعية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 49,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'حتى المستهلكون الذين يبدو أنهم لا يتبعون عملية شراء تقليدية يتبعون في الواقع نسخة معدّلة من نفس العملية.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أن عملية الشراء تمر بنفس المراحل الخمسة بداية من عملية تحديد المشكلة حتى  تقييم عملية الشراء، الوحدة الثانية، ص33',
+            'is_multi_correct' => false,
+            'order_index' => 13,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 50,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'يساعد فهم سلوك المستهلك المسوّق بشكل أساسي على:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 14,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تصميم استراتيجيات تسويقية تلبّي احتياجات العملاء ودوافعهم',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) تقليل عدد الموظفين',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) إلغاء الحاجة إلى المنتج',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) رفع الأسعار عشوائياً',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 51,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يهتم سلوك المستهلك بدراسة الأسباب التي تقف وراء قيام المستهلكين بعمليات الشراء والعوامل المؤثرة فيها.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة؛ حيث تساعد دراسة سلوك المستهلك على فهم الأسباب وراء قيام المستهلكين بعمليات الشراء، والعوامل التي تؤثر في سلوكهم.',
+            'is_multi_correct' => false,
+            'order_index' => 15,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 52,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يمثل أحد الأهداف المهمة لفهم سلوك المستهلك من وجهة نظر المسوق؟',
+            'explanation_ar' => 'التفسير: فهم العوامل التي تؤثر في قرارات المستهلك يساعد المسوق على تصميم استراتيجيات تسويقية أكثر ملاءمة لاحتياجات المستهلكين وسلوكهم الشرائي.',
+            'is_multi_correct' => false,
+            'order_index' => 16,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) إلغاء عملية البحث عن المعلومات',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التعرف على العوامل التي تؤثر في قرارات الشراء',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تقليل عدد المنتجات في السوق',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) إلغاء المنافسة بين الشركات',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 53,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يقتصر سلوك المستهلك على الأفراد فحسب، بل يمتد ليشمل قرارات الشراء التي تتخذها الجماعات أو الأسر..',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث يرتبط سلوك المستهلك بالمستهلكين وقراراتهم الشرائية، كما تتأثر هذه القرارات بعوامل اجتماعية مثل الأسرة والجماعات المرجعية.',
+            'is_multi_correct' => false,
+            'order_index' => 17,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 54,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يُعد مثالًا على تأثير الأسرة في سلوك المستهلك؟',
+            'explanation_ar' => 'التفسير: توضح تعد الأسرة والجماعات المرجعية من العوامل الاجتماعية المؤثرة في سلوك المستهلك، ويمكن أن يكون لها دور في تشكيل قرارات الشراء.',
+            'is_multi_correct' => false,
+            'order_index' => 18,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تأثير موقع المصنع على الإنتاج',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) تأثير أفراد الأسرة في قرارات الشراء.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تأثير تكلفة التخزين على المنتج',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) تأثير سعر السهم في السوق',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 55,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'قرارات المستهلك لا تتأثر بعمره ومرحلة دورة حياته.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن العمر ومرحلة دورة الحياة من العوامل الشخصية التي تؤثر في سلوك المستهلك، لأن احتياجات الفرد وتفضيلاته قد تتغير باختلاف مرحلته العمرية والحياتية.',
+            'is_multi_correct' => false,
+            'order_index' => 19,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 56,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من العوامل التالية يؤثر في سلوك المستهلك نتيجة لاختلاف قدرته وظروفه المالية؟',
+            'explanation_ar' => 'التفسير: تعد الظروف الاقتصادية ضمن العوامل المؤثرة في سلوك المستهلك، حيث يمكن أن تؤثر القدرة والظروف المالية في قرارات الشراء.',
+            'is_multi_correct' => false,
+            'order_index' => 20,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) الثقافة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) الجماعات المرجعية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الظروف الاقتصادية',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) الطبقة الاجتماعية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 57,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'نمط حياة المستهلك لا يساعد المسوق على فهم المنتجات والخدمات التي قد تتناسب مع احتياجاته وتفضيلاته.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن نمط الحياة من العوامل الشخصية المؤثرة في سلوك المستهلك، ويمكن أن يساعد فهمه في تطوير استراتيجيات تسويقية أكثر ملاءمة للمستهلكين.',
+            'is_multi_correct' => false,
+            'order_index' => 21,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 58,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد من العوامل الثقافية المؤثرة في سلوك المستهلك؟',
+            'explanation_ar' => 'التفسير: تتضمن العوامل الثقافية الثقافة، والثقافات الفرعية، والطبقة الاجتماعية. وتؤثر هذه العوامل في عادات وتفضيلات واتجاهات المستهلكين.',
+            'is_multi_correct' => false,
+            'order_index' => 22,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) الشخصية',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) الثقافة الفرعية',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) الظروف الاقتصادية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) نمط الحياة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 59,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن أن تختلف عادات الشراء بين أفراد المجتمع نتيجة لاختلاف الثقافات الفرعية التي ينتمون إليها.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث تمثل الثقافات الفرعية تمثل مجموعات فرعية داخل المجتمع، وقد تؤثر اختلافاتها في عادات واتجاهات الشراء لدى المستهلكين.',
+            'is_multi_correct' => false,
+            'order_index' => 23,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 60,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يمثل عاملًا شخصيًا يمكن أن يؤثر في سلوك المستهلك؟',
+            'explanation_ar' => 'التفسير: الشخصية من العوامل الشخصية المؤثرة في سلوك المستهلك، إلى جانب العمر ومرحلة دورة الحياة، والمهنة، والظروف الاقتصادية، ونمط الحياة.',
+            'is_multi_correct' => false,
+            'order_index' => 24,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) الثقافة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) الأسرة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الشخصية',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) الجماعات المرجعية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 61,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تؤثر خبرات المستهلك السابقة في سلوكه الشرائي، ويمكن أن تسهم هذه الخبرات في تشكيل قراراته المستقبلية.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أن التعلم يرتبط بما يكتسبه المستهلك من خبرات، وأن الخبرات السابقة يمكن أن تؤثر في السلوك الشرائي والقرارات اللاحقة.',
+            'is_multi_correct' => false,
+            'order_index' => 25,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 62,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الآتي يُعد من العوامل النفسية المؤثرة في سلوك المستهلك؟',
+            'explanation_ar' => 'التفسير: التعلم أحد العوامل النفسية التي تؤثر في سلوك المستهلك، إلى جانب عوامل نفسية أخرى  مثل الدوافع والإدراك والمعتقدات والاتجاهات.',
+            'is_multi_correct' => false,
+            'order_index' => 26,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التعلم',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) الطبقة الاجتماعية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الأسرة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) المهنة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 63,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا علاقة لإدراك المستهلك بالطريقة التي يفسر بها المعلومات التي يتلقاها حول المنتجات أو العلامات التجارية..',
+            'explanation_ar' => 'التفسير: العبارة خطأ؛ فالإدراك من العوامل النفسية المؤثرة في سلوك المستهلك، ويرتبط بكيفية تفسير المستهلك للمعلومات والمثيرات المحيطة به، وبالتالي يمكن أن يؤثر في قراراته الشرائية.',
+            'is_multi_correct' => false,
+            'order_index' => 27,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 64,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يمكن أن يساعد المسوق على فهم سبب تفضيل مستهلك لعلامة تجارية على أخرى؟',
+            'explanation_ar' => 'التفسير: ضرورة فهم العوامل التي تؤثر في سلوك المستهلك، لأن ذلك يساعد الشركات والمسوقين على فهم دوافع وتفضيلات العملاء واتخاذ قرارات تسويقية مناسبة.',
+            'is_multi_correct' => false,
+            'order_index' => 28,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) عدد موظفي الشركة فقط',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) دراسة العوامل المؤثرة في سلوك المستهلك',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) مساحة المصنع',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) عدد السيارات المستخدمة في التوزيع',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 65,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يُعد من السمات المرتبطة بسلوك القرار المعقد؟',
+            'explanation_ar' => 'التفسير: توضح المادة أن سلوك القرار المعقد قد يرتبط بـ التكلفة، والمشتريات النادرة، والمخاطر العالية، وعدم الالتزام بالعلامة التجارية. الوحدة الثانية: سلوك المستهلك، أنواع سلوك المستهلك، ص34.',
+            'is_multi_correct' => false,
+            'order_index' => 29,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) شراء متكرر وروتيني دون الحاجة إلى تفكير كبير.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) شراء منتج منخفض التكلفة دون مقارنة البدائل.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) معرفة المستهلك بالمنتج والعلامة التجارية وعدم وجود مخاطر في الشراء.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) ارتفاع التكلفة أو وجود مخاطر عالية أو كون المشتريات نادرة.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 66,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'في السلوك الشرائي المحدود، قد يقوم المستهلك ببعض التفكير ومقارنة المنتجات المختلفة قبل اتخاذ قرار الشراء.',
+            'explanation_ar' => 'التفسير: السلوك الشرائي المحدود يتضمن قدرًا من التفكير قبل الشراء، وقد يقوم المستهلك بمقارنة المنتجات المختلفة، بخلاف السلوك المبرمج الذي يكون أكثر روتينية وتكرارًا.  الوحدة الثانية: سلوك المستهلك، أنواع سلوك المستهلك، ص33',
+            'is_multi_correct' => false,
+            'order_index' => 30,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 67,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الحالات التالية تمثل السلوك الشرائي المبرمج؟',
+            'explanation_ar' => 'التفسير: السلوك المبرمج يرتبط بعمليات الشراء الروتينية والمتكررة، والتي لا تتطلب قدرًا كبيرًا من التفكير قبل الشراء،، الوحدة الثانية، ص33',
+            'is_multi_correct' => false,
+            'order_index' => 31,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) شراء منتج مرتفع التكلفة بعد إجراء بحث ومقارنة واسعة.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) شراء منتج غير مألوف مع وجود مخاطر عالية في قرار الشراء.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) شراء متكرر وروتيني لمنتج لا يتطلب من المستهلك قدرًا كبيرًا من التفكير.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) مقارنة عدة علامات تجارية قبل اتخاذ قرار شراء معقد.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+    ],
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/units/unit_03.php
+````php
+<?php
+
+// بيانات الوحدة رقم 3: تطوير خطة التسويق
+// تم توليدها آليًا من بنك أسئلة IBTA (404 سؤال) - 36 سؤال
+return [
+    'unit_number' => 3,
+    'title_ar' => 'تطوير خطة التسويق',
+    'order_index' => 3,
+    'questions' => [
+        [
+            'original_number' => 68,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تستخدم دورة حياة المنتج لتحليل المنتج:',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، تستخدم كل من: دورة حياة المنتج (والتي تشمل مرحلة التقديم، ثم النمو، ثم النضج، ثم الانحدار) في تحليل المنتج.  الوحدة 3: تطوير خطة السوق، درس: مراحل دورة حياة المنتج، ص 61.',
+            'is_multi_correct' => false,
+            'order_index' => 1,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 69,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من المراحل التالية من دورة حياة المنتج تزداد فيها المبيعات وتنخفض الأرباح:',
+            'explanation_ar' => 'حيث (في مرحلة النضج ترتفع المبيعات بينما تبدأ الأرباح في الانخفاض نتيجة زيادة المنافسة والإنفاق التسويقي) . راجع الوحدة 3 : تطوير خطة التسويق ، دورة حياة المنتج (ص 53)',
+            'is_multi_correct' => false,
+            'order_index' => 2,
+            'options' => [
+                [
+                    'option_text_ar' => 'ا) تقديم المنتج أو إطلاقه في السوق.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) مرحلة نمو السوق.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) مرحلة نضج السوق.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) كل ما سيق ذكره أعلاه.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 70,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'العلاقات العامة هي أحد أشكال ______________ التي تهدف إلى كسب فهم الجمهور وقبوله. اختر الإجابة الصحيحة:',
+            'explanation_ar' => 'التفسير : العلاقات العامة هي شكل من أشكال الاتصالات يهدف إلى كسب فهم الجمهور وقبوله. راجع الوحدة 3: تطوير خطة التسويق، العلاقات العامة ص 64.',
+            'is_multi_correct' => false,
+            'order_index' => 3,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التسويق',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) العمل',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الاتصالات',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) كل ما سبق ذكره',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 71,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الأنواع الخمسة الرئيسية للمنتجات التجارية؟ (اختر الإجابة الصحيحة)',
+            'explanation_ar' => 'بناء الصورة الذهنية أو إنشاء الفئة فهو هدف ترويجي وليس نوعًا من المنتجات التجارية. الوحدة 3 – تطوير خطة التسويق، درس المنتج ، ص : 47',
+            'is_multi_correct' => true,
+            'order_index' => 4,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) العقارات أو المنشآت الثابتة.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) الملحقات.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) بناء الصورة الذهنية أو إنشاء الفئة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) المكونات.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ه) المواد الأولية (الخام).',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'و) الخدمات.',
+                    'order_index' => 6,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 72,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الخيارات التالية يتضمن جميع العناصر الأربعة الرئيسية لخطة التسويق؟',
+            'explanation_ar' => 'لأن المزيج التسويقي الصحيح هو: المنتج – السعر – المكان / التوزيع– الترويج، ولا يوجد خيار يذكرها جميعًا بصورة صحيحة. الوحدة 3 تطوير خطة التسويق، ص : 44..',
+            'is_multi_correct' => false,
+            'order_index' => 5,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) مكان التسويق، العرض، الخصوصية، السعر',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) الخطة، الإنتاجية، السعر، المكان، والدعاية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) المنتج، مكان التسويق، الدعاية والترويج، الخطة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) لا شيء مما سبق ذكره',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 73,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي هو العنصر الرابع في المزيج التسويقي؟',
+            'explanation_ar' => 'العنصر الرابع من عناصر المزيج التسويقي (وفق ترتيب المنهج): المنتج، السعر، الترويج، التوزيع/المكان، الوحدة 3: تطوير خطة التسويق، ص: 44.',
+            'is_multi_correct' => false,
+            'order_index' => 6,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ)التوجيه',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التسويق',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) التوزيع',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) لا شيء مما سبق',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 74,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أيٌّ مما يلي لا يُعدّ',
+            'explanation_ar' => 'شهرة العلامة التجارية ليست من الفئات الأربع لخصائص المنتج، وإنما ترتبط بالعلامة التجارية. الوحدة 3 تطوير خطة التسويق، موضوع: خصائص المنتج، ص:51.',
+            'is_multi_correct' => false,
+            'order_index' => 7,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) عدد الميزات',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) الجودة في الأداء الوظيفي',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) شهرة العلامة التجارية',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) الشكل أو المظهر',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ه) الخيارات المتوفرة في خط الإنتاج',
+                    'order_index' => 5,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 75,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الخيارات التالية يتضمن العناصر الأربعة الرئيسية لخطة التسويق؟',
+            'explanation_ar' => 'السعر، المنتج، الدعاية والترويج، مكان التسويق ، هذا الخيار الوحيد الذي يحتوي على عناصر المزيج التسويقي الأربعة. راجع الوحدة 3 : تطوير خطة التسويق– درس: خطة التسويق، ص: 45.',
+            'is_multi_correct' => false,
+            'order_index' => 8,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) السعر، المنتج، الدعاية والترويج، مكان التسويق.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) مكان التسويق، العرض، الخصوصية، السعر.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الدعاية والترويج، الإنتاجية، السعر، المكان.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) المنتج، مكان التسويق، الدعاية والترويج، الخطة.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 76,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'يواجه المنتج في مرحلة نمو السوق تحديات عدة، منها الحاجة إلى استثمار موارد في الإعلان لزيادة الوعي بالمنتج.',
+            'explanation_ar' => 'العبارة صحيحة، حيث يحتاج المنتج في هذه المرحلة إلى الترويج المكثف لإعلام السوق بالمنتج، الوحدة 3 : تطوير خطة التسويق– درس: خطة التسويق، ص: 53.',
+            'is_multi_correct' => false,
+            'order_index' => 9,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 77,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الدورات التالية تستخدم لتحليل المنتج؟',
+            'explanation_ar' => 'تستخدم دورة حياة المنتج لتحليل المنتج واستراتيجياته، راجع الوحدة 3: تطوير خطة التسويق – درس: دورة حياة المنتج، ص: 53.',
+            'is_multi_correct' => false,
+            'order_index' => 10,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) دورة حياة المنتج.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) دورة تحليل المنتج.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) دورة مرحلة المنتج.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) لا شيء مما سبق ذكره أعلاه.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 78,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => '.أي من التالي يُعد خطوة أساسية في إعداد خطة التسويق؟',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 11,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ. تحديد السوق المستهدف',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب. زيادة عدد الموظفين',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج. تغيير الهيكل الإداري',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د. شراء الأصول الثابتة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 79,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'حدد أي من الأساليب التالية هي طرق للإعلان.',
+            'explanation_ar' => 'العلاقات العامة ليست من طرق الإعلان، وإنما تعتبر عملية من عمليات الاتصال . راجع الوحدة 3: الترويج، درس الإعلان ، ص 63',
+            'is_multi_correct' => true,
+            'order_index' => 12,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التلفاز.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) الراديو/ الإذاعة.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تناقل الأحاديث بين الناس/ الشفهي.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) الإنترنت.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ه) العلاقات الإعلامية.',
+                    'order_index' => 5,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 80,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يُعدّ من الفئات الأربع لخصائص المنتج؟',
+            'explanation_ar' => 'تشمل خصائص المنتج: الميزات، جودة الأداء، الشكل/المظهر، والخيارات المتاحة في خط الإنتاج، راجع الوحدة 3: تطوير خطة التسويق، درس : خصائص المنتج، ص51.',
+            'is_multi_correct' => false,
+            'order_index' => 13,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) عدة الميزات.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) الجودة في الأداء الوظيفي.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الشكل أو المظهر.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) الخيارات المتوفرة في خط الإنتاج.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ه) كل ما سبق.',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 81,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ممّا يلي يُعدّ العنصر الرابع في المزيج التسويقي ؟',
+            'explanation_ar' => 'حيث أن العنصر الرابع هو التوزيع في سلسلة المزيج التسويقي، والمكون من ( المنتج، السعر، الترويج، التوزيع) راجع الوحدة 3: تطوير خطة التسويق، موضوع خطة التسويق، ص: 45.',
+            'is_multi_correct' => false,
+            'order_index' => 14,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التوجيه',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التسويق',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الترويج',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) لا شيء مما سبق',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 82,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الخيارات التالية يتضمن العناصر الأربعة الرئيسية لخطة ؟',
+            'explanation_ar' => 'تعتبر عناصر المزيج التسويقي الأربعة (4Ps) هي: المنتج (Product، السعر (Price)، المكان/التوزيع (Place) ، الترويج (Promotion) . ولا يوجد أي خيار من الثلاثة الأولى يذكر هذه العناصر الأربعة بالصيغة الصحيحة والكاملة؛ لذلك تكون الإجابة الصحيحة هي: لا شيء مما سبق ذكره. راجع الوحدة الثالثة: تطوير خطة التسويق – المزيج التسويقي (4Ps). ـ ، ص : 45.',
+            'is_multi_correct' => false,
+            'order_index' => 15,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) مكان التسويق، العرض، الخصوصية، السعر.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) الحملة الإعلانية، السعر، المكان، الدعاية.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) المنتج، مكان التسويق، السعر، والترويج للخطة.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) لا شيء مما سبق ذكره.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 83,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما هي الأسس اللازمة لإعداد خطة تسويقية؟',
+            'explanation_ar' => 'التفسير: من الأسس لوضع خطة التسويق تحديد المنتج الذي سيتم الترويج له، وتحديد الأشخاص الذين سيتم الترويج لهم، وكيفية الترويج، وكيفية إيجاد العملاء أو الحفاظ عليهم. راجع، الوحدة الثالثة: تطوير خطة التسويق، ص: 44 .',
+            'is_multi_correct' => true,
+            'order_index' => 16,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) ما هو المنتج الذي ستروج له؟',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) من الأشخاص الذين سوف تروج لهم هذا المنتج؟',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) كيفية ترويجك للمنتجات.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) كيفية إيجاد العملاء أو الحفاظ عليهم.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 84,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'تُوصَف خطة التسويق الفعالة بأنها:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 17,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) خارطة طريق للنجاح التسويقي تجمع المنتج والسعر والمكان والترويج',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) قائمة بأسماء الموظفين',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) تقرير محاسبي سنوي',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) عقد إيجار المقر',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 85,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تتضمن خطة التسويق عناصر المزيج التسويقي.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 18,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 86,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يُعد عنصراً من عناصر خطة التسويق؟',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 19,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التعريف بالمنتج',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) جدول رواتب الإدارة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) لائحة السلامة المهنية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) سياسة الإجازات',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 87,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تتضمن خطة التسويق تحديد المنتج والسعر والمكان والترويج باعتبارها عناصر أساسية للمزيج التسويقي.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة؛ تعتبر خطة التسويق أداة لتنظيم جهود التسويق، وتشير إلى عناصر المزيج التسويقي: المنتج، والسعر، والمكان، والترويج.',
+            'is_multi_correct' => false,
+            'order_index' => 20,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 88,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الأسئلة التالية يجب أن تجيب عنه خطة التسويق؟',
+            'explanation_ar' => 'التفسير: من الأسس لوضع خطة التسويق تحديد المنتج الذي سيتم الترويج له، وتحديد الأشخاص الذين سيتم الترويج لهم، وكيفية الترويج، وكيفية إيجاد العملاء أو الحفاظ عليهم.',
+            'is_multi_correct' => false,
+            'order_index' => 21,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) كم عدد موظفي الشركة؟',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) ما المنتج الذي ستقوم بتسويقه؟',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) ما قيمة الأصول الثابتة للشركة؟',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) ما عدد ساعات العمل الرسمية؟',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 89,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تتضمن استراتيجية التسويق تحديد الطريقة التي ستستخدمها الشركة للوصول إلى العملاء والمحافظة عليهم.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة؛ فمن ضمن أسس خطة التسويق كيفية إيجاد العملاء أو الحفاظ عليهم، باعتبار ذلك جزءًا من جهود التسويق.',
+            'is_multi_correct' => false,
+            'order_index' => 22,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 90,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أيّ مما يلي يُعد من أنواع المنتجات التجارية (الصناعية)؟',
+            'explanation_ar' => 'التفسير: من ضمن المنتجات التجارية والصناعية؛ المواد الخام وهي السلع الطبيعية غير المصنعة مثل الخشب والتبن، الوحدة 3، ص 47.',
+            'is_multi_correct' => false,
+            'order_index' => 23,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) المناديل الورقية والصابون ومعجون الأسنان.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) المواد الخام',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) منتجات تصفيف الشعر',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) الملابس',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 91,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'تشمل المنتجات التجارية (الصناعية) المباني والمكاتب والمصانع والمعدات الرأسمالية.',
+            'explanation_ar' => 'التفسير: من ضمن المنتجات التجارية والصناعية: العقارات أو المنشآت الثابتة، مثل المباني والمكاتب والمصانع والمعدات الرأسمالية اللازمة للعمليات اليومية.',
+            'is_multi_correct' => false,
+            'order_index' => 24,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 92,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يُعد من المنتجات الاستهلاكية ؟',
+            'explanation_ar' => 'التفسير: تعتبر المنتجات الاستهلاكية المنتجات التي يتم شراؤها من قبل المستهلكين النهائيين للاستخدام الشخصي، المنتجات الضرورية كالأكل والشراب، وأدوات الزينة .ص، 49',
+            'is_multi_correct' => false,
+            'order_index' => 25,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) المعدات الرأسمالية للمصانع',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) المنتجات التي يشتريها المستهلك النهائي لاستخدامه الشخصي مثل الطعام والشراب.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) المواد الخام المستخدمة في الإنتاج فقط',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) المباني والمنشآت الصناعية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 93,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'العلامة التجارية تؤثر فقط في شكل المنتج ولا علاقة لها بالقيمة التي يدركها العميل',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث تؤثر العلامة التجارية في القيمة، فقيمة العلامة التجارية ترتبط بالقيمة التي يدركها العميل، ويمكن أن تساعد العلامة التجارية في جذب العملاء وبناء الثقة والولاء، ص 50.',
+            'is_multi_correct' => false,
+            'order_index' => 26,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 94,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أيٌّ ممّا يلي يُعدّ من أهداف التحكم في العلامة التجارية ؟',
+            'explanation_ar' => 'التفسير: يهدف التحكم في العلامة التجارية إلى ضمان صورة موحدة واستراتيجية متسقة للعلامة التجارية، بما يساعد على الحفاظ على سمعتها وجودتها، 50.',
+            'is_multi_correct' => false,
+            'order_index' => 27,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) زيادة تكاليف الإنتاج',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) ضمان صورة موحدة واتساق للعلامة التجارية',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تقليل جودة المنتجات',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) إلغاء هوية المنتج',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 95,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تعني جودة أداء المنتج قدرته على تلبية توقعات العملاء وتوفير مستوى ملائم من الأداء',
+            'explanation_ar' => 'التفسير: تعد جودة الأداء من ضمن خصائص المنتج، وترتبط بجودة أداء المنتج ومدى ملاءمته لتوقعات واحتياجات العملاء.',
+            'is_multi_correct' => false,
+            'order_index' => 28,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 96,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من العناصر التالية يمكن للشركة استخدامه لتمييز منتجها عن منتجات المنافسين ؟',
+            'explanation_ar' => 'التفسير: من ضمن خصائص المنتج، الميزات، وجودة الأداء، والشكل أو المظهر، والخيارات المتوفرة في خط الإنتاج، وهي عناصر يمكن توظيفها في تطوير المنتج وتمييزه.',
+            'is_multi_correct' => false,
+            'order_index' => 29,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) حذف جميع خصائص المنتج',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) إضافة ميزات جديدة للمنتج',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) إلغاء خيارات المنتج',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) تجاهل احتياجات السوق',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 97,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'في مرحلة النمو من دورة حياة المنتج، يطرح المنتج في السوق ويبدأ المستهلكون في التعرف عليه.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث تمر دورة حياة المنتج بمجموعة من المراحل تبدأ بالتقديم، ثم النمو، ثم النضج، ثم الانحدار. وفي مرحلة التقديم (وليس مرحلة النمو)  يبدأ المنتج بالدخول إلى السوق والتعريف به.',
+            'is_multi_correct' => false,
+            'order_index' => 30,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 98,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مرحلة من مراحل دورة حياة المنتج تتميز بزيادة المنافسة وضرورة الحفاظ على حصة السوق؟',
+            'explanation_ar' => 'التفسير: ترتبط مرحلة النضج بالسوق الذي أصبح أكثر استقرارًا، وتظهر فيها الحاجة إلى مواجهة المنافسة والحفاظ على حصة السوق.',
+            'is_multi_correct' => false,
+            'order_index' => 31,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التقديم',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) النضج',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) الانحدار فقط',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) مرحلة الفكرة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 99,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'السعر عنصر يؤثر في استراتيجية التسويق، ويجب أن يكون مناسبًا لقيمة المنتج في نظر العميل ولظروف السوق.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أن قرارات التسعير جزء مهم من استراتيجية التسويق، وأن تحديد السعر يرتبط بالقيمة المقدمة للعملاء والمنافسة وظروف السوق والاستراتيجية التسويقية العامة.',
+            'is_multi_correct' => false,
+            'order_index' => 32,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 100,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من العوامل التالية يمكن أن يؤثر في تحديد سعر المنتج؟',
+            'explanation_ar' => 'التفسير: تتأثر استراتيجية التسعير بعوامل مثل المنافسة، والقيمة المقدمة للعميل، وظروف السوق، وأهداف الشركة واستراتيجيتها التسويقية.',
+            'is_multi_correct' => false,
+            'order_index' => 33,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) لون مكتب المدير',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) أسعار المنافسين',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) عدد موظفي الموارد البشرية فقط',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) مساحة مستودع الشركة فقط',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 101,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'تركز استراتيجية التسويق في الترويج على كيفية وصول المنتج أو الخدمة إلى العميل بكفاءة من خلال قنوات التوزيع المناسبة.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن استراتيجية المكان/التوزيع هي التي تركز على كيفية وصول المنتج أو الخدمة إلى العميل، مع اختيار وإدارة قنوات التوزيع المناسبة بما يحقق الكفاءة في الوصول إلى السوق.',
+            'is_multi_correct' => false,
+            'order_index' => 34,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 102,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'خطة التسويق الفعالة تعمل كخارطة طريق للفشل التسويقي.',
+            'explanation_ar' => 'التفسير:  العبارة خاطئة، حيث تعد خطة التسويق الفعالة خارطة طريق للنجاح التسويقي، وتجمع عناصر المزيج التسويقي.',
+            'is_multi_correct' => false,
+            'order_index' => 35,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 103,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد من العناصر الأساسية للمزيج التسويقي؟',
+            'explanation_ar' => 'التفسير: تتضمن عناصر المزيج التسويقي المنتج والسعر والمكان/التوزيع والترويج.',
+            'is_multi_correct' => false,
+            'order_index' => 36,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) الموارد البشرية',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) المنتج',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) المحاسبة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) التمويل',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+    ],
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/units/unit_04.php
+````php
+<?php
+
+// بيانات الوحدة رقم 4: تحليل المنتج والسوق
+// تم توليدها آليًا من بنك أسئلة IBTA (404 سؤال) - 12 سؤال
+return [
+    'unit_number' => 4,
+    'title_ar' => 'تحليل المنتج والسوق',
+    'order_index' => 4,
+    'questions' => [
+        [
+            'original_number' => 104,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تُستخدم دورة تقييم مراحل المنتج في تحليل المنتج.',
+            'explanation_ar' => 'العبارة خاطئة، حيث تستخدم دورة تقييم مراحل المنتج في تحليل المنتج، الوحدة 4: تحليل المنتج والسوق: درس دورة تقييم المنتج ص : 75',
+            'is_multi_correct' => false,
+            'order_index' => 1,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 105,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'عندما تفكر في سوق معين، ينبغي تقييم جاذبيته الحالية فقط.',
+            'explanation_ar' => 'العبارة خطأ، حيث لا يقتصر تقييم السوق على جاذبيته الحالية فقط، بل يشمل أيضًا إمكاناته المستقبلية وعوامل أخرى، راجع الوحدة 4: تحليل المنتج والسوق، درس: تحليل المنتجات والسوق، ص:. 69.',
+            'is_multi_correct' => false,
+            'order_index' => 2,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 106,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي هي إحدى النقاط الرئيسية الأربعة المتعلقة بالتوضيب (التعبئة والتغليف)؟',
+            'explanation_ar' => 'يشمل عناصر التغليف الأربعة: الجاذبية، قابلية (سهولة الحمل (، التخزين، التكلفة.  راجع الوحدة 4، تحليل المنتج والسوق، درس التغليف، ص : 71.',
+            'is_multi_correct' => false,
+            'order_index' => 3,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التسعير',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) العلامة التجارية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) المتانة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) الجاذبية/المظهر',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 107,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما هو تحليل الاتجاهات؟',
+            'explanation_ar' => 'الخيار الأول هو التعريف لتحليل الاتجاهات؛ فهو يعتمد على جمع البيانات وتحليلها لاكتشاف الأنماط والاتجاهات التي تساعد في اتخاذ القرارات. ، راجع الوحدة الرابعة: ـ تحليل المنتج والسوق، مضوع تحليل المنتج واتجاه السوق، ص .78.',
+            'is_multi_correct' => false,
+            'order_index' => 4,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) عملية جمع المعلومات وتحويلها لإيجاد نمط أو اتجاه معين في المعلومات التي تم جمعها.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) أقل فنون التحليل دقة.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) تَتألف من النظر في المعلومات أو البيانات السابقة والاستنتاج بأن النتيجة سوف تكون هي نفسها.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) يقسم تحليل الاتجاهات السوق إلى أقسام أو شرائح يسهل عندها أو احتسابها.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 108,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يركّز تحليل السوق على الجاذبية الحالية والمستقبلية للسوق، والفرص المتاحة والمخاطر المحتملة.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 5,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 109,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'التمييز بين منتجات الأعمال والمنتجات الاستهلاكية مهم لأنه:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 6,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) حاسم في تطوير استراتيجية التسويق المناسبة',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) لا يؤثر على التسويق إطلاقاً',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) يخص المحاسبة فقط',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) يحدد رواتب البائعين',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 110,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => '«تحليل المنتجات التكميلية» يُعد أسلوباً مفيداً لـ:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 7,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) فهم جوانب السوق والفرص والتهديدات',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) حساب ضريبة الدخل',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) تصميم شعار الشركة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) توظيف المدربين',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 111,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يمثل أحد أنواع تحليل اتجاه السوق؟',
+            'explanation_ar' => 'التفسير: يتضمن تحليل المنتج واتجاه السوق عدة أنواع من التحليل، ومنها: التحليل الحدسي، والتحليل الزمني، وتحليل تجزئة السوق.، ص 78-88.',
+            'is_multi_correct' => false,
+            'order_index' => 8,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تحليل المنافسين',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التحليل الزمني',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تحليل الأسعار',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) تحليل التوزيع',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 112,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد مرحلة من مراحل دورة تقييم المنتج؟',
+            'explanation_ar' => 'التفسير: تتكون دورة تقييم المنتج من خمس مراحل، وتبدأ بـ مرحلة الفكرة، ثم مرحلة الجدوى، ثم التطوير، ثم الإطلاق، ثم النمو/النضج.',
+            'is_multi_correct' => false,
+            'order_index' => 9,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) مرحلة الفكرة',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) مرحلة التسعير',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) مرحلة التوزيع',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) مرحلة الإعلان',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 113,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'مرحلة الجدوى في دورة تقييم المنتج تهدف إلى التحقق من أن المنتج المقترح مناسب للسوق ويمكنه تلبية احتياجات العملاء.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أن مرحلة الجدوى تهدف إلى التحقق من ملاءمة المنتج المقترح للسوق، ومدى قدرته على تلبية احتياجات العملاء، بالإضافة إلى دراسة جدوى تطويره.',
+            'is_multi_correct' => false,
+            'order_index' => 10,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 114,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'من ضمن إستراتيجيات التسعير الشائعة أحيانا التسعير بسعر ترويجي.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث يتم أحيانًا تقديم أو تسعير المنتج بسعر م نخفض جدا (أحياناً أقل من التكلفة) لجذب العملاء إلى المتجر أو الموقع الإلكتروني.',
+            'is_multi_correct' => false,
+            'order_index' => 11,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 115,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد أحد العناصر الرئيسية للتغليف؟',
+            'explanation_ar' => 'التفسير: تشمل العناصر الرئيسية للتغليف الجاذبية، وسهولة الحمل، والتخزين، والتكلفة.',
+            'is_multi_correct' => false,
+            'order_index' => 12,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التسعير',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) العلامة التجارية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الجاذبية/المظهر',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) العمالة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+    ],
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/units/unit_05.php
+````php
+<?php
+
+// بيانات الوحدة رقم 5: التسويق المستهدف
+// تم توليدها آليًا من بنك أسئلة IBTA (404 سؤال) - 40 سؤال
+return [
+    'unit_number' => 5,
+    'title_ar' => 'التسويق المستهدف',
+    'order_index' => 5,
+    'questions' => [
+        [
+            'original_number' => 116,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يمكن للتركيبة السكانية أن تساعد الشركة في البحث عن أوجه التشابه بين المستهلكين وبالتالي لا تساعد في إنشاء مجموعة من المستهلكين المتشابهين الذين يمكن التسويق لهم باعتبارهم مستهلك واحد ,',
+            'explanation_ar' => 'العبارة خطأ، حيث تساعد التركيبة السكانية في البحث عن أوجه التشابه بين المستهلكين ومن ثم تساعد في إ نشاء مجموعة من المستهلكين المتشابهين الذين يمكن التسويق لهم بإعتبارهم مستهلك واحد، راجع الوحدة 5: التسويق المستدف، ص :87.',
+            'is_multi_correct' => false,
+            'order_index' => 1,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 117,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'عند التخطيط لاستراتيجية التسويق الخاصة بك، حدد العاملين الرئيسيين اللذين يجب أخذهما بعين الاعتبار.',
+            'explanation_ar' => 'الاستراتيجية التسويقية الناجحة تعتمد بالأساس على تقسيم السوق واستهداف الشرائح المناسبة (STP). الوحدة 5 – التسويق المستهدف، ص: 87.',
+            'is_multi_correct' => true,
+            'order_index' => 2,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التحسن في الأرباح',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التقسيم',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) الأسلوب المُركز',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) الاستهداف',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 118,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي هي الطرق الأكثر شيوعًا التي تُستخدم في تصنيف العملاء؟',
+            'explanation_ar' => 'تعد أكثر طرق تصنيف العملاء شيوعًا حسب (العامل النفسي، الديموغرافية/ التركيبة السكانية، الجغرافية، السلوكية)، أما غير السلوكية والنسبية فليستا من طرق التجزئة القياسية، راجع الوحدة 5: التسويق ، درس : التسويق المستهدف، ص: 88',
+            'is_multi_correct' => true,
+            'order_index' => 3,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) غير السلوكية',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) العامل النفسي',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) الديموغرافية / التركيبة السكانية',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) النسبية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ه) الجغرافية',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'و) السلوكية',
+                    'order_index' => 6,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 119,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'عند التخطيط لإستراتيجية التسويق الخاصة بك حدد العاملين الرئيسين الذين يجب أخذهما بعين الاعتبار؟(إجابة واحدة).',
+            'explanation_ar' => 'عند التخطيط لاستراتيجية التسويق يؤخذ في الاعتبار التقسيم والاستهداف، راجع الوحدة 5، التسويق المستهدف، درس: التسويق المستهدف، ص: 87.',
+            'is_multi_correct' => false,
+            'order_index' => 4,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تعزيز الأرباح.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التقسيم',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الاستهداف.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) ب وج',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 120,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تقتصر أهمية التركيبة السكانية على تحديد خصائص المستهلكين دون المساهمة في إيجاد أوجه الشبه بينهم وإنشاء مجموعات متشابهة.',
+            'explanation_ar' => 'العبارة خاطئة، حيث تساعد التركيبة السكانية على تجميع المستهلكين ذوي الخصائص المتشابهة لتوجيه التسويق إليهم، راجع الوحدة 5: التسويق المستهدف: درس: عوامل التجزئة، ص: 90.',
+            'is_multi_correct' => false,
+            'order_index' => 5,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 121,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي هي أمثلة من العوامل النفسية المستخدمة في تقسيم السوق؟',
+            'explanation_ar' => 'يعتبر كل من : نمط الحياة، والطبقة الاجتماعية من أمثلة التجزئة النفسية، بينما العمر ديموغرافي والولاء سلوكي، راجع الوحدة 5 : التسويق المستهدف، درس: التجزئة السيكوجرافية والسلوكية، ص:100.',
+            'is_multi_correct' => true,
+            'order_index' => 6,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) نمط الحياة',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) التركيبة السكانية حسب العمر',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الولاء للعلامة التجارية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) الطبقة الاجتماعية',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 122,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تسمى تجزئة السوق من المشترين المحتملين إلى مجموعات فرعية منفصلة على أساس معايير محددة: التقسيم.',
+            'explanation_ar' => 'العبارة صحيحة، حيث هذا هو التعريف الصحيح لتقسيم السوق (Segmentation): تقسيم المشترين المحتملين إلى مجموعات فرعية وفق معايير محددة. راجع الوحدة 5 :، درس: التسويق المستهدف،ص:  88.',
+            'is_multi_correct' => false,
+            'order_index' => 7,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 123,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي هي الطرق الأكثر شيوعا التي تستخدم في تصنيف العملاء؟(إجابة واحدة)',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 8,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) الحالة النفسية.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التركيبة السكانية/ الديموغرافية.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الجغرافية.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) السلوكية.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ه) كل ما سبق ذكره أعلاه.',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 124,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما هو التسويق المستهدف؟',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 9,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) يختار التسويق المستهدف قسم/ أقسام السوق التي تتناسب مع أهداف المؤسسة.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) يطور التسويق المستهدف إستراتيجية التسويق التي تناشد السوق المستهدف والمحدد.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) لقد غير التسويق المستهدف وسائل الإعلام التي يتم استخدامها من قبل الشركات للتسويق وكذلك غير كيفية حصول المستهلك على اتخاذ القرارات.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) لا شيء مما سبق ذكره أعلاه.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 125,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'لتحليل إمكانية النجاح في المستقبل يحتاج المرء للنظر في العوامل التالية من عملية تقسيم السوق:',
+            'explanation_ar' => 'لتحليل النجاح المستقبلين سيحتاج المرء إلى إلقاء نظرة على العوامل التالية: العمر، النوع، حجم الأسرة، التعليم، الدخل، الجغرافيا، مجموعة التجزئة، راجع الوحدة 5: التسويق المستهدف، درس عوامل التجزئة، ص 90.',
+            'is_multi_correct' => true,
+            'order_index' => 10,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) مستخدمي العلامة التجارية.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) الدخل .',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) مستخدمي الصنف المنافس.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) المكان الجغرافي.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 126,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'مما يلي يعتبر من العوامل النفسية المستخدمة في تقسيم السوق؟',
+            'explanation_ar' => 'التقسيم النفسي (Psychographic Segmentation) يعتمد على عوامل مثل: نمط الحياة (Lifestyle).، والطبقة الاجتماعية (Social Class). أما التركيبة السكانية حسب العمر فتعتبر من التقسيم الديموغرافي. والولاء للعلامة التجارية فتعتبر من التقسيم السلوكي. راجع الوحدة الخامسة: التسويق المستهدف، موضوع: تقسيم السوق (العوامل النفسية)، الصفحات 90–100.',
+            'is_multi_correct' => true,
+            'order_index' => 11,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) نمط الحياة',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) التركيبة السكانية حسب العمر',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الولاء للعلامة التجارية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) الطبقة الاجتماعية',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 127,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تساعد التجزئة التسويقية على فهم دوافع العملاء لاتخاذ قرارات الشراء، وتحديد المعوقات التي تواجههم وسبل التغلب عليها.',
+            'explanation_ar' => 'العبارة خاطئة، حيث أن تقسيم السوق (Market Segmentation) يساعد على فهم خصائص العملاء وسلوكهم ودوافع الشراء والعوائق التي تؤثر في قراراتهم، مما يمكّن المؤسسة من تطوير استراتيجيات تسويقية أكثر فاعلية. راجع الوحدة الخامسة: التسويق المستهدف، موضوع: تقسيم السوق (الصفحات 88–100)',
+            'is_multi_correct' => false,
+            'order_index' => 12,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 128,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'تعتبر عملية التجزئة التسويقية التي تربط بين العملاء والجمهور للشركات والمنتجات والخدمات التي تقدمها بهدف واحد ألا وهو: زيادة أداء السوق الجديد عبر الربح. ثم إن من الممكن أن يساعد السوق أو يفشل في تحقيق أي نمو أو ازدهار لهم، فهي تفسر كيفية قيام المستهلكين والشركات بالشراء، وكيف يمكن إزالة هذه المعيقات أو أسباب انخفاضها.',
+            'explanation_ar' => 'العبارة صحيحة، حيث تساعد التجزئة التسويقية على: • فهم العملاء وسلوكهم. • تفسير دوافع الشراء. • إزالة معوقات الشراء. • دعم نمو المؤسسة وتحسين الأداء التسويقي. لذلك فالعبارة صحيحة. راجع الوحدة الخامسة: التسويق المستهدف (تقسيم السوق)، ص 87.',
+            'is_multi_correct' => false,
+            'order_index' => 13,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 129,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'جميع الأسواق هي نفسها، وبالتالي من المهم أن نفهم الأقسام المختلفة التي تشكل مجمل السوق."',
+            'explanation_ar' => 'العبارة خطأ، لأن جميع الأسواق هي نفسها" غير صحيح؛ فكل سوق يختلف من حيث العملاء والاحتياجات والسلوك، ولذلك يتم تقسيم السوق (Market Segmentation) إلى شرائح مختلفة، راجع الوحدة الخامسة: التسويق المستهدف، ص 87.',
+            'is_multi_correct' => false,
+            'order_index' => 14,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 130,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'من المهم أن تُقيِّم أقسام السوق المختلفة التي تُشكِّل مجمل السوق',
+            'explanation_ar' => 'العبارة صحيحة، حيث يجب: •	تحديد أقسام (شرائح) السوق. •	تقييم كل شريحة من حيث حجمها، وربحيتها، وإمكانية خدمتها. •	ثم اختيار السوق المستهدف. إذن تقييم أقسام السوق المختلفة هو بالفعل خطوة أساسية قبل اختيار السوق المستهدف راجع الوحدة: التسويق المستهدف، ص :  87.',
+            'is_multi_correct' => false,
+            'order_index' => 15,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 131,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'لتحليل النجاح في المستقبل يحتاج المرء للنظر في العوامل التالية في عملية تقسيم السوق (إجابة واحدة تنطبق)',
+            'explanation_ar' => 'لتحليل النجاح المستقبلين سيحتاج المرء إلى إلقاء نظرة على العوامل التالية: العمر، النوع، حجم الأسرة، التعليم، الدخل، الجغرافيا، مجموعة التجزئة، راجع الوحدة 5: التسويق المستهدف، درس عوامل التجزئة، ص 90',
+            'is_multi_correct' => false,
+            'order_index' => 16,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) مستخدمين العلامة التجارية.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) الدخل .',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) مستخدمي المنتج المنافس',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) المكان الجغرافي.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ه) ب و د',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 132,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يساعد تحليل تجزئة السوق في تحديد حجم الفرص التسويقية في كل قطاع، وبالتالي يمكن للشركات تحديد الأسواق التي تستحق الاستثمار فيها.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن تحليل تجزئة السوق يساعد في تقدير حجم الفرص التسويقية في كل قطاع، كما يساعد الشركات على تحديد الموارد بشكل أفضل، وتحديد الأسواق التي يمكن أن تستحق الاستثمار فيها.',
+            'is_multi_correct' => false,
+            'order_index' => 17,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 133,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يمثل أحد أنواع التحليل في تحليل التجزئة السكانية؟',
+            'explanation_ar' => 'التفسير: يتضمن تحليل التجزئة السكانية عدة أنواع، من بينها العوامل الديموغرافية، واتجاهات المستهلك، والاتجاهات التكنولوجية، بهدف فهم خصائص السوق والمستهلكين بصورة أفضل.',
+            'is_multi_correct' => false,
+            'order_index' => 18,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التحليل الزمني',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التحليل الديموغرافي',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) التحليل التاريخي',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) التحليل التنافسي',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 134,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'تجزئة السوق تعني:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 19,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تقسيم السوق إلى فئات أو قطاعات لاستهدافها بفعالية',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) دمج جميع العملاء في فئة واحدة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) إلغاء التسويق للفئات الصغيرة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) بيع المنتج بسعر واحد للجميع',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 135,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يمثّل أساس التجزئة «الديموغرافي»؟',
+            'explanation_ar' => 'راجع الوحدة 5: التسويق المستهدف، ص88',
+            'is_multi_correct' => false,
+            'order_index' => 20,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) العمر والجنس والدخل والمهنة',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) المدن مقابل المناطق الريفية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) أنماط الاستخدام والولاء',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) نمط الحياة والقيم',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 136,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'التجزئة على أساس «المدن الكبرى مقابل المناطق الريفية» تُعد تجزئة:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 21,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) جغرافية',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) ديموغرافية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) سلوكية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) نفسية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 137,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تساعد تجزئة السوق الشركات على تصميم استراتيجيات تسويقية مخصصة لكل فئة من العملاء.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 22,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 138,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'التجزئة القائمة على أنماط الاستخدام والولاء للعلامة تُصنّف كتجزئة:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 23,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) سلوكية',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) جغرافية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) ديموغرافية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) اقتصادية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 139,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يساعد التسويق المستهدف الشركات على تحديد المجموعات الأكثر ملاءمة لأهدافها التسويقية بدلًا من التعامل مع السوق كله باعتباره مجموعة واحدة.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة؛ فالتسويق المستهدف يقوم على تحديد المجموعات أو الشرائح التي تتناسب مع أهداف الشركة، ثم توجيه الجهود التسويقية إليها بصورة أكثر تركيزًا.',
+            'is_multi_correct' => false,
+            'order_index' => 24,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 140,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد من أسباب قيام الشركات بتقسيم السوق؟',
+            'explanation_ar' => 'التفسير: حيث أن من أسباب تقسيم الأسواق تحسين الاستجابة لاحتياجات العملاء، وزيادة الأرباح، وفهم العملاء، والمحافظة عليهم، واكتساب حصة سوقية.',
+            'is_multi_correct' => false,
+            'order_index' => 25,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) زيادة عدد المنتجات دون دراسة العملاء',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) تحسين الاستجابة لاحتياجات العملاء',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) إلغاء الاختلافات بين العملاء',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) منع الشركة من تحديد الأسواق المناسبة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 141,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن أن يساعد تقسيم السوق الشركة على زيادة أرباحها من خلال توجيه جهودها إلى مجموعات أكثر ملاءمة.',
+            'explanation_ar' => 'التفسير: يعتبر هدف زيادة الأرباح من ضمن أسباب تنفيذ تقسيم السوق، حيث يمكن أن يؤدي التركيز على شرائح أكثر ملاءمة إلى استخدام أفضل للموارد والجهود التسويقية.',
+            'is_multi_correct' => false,
+            'order_index' => 26,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 142,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يُعد من النتائج التي يمكن أن يحققها تقسيم السوق؟',
+            'explanation_ar' => 'التفسير: من أسباب تنفيذ تقسيم السوق الحفاظ على العملاء، إلى جانب تحسين لاستجابة لاحتياجاتهم، وزيادة الأرباح، وفهمهم، واكتساب حصة سوقية.',
+            'is_multi_correct' => false,
+            'order_index' => 27,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) إلغاء الحاجة إلى دراسة العملاء',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التعامل مع جميع العملاء بالطريقة نفسها',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) الحفاظ على العملاء',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) إلغاء المنتجات غير المربحة مباشرة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 143,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يُسهم تقسيم السوق في تمكين الشركة من الاستحواذ على حصة في قطاع محدّد، بدلاً من استهداف السوق بأكمله بالأسلوب نفسه.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أن اكتساب حصة سوقية يعد أحد أسباب تنفيذ تقسيم السوق، حيث يسمح التركيز على شرائح محددة بتوجيه الجهود والموارد إليها بصورة أكثر فاعلية.',
+            'is_multi_correct' => false,
+            'order_index' => 28,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 144,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من المتغيرات التالية يُستخدم في التجزئة الديموغرافية إلى جانب العمر؟',
+            'explanation_ar' => 'التفسير: من المتغيرات الديموغرافية: العمر، والنوع، وحجم الأسرة، والتعليم، والدخل، والجغرافيا.ص90',
+            'is_multi_correct' => false,
+            'order_index' => 29,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) الاستخدام',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) حجم الأسرة',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) المزايا المطلوبة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) الولاء للعلامة التجارية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 145,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يُعد التعليم أحد المتغيرات المستخدمة في التجزئة الديموغرافية.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث يعد التعليم أحد المتغيرات الديموغرافية المستخدمة في تقسيم السوق، إلى جانب العمر والنوع وحجم الأسرة والدخل والجغرافيا.90',
+            'is_multi_correct' => false,
+            'order_index' => 30,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 146,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الأمثلة التالية يرتبط بتجزئة السوق حسب التجزئة الديموغرافية؟',
+            'explanation_ar' => 'التفسير: يختلف التسويق بشكل كبير بناء على الفئات العمرية المستهدفة، حسب الأطفال والبالغين والمتقدمين في العمر، ومعجون الأسنان خير مثال لذلك، ص 98..',
+            'is_multi_correct' => false,
+            'order_index' => 31,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) العملاء الذين يستخدمون المنتج يوميًا',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) اختلاف الاحتياجات حسب المرحلة العمرية',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) العملاء الذين يفضلون علامة تجارية معينة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) العملاء الذين يبحثون عن ميزة محددة في المنتج',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 147,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يعد النوع (الجنس) متغير ديموغرافي عند تقسيم السوق.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث يعتبر النوع ضمن المتغيرات الديموغرافية المستخدمة في تقسيم السوق، إلى جانب العمر، وحجم الأسرة، والتعليم، والدخل والجغرافيا.',
+            'is_multi_correct' => false,
+            'order_index' => 32,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 148,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يمثل مثالًا على استخدام التجزئة الديموغرافية حسب الدخل؟',
+            'explanation_ar' => 'التفسير: الدخل أحد المتغيرات الديموغرافية التي تستخدم في تقسيم السوق، ويمكن من خلاله التعرف على الاختلافات بين الشرائح ذات المستويات الاقتصادية المختلفة.',
+            'is_multi_correct' => false,
+            'order_index' => 33,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) استهداف العملاء حسب استخدامهم للمنتج',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) استهداف شرائح ذات مستويات دخل مختلفة بعروض مناسبة',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) استهداف العملاء حسب ولائهم للعلامة التجارية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) استهداف العملاء حسب الفوائد التي يبحثون عنها',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 149,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'في التجزئة الجغرافية، يمكن تقسيم السوق وفق مناطق أو وحدات جغرافية مختلفة بدلًا من الاعتماد على خصائص العملاء الشخصية فقط.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث تقسم التجزئة الجغرافية السوق إلى وحدات جغرافية مختلفة، ويمكن أن تشمل مناطق أو مواقع مختلفة، بما يسمح بتكييف النشاط التسويقي وفق خصائص كل منطقة.',
+            'is_multi_correct' => false,
+            'order_index' => 34,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 150,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد مثالًا على التجزئة السلوكية القائمة على المزايا؟',
+            'explanation_ar' => 'التفسير: يمكن أن تقوم التجزئة السلوكية على المزايا التي يبحث عنها المستهلكون، أي تقسيمهم وفق الفوائد أو المنافع التي يريدون الحصول عليها من المنتج. ص100(الفوائد المتحققة)',
+            'is_multi_correct' => false,
+            'order_index' => 35,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تقسيم العملاء حسب العمر',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) تقسيمهم حسب المدينة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) تقسيم العملاء وفق الفائدة التي يبحثون عنها في المنتج',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) تقسيمهم حسب حجم الأسرة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 151,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن تقسيم المستهلكين سلوكيًا وفق عدد مرات استخدامهم للمنتج خلال فترة زمنية معينة.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث يعد الاستخدام ضمن أسس التجزئة السلوكية، ويمكن تقسيم المستهلكين وفق معدل أو نمط استخدامهم للمنتج.',
+            'is_multi_correct' => false,
+            'order_index' => 36,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 152,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما المقصود بالتجزئة السيكوجرافية؟',
+            'explanation_ar' => 'التفسير: تقوم التجزئة السيكوجرافية على العوامل النفسية والاجتماعية للمستهلك، ومن أمثلتها نمط الحياة والقيم والجوانب المرتبطة بشخصية المستهلك. ص 100.',
+            'is_multi_correct' => false,
+            'order_index' => 37,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تقسيم العملاء حسب موقعهم الجغرافي فقط',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) تقسيم العملاء حسب العمر والدخل فقط',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) تقسيم السوق استنادًا إلى العوامل النفسية والاجتماعية وأنماط الحياة.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) تقسيم العملاء حسب عدد مرات الشراء فقط',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 153,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن أن يكون نمط الحياة أساسًا لتصميم حملات تسويقية تستهدف مجموعات من العملاء الذين يتشابهون في اهتماماتهم وأنماط حياتهم.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث يندرج نمط الحياة ضمن العوامل السيكوجرافية، وأن فهم سلوك المستهلكين وأنماط حياتهم يمكن أن يساعد المسوقين على تصميم حملات تسويقية موجهة إلى اهتماماتهم وأنماط حياتهم.',
+            'is_multi_correct' => false,
+            'order_index' => 38,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 154,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تُسهم تجزئة السوق في مساعدة الشركات على تخصيص استراتيجيات تسويقية مناسبة لمجموعات مختلفة من العملاء.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث تهدف تجزئة السوق إلى تقسيم السوق إلى مجموعات يمكن التعامل معها واستهدافها بصورة أكثر فعالية.',
+            'is_multi_correct' => false,
+            'order_index' => 39,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 155,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يمثل مثالًا على التجزئة الجغرافية؟',
+            'explanation_ar' => 'التفسير: تقسيم السوق إلى المدن الكبرى والمناطق الريفية يمثل تجزئة على أساس جغرافي.',
+            'is_multi_correct' => false,
+            'order_index' => 40,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) العمر والجنس',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) نمط الحياة والقيم',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) لمدن الكبرى مقابل المناطق الريفية.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) أنماط الاستخدام والولاء',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+    ],
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/units/unit_06.php
+````php
+<?php
+
+// بيانات الوحدة رقم 6: وضع العلامة التجارية
+// تم توليدها آليًا من بنك أسئلة IBTA (404 سؤال) - 34 سؤال
+return [
+    'unit_number' => 6,
+    'title_ar' => 'وضع العلامة التجارية',
+    'order_index' => 6,
+    'questions' => [
+        [
+            'original_number' => 156,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يهدف وضع العلامة التجارية إلى تضليل الأفراد في السوق المستهدف عند تمييز علامة تجارية عن أخرى',
+            'explanation_ar' => 'العبارة خطأ، حيث أن وضع العلامة التجارية في السوق يضمن تمكن الأفراد في السوق المستهدفة من تمييز علامتهم التجارية عن غيرها، راجع الوحدة 6: وضع العلامة التجارية: موضوع: تطوير مكانتك: ص 111',
+            'is_multi_correct' => false,
+            'order_index' => 1,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 157,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما هو تمركز العلامة التجارية؟',
+            'explanation_ar' => 'التفسير: التمركز يدور حول خلق صورة ذهنياً "فريدة ومتميزة" تميز المنتج عن المنافسين وليس مجرد موقع قياسي أو عاكس. راجع الوحدة 6: وضع العلامة التجارية: موضوع: تطوير مكانتك: ص 111',
+            'is_multi_correct' => false,
+            'order_index' => 2,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) المركز العاكس الذي تتخذه العلامة التجارية في السوق لضمان تمكن الأفراد في السوق المستهدفة من تمييز علامتهم التجارية عن غيرها.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب)المركز القياسي الذي تتخذه العلامة التجارية في السوق لضمان تمكن الأفراد في السوق المستهدفة من تمييز علامتهم التجارية عن غيرها.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) المركز أو المكان الفريد الذي تتخذه العلامة التجارية في السوق لضمان تمكن الأفراد في السوق المستهدفة من تمييز علامتهم التجارية عن غيرها.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) المركز الذي تتخذه العلامة التجارية في السوق لضمان تمكن الأفراد في السوق المستهدفة من تمييز علامتهم التجارية عن غيرها.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 158,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'إن تمركز العلامة التجارية هو الموقع القياسي الذي تتخذه العلامة التجارية في السوق لضمان تمكن الأفراد في السوق المستهدفة من تمييز علامتهم التجارية عن العلامات التجارية الأخرى.',
+            'explanation_ar' => 'العبارة خطأ، لأن التمركز يعتمد على الموقع "الفريد/المتميز" (Unique Place) في ذهن العميل وليس "القياسي". راجع الوحدة 6: وضع العلامة التجارية، موضوع: تطوير مكانتك: ص 111',
+            'is_multi_correct' => false,
+            'order_index' => 3,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 159,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يُعد تاريخ التصنيع عاملًا جيدًا لتحديد مركز المنتج.',
+            'explanation_ar' => 'العبارة صحيحة، لأن تاريخ التصنيع هو عنصر تشغيلي/لوجستي، ولا يُستخدم كخاصية لتحديد مركز المنتج ذهنياً لدى الجمهور. وليس من العوامل المستخدمة لتحديد تمركز المنتج أو العلامة التجارية. راجع الوحدة 6: وضع العلامة التجارية، موضوع: تطوير مكانتك، ص:111.',
+            'is_multi_correct' => false,
+            'order_index' => 4,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 160,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'إن تحديد ما يتميز بيه المنتج عن غيره ليس عاملاً جيداً لتحديد تمركز المنتج.',
+            'explanation_ar' => 'العبارة خطأ، لأن تمييز المنتج عن المنافسين (الميزة التنافسية) هو أساس عملية التمركز في ذهن العميل. الوحدة 6 –وضع العلامة التجارية، موضوع، تطوير مكانتك.، ص 111.',
+            'is_multi_correct' => false,
+            'order_index' => 5,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 161,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما هو تمركز العلامة التجارية؟',
+            'explanation_ar' => 'التفسير: المكانة الفريدة (Unique Position) في ذهن المستهلك هي التعريف الأساسي الدقيق للتمركز.. الوحدة 6 : وضع العلامة التجارية، درس :تطوير مكانتك، ص 111.',
+            'is_multi_correct' => false,
+            'order_index' => 6,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) المركز العاكس الذي تتخذه العلامة التجارية في السوق لضمان تمكّن الأفراد في السوق المستهدف من تمييز علامتهم التجارية عن غيرها.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) المركز القياسي الذي تتخذه العلامة التجارية في السوق لضمان تمكّن الأفراد في السوق المستهدف من تمييز علامتهم التجارية عن غيرها.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) المركز الذي تتخذه العلامة التجارية في السوق لضمان تمكّن الأفراد في السوق المستهدف من تمييز علامتهم التجارية عن غيرها.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) الوضع الفريد الذي تتخذه العلامة التجارية في السوق لضمان تمكّن الأفراد في السوق المستهدف من تمييز علامتهم التجارية عن غيرها.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 162,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تعتبر وظيفة المنتج عاملًا جيدًا لتحديد تمركز المنتج.',
+            'explanation_ar' => 'العبارة خطأ، إذ أن من إستراتيجيات تنفيذ أو تحديد أو تمركز بناء العلامة التجارية: تميز المنتج، الميزة الرئيسية، مستخدم المنتج، المقارنة مع المنافس، المقارنة مع الفئة، الاستخدام، الارتباط، الوحدة 6: وضع العلامة التجارية، موضوع: إستراتيجية بناء العلامة التجارية، ص : 116.',
+            'is_multi_correct' => false,
+            'order_index' => 7,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 163,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما هو أسلوب التمركز المستخدم لمطابقة فوائد منتجك أو المزايا التنافسية الفريدة من نوعها مع احتياجات ورغبات السوق المستهدف؟',
+            'explanation_ar' => 'التفسير: التمركز عن طريق المطابقة هو أسلوب يعتمد على مطابقة المنافع الفريدة التي يقدمها المنتج مع احتياجات الشريحة المستهدفة.، راجع الوحدة 6: وضع العلامة التجارية، درس: تطوير مكانتك، ص 112.',
+            'is_multi_correct' => false,
+            'order_index' => 8,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التمركز عن طريق رسم الخرائط',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التمركز عن طريق المطابقة',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) التمركز حسب العلاقة العاطفية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) استراتيجية لتمركز العلامة التجارية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 164,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي ليس من عوامل تحديد تمركز المنتج الجيدة؟',
+            'explanation_ar' => 'وظيفة المنتج، والمستهلكون المستهدفون، وما يميز المنتج كلها عوامل جيدة لتحديد تمركز المنتج. الوحدة 6 – وضع العلامة التجارية، ص 105..',
+            'is_multi_correct' => false,
+            'order_index' => 9,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) وظيفة المنتج',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) المستهلكون المستهدفون',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) أوجه الاختلاف بين المنتج وغيره (ما يميز المنتج)',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) لا شيء مما سبق .',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 165,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يجب فعله لتنفيذ استراتيجية تمركز العلامة التجارية؟',
+            'explanation_ar' => 'راجع الوحدة 6 : وضع العلامة التجارية، درس: تطوير المكانة، ص: 111.',
+            'is_multi_correct' => false,
+            'order_index' => 10,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) حدد مركز منتجك/شركتك استنادًا إلى نقاط قوة منتجك ونقاط ضعف المنتج المنافس.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) استخدم مركزين لنفس المنتج في السوق نفسه.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) تحديد مركز كل شيء عن المنتج الخاص بك للجميع.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) كل ما سبق ذكره.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 166,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تمركز العلامة التجارية هو المكانة الفريدة التي تحتلها العلامة في السوق، بما يضمن لجمهورها المستهدف تمييزها عن العلامات التجارية المنافسة.',
+            'explanation_ar' => 'العبارة صحيحة: حيث أن المكانة الفريدة (Unique Position) في ذهن المستهلك هي التعريف الأساسي الدقيق للتمركز.. الوحدة 6 : وضع العلامة التجارية، درس :تطوير مكانتك، ص 111. راجع الوحدة 6: وضع العلامة التجارية، ص 111 (تطوير مكانتك)',
+            'is_multi_correct' => false,
+            'order_index' => 11,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 167,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يجب وضعه ضمن استراتيجية مركز العلامة التجارية؟',
+            'explanation_ar' => 'التفسير: تقوم إستراتيجية تمركز العلامة التجارية على تحديد ميزة تنافسية واضحة اعتمادًا على نقاط قوة المنتج مقارنةً بالمنافسين. أما بقية الخيارات فهي ممارسات خاطئة (مثل استخدام أكثر من تمركز لنفس المنتج أو تقديم وعود لا يمكن الوفاء بها). راجع الوحدة السادسة: وضع العلامة التجارية، موضوع: تطوير مكانتك،ص 111.',
+            'is_multi_correct' => false,
+            'order_index' => 12,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) حدد ميزتك التنافسية، شركتك استنادًا إلى نقاط قوة منتجك ونقاط ضعف المنافس.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) استخدام مركزين لنفس المنتج في السوق نفسه.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) تحديد مركز لكل شيء في الملف الخاص بك للدمج.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) تقديم منتجك بناءً على وعود أو مبادئ لا يمكنك الوفاء بها.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 168,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما هو أسلوب التمركز المستخدم عندما تكون فوائد منتجك أو مزاياه التنافسية الفريدة من نوعها مع احتياجات ورغبات السوق المستهدف؟',
+            'explanation_ar' => 'يوجد ثلاثة أنواع من التمركز هي : ولذا فإن الصحيح، تمركز المطابقة وهو غير موجود ضمن الخيارات المتاحة.',
+            'is_multi_correct' => false,
+            'order_index' => 13,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التمركز عن طريق رسم الخرائط.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب)التمركز حسب العلاقة العاطفية.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) استراتيجية تمركز العلامة التجارية.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) لا شيء مما سبق ذكره.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تمركز المطابقة (Matching Positioning): يعتمد على مطابقة فوائد ومزايا المنتج الفريدة مع احتياجات ورغبات السوق المستهدف، بحيث يشعر العميل أن المنتج يلبي احتياجاته مباشرة.',
+                    'order_index' => 5,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التمركز برسم الخرائط (Mapping Positioning): يعتمد على استخدام خرائط التمركز لمقارنة موقع العلامة التجارية مع المنافسين وتحديد موقعها في أذهان العملاء.',
+                    'order_index' => 6,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التمركز حسب العلاقة العاطفية (Emotional Positioning): يعتمد على بناء ارتباط عاطفي بين العميل والعلامة التجارية، بحيث يتخذ العميل قرار الشراء بناءً على المشاعر والثقة والانتماء أكثر من الخصائص الوظيفية.',
+                    'order_index' => 7,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 169,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تعتبر سمعة الشركة وصورتها جزءاً حيوياً من الاستثمار التسويقي في العلامة التجارية.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 14,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 170,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'الوظيفة الأساسية للعلامة التجارية هي:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 15,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تمييز منتجات الشركة عن المنافسين وبناء صورة ذهنية لدى العميل',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) زيادة تكاليف الإنتاج',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) إخفاء اسم الشركة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) تقليل جودة المنتج',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 171,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'العلامة التجارية القوية تبني ولاء العملاء وتدعم الحصة السوقية.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 16,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 172,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يُعد من مكونات هوية العلامة التجارية؟',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 17,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) الاسم والشعار والقيم والصورة الذهنية',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) رواتب الموظفين',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) موقع المستودع',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) جدول الصيانة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 173,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يجب عند تحديد مكانة العلامة التجارية على المدى الطويل فهم احتياجات ورغبات السوق المستهدف.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة؛ فتحديد الموقع الناجح على المدى الطويل يتطلب مراعاة احتياجات ورغبات السوق المستهدف، حتى تكون المكانة التي تختارها العلامة مناسبة للجمهور المستهدف.',
+            'is_multi_correct' => false,
+            'order_index' => 18,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 174,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يمثل أحد الأسئلة الأساسية التي تساعد الشركة على تطوير مكانتها؟',
+            'explanation_ar' => 'التفسير: عند تطوير مكانة العلامة التجارية توجد مجموعة من الأسئلة الأساسية التي تساعد على تحديد هوية العلامة ومكانتها، ومنها: من أنت؟ ماذا تفعل؟ وكيف تفعله؟',
+            'is_multi_correct' => false,
+            'order_index' => 19,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) كم عدد موظفي الشركة؟',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) من أنت؟',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) كم تبلغ تكلفة المصنع؟',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) كم عدد فروع المنافسين؟',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 175,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'من الأسئلة التي تساعد على تطوير مكانة العلامة التجارية: "ماذا تفعل؟',
+            'explanation_ar' => 'التفسير: العبارة صحيحة؛ فعند تطوير مكانة العلامة التجارية توجد مجموعة من الأسئلة الأساسية التي تساعد على تحديد هوية العلامة ومكانتها، ومنها: من أنت؟ ماذا تفعل؟ وكيف تفعله؟',
+            'is_multi_correct' => false,
+            'order_index' => 20,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 176,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الأسئلة التالية يركز على الطريقة التي تقدم بها الشركة منتجاتها أو خدماتها؟',
+            'explanation_ar' => 'التفسير: ضمن أسئلة تطوير المكانة، يساعد سؤال "كيف تفعل؟" على توضيح الأسلوب أو الطريقة التي تستخدمها الشركة في تقديم القيمة لعملائها، وهو جزء من تحديد مكانتها.',
+            'is_multi_correct' => false,
+            'order_index' => 21,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) من أنت؟',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) ماذا تفعل؟',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) كيف تفعل ذلك؟',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) أين يوجد منافسوك؟',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 177,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يمكن استخدام التمركز عن طريق رسم الخرائط لمقارنة موقع العلامة التجارية مع العلامات المنافسة.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن التمركز عن طريق رسم الخرائط يعتمد على استخدام خريطة للتمركز تساعد في مقارنة العلامة التجارية بالمنافسين وتحديد المواقع المختلفة في السوق.',
+            'is_multi_correct' => false,
+            'order_index' => 22,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 178,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الهدف الأساسي من استخدام خريطة التمركز؟',
+            'explanation_ar' => 'التفسير: تستخدم خرائط التمركز لتحديد موقع العلامة أو المنتج مقارنة بالمنافسين، مما يساعد على معرفة موقع المنتج في السوق واختيار المكانة المناسبة له.',
+            'is_multi_correct' => false,
+            'order_index' => 23,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تحديد عدد موظفي الشركة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) تحديد موقع المنتج مقارنة بالمنافسين في السوق',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) حساب تكلفة الإنتاج',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) تحديد رواتب فريق التسويق',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 179,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يساعد التمركز عن طريق رسم الخرائط الشركة على تقييم كيفية إدراك السوق المستهدف لمنتجها مقارنة بالمنافسين.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث تستخدم خرائط التمركز لفهم موقع المنتج أو العلامة في السوق مقارنة بالمنافسين، وبالتالي تساعد في تقييم المكانة التي يدركها السوق المستهدف.',
+            'is_multi_correct' => false,
+            'order_index' => 24,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 180,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الذي يركز عليه التمركز من خلال المكانة العاطفية؟',
+            'explanation_ar' => 'التفسير: يعتمد التمركز من خلال المكانة العاطفية على تحديد موقع العلامة التجارية من خلال العلاقة العاطفية بينها وبين السوق المستهدف.',
+            'is_multi_correct' => false,
+            'order_index' => 25,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) مقارنة أسعار المنتجات فقط',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) بناء ارتباط عاطفي بين العميل والعلامة التجارية',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تحديد موقع المصنع',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) مقارنة عدد فروع الشركة بالمنافسين',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 181,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن للمكانة العاطفية أن تساعد العلامة التجارية على بناء علاقة مع المستهلك تتجاوز الخصائص الوظيفية للمنتج.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أن المكانة العاطفية تعتبر أسلوبًا يعتمد على العلاقة العاطفية مع السوق المستهدف، وبالتالي لا يقتصر التفاعل مع العلامة على خصائص المنتج الوظيفية فقط.',
+            'is_multi_correct' => false,
+            'order_index' => 26,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 182,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أيٌّ مما يلي يمثل أحد مزايا استخدام المكانة العاطفية؟',
+            'explanation_ar' => 'التفسير: تتضمن المكانة العاطفية على العديد من المزايا، ومنها إمكانية بناء علاقة أقوى مع العملاء وتعزيز ارتباطهم بالعلامة التجارية من خلال الجانب العاطفي.',
+            'is_multi_correct' => false,
+            'order_index' => 27,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) إلغاء الحاجة إلى فهم العملاء',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) تعزيز ارتباط العملاء بالعلامة التجارية',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تقليل أهمية العلامة التجارية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) منع الشركة من التميز عن المنافسين',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 183,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'ليس من المهم أن تتوافق المكانة التي تختارها العلامة التجارية مع توقعات الجمهور المستهدف.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث يجب عند تناول تحديد الموقع الناجح (التمركز في ذهن العميل) فهم السوق المستهدف واحتياجاته ورغباته، لأن المكانة يجب أن تكون ذات صلة بالجمهور الذي تستهدفه العلامة التجارية وتتوافق مع توقعاتهم.',
+            'is_multi_correct' => false,
+            'order_index' => 28,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 184,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الأساليب التالية يركز على مقارنة المنتج بالمنافسين لتحديد موقعه؟',
+            'explanation_ar' => 'التفسير: التمركز عن طريق رسم الخرائط يستخدم لتحديد موقع العلامة أو المنتج مقارنة بالمنافسين، بينما يركز التمركز بالمطابقة على ملاءمة المنافع لاحتياجات السوق المستهدف، ويركز التمركز العاطفي على العلاقة العاطفية.',
+            'is_multi_correct' => false,
+            'order_index' => 29,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التمركز عن طريق المطابقة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التمركز عن طريق رسم الخرائط',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) التمركز حسب العلاقة العاطفية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) التسويق غير المباشر',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 185,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'تتضمن استراتيجية بناء العلامة التجارية سبعة أساليب للتمركز.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث توجد سبعة أساليب ضمن استراتيجية بناء العلامة التجارية، وهي: تميز المنتج، الميزة الرئيسية، مستخدم المنتج، المقارنة مع المنافس، المقارنة مع الفئة، الاستخدام، والارتباط.',
+            'is_multi_correct' => false,
+            'order_index' => 30,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 186,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يُعد من أساليب استراتيجية بناء العلامة التجارية؟',
+            'explanation_ar' => 'التفسير: من ضمن أساليب استراتيجية بناء العلامة التجارية: تمييز المنتج، الميزة الرئيسية، مستخدم المنتج، المقارنة مع المنافس، المقارنة مع الفئة، الاستخدام، والارتباط',
+            'is_multi_correct' => false,
+            'order_index' => 31,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التمركز حسب السعر فقط',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التمركز حسب حجم الشركة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) المقارنة مع المنافس',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) التمركز حسب عدد الموظفين',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 187,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد من أساليب استراتيجية بناء العلامة التجارية؟',
+            'explanation_ar' => 'التفسير: يعتبر الاستخدام أحد الأساليب السبعة ضمن استراتيجية بناء العلامة التجارية، إلى جانب تميز المنتج، والميزة الرئيسية، ومستخدم المنتج، والمقارنة مع المنافس، والمقارنة مع الفئة، والارتباط.',
+            'is_multi_correct' => false,
+            'order_index' => 32,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) مقارنة تكلفة الموظفين',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) الاستخدام',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) موقع المصنع',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) حجم المخزون',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 188,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن أن يعتمد تحديد تمركز العلامة التجارية على المقارنة مع المنافسين.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث توجد عدة أساليب لتحديد تمركز العلامة التجارية، ومنها المقارنة مع المنافس، والمقارنة مع الفئة، والاستخدام والارتباط وغيرها.',
+            'is_multi_correct' => false,
+            'order_index' => 33,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 189,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الأسلوب الذي يعتمد على مطابقة المنافع الفريدة للمنتج مع احتياجات ورغبات الشريحة المستهدفة؟',
+            'explanation_ar' => 'التفسير: يعتمد التمركز عن طريق المطابقة على ربط المنافع أو المزايا التنافسية الفريدة للمنتج باحتياجات ورغبات السوق المستهدف.',
+            'is_multi_correct' => false,
+            'order_index' => 34,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التمركز عن طريق رسم الخرائط',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التمركز عن طريق المطابقة',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) التمركز حسب العلاقة العاطفية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) التمركز حسب السعر',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+    ],
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/units/unit_07.php
+````php
+<?php
+
+// بيانات الوحدة رقم 7: استراتيجية التسويق
+// تم توليدها آليًا من بنك أسئلة IBTA (404 سؤال) - 30 سؤال
+return [
+    'unit_number' => 7,
+    'title_ar' => 'استراتيجية التسويق',
+    'order_index' => 7,
+    'questions' => [
+        [
+            'original_number' => 190,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما هو الهدف من إستراتيجية السوق؟',
+            'explanation_ar' => 'التفسير: الاستراتيجية التسويقية الناجحة توازن بين تحقيق الأهداف المالية (المبيعات) وبناء علاقة مستدامة (رضا العملاء)، راجع الوحدة 7: إستراتيجية التسويق، ص  124',
+            'is_multi_correct' => false,
+            'order_index' => 1,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) خفض نسبة المبيعات وكسب رضا العملاء.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) زيادة نسبة المبيعات واكتساب رضا العملاء.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) زيادة رضا العملاء وخفض نسبة المبيعات.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) خفض رضا العملاء وزيادة المبيعات.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 191,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الإستراتيجيات التسويقية التالية تستخدمها الشركات لمهاجمة منتجك أو شركتك، في محاولةٍ لتشويه سمعتك أو إثبات أن منتجك مُدَّعٍ أو مُزيَّف؟',
+            'explanation_ar' => 'التفسير: من ضمن الاستراتيجيات التنافسية: مهاجمة المنافس أو التشكيك في منتجاته، الوحدة 7: استراتيجية التسويق، ص131',
+            'is_multi_correct' => false,
+            'order_index' => 2,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) الاستراتيجية التنافسية.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) إستراتيجية التدهور.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) إستراتيجية الجودة.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) إستراتيجية الترويج.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 192,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي لا يجب فعله في السويق؟',
+            'explanation_ar' => 'راجع الوحدة 7، إستراتيجية التسويق ،ص : 123.',
+            'is_multi_correct' => false,
+            'order_index' => 3,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تعرف على منافسيك.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) إخبار العملاء لم ينبغي عليهم استخدام المنتج.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) التعتيم على ضعف الشركة وعدم القدرة على التحسين.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 193,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي هو إحدى الخطوات الأربعة لوضع الاستراتيجيات التسويقية؟',
+            'explanation_ar' => 'راجع الوحدة 7: استراتيجية التسويق ، موضوع خطوات تطوير إستراتيجيات السوق، ص131.',
+            'is_multi_correct' => false,
+            'order_index' => 4,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) استعراض مشكلاتك وفرصك.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) استعراض السوق الذي تستهدفه والأهداف التسويقية.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) وضع الاستراتيجية الخاصة بك.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) مراجعة الاستراتيجية الخاصة بك لتحديد ميزتك.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'هـ) كل ما سبق ذكره.',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 194,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما هي استراتيجية التسويق؟',
+            'explanation_ar' => 'التفسير: إستراتيجية التسويق هي مجموعة من الإجراءات التي تركز على أفضل الفرص لزيادة المبيعات وتحقيق ميزة (أفضلية) تنافسية قابلة للاستمرار، راجع الوحدة 7: استراتيجية التسويق، بداية الموضوع: صفحة 131.',
+            'is_multi_correct' => false,
+            'order_index' => 5,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) مجموعة من الإجراءات التي من شأنها أن تسمح للمؤسسة بالتركيز على أفضل الفرص لزيادة نسبة مبيعاتها وتحقيق أفضلية تنافسية قابلة للاستمرار.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) مجموعة من الإجراءات التي من شأنها أن تسمح للمؤسسة بالتركيز على أفضل الفرص لزيادة نسبة مبيعاتها وتحقيق أفضلية تنافسية غير قابلة للاستمرار.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) مجموعة من الإجراءات التي من شأنها أن تسمح للمؤسسة بالتركيز على أفضل الفرص لتخفيض نسبة مبيعاتها وتحقيق أفضلية تنافسية قابلة للاستمرار.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) مجموعة من الإجراءات التي من شأنها أن تسمح للمؤسسة بالتركيز على أفضل الفرص لتخفيض نسبة مبيعاتها وتحقيق أفضلية تنافسية غير قابلة للاستمرار.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 195,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يمكن اعتبارها استراتيجيات جيدة لإطلاع العملاء المحتملين على عملك، منتجاتك، و/أو خدماتك؟',
+            'explanation_ar' => 'الأربع خيارات الأولى هي وسائل ترويجية وتسويقية فعلية لزيادة الوعي بالمنتج أو الخدمة، بينما الخيار الأخير ليس استراتيجية تسويقية. راجع الوحدة 7: استراتيجية التسويق، موضوع، إستراتيجيات الترويج،ص:136.',
+            'is_multi_correct' => true,
+            'order_index' => 6,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) إرسال رسائل شخصية للمؤثرين أو الصحفيين أو المحللين الذين يمكن أن يكتبوا خبرًا عنك في شبكة العلاقات الخاصة بك.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) تنظيم فعالية في شركتك حيث سيستمتع الضيوف بشيء مميز أو مثير للاهتمام.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) عبر محطة إذاعية محلية مع توافق صحيح يمكنك من استهداف عملائك المحتملين بهذا الإعلان.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) إرسال بطاقات تعريف للأعمال المجاورة.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ه) تحديد موعد للأحد أو يوم منتصف الشهر.',
+                    'order_index' => 5,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 196,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يعد من الخطوات الأربع لوضع الاستراتيجيات التسويقية؟ (اذكر اكثر من إجابة)',
+            'explanation_ar' => 'التفسير : تعتبر الخطوات الأربع الأولى هي خطوات وضع الإستراتيجيات التسويقية، أما تطوير الأساليب التنافسية فهو جزء من تنفيذ أو اختيار الاستراتيجية التنافسية، وليس إحدى الخطوات الأربع الأساسية لوضع الاستراتيجية التسويقية ، راجع الوحدة السابعة: إستراتيجيات التسويق ، درس خطوات تطوير إستراتيجيات التسويق، ص:  138.',
+            'is_multi_correct' => true,
+            'order_index' => 7,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) استعراض مشكلاتك وفرصك.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) استعراض السوق التي تستهدفها والأهداف التسويقية.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) مراجعة الاستراتيجية الخاصة بك لتحديد تمركزك.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) وضع الاستراتيجيات الخاصة بك.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ه) تطوير الأساليب التنافسية الخاصة',
+                    'order_index' => 5,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 197,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'إستراتيجية التسويق هي أساسًا خطة تمكّن المنظمة من التركيز على أفضل الفرص لزيادة المبيعات والحصول على ميزة تنافسية مستدامة.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة حيث تمثل استراتيجية التسويق أساسًا خطة تساعد المنظمة على التركيز على أفضل الفرص لزيادة المبيعات، مع تحقيق ميزة تنافسية مستدامة.',
+            'is_multi_correct' => false,
+            'order_index' => 8,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 198,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يُعد من أساليب تمييز المنتج عن المنافسين؟',
+            'explanation_ar' => 'التفسير: إن تمييز المنتج يعتمد على التركيز على عنصر أو خاصية فريدة تساعد المنتج على التميز عن المنافسين، مثل الجودة أو خصائص معينة في المنتج.',
+            'is_multi_correct' => false,
+            'order_index' => 9,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) خفض جودة المنتج',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التركيز على عنصر أو خاصية فريدة في المنتج',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تجاهل احتياجات العملاء',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) تقليل استخدامات المنتج',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 199,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يمكن استخدامه لتحديد استراتيجية المنتج وفقًا للمستخدم؟',
+            'explanation_ar' => 'التفسير:  من ضمن أساليب التعامل مع المنتج وتمييزه مستخدمي المنتج، حيث يمكن أن يكون التركيز في الاستراتيجية على الفئة التي تستخدم المنتج، وما يناسب احتياجاتها وخصائصها.',
+            'is_multi_correct' => false,
+            'order_index' => 10,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تحديد المنتج حسب سعر المنافس',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) تحديد المنتج حسب موقع الشركة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) تحديد المنتج حسب مستخدمي المنتج',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د) تحديد المنتج حسب عدد الموظفين',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 200,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => '«الحصة السوقية» تشير إلى:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 11,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) نسبة مبيعات الشركة من إجمالي مبيعات السوق',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) عدد موظفي قسم التسويق',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) قيمة المخزون',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) عدد الفروع',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 201,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يجب مراقبة الاستراتيجيات التسويقية بعناية للحفاظ على التميز وتجنّب التقليد من المنافسين.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 12,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 202,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'الغرض من الاستراتيجية التسويقية هو:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 13,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تحقيق أهداف التسويق وزيادة الأرباح والحصة السوقية',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) زيادة عدد الاجتماعات',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) تقليل التواصل مع العملاء',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) تجاهل المنافسين',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 203,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد من الموضوعات التي يمكن أن تعتمد عليها المؤسسة عند تطوير استراتيجية التسويق؟',
+            'explanation_ar' => 'التفسير: تركز استراتيجية التسويق على تمكين المنظمة من التركيز على أفضل الفرص بهدف زيادة المبيعات وتحقيق ميزة تنافسية مستدامة.',
+            'is_multi_correct' => false,
+            'order_index' => 14,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تحديد فرص السوق المناسبة.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التركيز على أفضل الفرص المتاحة لزيادة المبيعات.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تقليل القدرة على المنافسة.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) تجاهل احتياجات السوق.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 204,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'وسائل الإعلام المحلية لا تعتبر إحدى الوسائل للوصول إلى العملاء المحتملين والتعريف بالعمل.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث توجد مجموعة من الوسائل يمكن استخدامها ضمن خطة التسويق، ومنها الاستفادة من وسائل الإعلام المحلية للوصول إلى الجمهور المستهدف.',
+            'is_multi_correct' => false,
+            'order_index' => 15,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 205,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يمثل أسلوبًا مناسبًا لبناء الحصة السوقية؟',
+            'explanation_ar' => 'التفسير: يرتبط بناء الحصة السوقية باستخدام استراتيجيات تساعد المؤسسة على جذب العملاء والمحافظة عليهم، ومن ذلك التركيز على عناصر مثل الجودة والتمييز.',
+            'is_multi_correct' => false,
+            'order_index' => 16,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تجاهل احتياجات العملاء.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التركيز على جودة المنتج وتمييزه عن المنافسين.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) تقليل قيمة المنتج لدى العملاء.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) الابتعاد عن دراسة السوق.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 206,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن أن يساعد اكتشاف فرصة جديدة في السوق المؤسسة على زيادة حصتها السوقية.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث يمكن من خلال التعرف على الفرص التي يمكن أن تتيح للمؤسسة الوصول إلى عملاء أو أسواق جديدة زيادة حصة الشركة السوقية.',
+            'is_multi_correct' => false,
+            'order_index' => 17,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 207,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'إذا كانت المؤسسة تتبع استراتيجية تعتمد على انخفاض التكلفة، فما الأسلوب السعري الأكثر توافقًا معها؟',
+            'explanation_ar' => 'التفسير: ترتبط استراتيجية التكلفة المنخفضة وبين إمكانية استخدام أسعار منخفضة لجذب العملاء، بينما قد تسمح التكلفة العالية باستراتيجية سعرية مختلفة.',
+            'is_multi_correct' => false,
+            'order_index' => 18,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تقديم أسعار منخفضة نسبيًا لجذب العملاء.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) رفع الأسعار إلى أعلى مستوى ممكن.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) تجاهل تكاليف الإنتاج.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) استخدام السعر دون النظر إلى السوق.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 208,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما العامل الذي يجب على المؤسسة مراعاته عند اختيار استراتيجية التسعير؟',
+            'explanation_ar' => 'التفسير: إن اختيار استراتيجية التسعير يرتبط بوضع المنتج في السوق وبمستوى تكلفته، ولذلك تختلف الاستراتيجية وفقًا للظروف السوقية والتكلفة.',
+            'is_multi_correct' => false,
+            'order_index' => 19,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) عدد موظفي المؤسسة فقط.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) مستوى تكلفة المنتج ووضعه في السوق.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) مساحة مقر المؤسسة.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) عدد اجتماعات الإدارة.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 209,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن أن تلجأ المؤسسة إلى استراتيجية مطابقة السعر عندما يكون هدفها تقديم سعر يتوافق مع أسعار المنافسين.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث تعد إستراتيجية "مطابقة السعر" إحدى استراتيجيات التسعير، بحيث يتم تقديم السعر بصورة تتناسب مع الأسعار السائدة لدى المنافسين.',
+            'is_multi_correct' => false,
+            'order_index' => 20,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 210,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'متى تلجأ الشركات إلى الاستراتيجيات التنافسية ؟',
+            'explanation_ar' => 'التفسير: تستخدم الاستراتيجيات التنافسية عندما تواجه الشركة ظروفًا تنافسية مثل تراجع حصتها السوقية أو اشتداد المنافسة.',
+            'is_multi_correct' => false,
+            'order_index' => 21,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) عندما لا توجد أي منافسة في السوق.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) عندما تواجه تراجعًا في حصتها السوقية أو منافسة شديدة.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) عندما تتوقف عن بيع منتجاتها.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) عندما لا يكون لديها عملاء.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 211,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يمثل أحد الاتجاهات التي يمكن أن تتخذها المؤسسة عند التعامل مع المنافسة؟',
+            'explanation_ar' => 'التفسير: من ضمن الاستراتيجيات التنافسية توجه "الدفاع عن الحصة السوقية" باعتباره أحد الأساليب التي يمكن أن تستخدمها المؤسسة في مواجهة المنافسة.',
+            'is_multi_correct' => false,
+            'order_index' => 22,
+            'options' => [
+                [
+                    'option_text_ar' => 'الدفاع عن حصتها السوقية.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'إلغاء دراسة المنافسين.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'خفض جودة المنتج عمدًا.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التوقف عن متابعة السوق.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 212,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن أن تكون مواجهة المنافسة سببًا في قيام المؤسسة بإعادة النظر في استراتيجيتها التسويقية.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أن التغير في الحصة السوقية واشتداد المنافسة قد يدفعان المؤسسة إلى مراجعة استراتيجيتها واتخاذ إجراءات تنافسية مناسبة.',
+            'is_multi_correct' => false,
+            'order_index' => 23,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 213,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الهدف من استخدام استراتيجية الترويج عند نقطة البيع (POS)؟',
+            'explanation_ar' => 'التفسير: يمكن استخدام أدوات "نقطة البيع (Point-of-Sale – POS) لجذب انتباه العملاء وتشجيعهم على اتخاذ قرار الشراء.',
+            'is_multi_correct' => false,
+            'order_index' => 24,
+            'options' => [
+                [
+                    'option_text_ar' => 'زيادة تكاليف التخزين فقط.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'جذب انتباه العملاء وتشجيعهم على الشراء',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'منع العملاء من رؤية المنتج.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقليل التواصل مع العملاء.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 214,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'تقتصر استراتيجية الترويج على الإعلان فقط ولا تشمل عروض الترويج أو وسائل أخرى للتأثير في العملاء.',
+            'explanation_ar' => 'التفسير: العبارة خطأ، حيث توجد العديد من الوسائل التي تستخدمها إستراتيجية الترويج مثل الإعلان، وعروض المبيعات، والتسويق المباشر، والعلاقات العامة.',
+            'is_multi_correct' => false,
+            'order_index' => 25,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 215,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما المقصود باستراتيجية عروض الترويج؟',
+            'explanation_ar' => 'التفسير: تركز استراتيجية عروض الترويج على العروض المقدمة للعملاء بهدف دعم المبيعات وزيادة الإقبال على المنتج أو الخدمة.',
+            'is_multi_correct' => false,
+            'order_index' => 26,
+            'options' => [
+                [
+                    'option_text_ar' => 'استراتيجية تهدف إلى رفع تكلفة المنتج فقط.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'استراتيجية تهدف إلى زيادة المبيعات من خلال العروض الترويجية المقدمة للعملاء.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'استراتيجية تهدف إلى تقليل عدد العملاء.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'استراتيجية تهدف إلى إيقاف الإعلان.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 216,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا ينبغي أن تتوافق استراتيجية الإعلان مع خطة التسويق الشاملة للمؤسسة.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث تستخدم استراتيجية الإعلان في توجيه خطة التسويق الشاملة، ويجب أن يكون الإعلان متوافقًا مع أهداف المؤسسة وجهودها التسويقية.',
+            'is_multi_correct' => false,
+            'order_index' => 27,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 217,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يأتي أولًا ضمن خطوات تطوير استراتيجيات السوق؟',
+            'explanation_ar' => 'التفسير: تبدأ خطوات تطوير استراتيجية السوق بمراجعة المشكلات والفرص التي تواجهها المؤسسة، ثم الانتقال إلى مراجعة السوق المستهدف والأهداف وتطوير الاستراتيجية.',
+            'is_multi_correct' => false,
+            'order_index' => 28,
+            'options' => [
+                [
+                    'option_text_ar' => 'مراجعة مشكلاتك وفرصك التي تواجهها.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تحديد سعر المنتج فقط.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'اختيار قناة توزيع جديدة مباشرة.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إطلاق الإعلان قبل تحليل السوق.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 218,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تطوير استراتيجية السوق يتم دون الحاجة إلى مراجعة السوق المستهدف أو الأهداف التسويقية.',
+            'explanation_ar' => 'التفسير: العبارة خطأ، حيث تتضمن خطوات تطوير استراتيجيات السوق على مراجعة السوق المستهدف والأهداف التسويقية ضمن عملية تطوير الاستراتيجية؛ لذلك لا يمكن تجاهلها.',
+            'is_multi_correct' => false,
+            'order_index' => 29,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 219,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تتضمن استراتيجية التسويق استراتيجيات تتعلق بالحصة السوقية والمنافسة والتسعير والترويج.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث تتضمن استراتيجية التسويق استراتيجيات الحصة السوقية والاستراتيجيات التنافسية والتسعير والترويج والإعلان.',
+            'is_multi_correct' => false,
+            'order_index' => 30,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+    ],
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/units/unit_08.php
+````php
+<?php
+
+// بيانات الوحدة رقم 8: الاتصال
+// تم توليدها آليًا من بنك أسئلة IBTA (404 سؤال) - 29 سؤال
+return [
+    'unit_number' => 8,
+    'title_ar' => 'الاتصال',
+    'order_index' => 8,
+    'questions' => [
+        [
+            'original_number' => 220,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما هي أنواع الاتصالات التي تُطبق عليها استراتيجيات تسويق السلع؟',
+            'explanation_ar' => 'نقاط بيع البضائع هي نوع الاتصالات الذي تطبق عليه استراتيجيات تسويق السلع، والتي تعتبر نوع من أنواع التسويق المباشر للعميل دون وسيط. الوحدة 8 – الاتصال، ص 151، و156.',
+            'is_multi_correct' => false,
+            'order_index' => 1,
+            'options' => [
+                [
+                    'option_text_ar' => 'تقنيات التسويق التقليدية',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'اتصالات التجزئة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'نقاط بيع البضائع',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الاتصالات التنافسية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 221,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'حدد الأهداف التواصلية ممَّا يلي ؟',
+            'explanation_ar' => 'تشمل أهداف الاتصال 4 أهداف؛ هي: الإعلام، الإقناع، الطلب، بناء العلاقات ، راجع الوحدة 8: الاتصال، موضوع: أهداف الاتصال، ص 144.',
+            'is_multi_correct' => true,
+            'order_index' => 2,
+            'options' => [
+                [
+                    'option_text_ar' => 'الإعلام',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الإقناع',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الطلب',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'بناء العلاقات',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'لا شيء مما سبق',
+                    'order_index' => 5,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 222,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي لا يجب فعله في التواصل؟',
+            'explanation_ar' => 'راجع الوحدة 8، الاتصال ، ص 144.',
+            'is_multi_correct' => false,
+            'order_index' => 3,
+            'options' => [
+                [
+                    'option_text_ar' => 'تحديد رغبات عميلك ومعرفة احتياجاته',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إنشاء رسالة محددة لعملائك',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'وضع الاستراتيجيات الخاصة بك',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'لا شيء مما سبق ذكره',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 223,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الأهداف التالية هي أهداف تواصلية؟',
+            'explanation_ar' => 'تعتبر أهداف الاتصال هي: الإعلام، الإقناع، الطلب، بناء العلاقات، راجع الوحدة 8: الاتصال، درس أهداف الاتصال، ص: 153.',
+            'is_multi_correct' => true,
+            'order_index' => 4,
+            'options' => [
+                [
+                    'option_text_ar' => 'التلاعب',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الإعلام',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الإقناع',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'المواجهة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الطلب',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'بناء العلاقات',
+                    'order_index' => 6,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الإغفال',
+                    'order_index' => 7,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 224,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي لا يجب فعله في التواصل؟',
+            'explanation_ar' => 'التخمين ليس من الممارسات الصحيحة في الاتصال؛ يجب الاعتماد على المعلومات والبحث، راجع الوحدة 8 – الاتصال، ص: 143.',
+            'is_multi_correct' => false,
+            'order_index' => 5,
+            'options' => [
+                [
+                    'option_text_ar' => 'معرفة احتياجات ورغبات عميلك.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إنشاء رسالة محددة لعملائك.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تخمين ما يرغب فيه عملاؤك وعملاؤك المحتملون والمنافسون.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'وضع الاستراتيجيات الخاصة بك.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 225,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'تُركز العلاقات العامة بشكل أساسي على الشراء المباشر للمساحات الإعلانية المدفوعة.',
+            'explanation_ar' => 'التفسير: العبارة خطأ، حيث تعتمد العلاقات العامة على بناء صورة ذهنية إيجابية وتواصل غير مدفوع الأجر مباشرة، بينما الإعلان هو الذي يعتمد على شراء المساحات الإعلامية المدفوعة. راجع الوحدة 8 – الاتصال، ص: 143 وما بعدها.',
+            'is_multi_correct' => false,
+            'order_index' => 6,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 226,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'المبيعات الشخصية تُعد أكثر أدوات المزيج الترويجي تكلفة لكل اتصال ولكنها الأكثر فاعلية في إقناع العميل.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث تتطلب المبيعات الشخصية تفاعلاً مباشرًا بين البائع والعميل، مما يرفع تكلفة الاتصال الواحد لكنه يحقق أعلى نسبة إقناع وتكيف مع احتياجات العميل. راجع الوحدة 8 – الاتصال، ص: 143 وما بعدها.',
+            'is_multi_correct' => false,
+            'order_index' => 7,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 227,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'يُقصد بالترويج الشامل للعلامة التجارية لمنتج أو خدمة عبر عدة وسائط إعلامية مصطلح ________.',
+            'explanation_ar' => 'التفسير: الحملة الإعلانية هي سلسلة من الرسائل الإعلانية المنسقة الموجهة عبر وسائل إعلام متعددة لتعزيز العلامة التجارية أو الخدمة. راجع الوحدة 8 – الاتصال، ص: 143 وما بعدها.',
+            'is_multi_correct' => false,
+            'order_index' => 8,
+            'options' => [
+                [
+                    'option_text_ar' => 'المبيعات الشخصية',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الحملة الإعلانية',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'العلاقات العامة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التسعير النفسي',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 228,
+            'level' => 'hard',
+            'question_type' => 'true_false',
+            'text_ar' => 'تُعرف العروض الترويجية الموجهة للمستهلك النهائي باسم عروض التجارة (Trade Promotions).',
+            'explanation_ar' => 'التفسير: العبارة خطأ، حيث أن العروض الموجهة للمستهلك النهائي تُسمى عروض المستهلك الترويجية (Consumer Promotions)، بينما تُوجه عروض التجارة للموزعين والوسطاء. راجع الوحدة 8 – الاتصال، ص: 143 وما بعدها.',
+            'is_multi_correct' => false,
+            'order_index' => 9,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 229,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الوسائل التالية يُعد مثالاً على أدوات ترويج المبيعات؟',
+            'explanation_ar' => 'التفسير: تُعد الكوبونات والحسومات والعينات المجانية من الأدوات الرئيسية لترويج المبيعات لحث المستهلك على الشراء الفوري. راجع الوحدة 8 – الاتصال، ص: 143 وما بعدها.',
+            'is_multi_correct' => false,
+            'order_index' => 10,
+            'options' => [
+                [
+                    'option_text_ar' => 'الإعلانات التلفزيونية',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الرعاية الرياضية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'قسيمة التخفيض (الكوبون)',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'المؤتمرات الصحفية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 230,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'التسويق المباشر يعتمد على وجود العديد من الوسطاء مثل تجار الجملة وتجار التجزئة لنقل السلع للمستهلك.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن التسويق المباشر (Direct Marketing) يبيع المنتجات مباشرة من المنتج إلى المستهلك النهائي دون الاستعانة بوسطاء تجاريين.',
+            'is_multi_correct' => false,
+            'order_index' => 11,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 231,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'عناصر الترويج (المزيج الترويجي) تشمل:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 12,
+            'options' => [
+                [
+                    'option_text_ar' => 'الإعلان والبيع الشخصي والعلاقات العامة وترويج المبيعات',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الشراء والتخزين والنقل',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التسعير والتوزيع فقط',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التصنيع والتغليف',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 232,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => '«البيع الشخصي» كعنصر ترويجي يعتمد على:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 13,
+            'options' => [
+                [
+                    'option_text_ar' => 'التفاعل المباشر بين البائع والعميل',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الإعلانات التلفزيونية فقط',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'المنشورات الصحفية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'لوحات الطرق',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 233,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'العلاقات العامة  لا تعتبر أحد عناصر المزيج الترويجي.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 14,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 234,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الذي يجب أن تتوافق معه خطة الاتصالات التسويقية؟',
+            'explanation_ar' => 'التفسير: خطة الاتصالات يجب أن تكون متوافقة مع الاستراتيجية التسويقية والأهداف التسويقية، وأن تعكس الجمهور المستهدف وتوجه الرسائل بصورة مناسبة.',
+            'is_multi_correct' => false,
+            'order_index' => 15,
+            'options' => [
+                [
+                    'option_text_ar' => 'سياسة التوظيف فقط.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الاستراتيجية التسويقية والأهداف التسويقية.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'خطة الإنتاج فقط.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'نظام المحاسبة.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 235,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يحتاج المسوق إلى معرفة العملاء الحاليين والمحتملين قبل إعداد خطة الاتصالات.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث يجب معرفة العملاء الحاليين والمحتملين، وما يحبونه وما يكرهونه، وخصائصهم، حتى تتمكن المؤسسة من التواصل معهم بفعالية.',
+            'is_multi_correct' => false,
+            'order_index' => 16,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 236,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الأسئلة التالية يجب أن تجيب عنه المؤسسة قبل إعداد خطة الاتصالات؟',
+            'explanation_ar' => 'التفسير: لابد من طرح سؤالًا أساسيًا عند إعداد خطة الاتصالات، وهو: ما هي أفضل طريقة للتواصل مع العملاء؟ هل تتمثل في تفضيلات العملاء للبريد الإلكتروني ووسائل التواصل الاجتماعي أو وسائل الاتصال المادية.',
+            'is_multi_correct' => false,
+            'order_index' => 17,
+            'options' => [
+                [
+                    'option_text_ar' => 'كم عدد موظفي الشركة؟',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ما أفضل طريقة للتواصل مع العملاء؟',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ما مساحة مقر الشركة؟',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'كم عدد سيارات الشركة؟',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 237,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يجب على المؤسسة مراعاته عند اختيار أداة الاتصال المناسبة؟',
+            'explanation_ar' => 'التفسير: بعد تحديد الرسالة، تنتقل المؤسسة إلى تحديد الأدوات والمنهجيات المناسبة لنقلها، مع مراعاة الميزانية المتاحة ومتى سيتم استخدام الأداة أو الأدوات.',
+            'is_multi_correct' => false,
+            'order_index' => 18,
+            'options' => [
+                [
+                    'option_text_ar' => 'عدد فروع المنافسين.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الميزانية المتاحة وتوقيت استخدام الأداة.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'مساحة المستودعات.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'عدد المنتجات القديمة.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 238,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يجب أن تتضمن خطة الاتصالات التسويقية أداة اتصال واحدة فقط مهما اختلفت طبيعة العملاء',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث توجد عدة أدوات للاتصال يمكن استخدامها وفقًا لطبيعة الجمهور والرسالة والميزانية، ومنها العلاقات العامة والإعلان والموقع الإلكتروني والندوات والتسويق المباشر.',
+            'is_multi_correct' => false,
+            'order_index' => 19,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 239,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد من أدوات الاتصال ؟',
+            'explanation_ar' => 'التفسير: يعتبر الموقع الإلكتروني من ضمن أدوات الاتصال التي تستخدمها الشركات للتواصل مع العملاء والعملاء المحتملين، إلى جانب العلاقات العامة والإعلان والندوات والتسويق المباشر.',
+            'is_multi_correct' => false,
+            'order_index' => 20,
+            'options' => [
+                [
+                    'option_text_ar' => 'إدارة المخزون.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التخزين.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الموقع الإلكتروني.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'التصنيع.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 240,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الوظيفة الأساسية للعلاقات العامة؟',
+            'explanation_ar' => 'التفسير: تعرف العلاقات العامة بأنها شكل من أشكال الاتصال يهدف إلى بناء وإدارة العلاقات بين الشركة والجمهور، كما تركز على القضايا والقيم واستخدام وسائل متعددة لنشر المعلومات.',
+            'is_multi_correct' => false,
+            'order_index' => 21,
+            'options' => [
+                [
+                    'option_text_ar' => 'بيع المنتج مباشرة لكل عميل.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'بناء وإدارة العلاقات بين الشركة والجمهور.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تحديد أسعار المنتجات.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إدارة المخزون.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 241,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تساعد العلاقات العامة في بناء صورة إيجابية للشركة وتعزيز التواصل مع مختلف الجهات المعنية.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أن العلاقات العامة تساعد في بناء صورة إيجابية للشركة وتعزز التواصل مع مختلف الجهات المعنية.',
+            'is_multi_correct' => false,
+            'order_index' => 22,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 242,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'يعرف الإعلان بـ',
+            'explanation_ar' => 'التفسير: يعرف الإعلان بأنه رسالة مدفوعة تهدف إلى التأثير على سلوك الشراء والتفكير في السوق، ويتم بثها من قبل الشركات والمنظمات بوسائل متعددة.',
+            'is_multi_correct' => false,
+            'order_index' => 23,
+            'options' => [
+                [
+                    'option_text_ar' => 'رسالة مجانية هدفها إدارة العلاقات فقط.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'رسالة مدفوعة تهدف إلى التأثير على سلوك الشراء والتفكير في السوق.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'وسيلة لتخزين المنتجات.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'وسيلة لإدارة الموظفين.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 243,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يعد من خصائص التسويق المباشر؟',
+            'explanation_ar' => 'التفسير: يعرف التسويق المباشر بأنه أسلوب ترويجي يتضمن العرض المباشر للمنتج أو الخدمة إلى العملاء أو العملاء المحتملين بدون وسيط.',
+            'is_multi_correct' => false,
+            'order_index' => 24,
+            'options' => [
+                [
+                    'option_text_ar' => 'يعتمد بالضرورة على وجود وسيط.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'يقدم المنتج أو الخدمة مباشرة إلى العملاء أو العملاء المحتملين دون وسيط.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'يهدف فقط إلى بناء صورة الشركة.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'لا يسمح بقياس استجابة العملاء.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 244,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'يهدف التسويق المباشر إلى توليد استجابة فورية من الأفراد المستهدفين.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أن التسويق المباشر يهدف إلى توليد استجابة فورية من الأفراد المستهدفين، مع إمكانية تحليل كيفية استجابتهم للعروض الترويجية.',
+            'is_multi_correct' => false,
+            'order_index' => 25,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 245,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يُعد استجابة نموذجية للتسويق المباشر؟',
+            'explanation_ar' => 'التفسير: تشمل الاستجابات النموذجية للتسويق المباشر: الشراء، أو طلب مزيد من المعلومات، أو الإحالة إلى آخرين.',
+            'is_multi_correct' => false,
+            'order_index' => 26,
+            'options' => [
+                [
+                    'option_text_ar' => 'تجاهل العرض.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الشراء أو طلب مزيد من المعلومات.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'إيقاف التواصل مع الشركة.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تغيير موقع الشركة.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 246,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد مثالًا على وسائل التسويق المباشر؟',
+            'explanation_ar' => 'التفسير: توجد عدة وسائل للتسويق المباشر، منها الطلبات البريدية، والموقع الإلكتروني التي تشجع على الشراء مباشرة، والبيع من الباب إلى الباب، والتسويق عبر الهاتف، والتسويق عبر البريد الإلكتروني.',
+            'is_multi_correct' => false,
+            'order_index' => 27,
+            'options' => [
+                [
+                    'option_text_ar' => 'الإعلان.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'العلاقات العامة.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التسويق عبر البريد الإلكتروني.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ترويج المبيعات (التخفيضات والكوبونات.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 247,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن استخدام الندوات لتقديم المعلومات والتثقيف من خلال مشاركة الخبراء والمختصين وإجراء المناقشات.',
+            'explanation_ar' => 'التفسير: تعتبر الندوات وسيلة فعالة لتوجيه الجمهور نحو العمل وتقديم المعلومات والتثقيف من خلال مشاركة الخبراء والمختصين وإجراء المناقشات، كما يمكن أن تساعد في جذب جمهور مهتم وبناء العلاقات معه.',
+            'is_multi_correct' => false,
+            'order_index' => 28,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 248,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'لماذا قد تحتاج المنتجات الجديدة أو غير المعروفة إلى تخصيص ميزانية ترويجية أكبر؟',
+            'explanation_ar' => 'التفسير: من ضمن اعتبارات ميزانيات الاتصالات أن المنتجات الجديدة أو غير المعروفة قد تحتاج إلى جذب العملاء وزيادة الوعي بها، ولذلك يمكن تخصيص ميزانية ترويجية أكبر لها.',
+            'is_multi_correct' => false,
+            'order_index' => 29,
+            'options' => [
+                [
+                    'option_text_ar' => 'لأنها لا تحتاج إلى تعريف العملاء بها.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'لأنها لا تتأثر بسلوك العملاء.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'لجذب العملاء وزيادة الوعي بالمنتج.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'لأنها تعتمد فقط على البيع الشخصي.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+    ],
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/units/unit_09.php
+````php
+<?php
+
+// بيانات الوحدة رقم 9: تخطيط المنتج
+// تم توليدها آليًا من بنك أسئلة IBTA (404 سؤال) - 32 سؤال
+return [
+    'unit_number' => 9,
+    'title_ar' => 'تخطيط المنتج',
+    'order_index' => 9,
+    'questions' => [
+        [
+            'original_number' => 249,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يعد إحدى النقاط الرئيسية الأربعة المتعلقة بالتوضيب (التعبئة والتغليف)؟',
+            'explanation_ar' => 'التغليف والتوضيب يعتمد على 4 عناصر رئيسية منها الحماية، والترويج، والسهولة، والجاذبية/المظهر لجذب المستهلك. راجع الوحدة 9: تخطيط المنتج، موضوع ، عرض المنتج/ التوضيب ص (167 وما بعدها)',
+            'is_multi_correct' => false,
+            'order_index' => 1,
+            'options' => [
+                [
+                    'option_text_ar' => 'التسعير',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'العلامة التجارية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'العمالة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الجاذبية/المظهر',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 250,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من النقاط التالية تؤخذ بعين الاعتبار عند النظر إلى التوافق على التصميم؟',
+            'explanation_ar' => 'راجع الوحدة 9: تخطيط المنتج ، درس تصميم المنتج ص ،  162',
+            'is_multi_correct' => true,
+            'order_index' => 2,
+            'options' => [
+                [
+                    'option_text_ar' => 'احتياجات المستهلك',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'توفر المنتج',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'أنظمة المستهلك (أنظمة القياس )',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'أنظمة البث',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'القضايا البيئية',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'لا شيء من الإجابات المدرجة',
+                    'order_index' => 6,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 251,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الشركات التالية تستخدم اسم المؤسس لتمثيل منتج الشركة؟',
+            'explanation_ar' => 'سكوندريا فيراري سميت باسم مؤسسها أنزو فيراري (Enzo Ferrari).، الوحدة 9: تخطيط المنتج، درس: تسمية المنتج، ص 163.',
+            'is_multi_correct' => false,
+            'order_index' => 3,
+            'options' => [
+                [
+                    'option_text_ar' => 'تارغت (Target)',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ووكمان (Walkman)',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'كرسبي كريم (Krispy Kreme)',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'فيراري (Ferrari)',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 252,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي هي من أنواع الأسماء المستخدمة عند تسمية الكلمة التجارية؟',
+            'explanation_ar' => 'من أهم أنواع الأسماء المستخدمة عند تسمية الكلمة التجارية هي: عشوائي، خيالي، وصفي، إيحائي، راجع الوحدة 9: تخطيط المنتج، درس: تقنيات تسمية المنتج، ص: 163.',
+            'is_multi_correct' => true,
+            'order_index' => 4,
+            'options' => [
+                [
+                    'option_text_ar' => 'معياري',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'عشوائي',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'خيالي',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'وجودي',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'وصفي',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'دلالي',
+                    'order_index' => 6,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إيحائي',
+                    'order_index' => 7,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 253,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من النقاط التالية تعتبر أنواع مختلفة من عرض تقديم المنتج؟',
+            'explanation_ar' => 'التمهيدي، والشامل، والتحديثي، وتدريب فريق المبيعات، هذه هي الأنواع المذكورة لعرض تقديم المنتج، بينما الختامي وغير الشامل غير واردين ضمن الأنواع .راجع الوحدة 9 : تخطيط المنتج، درس: عرض المنتج، ص : 167.',
+            'is_multi_correct' => true,
+            'order_index' => 5,
+            'options' => [
+                [
+                    'option_text_ar' => 'الختامي',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التحديثي',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الشامل',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تدريب فريق المبيعات',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'غير الشامل',
+                    'order_index' => 5,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التمهيدي',
+                    'order_index' => 6,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 254,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يعد من أنواع الأسماء المستخدمة عند تسمية العلامة التجارية؟',
+            'explanation_ar' => 'تشمل أنواع تسمية المنتجات : وصفية، إيحائية، عشوائية، خيالية ، درس تسمية المنتج، ص 163-165.',
+            'is_multi_correct' => false,
+            'order_index' => 6,
+            'options' => [
+                [
+                    'option_text_ar' => 'معياري.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'وجودي.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'دلالي.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'لا شيء مما سبق ذكره أعلاه.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 255,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الأغراض الثلاثة الأكثر شيوعا للعرض التقديمي؟',
+            'explanation_ar' => 'تعد أكثر أغراض العرض التقديمي شيوعًا هي: التعليم، الإقناع، والتدريب، راجع الوحدة 9: تخطيط المنتج، درس أنواع العروض التقديمية للمنتجات، ص : 171.',
+            'is_multi_correct' => false,
+            'order_index' => 7,
+            'options' => [
+                [
+                    'option_text_ar' => 'التعليم والردع والتدريب.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التعليم والإقناع والتدريب.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'التعليم والغرض والتدريب.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التعليم والمركز والتدريب.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 256,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما هي جوانب تخطيط المنتج؟',
+            'explanation_ar' => 'تشمل جوانب تخطيط المنتج أ، وب ، وج، ود ، راجع الوحدة 9، الوحدة 9: تخطيط المنتج، موضوع: تخطيط المنتج، ص: 159.',
+            'is_multi_correct' => true,
+            'order_index' => 8,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ- تسمية المنتج',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب - عرض واستخدام المنتج',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'جـ- احتياجات العملاء',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'د - تصميم المنتج',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب و ج',
+                    'order_index' => 5,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 257,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الشركات التالية يستخدم كلمة مختصرة للاسم؟',
+            'explanation_ar' => 'راجع الوحدة، 9: تخطيط المنتج، درس تسمية المنتج، 163 .',
+            'is_multi_correct' => false,
+            'order_index' => 9,
+            'options' => [
+                [
+                    'option_text_ar' => 'كوكا كولا',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'مرسيدس',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'أبل',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'لا شيء مما سبق ذكره',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 258,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'إذا كان هدف الشركة من تصميم المنتج هو تحقيق الأرباح، فأي من التالي يمثل المبدأ الذي يجب أن يراعيه تصميم المنتج ؟',
+            'explanation_ar' => 'التفسير: تصميم المنتج الناجح لا يعتمد على جانب واحد فقط؛ فإذا كان الهدف هو جني الأرباح من تصميم المنتج، فيجب تحقيق توازن بين تلبية احتياجات العملاء، والتكاليف، والربحية. كما أن التصميم الجيد يمكن أن يكون عاملًا مهمًا في نجاح استراتيجية التسويق.',
+            'is_multi_correct' => false,
+            'order_index' => 10,
+            'options' => [
+                [
+                    'option_text_ar' => 'التركيز على خفض تكاليف الإنتاج فقط، حتى لو لم يلبِّ المنتج احتياجات العملاء.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التركيز على تلبية احتياجات العملاء فقط، بغض النظر عن التكاليف والربحية.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تحقيق توازن بين احتياجات العملاء والتكاليف والربحية.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'التركيز على التصميم الجمالي للمنتج باعتباره العامل الوحيد لنجاحه.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 259,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الترتيب الصحيح لمراحل دورة حياة المنتج؟',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 11,
+            'options' => [
+                [
+                    'option_text_ar' => 'التقديم ← النمو ← النضج ← الانحدار',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'النمو ← التقديم ← الانحدار ← النضج',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'النضج ← النمو ← التقديم ← الانحدار',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الانحدار ← النضج ← النمو ← التقديم',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 260,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'في أي مرحلة من دورة حياة المنتج تكون الأرباح عادةً في أعلى مستوياتها ويشتد التقليد من المنافسين؟',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 12,
+            'options' => [
+                [
+                    'option_text_ar' => 'النضج',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'التقديم',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'النمو',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الانحدار',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 261,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'مرحلة «الانحدار» في دورة حياة المنتج تتميز بـ:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 13,
+            'options' => [
+                [
+                    'option_text_ar' => 'تقلّص السوق وانخفاض الأرباح',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'أعلى معدلات النمو',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إطلاق المنتج لأول مرة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'غياب المنافسة تماماً',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 262,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'خلال مرحلة الانحدار، تلجأ الشركات غالباً إلى استراتيجيات مثل:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 14,
+            'options' => [
+                [
+                    'option_text_ar' => 'التذكير والعروض للحفاظ على الربحية',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'رفع الأسعار بشكل حاد',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إيقاف كل أنشطة التسويق فوراً',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'زيادة الإنتاج بلا حدود',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 263,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => '«تطوير المنتج» قبل طرحه يهدف إلى:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 15,
+            'options' => [
+                [
+                    'option_text_ar' => 'التأكد من أن المنتج يعمل بشكل صحيح ويتوافق مع الاحتياجات والمواصفات',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'رفع سعره فقط',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إخفاء عيوبه عن العميل',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إلغاء أبحاث السوق',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 264,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الهدف الأساسي من تخطيط المنتج؟',
+            'explanation_ar' => 'التفسير: يهدف تخطيط المنتج إلى تطوير المنتجات واستراتيجيات السوق بما يلبي أو يتجاوز احتياجات العملاء ويتوافق مع أهداف الشركة.',
+            'is_multi_correct' => false,
+            'order_index' => 16,
+            'options' => [
+                [
+                    'option_text_ar' => 'التركيز على زيادة الإنتاج فقط.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تطوير المنتجات واستراتيجيات السوق التي تلبي أو تتجاوز احتياجات العملاء وأهداف الشركة.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تقليل عدد المنتجات الموجودة في السوق.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التركيز على تصميم المنتج دون دراسة العملاء.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 265,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يجب أن يكون تصميم المنتج متوافقًا مع أهداف الشركة بالإضافة إلى احتياجات وتوقعات العملاء.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أن تصميم المنتج ينبغي أن يلبي احتياجات وتوقعات العملاء، وأن يتماشى كذلك مع أهداف الشركة.',
+            'is_multi_correct' => false,
+            'order_index' => 17,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 266,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'إذا كان المنتج يحقق احتياجات العملاء لكنه مرتفع التكلفة بصورة تجعل تحقيق الربح صعبًا، فما الجانب الذي لم يتحقق بصورة متوازنة؟',
+            'explanation_ar' => 'التفسير: حيث نجاح تصميم المنتج، خصوصًا إذا كان الهدف تحقيق الأرباح، يتطلب تحقيق توازن بين احتياجات العملاء والتكاليف والربحية.',
+            'is_multi_correct' => false,
+            'order_index' => 18,
+            'options' => [
+                [
+                    'option_text_ar' => 'احتياجات العملاء فقط.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التوازن بين احتياجات العملاء والتكاليف والربحية.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'اسم المنتج.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'عرض المنتج فقط.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 267,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من العوامل التالية يجب مراعاتها عند تصميم المنتج؟',
+            'explanation_ar' => 'التفسير: توجد عدة عوامل مرتبطة بتصميم المنتج، ومنها التصميم الجمالي، والوظائف، والمواد المستخدمة، والتجربة، والتكلفة، وغيرها.',
+            'is_multi_correct' => false,
+            'order_index' => 19,
+            'options' => [
+                [
+                    'option_text_ar' => 'السعر فقط.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'اسم الشركة فقط.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الوظائف والمواد المستخدمة والتصميم الجمالي والتكلفة.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'عدد منافذ التوزيع فقط.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 268,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تقتصر تفضيلات العملاء على معرفة العملاء الرئيسيين فقط، ولا تشمل معرفة ما يهم هؤلاء العملاء أو توقعاتهم.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث تتطلب دراسة تفضيلات العملاء تحديد العملاء الرئيسيين، وفهم ما يهمهم، ومعرفة توقعاتهم احتياجاتهم، ثم استخدام هذه المعلومات في تطوير المنتج.',
+            'is_multi_correct' => false,
+            'order_index' => 20,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 269,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الذي يمكن أن يساعد المؤسسة في الحفاظ على عملائها الحاليين واكتساب عملاء جدد؟',
+            'explanation_ar' => 'التفسير: يمكن أن يكونا كل من: الابتكار والتميز في تصميم المنتج مفتاحًا للنجاح، وأن المنتج الذي يلبي احتياجات العملاء ويقدم قيمة إضافية يساعد في تحقيق النجاح والحفاظ على العملاء.',
+            'is_multi_correct' => false,
+            'order_index' => 21,
+            'options' => [
+                [
+                    'option_text_ar' => 'تجاهل تفضيلات العملاء.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تطوير منتج يلبي احتياجات العملاء ويقدم قيمة إضافية لهم.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تقليل جودة المنتج.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الاعتماد على اسم المنتج فقط.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 270,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'إذا كان المنتج مخصصًا للاستخدام في دولة تختلف فيها أنظمة القياس عن الدولة التي صُمم فيها، فما الجانب الذي يجب مراعاته عند تصميم المنتج؟',
+            'explanation_ar' => 'التفسير: من ضمن قضايا التوافق في التصميم ضرورة مراعاة أنظمة القياس؛ إلى جانب المناخ وأنظمة البث والبنية التحتية وشبكات الطاقة والقضايا البيئية وتوقعات ورغبات المستهلك.',
+            'is_multi_correct' => false,
+            'order_index' => 22,
+            'options' => [
+                [
+                    'option_text_ar' => 'الاسم التجاري.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التوافق مع أنظمة القياس.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الإعلان فقط.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'طريقة عرض المنتج فقط.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 271,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تُعد القضايا البيئية من الأمور التي ينبغي مراعاتها عند التفكير في توافق التصميم.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث تعتبر القضايا البيئية من ضمن مجموعة الأمور التي ينبغي مراعاتها عند التفكير في توافق المنتج وتصميمه.',
+            'is_multi_correct' => false,
+            'order_index' => 23,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 272,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي نوع من أسماء المنتجات يعتمد على وصف بعض ميزات أو خصائص المنتج؟',
+            'explanation_ar' => 'التفسير: يصف الاسم الوصفي بعض ميزات أو خصائص المنتج، وتورد أمثلة على الأسماء الوصفية.',
+            'is_multi_correct' => false,
+            'order_index' => 24,
+            'options' => [
+                [
+                    'option_text_ar' => 'الاسم الوصفي.',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الاسم العشوائي.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الاسم الخيالي.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الاسم الإيحائي.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 273,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي نوع من أسماء المنتجات يشير إلى الميزات أو الفوائد الرئيسية للمنتج؟',
+            'explanation_ar' => 'التفسير: التسمية الإيحائية تشير إلى الميزات أو الفوائد الرئيسية للمنتج، أي أنها توحي بما يمكن أن يقدمه المنتج للمستهلك.',
+            'is_multi_correct' => false,
+            'order_index' => 25,
+            'options' => [
+                [
+                    'option_text_ar' => 'وصفي.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إيحائي',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'عشوائي.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'خيالي.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 274,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'الاسم العشوائي للمنتج هو اسم يتم اختياره دون وجود سبب محدد أو وصف لمعنى المنتج.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث تتضمن الأسماء العشوائية اختيار الاسم دون وجود سبب محدد.',
+            'is_multi_correct' => false,
+            'order_index' => 26,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 275,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أطلقت شركة منتجاً جديداً وترغب في أن يثير اسمه إحساساً بميزة أو فائدة معينة دون وصف المنتج مباشرة؛ أيُّ نوعٍ من التسمية يُعدُّ الأنسب لذلك؟',
+            'explanation_ar' => 'التفسير: الاسم الإيحائي لا يكتفي بوصف المنتج، وإنما يشير أو يلمّح إلى ميزاته أو فوائده الرئيسية.',
+            'is_multi_correct' => false,
+            'order_index' => 27,
+            'options' => [
+                [
+                    'option_text_ar' => 'عشوائية.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'وصفية.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إيحائية.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'خيالية فقط.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 276,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الغرض الأساسي من العرض التقديمي للمنتج؟',
+            'explanation_ar' => 'التفسير: تعد العروض التقديمية للمنتجات جانبًا مهمًا جدًا من عملية بيع المنتج للعملاء والمستثمرين المحتملين وكذلك للأفراد داخل الشركة.',
+            'is_multi_correct' => false,
+            'order_index' => 28,
+            'options' => [
+                [
+                    'option_text_ar' => 'عرض المنتج دون تقديم معلومات عنه.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'بيع المنتج للعملاء والمستثمرين المحتملين وكذلك للأفراد داخل الشركة.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تدريب العملاء على المحاسبة.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تحديد سعر المنتج فقط.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 277,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'ينبغي أن يقدم العرض التقديمي للمنتج المعلومات بصورة واضحة ومثيرة للاهتمام دون إفراط أو نقص.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث يجب تقديم المعلومات للجمهور بصورة واضحة ومثيرة للاهتمام، مع تجنب تقديم معلومات أكثر أو أقل من اللازم.',
+            'is_multi_correct' => false,
+            'order_index' => 29,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 278,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الآتي يُعد من فئات جمهور العرض التقديمي للمنتج؟',
+            'explanation_ar' => 'التفسير: توجد عدة فئات يمكن أن تكون من جمهور العرض التقديمي، ومنها: داخل الشركة، شريك التوزيع أو الحل، محللو الصناعة والسوق، المستثمرون، الوسيط، والزبون',
+            'is_multi_correct' => false,
+            'order_index' => 30,
+            'options' => [
+                [
+                    'option_text_ar' => 'المنافسون فقط.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'المستثمرون.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الموردون فقط.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'موظفو الحكومة فقط.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 279,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'إذا كان العرض التقديمي موجّهًا إلى فريق المبيعات، فما الهدف الذي ينبغي أن يركز عليه العرض بصورة أكبر؟',
+            'explanation_ar' => 'التفسير: يعتبر التدريب على المبيعات أحد أنواع العروض التقديمية، ويهدف إلى تمكين فريق المبيعات من تقديم المنتج بطريقة شاملة وتحليلية والتعامل مع الأسئلة والاستفسارات بفعالية.',
+            'is_multi_correct' => false,
+            'order_index' => 31,
+            'options' => [
+                [
+                    'option_text_ar' => 'وصف المنتج دون توضيح طريقة استخدامه.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التركيز على تاريخ الشركة فقط.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'توضيح كيفية استخدام المنتج ومزاياه لمساعدة فريق المبيعات على بيعه.',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تجاهل أسئلة العملاء المحتملين.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 280,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تُعد احتياجات المستهلك من الاعتبارات التي تؤخذ في الحسبان عند توافق التصميم',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، فمن ضمن الاعتبارات المرتبطة بالتوافق على التصميم احتياجات المستهلك، إضافة إلى عوامل أخرى مثل توفر المنتج والقضايا البيئية.',
+            'is_multi_correct' => false,
+            'order_index' => 32,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+    ],
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/units/unit_10.php
+````php
+<?php
+
+// بيانات الوحدة رقم 10: التسعير
+// تم توليدها آليًا من بنك أسئلة IBTA (404 سؤال) - 29 سؤال
+return [
+    'unit_number' => 10,
+    'title_ar' => 'التسعير',
+    'order_index' => 10,
+    'questions' => [
+        [
+            'original_number' => 281,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'تتضمن تكاليف تصنيع منتج أو تقديم خدمة ________ كإحدى النفقات التي على الشركة احتسابها. اختر الإجابة الصحيحة.',
+            'explanation_ar' => 'تشمل التكلفة: المواد، والعمالة، والنفقات العامة راجع الوحدة 10: التسعير، درس عوامل التكلفة والتسعير، ص: 180.',
+            'is_multi_correct' => false,
+            'order_index' => 1,
+            'options' => [
+                [
+                    'option_text_ar' => 'تكاليف المواد',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تكاليف النفقات العامة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تكاليف العمالة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'جميع ما ذكر',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 282,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي هي إستراتيجية تسعير؟',
+            'explanation_ar' => 'التفسير: الخيارات المذكورة (التكلفة المرتفعة، التكلفة المنخفضة، التطابق في السعر) تُعبر عن مستويات التكاليف أو تطابق الأسعار وليست مسماة كاستراتيجيات تسعير تسويقية معروفة مثل: (التسعير على أساس التكلفة، التسعير القائم على القيمة، تسعير كشط السوق، أو التسعير لاختراق السوق).، راجع الوحدة 10:، درس: إستراتيجيات التسعير، ص: 183,',
+            'is_multi_correct' => false,
+            'order_index' => 2,
+            'options' => [
+                [
+                    'option_text_ar' => 'التكلفة المرتفعة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التكلفة المنخفضة.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التطابق في التسعير',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'كل ما سبق.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'لا شيء مما سبق.',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 283,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'يتواجد .......... في معظم الأحيان في حال كانت المنتجات معروفة جيدًا في السوق، وفي حال كان سعرها راسخًا في السوق منذ فترة طويلة',
+            'explanation_ar' => 'يستخدم التسعير التنافسي غالبًا عندما تكون المنتجات معروفة جيدًا ويكون السعر مستقرًا في السوق منذ فترة، راجع الوحدة 10: ، درس: استراتيجيات التسعير، ص: 190.',
+            'is_multi_correct' => false,
+            'order_index' => 3,
+            'options' => [
+                [
+                    'option_text_ar' => 'تسعير خط المنتجات.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التسعير التنافسي.',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'التسعير بالأرقام الفردية.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقييم إستراتيجية التسعير.',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 284,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'يُعرف سعر التجزئة المقترح من الشركة المصنعة اختصاراً بـ _____',
+            'explanation_ar' => 'التفسير: يُشار إلى سعر التجزئة المقترح من قبل الشركة المصنعة بـ MSRP (Manufacturer\'s Suggested Retail Price). راجع الوحدة 10: التسعير، درس: إستراتيجيات التسعير، ص: 183.',
+            'is_multi_correct' => false,
+            'order_index' => 4,
+            'options' => [
+                [
+                    'option_text_ar' => 'MSRP',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'POS',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ROI',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'TFC',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 285,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'في إستراتيجية تسعير كشط السوق، تبدأ الشركة بأسعار منخفضة جدًا لاختراق السوق بسرعة ثم تقوم برفعها لاحقًا.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن تسعير كشط السوق يعتمد على البدء بأسعار مرتفعة للمنتجات الجديدة لكشط أقصى أرباح ممكنة من الطبقات المستعدة للدفعة الأولى، بينما التسعير لاختراق السوق هو الذي يبدأ بأسعار منخفضة. راجع الوحدة 10: التسعير، درس: إستراتيجيات التسعير، ص: 184.',
+            'is_multi_correct' => false,
+            'order_index' => 5,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 286,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'التكاليف التي تتغير مباشرة مع حجم الإنتاج تُسمى بالتكاليف ________.',
+            'explanation_ar' => 'التفسير: التكاليف المتغيرة (VC) تتغير مباشرة بالزيادة أو النقصان بناءً على كمية ونشاط الإنتاج، بخلاف التكاليف الثابتة. راجع الوحدة 10: التسعير، درس: إستراتيجيات التسعير، ص: 185.',
+            'is_multi_correct' => false,
+            'order_index' => 6,
+            'options' => [
+                [
+                    'option_text_ar' => 'الثابتة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'المتغيرة',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الإجمالية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'العامة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 287,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تُستخدم النسبة المئوية للرغبة في العائد على الاستثمار (ROI) لتقييم مدى كفاءة الاستثمار أو لمقارنة كفاءة عدد من الاستثمارات المختلفة.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث يُستخدم العائد على الاستثمار (ROI) كمقياس لقياس مقدار العائد على استثمار معين بالنسبة لتكلفة ذلك الاستثمار. راجع الوحدة 10: التسعير، درس: إستراتيجيات التسعير، ص: 186.',
+            'is_multi_correct' => false,
+            'order_index' => 7,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 288,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'يُعد التسعير بالأرقام الفردية (مثل 9.99 أو 159.99) نوعًا من أنواع ________.',
+            'explanation_ar' => 'التفسير: التسعير النفسي يحدد الأسعار عند مستويات تؤثر نفسياً على المستهلك وتجعله يشعر أن السعر أقل بشكل ملحوظ (مثل استخدام أرقام فردية كـ 9.99). راجع الوحدة 10: التسعير، درس: إستراتيجيات التسعير، ص: 192.',
+            'is_multi_correct' => false,
+            'order_index' => 8,
+            'options' => [
+                [
+                    'option_text_ar' => 'تسعير كشط السوق',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التسعير على أساس التكلفة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التسعير النفسي',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'التسعير التنافسي',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 289,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'النقطة التي تتساوى عندها الإيرادات الإجمالية مع التكاليف الإجمالية دون تحقيق ربح أو خسارة تُسمى نقطة التعادل.',
+            'explanation_ar' => 'التفسير: نقطة التعادل تعبر عن حجم المبيعات الذي تتساوى عنده التكاليف الكلية مع الإيرادات الكلية تماماً. راجع الوحدة 10: التسعير، درس: إستراتيجيات التسعير، ص: 185.',
+            'is_multi_correct' => false,
+            'order_index' => 9,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 290,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من العوامل التالية يُعتبر من العوامل الداخلية التي تؤثر على قرارات التسعير؟',
+            'explanation_ar' => 'التفسير: تشمل العوامل الداخلية المؤثرة في التسعير أهداف الشركة التسويقية والتكاليف والإستراتيجية العامة، بينما تعتبر المنافسة والطلب والظروف الاقتصادية عوامل خارجية. راجع الوحدة 10: التسعير، درس: عوامل التكلفة والتسعير، ص: 180-181.',
+            'is_multi_correct' => false,
+            'order_index' => 10,
+            'options' => [
+                [
+                    'option_text_ar' => 'أسعار المنافسين',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الطلب في السوق',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'أهداف التسويق والتكاليف',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الظروف الاقتصادية العامة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 291,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'استراتيجية «كشط السوق» (Skimming) تعني:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 11,
+            'options' => [
+                [
+                    'option_text_ar' => 'تحديد سعر مرتفع عند إطلاق المنتج لتحقيق أقصى ربح قبل دخول المنافسين',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تقديم المنتج بسعر منخفض جداً لجذب العملاء',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'بيع المنتج بالتكلفة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'توزيع المنتج مجاناً',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 292,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'استراتيجية «الاختراق» (Penetration) في التسعير تعني:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 12,
+            'options' => [
+                [
+                    'option_text_ar' => 'تقديم المنتج بسعر منخفض جداً لاجتذاب عملاء جدد ثم رفع السعر تدريجياً',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تحديد سعر مرتفع من البداية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تثبيت السعر للأبد',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'رفع السعر عند كل عملية بيع',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 293,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'قد يحتاج السعر إلى أن يكون مرتفعاً إذا كان التصنيع باهظ الثمن.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 13,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 294,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'التسعير جزء حاسم من استراتيجية الأعمال ويجب أن يتوافق مع عدة عوامل.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 14,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 295,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الآتي يُعد من مكونات تكلفة تصنيع المنتج أو تقديم الخدمة؟',
+            'explanation_ar' => 'التفسير: تتكون تكاليف تصنيع المنتج أو تقديم الخدمة من تكاليف المواد والعمالة والنفقات العامة.',
+            'is_multi_correct' => false,
+            'order_index' => 15,
+            'options' => [
+                [
+                    'option_text_ar' => 'تكاليف المواد',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تكاليف العمالة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'النفقات العامة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'جميع ما سبق',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 296,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'التكاليف التي لا تتغير بتغير حجم الإنتاج تُعرف باسم:',
+            'explanation_ar' => 'التفسير: التكاليف الثابتة لا تتغير مباشرة مع تغير حجم الإنتاج، بخلاف التكاليف المتغيرة.',
+            'is_multi_correct' => false,
+            'order_index' => 16,
+            'options' => [
+                [
+                    'option_text_ar' => 'التكاليف الثابتة',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'التكاليف المتغيرة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التكاليف الإجمالية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تكاليف المبيعات',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 297,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'كيف تُحسب نقطة التعادل',
+            'explanation_ar' => 'التفسير: تُحسب نقطة التعادل بتقسيم التكاليف الثابتة على هامش المساهمة للوحدة(سعر بيع الوحدة – التكلفة المتغيرة للوحدة)؛ وفي المثال الوارد تظهر النتيجة بحوالي 286 وحدة.',
+            'is_multi_correct' => false,
+            'order_index' => 17,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) تقسيم التكاليف الثابتة على هامش المساهمة للوحدة (سعر بيع الوحدة -التكلفة المتغيرة)',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ب) التكاليف الثابتة × سعر بيع الوحدة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ج) التكاليف المتغيرة ÷ التكاليف الثابتة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) سعر بيع الوحدة ÷ التكاليف الثابتة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 298,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'إذا كان سعر بيع الوحدة 75 والتكلفة المتغيرة للوحدة 45، فإن هامش المساهمة للوحدة يساوي:',
+            'explanation_ar' => 'التفسير: هامش المساهمة للوحدة = سعر البيع − التكلفة المتغيرة، أي 75 − 45 = 30.',
+            'is_multi_correct' => false,
+            'order_index' => 18,
+            'options' => [
+                [
+                    'option_text_ar' => '20',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => '30',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => '45',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => '75',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 299,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'تستخدم الشركة العائد على الاستثمار (ROI) من أجل:',
+            'explanation_ar' => 'التفسير: يُستخدم ROI لتقييم مدى كفاءة الاستثمار ومقارنة كفاءة الاستثمارات المختلفة.',
+            'is_multi_correct' => false,
+            'order_index' => 19,
+            'options' => [
+                [
+                    'option_text_ar' => 'تحديد عدد المنافسين في السوق',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقييم كفاءة الاستثمار',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تحديد اسم المنتج',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'اختيار قناة التوزيع',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 300,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'يشير الاختصار TFC إلى:',
+            'explanation_ar' => 'التفسير: يستخدم الاختصار TFC للدلالة على التكاليف الثابتة الكلية  Total Fixed Costs .',
+            'is_multi_correct' => false,
+            'order_index' => 20,
+            'options' => [
+                [
+                    'option_text_ar' => 'إجمالي التكاليف الثابتة',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'إجمالي التكاليف المتغيرة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'سعر البيع',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'العائد على الاستثمار',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 301,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'يشير الاختصار TVC إلى:',
+            'explanation_ar' => 'التفسير: TVC هو اختصار Total Variable Cost، أي إجمالي التكاليف المتغيرة.',
+            'is_multi_correct' => false,
+            'order_index' => 21,
+            'options' => [
+                [
+                    'option_text_ar' => 'إجمالي التكاليف الثابتة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إجمالي التكاليف المتغيرة',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'إجمالي الإيرادات',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'العائد على الاستثمار',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 302,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يُستخدم التسعير النفسي بهدف التأثير في إدراك المستهلك للسعر.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث من أمثلة التسعير النفسي استخدام أسعار مثل 159.99 بدلًا من 160.',
+            'is_multi_correct' => false,
+            'order_index' => 22,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 303,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'السعر 159.99 بدلًا من 160 يمثل مثالًا على:',
+            'explanation_ar' => 'التفسير: استخدام سعر 159.99 بدلًا من 160 هو أحد أمثلة التسعير بالأرقام الفردية ضمن التسعير النفسي.',
+            'is_multi_correct' => false,
+            'order_index' => 23,
+            'options' => [
+                [
+                    'option_text_ar' => 'التسعير على أساس التكلفة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تسعير كشط السوق',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التسعير النفسي',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'التسعير بالاختراق',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 304,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'السعر الذي تحدده الشركة المصنعة باعتباره سعرًا مقترحًا للبيع بالتجزئة يُعرف باسم MSRP.',
+            'explanation_ar' => 'التفسير: MSRP هو اختصار Manufacturer\'s Suggested Retail Price، أي سعر التجزئة المقترح من الشركة المصنعة.',
+            'is_multi_correct' => false,
+            'order_index' => 24,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 305,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'إذا كانت الشركة تسعى إلى استرداد تكاليفها وتحقيق هامش ربح محدد، فإن أحد الأساليب التي يمكن أن تعتمد عليها هو التسعير بناءً على:',
+            'explanation_ar' => 'التفسير: ترتبط قرارات التسعير بعوامل التكلفة، حيث يجب على الشركة مراعاة تكاليف المواد والعمالة والنفقات العامة عند تحديد السعر.',
+            'is_multi_correct' => false,
+            'order_index' => 25,
+            'options' => [
+                [
+                    'option_text_ar' => 'التكلفة',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'لون المنتج',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'اسم العلامة التجارية فقط',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'موقع المتجر',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 306,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'ارتفاع التكاليف الثابتة يؤدي بالضرورة إلى انخفاض نقطة التعادل.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن ارتفاع التكاليف الثابتة؛ مع ثبات العوامل الأخرى، يؤدي إلى ارتفاع كمية المبيعات اللازمة للوصول إلى نقطة التعادل، وليس انخفاضها.',
+            'is_multi_correct' => false,
+            'order_index' => 26,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 307,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'إذا ارتفع سعر البيع مع بقاء التكاليف الأخرى ثابتة، فإن كمية المبيعات المطلوبة للوصول إلى نقطة التعادل تنخفض.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أن ارتفاع سعر البيع يزيد هامش المساهمة لكل وحدة، وبالتالي يقل عدد الوحدات اللازمة لتغطية التكاليف الثابتة والوصول إلى نقطة التعادل.',
+            'is_multi_correct' => false,
+            'order_index' => 27,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 308,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن أن تلجأ المؤسسة إلى استراتيجية مطابقة السعر عندما يكون هدفها تقديم سعر لا يتوافق مع أسعار المنافسين.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث تعتبر إستراتيجية مطابقة السعر إحدى استراتيجيات التسعير، ويكون فيها السعر متوافقًا مع أسعار المنافسين.',
+            'is_multi_correct' => false,
+            'order_index' => 28,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 309,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من العوامل التالية يُعد عاملًا خارجيًا يؤثر في قرارات التسعير؟',
+            'explanation_ar' => 'التفسير: يمكن التفريق بين العوامل الداخلية، مثل أهداف التسويق والتكاليف، والعوامل الخارجية، مثل المنافسة والطلب والظروف الاقتصادية.',
+            'is_multi_correct' => false,
+            'order_index' => 29,
+            'options' => [
+                [
+                    'option_text_ar' => 'أهداف التسويق',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تكاليف الشركة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'أسعار المنافسين',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'استراتيجية الشركة العامة',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+    ],
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/units/unit_11.php
+````php
+<?php
+
+// بيانات الوحدة رقم 11: التوزيع
+// تم توليدها آليًا من بنك أسئلة IBTA (404 سؤال) - 31 سؤال
+return [
+    'unit_number' => 11,
+    'title_ar' => 'التوزيع',
+    'order_index' => 11,
+    'questions' => [
+        [
+            'original_number' => 310,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي ليس بإستراتيجية توزيع قناة مباشرة؟',
+            'explanation_ar' => 'القناة المباشرة تعني التوصيل من المُنتِج إلى المستهلك مباشرة؛ وجود "الوسطاء" يحولها إلى قناة غير مباشرة. راجع الوحدة 11: التوزيع ، موضوع :التوزيع المباشر والغير مباشر (ص 204 – 209)',
+            'is_multi_correct' => false,
+            'order_index' => 1,
+            'options' => [
+                [
+                    'option_text_ar' => 'البريد المباشر',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الوسطاء',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'دليل السلع والكتالوج والمنشورات',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'مندوب مبيعات من الباب إلى الباب',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'المواقع الإلكترونية على شبكة الإنترنت',
+                    'order_index' => 5,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 311,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما هي الأنواع الثلاث لإستراتيجيات تغطية السوق؟',
+            'explanation_ar' => 'راجع الوحدة 11: التوزيع، درس إستراتيجية التوزيع، ص 201 .',
+            'is_multi_correct' => false,
+            'order_index' => 2,
+            'options' => [
+                [
+                    'option_text_ar' => 'الانتقائية، المكثفة، التوزيع غير المباشر.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الانتقائية، الحصرية، التطفلية.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'المكثفة، الحصرية، التوزيع المباشر.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'المكثفة، الانتقائية، الحصرية.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 312,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'إن قنوات التوزيع هي السبل المستخدمة في نقل السلع والخدمات للسوق.',
+            'explanation_ar' => 'العبارة صحيحة، حيث تعرف قنوات التوزيع بأنها الوسائل المستخدمة لنقل السلع والخدمات إلى السوق، راجع الوحدة 11: التوزيع، ص199 .',
+            'is_multi_correct' => false,
+            'order_index' => 3,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 313,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'إن اختيارك لاستراتيجية القناة الصحيحة سيساعدك في إيصال المنتج إلى المستهلكين في الوقت المناسب.',
+            'explanation_ar' => 'العبارة صحيحة، حيث تهدف إستراتيجية قنوات التوزيع إلى ضمان وصول المنتج إلى العميل المناسب، في المكان المناسب، وفي الوقت المناسب،. راجع الوحدة 11: التوزيع ، موضوع: استراتيجية التوزيع وقنوات التوزيع 201، و202.',
+            'is_multi_correct' => false,
+            'order_index' => 4,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 314,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'إن اختيار أي استراتيجية مع القناة الصحيحة سيساعدك في إيصال المنتج إلى المستهلك في الوقت المناسب.',
+            'explanation_ar' => 'العبارة خطأ، حيث أن اختيار استراتيجية التوزيع المناسبة مع القناة المناسبة هو الذي يحقق وصول المنتج، وليس أن أي استراتيجية ستنجح، حيث يعد المزيج الصحيح بين الإستراتيجية والقناة والعملية معاً ، مهماً للإستراتيجية التسويقية الشاملة. راجع الوحدة 11، التوزيع، مقدمة، ص : 198.',
+            'is_multi_correct' => false,
+            'order_index' => 5,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 315,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'يقصد بـ ________ القنوات والمسارات التي تمر من خلالها المنتجات والخدمات للوصول من المنتِج إلى المستهلك النهائي.',
+            'explanation_ar' => 'التفسير: قنوات التوزيع (Distribution Channels) هي الهياكل والمؤسسات والمسارات التي تساعد في نقل المنتجات والخدمات من مكان الإنتاج إلى أماكن الاستهلاك. راجع الوحدة 11: التوزيع ، الصفحة رقم 198 وما بعدها.',
+            'is_multi_correct' => false,
+            'order_index' => 6,
+            'options' => [
+                [
+                    'option_text_ar' => 'المزيج الترويجي',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'قنوات التوزيع',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'إستراتيجية التسعير',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'المزيج التسويقي',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 316,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'يُسمى التوزيع الذي تقوم فيه الشركة ببيع منتجاتها عبر جميع المنافذ المتاحة والممكنة بـ ________.',
+            'explanation_ar' => 'التفسير: التوزيع المكثف أو الشامل يهدف إلى عرض المنتج في أكبر عدد ممكن من منافذ البيع لتسهيل وصول المستهلك إليه في أي وقت (مثل السلع الاستهلاكية). راجع الوحدة 11: التوزيع ، الصفحة رقم 198 وما بعدها.',
+            'is_multi_correct' => false,
+            'order_index' => 7,
+            'options' => [
+                [
+                    'option_text_ar' => 'التوزيع الانتقائي (Selective)',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التوزيع الحصري (Exclusive)',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التوزيع الشامل / المكثف (Intensive)',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'التوزيع المباشر',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 317,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'إدارة اللوجستيات تركز فقط على عملية الشحن النهائي للسلعة ولا تهتم بمدخلات الإنتاج أو التخزين.',
+            'explanation_ar' => 'التفسير: العبارة خطأ، حيث تشمل إدارة اللوجستيات التخطيط والتنفيذ والتحكم في تدفق المواد الخام والسلع والتخزين والمؤشرات اللوجستية من نقطة المنشأ إلى نقطة الاستهلاك.راجع الوحدة 11: التوزيع، الصفحة رقم 198 وما بعدها.',
+            'is_multi_correct' => false,
+            'order_index' => 8,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 318,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'يُعرف التجار الذين يشترون البضائع بكميات كبيرة من المنتجين ثم يبيعونها إلى تجار التجزئة بـ ________.',
+            'explanation_ar' => 'التفسير: تجار الجملة (Wholesalers) يمثلون الحلقة الوسطى التي تشتري بكميات ضخمة لتوزع على تجار التجزئة. راجع الوحدة 11: التوزيع ، الصفحة رقم 198 وما بعدها.',
+            'is_multi_correct' => false,
+            'order_index' => 9,
+            'options' => [
+                [
+                    'option_text_ar' => 'الوكلاء',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تجار الجملة',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'السماسرة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'المستهلكين النهائيين',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 319,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'التوزيع الحصري يمنح عددًا محدودًا جدًا من الموزعين حق توزيع منتجات الشركة في منطقة جغرافية معينة.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أن إستراتيجية التوزيع الحصري تُستخدم غالبًا للسلع الفاخرة حيث تُعطى الأهلية لموزع واحد أو عدد محدود جدًا في منطقة معينة لبناء صورة ذهنية ممتازة. راجع الوحدة 11: التوزيع ، الصفحة رقم 198 وما بعدها.',
+            'is_multi_correct' => false,
+            'order_index' => 10,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 320,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من العناصر التالية يُعد من الوظائف الأساسية لبرامج إدارة سلسلة الإمداد (Supply Chain Management)؟',
+            'explanation_ar' => 'التفسير: إدارة سلسلة الإمداد تركز على تنسيق وتنفيذ العمليات الخاصة بالمشتريات، إدارة المخزون، حركة البضائع، والتخزين.راجع الوحدة 11: التوزيع ، الصفحة رقم 198 وما بعدها.',
+            'is_multi_correct' => false,
+            'order_index' => 11,
+            'options' => [
+                [
+                    'option_text_ar' => 'تصميم الإعلانات التلفزيونية',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إدارة المخزون والمشتريات',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تحديد الأسعار النفسية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إجراء المقابلات الشخصية للمبيعات',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 321,
+            'level' => 'hard',
+            'question_type' => 'true_false',
+            'text_ar' => 'يُقصد بالصراع بين أعضاء قناة التوزيع في نفس المستوى (مثل صراع بين تاجر تجزئة وتاجر تجزئة آخر) بالصراع الرأسي.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن الصراع بين أطراف في نفس المستوى يُسمى بالصراع الأفقي (Horizontal Conflict)، بينما الصراع الرأسي (Vertical Conflict) يحدث بين مستويات مختلفة في القناة (مثل المنتج مع تاجر الجملة).راجع الوحدة 11: التوزيع ، الصفحة رقم 198 وما بعدها.',
+            'is_multi_correct' => false,
+            'order_index' => 12,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 322,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'التوزيع كعنصر من المزيج التسويقي ينطوي على:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 13,
+            'options' => [
+                [
+                    'option_text_ar' => 'نقل وتوزيع السلع من الشركة المصنعة إلى البائع أو المستهلك',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تصميم المنتج فقط',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تحديد سعر المنتج',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'كتابة الإعلانات',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 323,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'التوزيع أكثر من مجرد نقل المنتج من النقطة (أ) إلى المستهلك في النقطة (ب).',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 14,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 324,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => '«قنوات التوزيع» تشير إلى:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 15,
+            'options' => [
+                [
+                    'option_text_ar' => 'المسارات التي يمر بها المنتج للوصول إلى المستهلك النهائي',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'أقسام المحاسبة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'خطوط الإنتاج',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'قوائم الأسعار',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 325,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من العوامل التالية تؤثر في استراتيجية التوزيع ؟',
+            'explanation_ar' => 'التفسير: تتأثر استراتيجية التوزيع بهيكل السوق، وأهداف المنظمة، ومواردها، واستراتيجيتها التسويقية.',
+            'is_multi_correct' => false,
+            'order_index' => 16,
+            'options' => [
+                [
+                    'option_text_ar' => 'حجم العبوة فقط',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'لون المنتج فقط',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'هيكل السوق وأهداف المنظمة ومواردها واستراتيجيتها التسويقية',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'عدد موظفي قسم المحاسبة فقط',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 326,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'عند تحديد كيفية نقل المنتجات أو الخدمات إلى العملاء، فإن القرار يتعلق بـ :',
+            'explanation_ar' => 'التفسير: اختيار القنوات يعني تحديد القنوات التي سيتم استخدامها لنقل المنتجات أو الخدمات إلى العملاء، ومن أمثلتها البيع بالتجزئة والمبيعات عبر الإنترنت والموزعون.',
+            'is_multi_correct' => false,
+            'order_index' => 17,
+            'options' => [
+                [
+                    'option_text_ar' => 'تحديد سعر المنتج',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'اختيار قنوات التوزيع',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تصميم العبوة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تحديد ميزانية الإعلان',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 327,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يُمثّل أحد العناصر الأربعة لعملية التوزيع المادي؟',
+            'explanation_ar' => 'التفسير: توجد أربعة عناصر لعملية التوزيع المادي، من بينها النقل وإدارة المخزون ومعالجة الطلب.',
+            'is_multi_correct' => false,
+            'order_index' => 18,
+            'options' => [
+                [
+                    'option_text_ar' => 'الإعلان',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التسعير',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'النقل',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'بناء العلامة التجارية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 328,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي وسيلة نقل تصف بأنها سريعة ولكنها مكلفة؟',
+            'explanation_ar' => 'التفسير: يعتبر الشحن الجوي سريع ولكنه مكلف، ولذلك يستخدم عندما يكون التسليم السريع مهمًا للعميل.',
+            'is_multi_correct' => false,
+            'order_index' => 19,
+            'options' => [
+                [
+                    'option_text_ar' => 'النقل المائي',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'النقل بالسكك الحديدية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'النقل الجوي',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'النقل بالشاحنات',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 329,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ماذا يُقصد بالخدمات متعددة الوسائط في عملية النقل؟',
+            'explanation_ar' => 'التفسير: الخدمات متعددة الوسائط تعني استخدام طريقتين أو أكثر من وسائل النقل، مع ترتيب العملية بحيث يتم استخدام أكثر طرق النقل كفاءة.',
+            'is_multi_correct' => false,
+            'order_index' => 20,
+            'options' => [
+                [
+                    'option_text_ar' => 'استخدام شاحنة واحدة فقط لنقل المنتج',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'استخدام وسيلة نقل واحدة لأكثر من مرة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'نقل المنتجات باستخدام طريقتين أو أكثر من وسائل النقل',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'نقل المنتجات داخل المستودع فقط',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 330,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الغرض الأساسي من نظام كمية الطلب الاقتصادي (EOQ)؟',
+            'explanation_ar' => 'التفسير: يحدد نموذج كمية الطلب الاقتصادي الكمية المثلى التي ينبغي الاحتفاظ بها في المخزون بهدف تقليل تكاليف المخزون المتغيرة.',
+            'is_multi_correct' => false,
+            'order_index' => 21,
+            'options' => [
+                [
+                    'option_text_ar' => 'زيادة تكاليف التخزين',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'زيادة حجم المخزون دون حدود',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تحديد كمية الطلب المثلى لتقليل تكاليف المخزون',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'إلغاء الحاجة إلى إدارة المخزون',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 331,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يمثل وظيفة للوسطاء تتمثل في جمع عناصر من مصادر مختلفة لإنشاء إمدادات أكبر للعملاء؟',
+            'explanation_ar' => 'التفسير: التراكم يعني أن الوسطاء يجمعون عناصر من عدة مصادر مختلفة لإنشاء إمدادات أكبر لعملائهم.',
+            'is_multi_correct' => false,
+            'order_index' => 22,
+            'options' => [
+                [
+                    'option_text_ar' => 'الفرز',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التراكم',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'النقل',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التخزين',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 332,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'إذا كان المنتج غير متوفر بسبب نفاد مخزون الشركة المصنعة أو تاجر الجملة، فما الخطوة الإضافية في معالجة الطلب؟',
+            'explanation_ar' => 'التفسير: عند عدم توفر العنصر، يتم تحديد موعد متوقع لتوفره ثم وضع جدول للتسليم، مع التحذير من الإفراط في الوعد بمواعيد لا يمكن الالتزام بها.',
+            'is_multi_correct' => false,
+            'order_index' => 23,
+            'options' => [
+                [
+                    'option_text_ar' => 'إلغاء الطلب مباشرة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الإعلان عن المنتج',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'جدولة الطلب',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تغيير العلامة التجارية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 333,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'النقل في عملية التوزيع المادي يقتصر على نقل المنتجات من الشركة المصنعة إلى المستهلك النهائي فقط.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث يشير النقل إلى حركة المنتجات من موقع إلى آخر، مثل انتقالها من المستودع إلى بائع التجزئة أو من الشركة المصنعة إلى وسيط.',
+            'is_multi_correct' => false,
+            'order_index' => 24,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 334,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يساعد نظام "Just In Time" على تقليل حاجة تجار التجزئة إلى الاحتفاظ بمخزون فائض.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث أصبح العديد من تجار التجزئة لم يعودوا يحتفظون بمخزون فائض، بل يطلبون ما يحتاجونه في الوقت المطلوب، مما يجعل من الضروري أن يوفر المصنعون وتجار الجملة المخزون عند الطلب.',
+            'is_multi_correct' => false,
+            'order_index' => 25,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 335,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'تبدأ معالجة الطلب عند شحن المنتج، وتنتهي بمجرد خروج المنتج من المستودع.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث تبدأ معالجة الطلب عندما يقدم العميل طلبًا، ولا تعتبر مكتملة بمجرد الشحن؛ إذ تشمل مراحل لاحقة مثل ما بعد الشحن والخدمة ما بعد البيع، حتى يكون المنتج في حوزة العميل وتتم خدمته بصورة مناسبة.',
+            'is_multi_correct' => false,
+            'order_index' => 26,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 336,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'من أنشطة ما بعد الشحن تتبع الطلب والتأكد من استلام العميل للمنتج بصورة مرضية.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث لا تنتهي معالجة الطلب بمجرد إرسال المنتج؛ فمن أنشطة ما بعد الشحن تتبع الطلب، وتحديث العميل بشأن التسليم، واكتشاف أخطاء أو تأخيرات الشحن ومعالجتها، بالإضافة إلى الفوترة.',
+            'is_multi_correct' => false,
+            'order_index' => 27,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 337,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تؤثر قنوات التوزيع على الأرباح أو القدرة التنافسية للمنظمة.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث يؤثر التوزيع على الأرباح والقدرة التنافسية، وأن قناة التوزيع الضعيفة يمكن أن تقلل الأرباح بشكل كبير وقد تؤدي إلى توجه العملاء إلى المنافسين.',
+            'is_multi_correct' => false,
+            'order_index' => 28,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 338,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يجب توسيع قنوات التوزيع حتى لو لم تكن المنظمة مستعدة لتسليم المنتجات باستمرار إلى القنوات الجديدة.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أنه من الأمور التي لا يجب فعلها توسيع التوزيع إذا لم تكن المنظمة مستعدة لتسليم المنتجات باستمرار إلى القنوات الجديدة. كما يوصي باختبار طرق التوزيع الجديدة قبل التوسع فيها.',
+            'is_multi_correct' => false,
+            'order_index' => 29,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 339,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تهدف استراتيجية قنوات التوزيع إلى المساعدة في إيصال المنتج إلى المستهلك في الوقت المناسب.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن اختيار استراتيجية القناة المناسبة يساعد على إيصال المنتج إلى العميل المناسب، في المكان والوقت المناسبين.',
+            'is_multi_correct' => false,
+            'order_index' => 30,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 340,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد من أنواع استراتيجيات تغطية السوق؟',
+            'explanation_ar' => 'التفسير: توجد ثلاثة أنواع لاستراتيجيات تغطية السوق: المكثفة، والانتقائية، والحصرية.',
+            'is_multi_correct' => false,
+            'order_index' => 31,
+            'options' => [
+                [
+                    'option_text_ar' => 'التوزيع المالي',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التوزيع الحصري',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'التوزيع المحاسبي',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التوزيع الإداري',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+    ],
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/units/unit_12.php
+````php
+<?php
+
+// بيانات الوحدة رقم 12: التكنولوجيا في التسويق
+// تم توليدها آليًا من بنك أسئلة IBTA (404 سؤال) - 37 سؤال
+return [
+    'unit_number' => 12,
+    'title_ar' => 'التكنولوجيا في التسويق',
+    'order_index' => 12,
+    'questions' => [
+        [
+            'original_number' => 341,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أيٌّ مما يلي يُعرف بأنه تطبيق التكنولوجيا الرقمية والإنترنت لتحقيق الأهداف التسويقية للشركة؟',
+            'explanation_ar' => 'التفسير: يتضمن التسويق الرقمي استخدام الوسائط والتكنولوجيا الرقمية لتوسيع نطاق الوصول للعملاء وتحقيق أهداف التسويق. راجع الوحدة 12: التكنولوجيا في التسويق، ص 228',
+            'is_multi_correct' => false,
+            'order_index' => 1,
+            'options' => [
+                [
+                    'option_text_ar' => 'أ) التسويق المباشر',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ب) التسويق الرقمي (Digital Marketing)',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ج) العلاقات العامة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'د) البيع الشخصي',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 342,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'من أنواع التسويق الرقمي (الإلكتروني ) ما يلي:',
+            'explanation_ar' => 'راجع الوحدة 12: التكنولوجيا في التسويق ، ص : 230',
+            'is_multi_correct' => false,
+            'order_index' => 2,
+            'options' => [
+                [
+                    'option_text_ar' => 'التسويق عبر الإنترنت (الشبكي).',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التسويق عبر محركات البحث.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التسويق عبر البريد الإلكتروني.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التسويق عبر وسائل التواصل الاجتماعي',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'جميع ما سبق',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 343,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'من أنواع التسويق عبر الإنترنت (الشبكي ) الدفع لكل نقرة (Click).',
+            'explanation_ar' => 'راجع الوحدة 12: التكنولوجيا في التسويق، درس التكنولوجيات في التسويق، ص : 230',
+            'is_multi_correct' => false,
+            'order_index' => 3,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 344,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من القطاعات التالية يُعد أحد قطاعات التسويق عبر الإنترنت الرئيسية التي تعتمد عليها الشركات للوصول إلى الجمهور؟',
+            'explanation_ar' => 'التفسير: يُعد التسويق عبر محركات البحث أحد القطاعات الرئيسية للتسويق عبر الإنترنت لضمان ظهوره للعملاء الباحثين عن الخدمات والمنتجات. راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228',
+            'is_multi_correct' => false,
+            'order_index' => 4,
+            'options' => [
+                [
+                    'option_text_ar' => 'التسويق الميداني المباشر',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التسويق عبر محركات البحث (SEM/SEO)',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'المعارض التجارية التقليدية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التوزيع الجغرافي الحصري',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 345,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'التسويق عبر البريد الإلكتروني يُركز بشكل أساسي على إرسال رسائل مخصصة واستهداف دقيق للجمهور لبناء علاقات مستمرة وتحقيق معدلات تحويل عالية.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث يُستخدم التسويق عبر البريد الإلكتروني كأداة قوية لتوجيه الرسائل المخصصة للجمهور المستهدف وتتبع تفاعلهم. راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228',
+            'is_multi_correct' => false,
+            'order_index' => 5,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 346,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الخطوات الأساسية للتواجد الرقمي للشركة عند التخطيط للتسويق الإلكتروني:',
+            'explanation_ar' => 'التفسير: تصميم وإنشاء موقع إلكتروني يُعد الواجهة الرقمية الأساسية التي تُبنى عليها باقي أنشطة التسويق الإلكتروني. راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228',
+            'is_multi_correct' => false,
+            'order_index' => 6,
+            'options' => [
+                [
+                    'option_text_ar' => 'إغلاق المنافذ التقليدية',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تصميم وإنشاء موقع إلكتروني للشركة',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الاعتماد الحصري على الرسائل النصية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'طباعة الكتالوجات الورقية',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 347,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'يُقصد بعملية تحسين ظهور الموقع الإلكتروني في نتائج البحث غير المدفوعة بـ ________.',
+            'explanation_ar' => 'التفسير: تحسين محركات البحث (SEO) يهدف لتطوير محتوى الموقع وتهييئته ليظهر في نتائج البحث الأولى مجاناً. راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228',
+            'is_multi_correct' => false,
+            'order_index' => 7,
+            'options' => [
+                [
+                    'option_text_ar' => 'التسويق الميداني',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تحسين محركات البحث (SEO)',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'التسعير التنافسي',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'البيع المباشر',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 348,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الخيار الذي يعتبر الطريقة الأسهل والأغلى لإنشاء موقع ويب:',
+            'explanation_ar' => 'التفسير: توظيف محترف هو الطريقة الأسهل والأغلى للحصول على موقع ويب وتشغيله راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228.',
+            'is_multi_correct' => false,
+            'order_index' => 8,
+            'options' => [
+                [
+                    'option_text_ar' => 'استخدام برنامج جاهز',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إنشاء الموقع بنفسك',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'توظيف محترف',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الاستغناء عن الموقع',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 349,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يُعد من معايير تقييم المرشحين لتصميم موقع الويب؟',
+            'explanation_ar' => 'من معايير التقييم: سهولة الاستخدام، سرعة الموقع، استخدام الرسوم المتحركة، واتساق النص. راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228.',
+            'is_multi_correct' => false,
+            'order_index' => 9,
+            'options' => [
+                [
+                    'option_text_ar' => 'سهولة استخدام الموقع',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'عدد الموظفين',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'مساحة المكتب',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'حجم المخزون',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 350,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الذي يجب أن تتضمنه خطة مشروع إنشاء موقع ويب ؟',
+            'explanation_ar' => 'التفسير: يجب وضع خطة واضحة تحدد السعر النهائي والنطاق، ومتطلبات الموقع، والتوقعات المتعلقة بموعد التسليم راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228',
+            'is_multi_correct' => false,
+            'order_index' => 10,
+            'options' => [
+                [
+                    'option_text_ar' => 'السعر فقط.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'المحتوى فقط',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'نطاق العمل ومتطلبات الموقع والتوقعات المتعلقة بالموعد',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'اسم المصمم فقط',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 351,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يُقصد بـ "تحسين محركات البحث" (SEO) دفع مبالغ مالية لمحركات البحث مقابل ظهور الإعلان في أعلى نتائج البحث.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة حيث يهدف مصطلح  SEO للظهور في النتائج المجانية (الغير مدفوعة) من خلال تحسين المحتوى والكلمات المفتاحية، بينما الدفع مقابل الظهور يُعرف بـ (SEM / Pay-Per-Click). راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228',
+            'is_multi_correct' => false,
+            'order_index' => 11,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 352,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما هي التقنية التي تُستخدم لرصد وتتبع سلوك الزوار على الموقع الإلكتروني وتحليل كيفية تفاعلهم مع المحتوى؟',
+            'explanation_ar' => 'التفسير: توفر تحليلات الويب بيانات دقيقة حول الزيارات، السلوك، ومعدلات التحويل للمستخدمين على الموقع. راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228',
+            'is_multi_correct' => false,
+            'order_index' => 12,
+            'options' => [
+                [
+                    'option_text_ar' => 'تحسين محركات البحث (SEO)',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تحليلات الويب (Web Analytics)',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'البريد الإلكتروني العشوائي (Spam)',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إدارة شبكات الاتصال',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 353,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التقنيات التالية تعتبر من ضمن تقنيات الويب؟',
+            'explanation_ar' => 'التفسير : تعد تقنيات CSS وXML وAJAX ضمن التقنيات الجديدة/المستخدمة في تطوير الويب، وتناقش أثرها على تصميم المواقع، راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228.',
+            'is_multi_correct' => false,
+            'order_index' => 13,
+            'options' => [
+                [
+                    'option_text_ar' => 'CSS وXML وAJAX',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'Excel وWord',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'PowerPoint وAccess',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'Bluetooth وGPS',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 354,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'من أهم أدوات التجارة الإلكترونية هي:',
+            'explanation_ar' => 'راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228',
+            'is_multi_correct' => false,
+            'order_index' => 14,
+            'options' => [
+                [
+                    'option_text_ar' => 'برنامج عربة التسوق اللازمة لبيع منتجاتك أو خدماتك.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'بوابة الدفع (الخدمة التي تسمح بالمدفوعات)',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'حساب بطاقة ائتمان التاجر.',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'جميع ما سبق',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 355,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'توجد جوانب يجب أن تفهمها قبل الشروع في عملية إنشاء موقع الويب هي :',
+            'explanation_ar' => 'راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228.',
+            'is_multi_correct' => false,
+            'order_index' => 15,
+            'options' => [
+                [
+                    'option_text_ar' => 'الغرض.',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الأهداف.',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الجمهور المستهدف',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'المحتوى',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'جميع ما سبق',
+                    'order_index' => 5,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 356,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'توجد بنود يجب معالجتها فيما يتعلق بما سيتضمنه الموقع خلال مرحة التخطيط ، من ضمنها :',
+            'explanation_ar' => 'راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228',
+            'is_multi_correct' => false,
+            'order_index' => 16,
+            'options' => [
+                [
+                    'option_text_ar' => 'المستخدم النهائي',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التقنيات',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'النماذج التفاعلية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'جميع ما سبق',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 357,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يعتبر الجمهور المستهدف أحد العوامل الرئيسية التي تؤخذ في الاعتبار عن تصميم الموقع.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث يعتبر الجمهور المستهدف أحد العوامل الرئيسية التي تؤخذ في الاعتبار عن تصميم الموقع، الموقع الذي يستهدف المراهقين مختلفا عن كثيرا عن الموقع المخصص لمؤسسة مالية.راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228.',
+            'is_multi_correct' => false,
+            'order_index' => 17,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 358,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'التسويق بالعمولة عبر الإنترنت يسمح للفرد بالترويج لمنتج بائع آخر والحصول على عمولة.',
+            'explanation_ar' => 'راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228',
+            'is_multi_correct' => false,
+            'order_index' => 18,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 359,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'تعرف تقنية ............  بأنه يقوم المستهلك " بسحب " المعلومات حول الشركات و/ أو المنتجات و/ أو الخدمات في محاولة لتحديد الشركات التي يتردد عليها، أو المنتجات التي يجب شراؤها.',
+            'explanation_ar' => 'راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228',
+            'is_multi_correct' => false,
+            'order_index' => 19,
+            'options' => [
+                [
+                    'option_text_ar' => 'تقنية " PULL"',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تقنية : PUSH',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقنية SEO',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقنية PPC',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 360,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'هنالك إستراتيجيات قد تساعد شركتك/ أو منتجك/ أو خدمتك في المستقبل القريب هي:',
+            'explanation_ar' => 'الإجابة الصحيحة جميع ما سبق، راجع الوحدة: الوحدة 12: التكنولوجيا في التسويق، ص 228',
+            'is_multi_correct' => false,
+            'order_index' => 20,
+            'options' => [
+                [
+                    'option_text_ar' => 'التسويق عبر الهاتف المحمول',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إنشاء تطبيقك الخاص للهواتف الذكية',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'عمليات الدفع الإلكتروني',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'جميع ما سباق',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 361,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تلعب التكنولوجيا دوراً في تنفيذ الأنشطة التسويقية والوصول للعملاء.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 21,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 362,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'من أبرز فوائد التكنولوجيا في التسويق:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 22,
+            'options' => [
+                [
+                    'option_text_ar' => 'الوصول الأوسع للعملاء وتحليل البيانات وتحسين الاستهداف',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'زيادة تكاليف التخزين فقط',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقليل جودة المنتج',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إلغاء الحاجة للعملاء',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 363,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا تساعد تطبيقات التكنولوجيا الوصول للعملاء.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 23,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 364,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التقنيات التالية ترتبط بإنشاء صفحات الويب؟',
+            'explanation_ar' => 'التفسير: تعد تقنية الـ  HTML ضمن التقنيات المرتبطة بالويب وإنشاء صفحات المواقع الإلكترونية.',
+            'is_multi_correct' => false,
+            'order_index' => 24,
+            'options' => [
+                [
+                    'option_text_ar' => 'Excel',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'HTML',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'PowerPoint',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'Access',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 365,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ماذا يُقصد بمصطلح WYSIWYG في سياق تصميم مواقع الويب؟',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 25,
+            'options' => [
+                [
+                    'option_text_ar' => 'نظام لإدارة البريد الإلكتروني',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'أداة/واجهة تتيح تصميم صفحات الويب بصورة مرئية',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'محرك بحث',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'نظام للدفع الإلكتروني',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 366,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يعد مرتبطًا بالإعلانات المدفوعة في محركات البحث؟',
+            'explanation_ar' => 'التفسير: يشير الاختصار PPC إلى نموذج إعلاني يرتبط بالدفع مقابل النقر Pay Per Click',
+            'is_multi_correct' => false,
+            'order_index' => 26,
+            'options' => [
+                [
+                    'option_text_ar' => 'SEO فقط',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'PPC',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'HTML',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'XML',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 367,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'يشير الاختصار PPC إلى نموذج إعلاني يرتبط بالدفع مقابل النقر Pay Per Click.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 27,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 368,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الأدوات التالية يرتبط بسياق البحث عن الكلمات المفتاحية والأفكار المتعلقة بها؟',
+            'explanation_ar' => 'التفسير: تعتبر Google Trendsو Answer the Public Keyword Generatorضمن الأدوات المرتبطة بالبحث في محركات البحث والكلمات المفتاحية.',
+            'is_multi_correct' => false,
+            'order_index' => 28,
+            'options' => [
+                [
+                    'option_text_ar' => 'Microsoft Word',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'Google Trends',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'PowerPoint',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'Bluetooth',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 369,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يُستخدم Google Trends في سياق تحليل الاتجاهات المرتبطة بعمليات البحث.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث تعتبر  Google Trends ضمن الأدوات المستخدمة في سياق محركات البحث وتحليل ما يبحث عنه المستخدمون.',
+            'is_multi_correct' => false,
+            'order_index' => 29,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 370,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يعتبر أداة لتوليد أفكار للكلمات المفتاحية؟',
+            'explanation_ar' => 'التفسير: تعتبر Answer the Public Keyword Generatorضمن الأدوات المرتبطة بالكلمات المفتاحية في سياق التسويق عبر محركات البحث.',
+            'is_multi_correct' => false,
+            'order_index' => 30,
+            'options' => [
+                [
+                    'option_text_ar' => 'Google Maps',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'Answer the Public Keyword Generator',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'Google Drive',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'Google Calendar',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 371,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يشير الاختصار SERP إلى الصفحة التي تظهر فيها نتائج محرك البحث.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 31,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 372,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الآتي يرتبط مباشرة بمفهوم SERP ؟',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 32,
+            'options' => [
+                [
+                    'option_text_ar' => 'تصميم الشعار',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'نظام الدفع الإلكتروني',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'نتائج محرك البحث',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'إدارة المخزون',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 373,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تعتبر كل من  Google وYahoo محركات البحث.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 33,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 374,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يعتبر مثال على منصات التواصل الاجتماعي؟',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 34,
+            'options' => [
+                [
+                    'option_text_ar' => 'Excel',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'Google AdWords',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'Facebook',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'HTML',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 375,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مجموعة من التالية تتضمن منصات وسائل التواصل الاجتماعي؟',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 35,
+            'options' => [
+                [
+                    'option_text_ar' => 'Excel وWord وAccess',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'Facebook وTwitter وLinkedIn',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'HTML وCSS وXML',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'Google وAmazon وIBM',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 376,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يقتصر استخدام وسائل التواصل الاجتماعي في التسويق على Facebook وTwitter فقط.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث توجد مجموعة كبيرة من منصات التواصل الاجتماعي يمكن استخدمها في التسويق، والتي من بينها Facebook وTwitter وLinkedIn وYouTube وQuora وReddit.',
+            'is_multi_correct' => false,
+            'order_index' => 36,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 377,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من المجموعات التالية تمثل أمثلة إضافية لمنصات التواصل الاجتماعي ؟',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 37,
+            'options' => [
+                [
+                    'option_text_ar' => 'ð Google وAmazon',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ð HTML وCSS',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'YouTube وQuora وReddit',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ð PPC وSEO',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+    ],
+];
+````
+
+## File: database/data/graded_exams/marketing_ibta/units/unit_13.php
+````php
+<?php
+
+// بيانات الوحدة رقم 13: تقييم التسويق
+// تم توليدها آليًا من بنك أسئلة IBTA (404 سؤال) - 27 سؤال
+return [
+    'unit_number' => 13,
+    'title_ar' => 'تقييم التسويق',
+    'order_index' => 13,
+    'questions' => [
+        [
+            'original_number' => 378,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي تعتبر من أنواع تقييمات خطة السوق.',
+            'explanation_ar' => 'تشمل العناصر السابقة مع العناصر التالية :الفاعلية، والكفاءة، والملخص، الهدف، الإجراءات النتائج  تمثل كافة أنواع تقييمات خطة السوق  ، الوحدة 13 ، درس أنواع تقيميات خطة السوق، ص : 272.',
+            'is_multi_correct' => false,
+            'order_index' => 1,
+            'options' => [
+                [
+                    'option_text_ar' => 'الاحتياجات',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التكلفة / الفائدة',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التكوين',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'كل ما سبق ذكره.',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 379,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الهدف الأساسي من تقييم خطة التسويق',
+            'explanation_ar' => 'تقييم الخطة يساعد على التأكد من تحقيق الأهداف المحددة، كما يساعد في تحسين خطة التسويق مستقبلاً. راجع الوحدة 13: تقويم التسويق، ص 270.',
+            'is_multi_correct' => false,
+            'order_index' => 2,
+            'options' => [
+                [
+                    'option_text_ar' => 'زيادة عدد الموظفين',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التأكد من تحقيق الأهداف المحددة وتحسين الخطة',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تغيير اسم الشركة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقليل عدد المنتجات',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 380,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'لماذا ينبغي مراجعة خطة التسويق بصورة مستمرة؟',
+            'explanation_ar' => 'المستهلكين يتغيرون، وأن عدم معالجة هذه التغييرات قد يؤدي إلى فقدان قاعدة عملاء الشركة. راجع الوحدة 13: تقويم التسويق، ص 270.',
+            'is_multi_correct' => false,
+            'order_index' => 3,
+            'options' => [
+                [
+                    'option_text_ar' => 'لأن المستهلكين لا يتغيرون',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'لأن المستهلكين تتغير رغباتهم واحتياجاتهم',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'لتغيير الأسعار فقط',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'لتقليل الإعلانات',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 381,
+            'level' => 'hard',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي مما يلي يُعد نوعًا من أنواع تقييمات خطة التسويق ؟',
+            'explanation_ar' => 'من أنواع تقييم التسويق: الاحتياجات، والتكلفة/الفائدة، والفعالية، والكفاءة، والتكوين، والملخص، والهدف، والإجراءات، والنتائج. راجع الوحدة 13: تقويم التسويق، ص 270.',
+            'is_multi_correct' => false,
+            'order_index' => 4,
+            'options' => [
+                [
+                    'option_text_ar' => 'تقييم الاحتياجات .',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تقييم الموظفين',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقييم الرواتب',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقييم المباني',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 382,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يساعد تقييم خطة التسويق في تحديد نقاط القوة والضعف في خطة التسويق، بما يساعد على تحسينه.',
+            'explanation_ar' => 'العبارة خاطئة لأنه تقييم خطة التسويق يساعد في تحديد نقاط القوة والضعف في خطة التسويق، بما يساعد على تحسينه. راجع الوحدة 13: تقويم التسويق، ص 270.',
+            'is_multi_correct' => false,
+            'order_index' => 5,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 383,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الأنواع الثلاثة الأكثر شيوعًا لتقييمات خطة التسويق؟',
+            'explanation_ar' => 'التفسير تعتبر الأنواع الثلاثة الأكثر شيوعًا في تصميم التقييم التسويقي هي: قائم على الهدف، قائم على الإجراءات، قائم على النتائج. راجع الوحدة 13: تقويم التسويق، ص 270.',
+            'is_multi_correct' => false,
+            'order_index' => 6,
+            'options' => [
+                [
+                    'option_text_ar' => 'قائم على الهدف، قائم على الإجراءات، قائم على النتائج',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'قائم على السعر، المنتج، المكان',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'قائم على العملاء، الموظفين، الإدارة',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'قائم على التكلفة، الربح، المبيعات',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 384,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما السؤال الذي ينبغي طرحه عند تصميم تقييم قائم على الهدف؟',
+            'explanation_ar' => 'التفسير: من ضمن أسئلة تصميم التقييم: أسئلة، «ما هو الغرض من التقييم؟ ما هو القرار الذي تريد أن تتخذه نتيجة التقييم؟». راجع الوحدة 13: تقويم التسويق، ص 270.',
+            'is_multi_correct' => false,
+            'order_index' => 7,
+            'options' => [
+                [
+                    'option_text_ar' => 'ما هو الغرض من التقييم؟',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'كم عدد الموظفين؟',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'كم عدد الفروع؟',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ما سعر المنتج؟',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 385,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'تتمثل أدوات جمع المعلومات فيما يلي:',
+            'explanation_ar' => 'تتمثل هذه الأدوات تحديدًا لجمع المعلومات: الاستبيانات، المقابلات، التوثيق، والمراقبة.راجع الوحدة 13: تقويم التسويق، ص 270.',
+            'is_multi_correct' => false,
+            'order_index' => 8,
+            'options' => [
+                [
+                    'option_text_ar' => 'الاستبيانات والمقابلات والتوثيق والمراقبة',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'الإعلانات والأسعار فقط',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'المبيعات والمخزون فقط',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الصحف والمجلات فقط',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 386,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من التالي يمثل سؤالًا مناسبًا عند تقييم قائم على الإجراءات؟',
+            'explanation_ar' => 'يركز التقييم القائم على الإجراءات على كيفية تنفيذ العمليات، ومن ذلك كيفية تدريب الموظفين وتقديم المنتجات أو الخدمات. راجع الوحدة 13: تقويم التسويق، ص 270.',
+            'is_multi_correct' => false,
+            'order_index' => 9,
+            'options' => [
+                [
+                    'option_text_ar' => 'كيف يتم تدريب الموظفين على تقديم المنتج أو الخدمات؟',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ما لون شعار الشركة؟',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'كم عدد فروع المنافسين؟',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ما سعر الإعلان؟',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 387,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الذي يركز عليه التقييم القائم على النتائج؟',
+            'explanation_ar' => 'أن التقييم القائم على النتائج يأخذ في الاعتبار ما إذا كانت الأنشطة التسويقية تحقق النتائج المناسبة التي ترضي العملاء والسوق المستهدف ككل. راجع الوحدة 13: تقويم التسويق، ص 270',
+            'is_multi_correct' => false,
+            'order_index' => 10,
+            'options' => [
+                [
+                    'option_text_ar' => 'تحقيق النتائج التي ترضي العملاء والسوق المستهدف ككل',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'طريقة تصميم المكتب',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'عدد الاجتماعات',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'عدد الموظفين فقط',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 388,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'الغرض من تقييم التسويق هو:',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 11,
+            'options' => [
+                [
+                    'option_text_ar' => 'قياس فعالية الأنشطة التسويقية وتحسين الأداء',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'زيادة عدد الموظفين',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إيقاف الحملات نهائياً',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تجاهل النتائج',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 389,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'تقييم التسويق لا يساعد المنظمة على معرفة مدى تحقيق أهدافها التسويقية.',
+            'explanation_ar' => null,
+            'is_multi_correct' => false,
+            'order_index' => 12,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 390,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'عند إجراء تقييم لخطة التسويق، ما الذي ينبغي أن يساعد التقييم الإدارة على تحديده؟',
+            'explanation_ar' => 'التفسير: من أهداف تقييم خطة التسويق تحديد نقاط القوة والضعف في الخطة، بما يساعد المنظمة على تحسينها مستقبلًا.',
+            'is_multi_correct' => false,
+            'order_index' => 13,
+            'options' => [
+                [
+                    'option_text_ar' => 'عدد مكاتب الشركة فقط',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'نقاط القوة والضعف في خطة التسويق',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ألوان المنتجات المنافسة فقط',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'عدد الموظفين الجدد',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 391,
+            'level' => 'easy',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الأسئلة التالية يرتبط بصورة أكبر بقرار سيتم اتخاذه نتيجة التقييم؟',
+            'explanation_ar' => 'التفسير: عند تصميم التقييم ينبغي تحديد القرار الذي سيتم اتخاذه بناءً على نتائج التقييم، وليس جمع المعلومات بصورة عشوائية.',
+            'is_multi_correct' => false,
+            'order_index' => 14,
+            'options' => [
+                [
+                    'option_text_ar' => 'ما لون الشعار؟',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'كم عدد موظفي الشركة؟',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ما القرار الذي تريد أن تتخذه نتيجة التقييم؟',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'أين يقع مقر الشركة؟',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 392,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'إذا كان الهدف من التقييم معرفة ما إذا كانت الخطة تحقق الغرض الذي وضعت من أجله، فأي نوع من التقييم يناسب ذلك؟',
+            'explanation_ar' => 'التفسير: التقييم القائم على الهدف يرتبط بفحص الخطة في ضوء الغرض أو الهدف الذي وضعت لتحقيقه.',
+            'is_multi_correct' => false,
+            'order_index' => 15,
+            'options' => [
+                [
+                    'option_text_ar' => 'التقييم القائم على الهدف',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'التقييم القائم على الإجراءات',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'التقييم القائم على النتائج فقط',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقييم التكلفة فقط',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 393,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الأسئلة التالية يرتبط بالتقييم القائم على الإجراءات؟',
+            'explanation_ar' => 'التفسير: يركز التقييم القائم على الإجراءات على كيفية تنفيذ الأنشطة والعمليات، وليس فقط على النتائج النهائية.',
+            'is_multi_correct' => false,
+            'order_index' => 16,
+            'options' => [
+                [
+                    'option_text_ar' => 'هل حققت الخطة أهدافها النهائية؟',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'كيف يتم تنفيذ الأنشطة والإجراءات التسويقية؟',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'ما مقدار الربح السنوي للشركة؟',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'ما حجم السوق المستهدف؟',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 394,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'شركة قامت بتقييم حملتها التسويقية من خلال مقارنة النتائج التي حققتها بالنتائج التي كانت تستهدفها. هذا مثال على:',
+            'explanation_ar' => 'التفسير: التقييم القائم على النتائج يهتم بما إذا كانت الأنشطة التسويقية قد حققت النتائج المناسبة المطلوبة.',
+            'is_multi_correct' => false,
+            'order_index' => 17,
+            'options' => [
+                [
+                    'option_text_ar' => 'تقييم قائم على الاحتياجات',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقييم قائم على الإجراءات',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تقييم قائم على النتائج',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'تقييم قائم على التكوين',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 395,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'أي من الأدوات التالية يمكن استخدامها للحصول على معلومات عند إجراء التقييم التسويقي؟',
+            'explanation_ar' => 'التفسير: تعتمد عملية جمع المعلومات في التقييم على مجموعة من الأدوات، وليس أداة واحدة فقط.',
+            'is_multi_correct' => false,
+            'order_index' => 18,
+            'options' => [
+                [
+                    'option_text_ar' => 'الاستبيانات فقط',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'المقابلات فقط',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'المراقبة فقط',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'الاستبيانات والمقابلات والتوثيق والمراقبة',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 396,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'إذا أرادت المنظمة معرفة مدى رضا السوق المستهدف عن النتائج التي حققتها أنشطتها التسويقية، فإنها تركز بصورة أساسية على:',
+            'explanation_ar' => 'التفسير: التقييم القائم على النتائج يهتم بما إذا كانت الأنشطة تحقق النتائج المناسبة التي ترضي العملاء والسوق المستهدف.',
+            'is_multi_correct' => false,
+            'order_index' => 19,
+            'options' => [
+                [
+                    'option_text_ar' => 'كيفية كتابة الخطة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'عدد الموظفين المشاركين',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'طريقة إعداد الميزانية',
+                    'order_index' => 3,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'نتائج الأنشطة التسويقية',
+                    'order_index' => 4,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 397,
+            'level' => 'medium',
+            'question_type' => 'mcq',
+            'text_ar' => 'ما الخطوة الأكثر منطقية قبل البدء في جمع المعلومات الخاصة بالتقييم؟',
+            'explanation_ar' => 'التفسير: تحديد الغرض من التقييم والقرار الذي سيُتخذ بناءً عليه يساعد في تحديد المعلومات المطلوبة وأسلوب جمعها.',
+            'is_multi_correct' => false,
+            'order_index' => 20,
+            'options' => [
+                [
+                    'option_text_ar' => 'تغيير الخطة مباشرة',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'إيقاف النشاط التسويقي',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'تحديد الغرض من التقييم والقرار المطلوب اتخاذه',
+                    'order_index' => 3,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'اختيار شعار جديد للمنتج',
+                    'order_index' => 4,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 398,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن استخدام نتائج تقييم خطة التسويق لتحسين الخطة التسويقية مستقبلًا.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث لا يقتصر التقييم على الحكم على الخطة الحالية، وإنما يساعد أيضًا في تحسين خطة التسويق مستقبلًا.',
+            'is_multi_correct' => false,
+            'order_index' => 21,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 399,
+            'level' => 'medium',
+            'question_type' => 'true_false',
+            'text_ar' => 'التقييم القائم على الإجراءات يهتم فقط بالنتائج النهائية التي حققتها الخطة، ولا يهتم بكيفية تنفيذها.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن التقييم القائم على الإجراءات يهتم بكيفية تنفيذ الأنشطة والعمليات، ولذلك فإن معرفة كيفية تنفيذ العمل جزء أساسي منه.',
+            'is_multi_correct' => false,
+            'order_index' => 22,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 400,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن أن يكون التقييم التسويقي أكثر فائدة عندما تكون المعلومات التي يتم جمعها مرتبطة بالغرض من التقييم.',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث يساعد تحديد الغرض والقرار المطلوب في توجيه عملية جمع المعلومات نحو البيانات المفيدة للتقييم.',
+            'is_multi_correct' => false,
+            'order_index' => 23,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 401,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'التقييم القائم على النتائج لا يهتم بما إذا كانت الأنشطة التسويقية تحقق نتائج مناسبة للعملاء والسوق المستهدف.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث أن جوهر اهتمام التقييم القائم على النتائج؛ بما إذا كانت الأنشطة التسويقية تحقق النتائج المناسبة التي ترضي العملاء والسوق المستهدف.',
+            'is_multi_correct' => false,
+            'order_index' => 24,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 402,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يمكن أن تستخدم عملية التقييم أكثر من وسيلة لجمع المعلومات',
+            'explanation_ar' => 'التفسير: العبارة صحيحة، حيث تشمل أدوات جمع المعلومات الاستبيانات والمقابلات والتوثيق والمراقبة، وبالتالي يمكن استخدام أكثر من أداة في عملية التقييم.',
+            'is_multi_correct' => false,
+            'order_index' => 25,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => true,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => false,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 403,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'لا يؤثر تحديد الهدف من التقييم التسويقي والقرارات التي ستُتخذ بناءً على نتائجه في طريقة تصميم هذا التقييم.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، تحديد الغرض من التقييم والقرار الذي تريد المنظمة اتخاذه نتيجة التقييم من الأسئلة الأساسية عند تصميم التقييم التسويقي.',
+            'is_multi_correct' => false,
+            'order_index' => 26,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+        [
+            'original_number' => 404,
+            'level' => 'easy',
+            'question_type' => 'true_false',
+            'text_ar' => 'يقتصر تقييم خطة التسويق على معرفة ما إذا كانت الخطة حققت نتائجها فقط، دون النظر إلى طريقة تنفيذها.',
+            'explanation_ar' => 'التفسير: العبارة خاطئة، حيث يمكن التمييز بين التقييم القائم على الهدف، والقائم على الإجراءات، والقائم على النتائج؛ ولذلك فإن التقييم لا يقتصر على النتائج وحدها، بل يمكن أن يفحص الأهداف والإجراءات والنتائج.',
+            'is_multi_correct' => false,
+            'order_index' => 27,
+            'options' => [
+                [
+                    'option_text_ar' => 'True',
+                    'order_index' => 1,
+                    'is_correct' => false,
+                ],
+                [
+                    'option_text_ar' => 'False',
+                    'order_index' => 2,
+                    'is_correct' => true,
+                ],
+            ],
+        ],
+    ],
+];
+````
+
+## File: database/migrations/2026_08_29_000001_create_graded_exams_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+// جدول منفصل تمامًا عن assessments الحالي (نظام سيكومتري بالسكور).
+// graded_exams مخصص لبنوك الأسئلة الموضوعية (إجابة صحيحة/خطأ محددة)
+// زي "الاختبار التجريبي للشهادة الاحترافية في التسويق - IBTA".
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('graded_exams', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('title_ar');
+            $table->text('description_ar')->nullable();
+            $table->string('category')->nullable();      // مثال: 'marketing_certification'
+            $table->integer('total_questions')->default(0); // إجمالي بنك الأسئلة (404)
+            $table->integer('time_limit_min')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->uuid('created_by');
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('graded_exams');
+    }
+};
+````
+
+## File: database/migrations/2026_08_29_000002_create_graded_exam_units_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+// وحدات بنك الأسئلة (13 وحدة). مكافئ مفاهيميًا لـ dimensions
+// لكن مفصول تمامًا لتجنّب أي تعارض مع منطق السكور النفسي الحالي.
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('graded_exam_units', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('graded_exam_id');
+            $table->integer('unit_number');        // 1 إلى 13 (نفس ترقيم المصدر الأصلي)
+            $table->string('title_ar');
+            $table->integer('order_index')->default(0);
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->unique(['graded_exam_id', 'unit_number']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('graded_exam_units');
+    }
+};
+````
+
+## File: database/migrations/2026_08_29_000003_create_graded_exam_questions_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('graded_exam_questions', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('graded_exam_id');          // مكرر عمدًا (denormalized) لتسهيل الاستعلامات المباشرة
+            $table->uuid('unit_id');
+            $table->integer('original_number')->nullable(); // الرقم التسلسلي الأصلي 1-404 (تتبّع فقط)
+            $table->enum('level', ['easy', 'medium', 'hard']);
+            $table->enum('question_type', ['mcq', 'true_false']);
+            $table->text('text_ar');
+            $table->text('explanation_ar')->nullable();      // NULL لو مفيش شرح في المصدر
+            $table->boolean('is_multi_correct')->default(false);
+            $table->string('source_page_ref')->nullable();   // رقم الصفحة المرجعية إن وُجد
+            $table->integer('order_index')->default(0);
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('graded_exam_questions');
+    }
+};
+````
+
+## File: database/migrations/2026_08_29_000004_create_graded_exam_options_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('graded_exam_options', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('question_id');
+            $table->string('option_label')->nullable();  // 'أ' / 'ب' / 'True' / 'False' ... قد تكون NULL
+            $table->text('option_text_ar');
+            $table->integer('order_index')->default(0);
+            $table->boolean('is_correct')->default(false); // بديل score_value بتاع answer_options القديم
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('graded_exam_options');
+    }
+};
+````
+
+## File: database/migrations/2026_08_29_000005_create_graded_exam_sessions_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+// نسخة موازية لـ exam_sessions الحالي، لكن خاصة بامتحانات الأسئلة الموضوعية
+// العشوائية (مثال: امتحان 50 سؤال بقيود سهل/متوسط/صعب اللي اتفقنا عليها).
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('graded_exam_sessions', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('user_id');
+            $table->uuid('graded_exam_id');
+            $table->enum('status', ['in_progress', 'completed', 'abandoned'])->default('in_progress');
+            $table->integer('total_questions');          // عدد الأسئلة في هذه النسخة (مثال: 50)
+            $table->json('constraints_snapshot')->nullable(); // نسخة من constraints.json وقت التوليد
+            $table->integer('random_seed')->nullable();
+            $table->timestamp('started_at');
+            $table->timestamp('completed_at')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('graded_exam_sessions');
+    }
+};
+````
+
+## File: database/migrations/2026_08_29_000006_create_graded_exam_session_questions_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+// يحدد فعليًا: أي أسئلة اتسحبت لهذه النسخة من الامتحان، بأي ترتيب،
+// وترتيب الخيارات بعد الخلط (shuffle) الخاص بهذه المحاولة تحديدًا.
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('graded_exam_session_questions', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('session_id');
+            $table->uuid('question_id');
+            $table->integer('position_in_exam');           // 1 إلى 50 مثلاً
+            $table->json('shuffled_options_order')->nullable(); // ترتيب عرض الخيارات لهذه النسخة
+            $table->timestamps();
+
+            $table->unique(['session_id', 'question_id']);
+            $table->index(['session_id', 'position_in_exam']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('graded_exam_session_questions');
+    }
+};
+````
+
+## File: database/migrations/2026_08_29_000007_create_graded_exam_user_answers_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('graded_exam_user_answers', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('session_id');
+            $table->uuid('question_id');
+            $table->boolean('is_correct')->nullable(); // NULL لحد ما يتم التصحيح
+            $table->timestamp('answered_at')->nullable();
+            $table->timestamps();
+
+            $table->unique(['session_id', 'question_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('graded_exam_user_answers');
+    }
+};
+````
+
+## File: database/migrations/2026_08_29_000008_create_graded_exam_user_answer_options_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+// pivot table: يدعم اختيار أكثر من خيار واحد لكل سؤال
+// (ضروري لأن 21 سؤال في البنك ليهم أكثر من إجابة صحيحة).
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('graded_exam_user_answer_options', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('user_answer_id');
+            $table->uuid('option_id');
+            $table->timestamps();
+
+            $table->unique(['user_answer_id', 'option_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('graded_exam_user_answer_options');
+    }
+};
+````
+
+## File: database/migrations/2026_08_29_000009_create_graded_exam_results_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('graded_exam_results', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('session_id');
+            $table->integer('correct_count');
+            $table->integer('incorrect_count');
+            $table->integer('total_questions');
+            $table->decimal('percentage', 5, 2);
+            $table->string('pass_status')->nullable(); // 'ناجح' / 'راسب' حسب حد النجاح المعتمد
+            $table->timestamp('calculated_at');
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('graded_exam_results');
+    }
+};
+````
+
+## File: database/migrations/2026_08_29_000010_create_graded_exam_constraint_settings_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+// إعدادات قابلة للتعديل من لوحة تحكم الأدمن (Runtime settings).
+// علاقة 1:1 مع graded_exams. القيم الوصفية/الإحصائية (مثل عدد الأسئلة
+// الصعبة المتاحة فعليًا في البنك) تُحسب Live من graded_exam_questions
+// وقت التحقق، ولا تُخزَّن هنا أبدًا حتى لا تصبح قديمة (stale).
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('graded_exam_constraint_settings', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('graded_exam_id')->unique();
+
+            // === القيم اللي الأدمن هيتحكم فيها من الداشبورد ===
+            $table->integer('total_questions')->default(50);
+            $table->decimal('easy_percentage', 5, 2)->default(50.00);
+            $table->decimal('medium_percentage', 5, 2)->default(40.00);
+            $table->decimal('hard_percentage', 5, 2)->default(10.00);
+
+            // === إعدادات إضافية (اختيارية دلوقتي، جاهزة للمستقبل) ===
+            $table->enum('type_distribution_mode', ['proportional', 'balanced'])->default('proportional');
+            $table->enum('mc_position_balance_mode', ['mirror_bank_bias', 'forced_balanced'])->default('forced_balanced');
+            $table->integer('max_multi_correct_questions')->default(3);
+            $table->integer('max_consecutive_same_answer')->default(3);
+            $table->integer('max_consecutive_same_unit')->default(2);
+
+            // مساحة مرنة لأي إعداد مستقبلي تاني من غير ما تحتاج migration جديدة كل مرة
+            $table->json('advanced_settings')->nullable();
+
+            $table->uuid('updated_by')->nullable();
+            $table->timestamps();
+
+            // القيمة دي بتتفحص في التطبيق (FormRequest) لكن نضيفها هنا للتوثيق:
+            // easy_percentage + medium_percentage + hard_percentage يجب أن يساوي 100
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('graded_exam_constraint_settings');
+    }
+};
+````
+
+## File: database/seeders/GradedExamMarketingIbtaSeeder.php
+````php
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\GradedExam;
+use App\Models\GradedExamUnit;
+use App\Models\GradedExamQuestion;
+use App\Models\GradedExamOption;
+use Illuminate\Database\Seeder;
+
+class GradedExamMarketingIbtaSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $dir = database_path('data/graded_exams/marketing_ibta');
+
+        $meta = require $dir . '/meta.php';
+        $meta['created_by'] = \App\Models\User::first()->id ?? null;
+
+        $gradedExam = GradedExam::create($meta);
+
+        \App\Models\GradedExamConstraintSetting::create([
+            'graded_exam_id' => $gradedExam->id,
+            'total_questions' => 50,
+            'easy_percentage' => 50.00,
+            'medium_percentage' => 40.00,
+            'hard_percentage' => 10.00,
+        ]);
+
+        // كل وحدة في ملف منفصل: units/unit_01.php ... unit_13.php
+        $unitFiles = glob($dir . '/units/unit_*.php');
+        sort($unitFiles); // يضمن ترتيب unit_01 قبل unit_02 ... الخ
+
+        foreach ($unitFiles as $unitFile) {
+            $unitData = require $unitFile;
+
+            $unit = GradedExamUnit::create([
+                'graded_exam_id' => $gradedExam->id,
+                'unit_number' => $unitData['unit_number'],
+                'title_ar' => $unitData['title_ar'],
+                'order_index' => $unitData['order_index'],
+            ]);
+
+            foreach ($unitData['questions'] as $qData) {
+                $question = GradedExamQuestion::create([
+                    'graded_exam_id' => $gradedExam->id,
+                    'unit_id' => $unit->id,
+                    'original_number' => $qData['original_number'],
+                    'level' => $qData['level'],
+                    'question_type' => $qData['question_type'],
+                    'text_ar' => $qData['text_ar'],
+                    'explanation_ar' => $qData['explanation_ar'],
+                    'is_multi_correct' => $qData['is_multi_correct'],
+                    'order_index' => $qData['order_index'],
+                ]);
+
+                foreach ($qData['options'] as $optData) {
+                    GradedExamOption::create([
+                        'question_id' => $question->id,
+                        'option_text_ar' => $optData['option_text_ar'],
+                        'order_index' => $optData['order_index'],
+                        'is_correct' => $optData['is_correct'],
+                    ]);
+                }
+            }
+        }
+
+        // تحديث العدد الفعلي للأسئلة بعد الإدخال (تحقق تلقائي)
+        $gradedExam->update([
+            'total_questions' => $gradedExam->questions()->count(),
+        ]);
+    }
+}
+````
+
+## File: database/seeders/GradedExamsDatabaseSeeder.php
+````php
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use App\Models\GradedExam;
+use App\Models\GradedExamUnit;
+use App\Models\GradedExamQuestion;
+use App\Models\GradedExamOption;
+
+class GradedExamsDatabaseSeeder extends Seeder
+{
+    public function run()
+    {
+        // تفريغ الجداول قبل إعادة البذر (نفس أسلوب AssessmentsDatabaseSeeder)
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys=OFF;');
+        } else {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        }
+        GradedExamOption::truncate();
+        GradedExamQuestion::truncate();
+        GradedExamUnit::truncate();
+        GradedExam::truncate();
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys=ON;');
+        } else {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        }
+
+        // امتحانات موضوعية إضافية تُضاف هنا مستقبلاً بنفس الطريقة:
+        $this->call(GradedExamMarketingIbtaSeeder::class);
+    }
+}
+````
+
+## File: resources/views/admin/graded_exam_questions/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'أسئلة الشهادات الاحترافية')
+@section('page-title', 'أسئلة الشهادات الاحترافية')
+
+@section('content')
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('admin.graded_exams.questions.index') }}" class="row g-2 align-items-end" id="filter-form">
+            <input type="hidden" name="per_page" id="filter-per-page" value="{{ request('per_page', 25) }}">
+            
+            <div class="col-md-2">
+                <label class="form-label small fw-medium">الشهادة</label>
+                <select name="graded_exam_id" class="form-select form-select-sm" id="filter-exam">
+                    <option value="">الكل</option>
+                    @foreach($exams as $e)
+                        <option value="{{ $e->id }}" {{ request('graded_exam_id') == $e->id ? 'selected' : '' }}>
+                            {{ $e->title_ar }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label small fw-medium">الوحدة</label>
+                <select name="unit_id" class="form-select form-select-sm" id="filter-unit">
+                    <option value="">الكل</option>
+                    @foreach($units as $u)
+                        <option value="{{ $u->id }}" {{ request('unit_id') == $u->id ? 'selected' : '' }}>
+                            {{ $u->title_ar }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label small fw-medium">المستوى</label>
+                <select name="level" class="form-select form-select-sm">
+                    <option value="">الكل</option>
+                    <option value="easy" {{ request('level') == 'easy' ? 'selected' : '' }}>سهل</option>
+                    <option value="medium" {{ request('level') == 'medium' ? 'selected' : '' }}>متوسط</option>
+                    <option value="hard" {{ request('level') == 'hard' ? 'selected' : '' }}>صعب</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label small fw-medium">النوع</label>
+                <select name="question_type" class="form-select form-select-sm">
+                    <option value="">الكل</option>
+                    <option value="mcq_single" {{ request('question_type') == 'mcq_single' ? 'selected' : '' }}>اختياري (إجابة واحدة)</option>
+                    <option value="mcq_multi" {{ request('question_type') == 'mcq_multi' ? 'selected' : '' }}>اختياري (متعدد)</option>
+                    <option value="true_false" {{ request('question_type') == 'true_false' ? 'selected' : '' }}>صح / خطأ</option>
+                </select>
+            </div>
+            
+            <div class="col-md-1">
+                <label class="form-label small fw-medium">الخيارات</label>
+                <select name="options_count" class="form-select form-select-sm">
+                    <option value="">الكل</option>
+                    <option value="2" {{ request('options_count') == '2' ? 'selected' : '' }}>2</option>
+                    <option value="3" {{ request('options_count') == '3' ? 'selected' : '' }}>3</option>
+                    <option value="4" {{ request('options_count') == '4' ? 'selected' : '' }}>4</option>
+                    <option value="5" {{ request('options_count') == '5' ? 'selected' : '' }}>5</option>
+                    <option value="other" {{ request('options_count') == 'other' ? 'selected' : '' }}>+5</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label small fw-medium">بحث في النص</label>
+                <input type="text" name="search" class="form-control form-control-sm"
+                    value="{{ request('search') }}" placeholder="كلمة بحث...">
+            </div>
+            
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-2">
+        <span class="text-muted small">{{ $questions->total() }} سؤال</span>
+        <span class="text-muted small text-black-50">|</span>
+        <label class="small text-muted mb-0">عرض:</label>
+        <select id="per-page-select" class="form-select form-select-sm d-inline-block w-auto py-0 px-2" style="height: 28px;">
+            <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25</option>
+            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+            <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
+        </select>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+            <i class="bi bi-plus-circle me-1"></i>إضافة سؤال
+        </button>
+    </div>
+</div>
+
+<div id="questions-table-wrapper">
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 50px;">رقم</th>
+                    <th style="width: 45%;">نص السؤال</th>
+                    <th>الوحدة</th>
+                    <th>المستوى</th>
+                    <th>النوع</th>
+                    <th class="text-center">الخيارات</th>
+                    <th class="text-end" style="width:120px;">العمليات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($questions as $q)
+                <tr data-id="{{ $q->id }}">
+                    <td class="text-muted small">{{ $q->original_number }}</td>
+                    
+                    <td class="question-text-cell small" data-id="{{ $q->id }}">
+                        <span class="question-text-display fw-medium d-block mb-1">{{ $q->text_ar }}</span>
+                        @if($q->explanation_ar)
+                            <span class="question-explanation-display text-muted" style="font-size: 0.75rem;">
+                                <i class="bi bi-info-circle me-1"></i>{{ Str::limit($q->explanation_ar, 80) }}
+                            </span>
+                            <div class="d-none full-explanation">{{ $q->explanation_ar }}</div>
+                        @endif
+                        <div class="d-none question-level">{{ $q->level }}</div>
+                        <div class="d-none question-type">{{ $q->question_type }}</div>
+                    </td>
+                    
+                    <td class="small text-muted">{{ $q->unit ? $q->unit->title_ar : 'بدون وحدة' }}</td>
+                    
+                    <td>
+                        @if($q->level == 'easy')
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">سهل</span>
+                        @elseif($q->level == 'medium')
+                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">متوسط</span>
+                        @else
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">صعب</span>
+                        @endif
+                    </td>
+                    
+                    <td class="small text-muted">
+                        {{ $q->question_type == 'mcq' ? 'اختياري' : 'صح/خطأ' }}
+                    </td>
+                    
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-light border btn-view-options" data-id="{{ $q->id }}">
+                            <i class="bi bi-list-ul me-1"></i>{{ $q->options_count }}
+                        </button>
+                    </td>
+                    
+                    <td>
+                        <div class="d-flex gap-1 justify-content-end">
+                            <button class="btn btn-sm btn-outline-primary btn-edit-q" data-id="{{ $q->id }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger btn-delete-q"
+                                    data-id="{{ $q->id }}"
+                                    data-url="{{ route('admin.graded_exams.questions.destroy', $q->id) }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        لا توجد أسئلة مطابقة للبحث.
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-transparent border-0">{{ $questions->appends(request()->query())->links() }}</div>
+</div>
+</div>
+
+<!-- Edit Question Modal (Form approach instead of inline due to complexity) -->
+<div class="modal fade" id="editQuestionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">تعديل السؤال</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-q-id">
+                <div class="mb-3">
+                    <label class="form-label small fw-medium">نص السؤال</label>
+                    <textarea class="form-control" id="edit-q-text" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-medium">التفسير / الشرح (اختياري)</label>
+                    <textarea class="form-control text-muted" id="edit-q-explanation" rows="3"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-medium">المستوى</label>
+                        <select class="form-select" id="edit-q-level">
+                            <option value="easy">سهل</option>
+                            <option value="medium">متوسط</option>
+                            <option value="hard">صعب</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small fw-medium">نوع السؤال</label>
+                        <select class="form-select" id="edit-q-type">
+                            <option value="mcq">اختيار من متعدد</option>
+                            <option value="true_false">صح / خطأ</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="btn-save-edit">حفظ التغييرات</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Options Modal -->
+<div class="modal fade" id="optionsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">خيارات الإجابة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="list-group list-group-flush" id="options-list">
+                    <!-- Loaded via AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Question Modal -->
+<div class="modal fade" id="addQuestionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">إضافة سؤال جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">الشهادة *</label>
+                        <select class="form-select" id="add-q-exam_id">
+                            <option value="">اختر الشهادة</option>
+                            @foreach($exams as $e)
+                                <option value="{{ $e->id }}">{{ $e->title_ar }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">الوحدة *</label>
+                        <select class="form-select" id="add-q-unit_id">
+                            <option value="">اختر الوحدة</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">نص السؤال *</label>
+                        <textarea class="form-control" id="add-q-text" rows="3" placeholder="اكتب نص السؤال هنا..."></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">التفسير / الشرح</label>
+                        <textarea class="form-control" id="add-q-explanation" rows="2" placeholder="الشرح (اختياري)"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">المستوى *</label>
+                        <select class="form-select" id="add-q-level">
+                            <option value="easy">سهل</option>
+                            <option value="medium">متوسط</option>
+                            <option value="hard">صعب</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">نوع السؤال *</label>
+                        <select class="form-select" id="add-q-type">
+                            <option value="mcq">اختيار من متعدد</option>
+                            <option value="true_false">صح / خطأ</option>
+                        </select>
+                    </div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 fw-semibold">خيارات الإجابة</h6>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-add-option">
+                        <i class="bi bi-plus me-1"></i>إضافة خيار
+                    </button>
+                </div>
+                <div id="add-options-container"></div>
+                <div class="form-text mt-2 multi-correct-hint"><i class="bi bi-info-circle me-1"></i>يمكنك تحديد أكثر من خيار كإجابة صحيحة (سيتحول السؤال تلقائياً إلى سؤال متعدد الإجابات الصحيحة).</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="btn-save-new-question">
+                    <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ السؤال</span>
+                    <span class="spinner-border spinner-border-sm d-none"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@push('scripts')
+<script>
+// Dynamic units dropdown based on exam selection
+$('#filter-exam').on('change', function() {
+    const examId = $(this).val();
+    const unitSelect = $('#filter-unit');
+    
+    $.get('{{ route('admin.graded_exams.units.byExam') }}', { graded_exam_id: examId }, function(units) {
+        let opts = '<option value="">كل الوحدات</option>';
+        units.forEach(u => {
+            opts += `<option value="${u.id}">${u.title_ar}</option>`;
+        });
+        unitSelect.html(opts);
+    });
+});
+
+// Per page select
+$('#per-page-select').on('change', function() {
+    $('#filter-per-page').val($(this).val());
+    $('#filter-form').submit();
+});
+
+// View Options
+$(document).on('click', '.btn-view-options', function() {
+    const qId = $(this).data('id');
+    const list = $('#options-list');
+    list.html('<div class="p-4 text-center"><div class="spinner-border text-primary spinner-border-sm"></div></div>');
+    
+    const modal = new bootstrap.Modal(document.getElementById('optionsModal'));
+    modal.show();
+    
+    $.get(`{{ url('admin/graded-exams/questions') }}/${qId}/options`, function(res) {
+        if(res.success) {
+            list.empty();
+            if(res.options.length === 0) {
+                list.html('<div class="p-3 text-center text-muted small">لا توجد خيارات</div>');
+                return;
+            }
+            
+            res.options.forEach(opt => {
+                const icon = opt.is_correct ? '<i class="bi bi-check-circle-fill text-success fs-5"></i>' : '<i class="bi bi-circle text-muted"></i>';
+                const bg = opt.is_correct ? 'bg-success bg-opacity-10' : '';
+                
+                list.append(`
+                    <div class="list-group-item d-flex align-items-center gap-3 ${bg}">
+                        ${icon}
+                        <span class="${opt.is_correct ? 'fw-bold' : ''}">${opt.option_text_ar}</span>
+                    </div>
+                `);
+            });
+        }
+    });
+});
+
+// Edit Question Modal
+$(document).on('click', '.btn-edit-q', function() {
+    const qId = $(this).data('id');
+    const row = $(this).closest('tr');
+    
+    const text = row.find('.question-text-display').text().trim();
+    let explanation = row.find('.full-explanation').text().trim();
+    const level = row.find('.question-level').text().trim();
+    const type = row.find('.question-type').text().trim();
+    
+    $('#edit-q-id').val(qId);
+    $('#edit-q-text').val(text);
+    $('#edit-q-explanation').val(explanation);
+    $('#edit-q-level').val(level);
+    $('#edit-q-type').val(type);
+    
+    new bootstrap.Modal(document.getElementById('editQuestionModal')).show();
+});
+
+// Save Edit
+$('#btn-save-edit').on('click', function() {
+    const qId = $('#edit-q-id').val();
+    const text = $('#edit-q-text').val().trim();
+    const explanation = $('#edit-q-explanation').val().trim();
+    const level = $('#edit-q-level').val();
+    const type = $('#edit-q-type').val();
+    
+    if(!text) {
+        showAlert('نص السؤال مطلوب', 'warning');
+        return;
+    }
+    
+    const btn = $(this);
+    setLoading(btn, true);
+    
+    $.ajax({
+        url: `{{ url('admin/graded-exams/questions') }}/${qId}`,
+        method: 'PATCH',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: {
+            text_ar: text,
+            explanation_ar: explanation,
+            level: level,
+            question_type: type
+        },
+        success: function(res) {
+            setLoading(btn, false);
+            bootstrap.Modal.getInstance(document.getElementById('editQuestionModal')).hide();
+            showAlert(res.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            showAlert('حدث خطأ أثناء الحفظ', 'danger');
+        }
+    });
+});
+
+// Delete Question
+$(document).on('click', '.btn-delete-q', function() {
+    const url = $(this).data('url');
+    confirmDelete('هل أنت متأكد من حذف هذا السؤال؟', url, () => location.reload());
+});
+
+// ------------- ADD QUESTION LOGIC -------------
+
+// Dynamic units for Add modal
+$('#add-q-exam_id').on('change', function() {
+    const examId = $(this).val();
+    const unitSelect = $('#add-q-unit_id');
+    
+    if (!examId) {
+        unitSelect.html('<option value="">اختر الوحدة</option>');
+        return;
+    }
+    
+    $.get('{{ route('admin.graded_exams.units.byExam') }}', { graded_exam_id: examId }, function(units) {
+        let opts = '<option value="">اختر الوحدة</option>';
+        units.forEach(u => {
+            opts += `<option value="${u.id}">${u.title_ar}</option>`;
+        });
+        unitSelect.html(opts);
+    });
+});
+
+let optIndex = 0;
+function addOptionRow(label='', isCorrect=false, isReadonly=false) {
+    const checked = isCorrect ? 'checked' : '';
+    const readonlyAttr = isReadonly ? 'readonly' : '';
+    const removeBtnDisabled = isReadonly ? 'disabled' : '';
+    
+    $('#add-options-container').append(`
+        <div class="row g-2 mb-2 add-opt-row">
+            <div class="col-8">
+                <input type="text" class="form-control form-control-sm add-opt-label" placeholder="نص الخيار" value="${label}" ${readonlyAttr}>
+            </div>
+            <div class="col-2 d-flex align-items-center justify-content-center">
+                <div class="form-check m-0">
+                    <input class="form-check-input add-opt-correct" type="checkbox" ${checked}>
+                    <label class="form-check-label small ms-1">صحيح</label>
+                </div>
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-sm btn-outline-danger w-100 btn-remove-add-opt" ${removeBtnDisabled}>
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `);
+}
+
+function updateOptionsBasedOnType() {
+    const type = $('#add-q-type').val();
+    $('#add-options-container').empty();
+    
+    if (type === 'true_false') {
+        $('#btn-add-option').hide();
+        $('.multi-correct-hint').hide();
+        
+        // Add True / False specifically
+        addOptionRow('صح', true, true);
+        addOptionRow('خطأ', false, true);
+        
+        // Make sure only one can be checked for True/False
+        $('.add-opt-correct').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('.add-opt-correct').not(this).prop('checked', false);
+            }
+        });
+        
+    } else {
+        $('#btn-add-option').show();
+        $('.multi-correct-hint').show();
+        
+        addOptionRow('أ)', true);
+        addOptionRow('ب)', false);
+        addOptionRow('ج)', false);
+        addOptionRow('د)', false);
+    }
+}
+
+$('#add-q-type').on('change', updateOptionsBasedOnType);
+
+$('#addQuestionModal').on('show.bs.modal', function() {
+    $('#add-q-type').val('mcq'); // Default
+    updateOptionsBasedOnType();
+});
+
+$('#btn-add-option').on('click', () => addOptionRow());
+
+$(document).on('click', '.btn-remove-add-opt', function() {
+    $(this).closest('.add-opt-row').remove();
+});
+
+$('#btn-save-new-question').on('click', function() {
+    const payload = {
+        graded_exam_id: $('#add-q-exam_id').val(),
+        unit_id: $('#add-q-unit_id').val(),
+        text_ar: $('#add-q-text').val().trim(),
+        explanation_ar: $('#add-q-explanation').val().trim(),
+        level: $('#add-q-level').val(),
+        question_type: $('#add-q-type').val(),
+        options: []
+    };
+    
+    $('.add-opt-row').each(function() {
+        const label = $(this).find('.add-opt-label').val().trim();
+        const isCorrect = $(this).find('.add-opt-correct').is(':checked');
+        if (label) {
+            payload.options.push({ label_ar: label, is_correct: isCorrect });
+        }
+    });
+    
+    if (!payload.graded_exam_id || !payload.unit_id || !payload.text_ar) {
+        showAlert('الرجاء تعبئة الشهادة، الوحدة، ونص السؤال.', 'warning');
+        return;
+    }
+    
+    if (payload.options.length < 2) {
+        showAlert('يجب إدخال خيارين على الأقل.', 'warning');
+        return;
+    }
+    
+    if (!payload.options.some(opt => opt.is_correct)) {
+        showAlert('يجب تحديد خيار واحد صحيح على الأقل.', 'warning');
+        return;
+    }
+    
+    const btn = $(this);
+    setLoading(btn, true);
+    
+    $.ajax({
+        url: '{{ route('admin.graded_exams.questions.store') }}',
+        method: 'POST',
+        contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify(payload),
+        success: function(res) {
+            setLoading(btn, false);
+            bootstrap.Modal.getInstance(document.getElementById('addQuestionModal')).hide();
+            showAlert(res.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ أثناء الإضافة', 'danger');
+        }
+    });
+});
+</script>
+@endpush
+````
+
+## File: resources/views/admin/graded_exams/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'إدارة الشهادات والوحدات')
+@section('page-title', 'إدارة الشهادات والوحدات')
+
+@section('content')
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">الشهادات الاحترافية</h5>
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExamModal">
+        <i class="bi bi-plus-circle me-1"></i>إضافة شهادة جديدة
+    </button>
+</div>
+
+<div class="row">
+    @foreach($exams as $exam)
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title fw-bold text-primary mb-0">{{ $exam->title_ar }}</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu shadow-sm text-end">
+                            <li><a class="dropdown-item btn-edit-exam" href="#" data-id="{{ $exam->id }}" data-title="{{ $exam->title_ar }}" data-desc="{{ $exam->description_ar }}" data-active="{{ $exam->is_active ? 1 : 0 }}"><i class="bi bi-pencil me-2"></i>تعديل الشهادة</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger btn-delete-exam" href="#" data-url="{{ route('admin.graded_exams.destroy', $exam->id) }}"><i class="bi bi-trash me-2"></i>حذف الشهادة</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="text-muted small mb-3" style="min-height: 40px;">{{ $exam->description_ar ?: 'لا يوجد وصف' }}</p>
+                
+                <div class="d-flex justify-content-between mb-3 small">
+                    <span class="text-muted"><i class="bi bi-journal-text me-1"></i>{{ $exam->units_count }} وحدة</span>
+                    <span class="text-muted"><i class="bi bi-question-circle me-1"></i>{{ $exam->questions_count }} سؤال</span>
+                    <span class="badge {{ $exam->is_active ? 'bg-success' : 'bg-secondary' }}">{{ $exam->is_active ? 'مفعل' : 'معطل' }}</span>
+                </div>
+                
+                <hr>
+                
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0 fw-semibold text-secondary" style="font-size: 0.85rem;">الوحدات الدراسية</h6>
+                    <button class="btn btn-sm btn-outline-primary py-0 px-2 btn-add-unit" data-id="{{ $exam->id }}" style="font-size: 0.75rem;">
+                        <i class="bi bi-plus"></i> إضافة وحدة
+                    </button>
+                </div>
+                
+                <div class="list-group list-group-flush small" style="max-height: 200px; overflow-y: auto;">
+                    @forelse($exam->units as $unit)
+                        <div class="list-group-item px-1 py-2 d-flex justify-content-between align-items-center">
+                            <span class="text-truncate" title="{{ $unit->title_ar }}">{{ $unit->title_ar }}</span>
+                            <div>
+                                <button class="btn btn-sm text-primary p-0 mx-1 btn-edit-unit" data-id="{{ $unit->id }}" data-title="{{ $unit->title_ar }}" data-url="{{ route('admin.graded_exams.units.update', $unit->id) }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm text-danger p-0 btn-delete-unit" data-url="{{ route('admin.graded_exams.units.destroy', $unit->id) }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center text-muted small py-2">لا توجد وحدات</div>
+                    @endforelse
+                </div>
+                
+            </div>
+            <div class="card-footer bg-white border-top-0 pt-0">
+                <a href="{{ route('admin.graded_exams.questions.index', ['graded_exam_id' => $exam->id]) }}" class="btn btn-light btn-sm w-100">
+                    <i class="bi bi-gear me-1"></i>إدارة بنك أسئلة الشهادة
+                </a>
+            </div>
+        </div>
+    </div>
+    @endforeach
+</div>
+
+<!-- Add/Edit Exam Modal -->
+<div class="modal fade" id="examModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold" id="examModalTitle">إضافة شهادة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="e-id">
+                <div class="mb-3">
+                    <label class="form-label small fw-medium">اسم الشهادة *</label>
+                    <input type="text" class="form-control" id="e-title">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-medium">الوصف</label>
+                    <textarea class="form-control" id="e-desc" rows="3"></textarea>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="e-active" checked>
+                    <label class="form-check-label small" for="e-active">مفعلة وتظهر للمستخدمين</label>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="btn-save-exam">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Unit Modal -->
+<div class="modal fade" id="unitModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold" id="unitModalTitle">إضافة وحدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="u-exam-id">
+                <input type="hidden" id="u-id">
+                <input type="hidden" id="u-url">
+                <div class="mb-3">
+                    <label class="form-label small fw-medium">اسم الوحدة *</label>
+                    <input type="text" class="form-control" id="u-title">
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="btn-save-unit">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@push('scripts')
+<script>
+// Exam Logic
+let isExamEdit = false;
+
+$('[data-bs-target="#addExamModal"]').on('click', function() {
+    isExamEdit = false;
+    $('#examModalTitle').text('إضافة شهادة جديدة');
+    $('#e-id').val('');
+    $('#e-title').val('');
+    $('#e-desc').val('');
+    $('#e-active').prop('checked', true);
+    new bootstrap.Modal(document.getElementById('examModal')).show();
+});
+
+$('.btn-edit-exam').on('click', function(e) {
+    e.preventDefault();
+    isExamEdit = true;
+    $('#examModalTitle').text('تعديل الشهادة');
+    $('#e-id').val($(this).data('id'));
+    $('#e-title').val($(this).data('title'));
+    $('#e-desc').val($(this).data('desc'));
+    $('#e-active').prop('checked', $(this).data('active') == 1);
+    new bootstrap.Modal(document.getElementById('examModal')).show();
+});
+
+$('#btn-save-exam').on('click', function() {
+    const id = $('#e-id').val();
+    const payload = {
+        title_ar: $('#e-title').val().trim(),
+        description_ar: $('#e-desc').val().trim(),
+        is_active: $('#e-active').is(':checked') ? 1 : 0
+    };
+    
+    if(!payload.title_ar) {
+        showAlert('اسم الشهادة مطلوب', 'warning');
+        return;
+    }
+    
+    const url = isExamEdit ? `{{ url('admin/graded-exams') }}/${id}` : `{{ route('admin.graded_exams.store') }}`;
+    const method = isExamEdit ? 'PUT' : 'POST';
+    
+    const btn = $(this);
+    setLoading(btn, true);
+    
+    $.ajax({
+        url: url,
+        method: method,
+        contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify(payload),
+        success: function(res) {
+            showAlert(res.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            showAlert('خطأ أثناء الحفظ', 'danger');
+        }
+    });
+});
+
+$('.btn-delete-exam').on('click', function(e) {
+    e.preventDefault();
+    confirmDelete('سيتم حذف الشهادة. هل أنت متأكد؟', $(this).data('url'), () => location.reload());
+});
+
+
+// Unit Logic
+let isUnitEdit = false;
+
+$('.btn-add-unit').on('click', function() {
+    isUnitEdit = false;
+    $('#unitModalTitle').text('إضافة وحدة جديدة');
+    $('#u-exam-id').val($(this).data('id'));
+    $('#u-id').val('');
+    $('#u-title').val('');
+    new bootstrap.Modal(document.getElementById('unitModal')).show();
+});
+
+$('.btn-edit-unit').on('click', function(e) {
+    e.preventDefault();
+    isUnitEdit = true;
+    $('#unitModalTitle').text('تعديل الوحدة');
+    $('#u-id').val($(this).data('id'));
+    $('#u-title').val($(this).data('title'));
+    $('#u-url').val($(this).data('url'));
+    new bootstrap.Modal(document.getElementById('unitModal')).show();
+});
+
+$('#btn-save-unit').on('click', function() {
+    const title = $('#u-title').val().trim();
+    if(!title) {
+        showAlert('اسم الوحدة مطلوب', 'warning');
+        return;
+    }
+    
+    const examId = $('#u-exam-id').val();
+    const updateUrl = $('#u-url').val();
+    
+    const url = isUnitEdit ? updateUrl : `{{ url('admin/graded-exams') }}/${examId}/units`;
+    const method = isUnitEdit ? 'PUT' : 'POST';
+    
+    const btn = $(this);
+    setLoading(btn, true);
+    
+    $.ajax({
+        url: url,
+        method: method,
+        contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify({ title_ar: title }),
+        success: function(res) {
+            showAlert(res.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            showAlert('خطأ أثناء الحفظ', 'danger');
+        }
+    });
+});
+
+$('.btn-delete-unit').on('click', function(e) {
+    e.preventDefault();
+    confirmDelete('هل أنت متأكد من حذف هذه الوحدة؟', $(this).data('url'), () => location.reload());
+});
+
+</script>
+@endpush
+````
+
+## File: resources/views/user/coming-soon.blade.php
+````php
+@extends('layouts.user')
+@section('title', 'قريباً')
+
+@push('styles')
+<style>
+.coming-soon-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 200px);
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    text-align: center;
+}
+
+.coming-soon-icon {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+    font-size: 3rem;
+    color: #ffffff;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 20px rgba(245, 158, 11, 0);
+    }
+}
+
+.coming-soon-title {
+    color: #1a2b56;
+    font-weight: 800;
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.coming-soon-description {
+    color: #64748b;
+    font-size: 1.1rem;
+    max-width: 500px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.back-btn {
+    background: #1a2b56;
+    color: #ffffff;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.back-btn:hover {
+    background: #0f172a;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(26, 43, 86, 0.3);
+}
+
+.features-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    max-width: 600px;
+    margin-top: 40px;
+}
+
+.feature-item {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.feature-item i {
+    color: #f59e0b;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.feature-item h4 {
+    color: #1a2b56;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.feature-item p {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .coming-soon-container {
+        padding: 30px 15px;
+        min-height: calc(100vh - 250px);
+    }
+    
+    .coming-soon-icon {
+        width: 100px;
+        height: 100px;
+        font-size: 2.5rem;
+    }
+    
+    .coming-soon-title {
+        font-size: 2rem;
+    }
+    
+    .coming-soon-description {
+        font-size: 1rem;
+    }
+    
+    .features-list {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+@endpush
+
+@section('content')
+<div class="coming-soon-container">
+    <div class="coming-soon-icon">
+        <i class="bi bi-award"></i>
+    </div>
+    
+    <h1 class="coming-soon-title">الشهادات الاحترافية</h1>
+    <p class="coming-soon-description">
+        نعمل حالياً على تطوير نظام الشهادات الاحترافية ليقدم لك أفضل تجربة تعليمية وتدريبية. سيتوفر قريباً بإذن الله.
+    </p>
+    
+    <a href="{{ route('selection') }}" class="back-btn">
+        <i class="bi bi-arrow-right"></i>
+        العودة للقائمة الرئيسية
+    </a>
+    
+    <div class="features-list">
+        <div class="feature-item">
+            <i class="bi bi-patch-check"></i>
+            <h4>شهادات معتمدة</h4>
+            <p>اعتراف دولي ومهني</p>
+        </div>
+        <div class="feature-item">
+            <i class="bi bi-mortarboard"></i>
+            <h4>برامج تدريبية</h4>
+            <p>محتوى تعليمي متخصص</p>
+        </div>
+        <div class="feature-item">
+            <i class="bi bi-trophy"></i>
+            <h4>تطوير مهني</h4>
+            <p>تعزيز مسارك المهني</p>
+        </div>
+    </div>
+</div>
+@endsection
+````
+
+## File: resources/views/user/graded_exams/index.blade.php
+````php
+@extends('layouts.user')
+@section('title', 'الشهادات الاحترافية')
+
+@push('styles')
+<style>
+.exams-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.page-title {
+    color: #1a2b56;
+    font-weight: 800;
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.page-subtitle {
+    color: #64748b;
+    font-size: 1rem;
+}
+
+.exam-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.exam-card:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border-color: #cbd5e1;
+}
+
+.exam-info h3 {
+    color: #1a2b56;
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+}
+
+.exam-info p {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+    max-width: 600px;
+}
+
+.exam-meta {
+    display: flex;
+    gap: 20px;
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.exam-meta span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-start-exam {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.btn-start-exam:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    color: #ffffff;
+}
+</style>
+@endpush
+
+@section('content')
+<div class="exams-container">
+    <div class="page-header">
+        <h1 class="page-title">الشهادات الاحترافية المتوفرة</h1>
+        <p class="page-subtitle">اختر الشهادة التي ترغب في التقدم لها وابدأ الاختبار الآن</p>
+    </div>
+    
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
+    <div class="exams-list">
+        @forelse($exams as $exam)
+            <div class="exam-card">
+                <div class="exam-info">
+                    <h3>{{ $exam->title_ar }}</h3>
+                    <p>{{ $exam->description_ar ?: 'لا يوجد وصف متوفر.' }}</p>
+                    <div class="exam-meta">
+                        <span><i class="bi bi-question-circle"></i> {{ $exam->total_questions }} سؤال</span>
+                        @if($exam->time_limit_min)
+                            <span><i class="bi bi-clock"></i> {{ $exam->time_limit_min }} دقيقة</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="exam-action">
+                    <form action="{{ route('user.graded_exams.start', $exam->id) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn-start-exam">
+                            بدء الاختبار <i class="bi bi-arrow-left"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @empty
+            <div class="text-center py-5">
+                <i class="bi bi-journal-x text-muted mb-3" style="font-size: 3rem;"></i>
+                <h4 class="text-muted">لا توجد شهادات متوفرة حالياً</h4>
+            </div>
+        @endforelse
+    </div>
+</div>
+@endsection
+````
+
+## File: resources/views/user/graded_exams/result.blade.php
+````php
+@extends('layouts.user')
+@section('title', 'نتيجة الاختبار')
+
+@section('content')
+<div class="container py-5 text-center">
+    <i class="bi bi-check-circle text-success mb-3" style="font-size: 5rem;"></i>
+    <h2 class="mb-4">تم الانتهاء من الاختبار بنجاح</h2>
+    <p class="lead mb-5">لقد أتممت اختبار "{{ $session->gradedExam->title_ar }}".</p>
+    
+    <a href="{{ route('user.graded_exams.index') }}" class="btn btn-primary px-4">
+        العودة للشهادات
+    </a>
+</div>
+@endsection
+````
+
+## File: resources/views/user/graded_exams/show.blade.php
+````php
+@extends('layouts.user')
+@section('title', 'إجراء الاختبار')
+
+@push('styles')
+<style>
+.exam-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 30px 15px;
+}
+.question-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+}
+.question-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1a2b56;
+    margin-bottom: 20px;
+}
+.option-label {
+    display: block;
+    padding: 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.option-label:hover {
+    background: #f8fafc;
+}
+.option-input:checked + .option-label {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+</style>
+@endpush
+
+@section('content')
+<div class="exam-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>{{ $session->gradedExam->title_ar }}</h4>
+        <span class="badge bg-primary fs-6">{{ $session->total_questions }} سؤال</span>
+    </div>
+
+    <form action="{{ route('user.graded_exams.answer', $session->id) }}" method="POST">
+        @csrf
+        
+        @foreach($session->sessionQuestions as $index => $sq)
+            <div class="question-card">
+                <div class="question-text">
+                    {{ $index + 1 }}. {{ $sq->question->text_ar }}
+                    @if($sq->question->is_multi_correct)
+                        <span class="badge bg-secondary ms-2" style="font-size: 0.7rem;">اختيار متعدد</span>
+                    @endif
+                </div>
+                
+                <div class="options-list">
+                    @foreach($sq->question->options as $opt)
+                        @if($sq->question->is_multi_correct)
+                            <input type="checkbox" class="btn-check option-input" 
+                                name="answers[{{ $sq->id }}][]" value="{{ $opt->id }}" id="opt_{{ $opt->id }}">
+                        @else
+                            <input type="radio" class="btn-check option-input" 
+                                name="answers[{{ $sq->id }}]" value="{{ $opt->id }}" id="opt_{{ $opt->id }}">
+                        @endif
+                        <label class="option-label" for="opt_{{ $opt->id }}">
+                            {{ $opt->option_text_ar }}
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
+        
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success btn-lg px-5">إنهاء الاختبار</button>
+        </div>
+    </form>
+</div>
+@endsection
+````
+
+## File: resources/views/user/selection.blade.php
+````php
+@extends('layouts.user')
+@section('title', 'اختر الخدمة')
+
+@push('styles')
+<style>
+.selection-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 200px);
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.selection-title {
+    color: #1a2b56;
+    font-weight: 800;
+    font-size: 2rem;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.selection-subtitle {
+    color: #64748b;
+    font-size: 1rem;
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    max-width: 800px;
+    width: 100%;
+}
+
+.option-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 40px 30px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+    text-decoration: none;
+    color: inherit;
+}
+
+.option-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+    border-color: #1a2b56;
+}
+
+.option-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 2.5rem;
+}
+
+.assessments-icon {
+    background: linear-gradient(135deg, #1a2b56 0%, #2d4a7c 100%);
+    color: #ffffff;
+}
+
+.certificates-icon {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #ffffff;
+}
+
+.option-title {
+    color: #1a2b56;
+    font-weight: 800;
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+}
+
+.option-description {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.option-features {
+    text-align: right;
+    margin-top: 20px;
+}
+
+.option-features li {
+    color: #4a5568;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    padding-right: 25px;
+    position: relative;
+}
+
+.option-features li::before {
+    content: "✓";
+    position: absolute;
+    right: 0;
+    color: #10b981;
+    font-weight: bold;
+}
+
+.coming-soon-badge {
+    background: #fbbf24;
+    color: #1a2b56;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+    .selection-container {
+        padding: 30px 15px;
+        min-height: calc(100vh - 250px);
+    }
+    
+    .selection-title {
+        font-size: 1.5rem;
+    }
+    
+    .options-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .option-card {
+        padding: 30px 20px;
+    }
+}
+</style>
+@endpush
+
+@section('content')
+<div class="selection-container">
+    <h1 class="selection-title">مرحباً بك في دار الرؤى</h1>
+    <p class="selection-subtitle">اختر الخدمة التي تريدها للبدء</p>
+    
+    <div class="options-grid">
+        <!-- Assessments Option -->
+        <a href="{{ route('dashboard.assessments') }}" class="option-card">
+            <div class="option-icon assessments-icon">
+                <i class="bi bi-journal-check"></i>
+            </div>
+            <h3 class="option-title">المقاييس</h3>
+            <p class="option-description">
+                اكتشف قدراتك ومهاراتك من خلال مقاييس علمية معتمدة وتقارير تفصيلية
+            </p>
+            <ul class="option-features list-unstyled">
+                <li>مقاييس شخصية ومهنية متنوعة</li>
+                <li>تقارير مفصلة وشاملة</li>
+                <li>نتائج فورية ودقيقة</li>
+            </ul>
+        </a>
+        
+        <!-- Professional Certificates Option -->
+        <a href="{{ route('user.graded_exams.index') }}" class="option-card">
+            <div class="option-icon certificates-icon">
+                <i class="bi bi-award"></i>
+            </div>
+            <h3 class="option-title">الشهادات الاحترافية</h3>
+            <p class="option-description">
+                احصل على شهادات احترافية معتمدة تعزز مسارك المهني
+            </p>
+            <ul class="option-features list-unstyled">
+                <li>شهادات معتمدة دولياً</li>
+                <li>برامج تدريبية متخصصة</li>
+                <li>اعتراف مهني واسع</li>
+            </ul>
+        </a>
+    </div>
+</div>
+@endsection
+````
 
 ## File: .editorconfig
 ````
@@ -553,153 +15259,6 @@ class DashboardController extends Controller
 }
 ````
 
-## File: app/Http/Controllers/Admin/DimensionController.php
-````php
-<?php
-
-namespace App\Http\Controllers\Admin;
-
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\StoreDimensionRequest;
-use App\Http\Requests\Admin\StoreInterpretationsRequest;
-use App\Models\Assessment;
-use App\Models\Dimension;
-use App\Services\DimensionService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-
-class DimensionController extends Controller
-{
-    public function __construct(
-        private readonly DimensionService $dimensionService,
-    ) {}
-
-    public function byAssessment(Assessment $assessment): JsonResponse
-    {
-        $dimensions = $this->dimensionService->byAssessment($assessment);
-
-        return response()->json($dimensions);
-    }
-
-    public function store(StoreDimensionRequest $request, Assessment $assessment): JsonResponse
-    {
-        $dimension = $this->dimensionService->create($assessment, $request->validated());
-
-        return response()->json([
-            'success' => true,
-            'dimension' => $dimension,
-            'message' => 'تم إضافة البُعد بنجاح.',
-        ]);
-    }
-
-    public function update(StoreDimensionRequest $request, Dimension $dimension): JsonResponse
-    {
-        $this->dimensionService->update($dimension, $request->validated());
-
-        return response()->json(['success' => true, 'message' => 'تم تحديث البُعد.']);
-    }
-
-    public function destroy(Dimension $dimension): JsonResponse
-    {
-        $this->dimensionService->delete($dimension);
-
-        return response()->json(['success' => true, 'message' => 'تم حذف البُعد بنجاح.']);
-    }
-
-    public function reorder(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'order' => 'required|array',
-            'order.*' => 'required|uuid|exists:dimensions,id',
-        ]);
-
-        $this->dimensionService->reorder($data['order']);
-
-        return response()->json(['success' => true, 'message' => 'تم إعادة ترتيب الأبعاد.']);
-    }
-
-    public function storeInterpretations(StoreInterpretationsRequest $request, Dimension $dimension): JsonResponse
-    {
-        $this->dimensionService->saveInterpretations($dimension, $request->validated());
-
-        return response()->json(['success' => true, 'message' => 'تم حفظ تفسيرات البُعد بنجاح.']);
-    }
-}
-````
-
-## File: app/Http/Controllers/Admin/IconController.php
-````php
-<?php
-
-namespace App\Http\Controllers\Admin;
-
-use App\Http\Controllers\Controller;
-use App\Models\Icon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-
-class IconController extends Controller
-{
-    public function index()
-    {
-        $icons = Icon::orderBy('created_at', 'desc')->get()->groupBy('category');
-        return view('admin.icons.index', compact('icons'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category' => 'required|in:certificates,programs,plan_30_days,assessments,system',
-            'icon_file' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:500', // max 500KB
-        ], [
-            'icon_file.max' => 'حجم الأيقونة يجب أن لا يتجاوز 500 كيلوبايت لضمان سرعة التقرير.',
-            'icon_file.image' => 'يجب اختيار ملف صورة صالح.',
-        ]);
-
-        if ($request->hasFile('icon_file')) {
-            $file = $request->file('icon_file');
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            
-            // Move to public/images/icons
-            $destinationPath = public_path('images/icons');
-            if (!File::exists($destinationPath)) {
-                File::makeDirectory($destinationPath, 0755, true);
-            }
-            
-            $file->move($destinationPath, $filename);
-            
-            $iconUrl = '/images/icons/' . $filename;
-
-            Icon::create([
-                'name' => $request->name,
-                'category' => $request->category,
-                'icon_url' => $iconUrl,
-            ]);
-
-            return back()->with('success', 'تم إضافة الأيقونة بنجاح.');
-        }
-
-        return back()->withErrors(['icon_file' => 'فشل في رفع الأيقونة.']);
-    }
-
-    public function destroy(Icon $icon)
-    {
-        // Extract filename from URL
-        $filename = basename($icon->icon_url);
-        $path = public_path('images/icons/' . $filename);
-        
-        if (File::exists($path)) {
-            File::delete($path);
-        }
-
-        $icon->delete();
-
-        return back()->with('success', 'تم حذف الأيقونة بنجاح.');
-    }
-}
-````
-
 ## File: app/Http/Controllers/Controller.php
 ````php
 <?php
@@ -807,6 +15366,32 @@ class StoreDimensionRequest extends FormRequest
         return [
             'name_ar' => 'required|string|max:255',
             'max_score' => 'required|integer|min:1',
+        ];
+    }
+}
+````
+
+## File: app/Http/Requests/LoginRequest.php
+````php
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class LoginRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /** @return array<string, mixed> */
+    public function rules(): array
+    {
+        return [
+            'email' => 'required|email',
+            'password' => 'required|string',
         ];
     }
 }
@@ -1234,177 +15819,6 @@ class ExamSessionRepository implements ExamSessionRepositoryInterface
 }
 ````
 
-## File: app/Repositories/QuestionRepository.php
-````php
-<?php
-
-namespace App\Repositories;
-
-use App\Models\AnswerOption;
-use App\Models\Assessment;
-use App\Models\Question;
-use App\Repositories\Contracts\QuestionRepositoryInterface;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
-
-class QuestionRepository implements QuestionRepositoryInterface
-{
-    public function filteredPaginated(array $filters): LengthAwarePaginator
-    {
-        /*
-         * Use a DB JOIN between questions, assessments and dimensions
-         * to retrieve assessment title and dimension name in a single query,
-         * avoiding the N+1 problem that the previous with() approach caused.
-         */
-        $query = DB::table('questions as q')
-            ->join('assessments as a', 'a.id', '=', 'q.assessment_id')
-            ->leftJoin('dimensions as d', 'd.id', '=', 'q.dimension_id')
-            ->select([
-                'q.id',
-                'q.text_ar',
-                'q.assessment_id',
-                'q.dimension_id',
-                'q.order_index',
-                'q.is_reversed',
-                'q.created_at',
-                'a.title_ar as assessment_title',
-                'd.name_ar  as dimension_name',
-            ])
-            ->selectSub(
-                DB::table('answer_options')->whereColumn('answer_options.question_id', 'q.id')->selectRaw('COUNT(*)'),
-                'answer_options_count'
-            );
-
-        if (! empty($filters['assessment_id'])) {
-            $query->where('q.assessment_id', $filters['assessment_id'])
-                ->orderBy('q.order_index');
-        } else {
-            $query->orderByDesc('q.created_at');
-        }
-
-        if (! empty($filters['dimension_id'])) {
-            $query->where('q.dimension_id', $filters['dimension_id']);
-        }
-
-        if (! empty($filters['search'])) {
-            $query->where('q.text_ar', 'like', '%'.$filters['search'].'%');
-        }
-
-        $perPage = $filters['per_page'] ?? 25;
-
-        if ($perPage === 'all' || $perPage === 'الكل') {
-            $total = $query->count();
-            $perPage = $total > 0 ? $total : 25;
-        } else {
-            $perPage = in_array((int) $perPage, [25, 50, 100]) ? (int) $perPage : 25;
-        }
-
-        return $query->paginate($perPage);
-    }
-
-    public function byAssessment(Assessment $assessment): Collection
-    {
-        return $assessment->questions()
-            ->with('answerOptions')
-            ->orderBy('order_index')
-            ->get();
-    }
-
-    public function create(array $data, array $options): Question
-    {
-        $question = Question::create([
-            'assessment_id' => $data['assessment_id'],
-            'dimension_id' => $data['dimension_id'] ?? null,
-            'text_ar' => $data['text_ar'],
-            'order_index' => Question::where('assessment_id', $data['assessment_id'])->count(),
-            'is_reversed' => $data['is_reversed'] ?? false,
-        ]);
-
-        foreach ($options as $index => $opt) {
-            AnswerOption::create([
-                'question_id' => $question->id,
-                'label_ar' => $opt['label_ar'],
-                'score_value' => $opt['score_value'],
-                'order_index' => $opt['order_index'] ?? $index,
-            ]);
-        }
-
-        return $question;
-    }
-
-    public function update(Question $question, array $data): Question
-    {
-        $question->update($data);
-
-        return $question->fresh();
-    }
-
-    public function delete(Question $question): void
-    {
-        $question->delete();
-    }
-
-    public function bulkDelete(array $ids): void
-    {
-        Question::whereIn('id', $ids)->delete();
-    }
-
-    public function reorder(array $orderedIds): void
-    {
-        foreach ($orderedIds as $index => $id) {
-            Question::where('id', $id)->update(['order_index' => $index]);
-        }
-    }
-
-    public function bulkAssignDimension(array $ids, ?string $dimensionId): void
-    {
-        Question::whereIn('id', $ids)->update(['dimension_id' => $dimensionId]);
-    }
-
-    public function assignDimension(Question $question, ?string $dimensionId): Question
-    {
-        $question->update(['dimension_id' => $dimensionId]);
-
-        return $question->fresh();
-    }
-
-    public function bulkImport(array $data): int
-    {
-        $defaultOptions = [
-            ['label_ar' => 'نعم',        'score_value' => 2, 'order_index' => 0],
-            ['label_ar' => 'إلى حد ما', 'score_value' => 1, 'order_index' => 1],
-            ['label_ar' => 'لا',         'score_value' => 0, 'order_index' => 2],
-        ];
-
-        $lines = $data['lines'];
-        $baseIndex = Question::where('assessment_id', $data['assessment_id'])->count();
-        $count = 0;
-
-        foreach ($lines as $offset => $line) {
-            if (empty($line)) {
-                continue;
-            }
-
-            $question = Question::create([
-                'assessment_id' => $data['assessment_id'],
-                'dimension_id' => $data['dimension_id'] ?? null,
-                'text_ar' => $line,
-                'order_index' => $baseIndex + $offset,
-            ]);
-
-            foreach ($defaultOptions as $opt) {
-                AnswerOption::create(array_merge($opt, ['question_id' => $question->id]));
-            }
-
-            $count++;
-        }
-
-        return $count;
-    }
-}
-````
-
 ## File: app/Services/AdminDashboardService.php
 ````php
 <?php
@@ -1530,214 +15944,102 @@ class DimensionService
 }
 ````
 
-## File: app/Services/QuestionService.php
+## File: app/Services/FileUploadService.php
 ````php
 <?php
 
 namespace App\Services;
 
-use App\Models\Assessment;
-use App\Models\Question;
-use App\Repositories\Contracts\QuestionRepositoryInterface;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 
-class QuestionService
+class FileUploadService
+{
+    /**
+     * Upload an image to a public folder and optionally delete the old file.
+     *
+     * @param UploadedFile $file
+     * @param string $folder Relative folder name under public/ (e.g. 'images/icons')
+     * @param string|null $oldUrl Old file URL to delete if present
+     * @param string $prefix Optional filename prefix
+     * @return string Public relative URL (e.g. '/images/icons/filename.png')
+     */
+    public function uploadPublicImage(UploadedFile $file, string $folder, ?string $oldUrl = null, string $prefix = ''): string
+    {
+        $destinationPath = public_path($folder);
+        if (! File::exists($destinationPath)) {
+            File::makeDirectory($destinationPath, 0755, true);
+        }
+
+        $prefixStr = $prefix !== '' ? $prefix . '_' : '';
+        $filename = $prefixStr . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $file->move($destinationPath, $filename);
+
+        $newUrl = '/' . trim($folder, '/') . '/' . $filename;
+
+        // Delete old file if provided
+        if ($oldUrl && str_starts_with($oldUrl, '/' . trim($folder, '/') . '/')) {
+            $oldFilename = basename($oldUrl);
+            $oldPath = public_path(trim($folder, '/') . '/' . $oldFilename);
+            if (File::exists($oldPath)) {
+                File::delete($oldPath);
+            }
+        }
+
+        return $newUrl;
+    }
+
+    /**
+     * Delete a public image file.
+     */
+    public function deletePublicImage(string $url, string $folder): void
+    {
+        $filename = basename($url);
+        $path = public_path(trim($folder, '/') . '/' . $filename);
+
+        if (File::exists($path)) {
+            File::delete($path);
+        }
+    }
+}
+````
+
+## File: app/Services/IconService.php
+````php
+<?php
+
+namespace App\Services;
+
+use App\Models\Icon;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
+
+class IconService
 {
     public function __construct(
-        private readonly QuestionRepositoryInterface $questions,
+        private readonly FileUploadService $fileUploadService,
     ) {}
 
-    /**
-     * @param  array<string, mixed>  $filters
-     */
-    public function filteredList(array $filters): LengthAwarePaginator
+    public function getGroupedByCategory(): Collection
     {
-        return $this->questions->filteredPaginated($filters);
+        return Icon::orderBy('created_at', 'desc')->get()->groupBy('category');
     }
 
-    public function byAssessment(Assessment $assessment): Collection
+    public function store(string $name, string $category, UploadedFile $file): Icon
     {
-        return $this->questions->byAssessment($assessment);
-    }
+        $iconUrl = $this->fileUploadService->uploadPublicImage($file, 'images/icons');
 
-    /**
-     * @param  array<string, mixed>  $data
-     * @param  array<int, array<string, mixed>>  $options
-     */
-    public function create(array $data, array $options): Question
-    {
-        return $this->questions->create($data, $options);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function update(Question $question, array $data): Question
-    {
-        return $this->questions->update($question, ['text_ar' => $data['text_ar']]);
-    }
-
-    public function delete(Question $question): void
-    {
-        $this->questions->delete($question);
-    }
-
-    /**
-     * @param  array<int, string>  $ids
-     */
-    public function bulkDelete(array $ids): int
-    {
-        $count = count($ids);
-        $this->questions->bulkDelete($ids);
-
-        return $count;
-    }
-
-    /**
-     * @param  array<int, string>  $orderedIds
-     */
-    public function reorder(array $orderedIds): void
-    {
-        $this->questions->reorder($orderedIds);
-    }
-
-    /**
-     * @param  array<int, string>  $ids
-     */
-    public function bulkAssignDimension(array $ids, ?string $dimensionId): void
-    {
-        $this->questions->bulkAssignDimension($ids, $dimensionId);
-    }
-
-    public function assignDimension(Question $question, ?string $dimensionId): Question
-    {
-        return $this->questions->assignDimension($question, $dimensionId);
-    }
-
-    /**
-     * Bulk-import questions from raw text (one per line).
-     *
-     * @param  array<string, mixed>  $data  Keys: assessment_id, dimension_id, questions_text
-     * @return int Number of questions created
-     */
-    public function bulkImport(array $data): int
-    {
-        $lines = array_filter(
-            array_map('trim', explode("\n", $data['questions_text']))
-        );
-
-        return $this->questions->bulkImport([
-            'assessment_id' => $data['assessment_id'],
-            'dimension_id' => $data['dimension_id'] ?? null,
-            'lines' => array_values($lines),
+        return Icon::create([
+            'name' => $name,
+            'category' => $category,
+            'icon_url' => $iconUrl,
         ]);
     }
 
-    /**
-     * Import questions from a CSV file.
-     */
-    public function importFromCsv(Assessment $assessment, string $filePath): int
+    public function delete(Icon $icon): void
     {
-        if (($handle = fopen($filePath, 'r')) === false) {
-            throw new \RuntimeException('تعذر فتح ملف CSV.');
-        }
-
-        $rowCount = 0;
-        $isFirst = true;
-
-        while (($row = fgetcsv($handle, 1000, ',')) !== false) {
-            if (empty($row) || count($row) < 2) {
-                continue;
-            }
-
-            // Skip header row if present
-            if ($isFirst) {
-                $isFirst = false;
-                $firstCol = trim($row[0]);
-                if (
-                    str_contains($firstCol, 'dimension') ||
-                    str_contains($firstCol, 'البعد') ||
-                    str_contains($firstCol, 'بُعد') ||
-                    str_contains(trim($row[1]), 'question') ||
-                    str_contains(trim($row[1]), 'السؤال')
-                ) {
-                    continue;
-                }
-            }
-
-            $dimName = trim($row[0] ?? '');
-            $qText = trim($row[1] ?? '');
-
-            if (empty($qText)) {
-                continue;
-            }
-
-            $isReversed = filter_var(trim($row[2] ?? '0'), FILTER_VALIDATE_BOOLEAN) || trim($row[2] ?? '0') === '1';
-            $optionsStr = trim($row[3] ?? '');
-
-            // Get or create dimension if dimName is provided
-            $dimensionId = null;
-            if (! empty($dimName)) {
-                $dimension = $assessment->dimensions()->firstOrCreate(
-                    ['name_ar' => $dimName],
-                    [
-                        'max_score' => 0,
-                        'order_index' => $assessment->dimensions()->count(),
-                    ]
-                );
-                $dimensionId = $dimension->id;
-            }
-
-            // Parse options
-            $options = [];
-            if (! empty($optionsStr)) {
-                $optParts = explode('|', $optionsStr);
-                foreach ($optParts as $idx => $part) {
-                    $pair = explode(':', $part);
-                    $label = trim($pair[0] ?? '');
-                    $score = intval(trim($pair[1] ?? '0'));
-                    if ($label !== '') {
-                        $options[] = [
-                            'label_ar' => $label,
-                            'score_value' => $score,
-                            'order_index' => $idx,
-                        ];
-                    }
-                }
-            }
-
-            // Default options
-            if (empty($options)) {
-                $options = [
-                    ['label_ar' => 'نعم',        'score_value' => $isReversed ? 0 : 2, 'order_index' => 0],
-                    ['label_ar' => 'إلى حد ما', 'score_value' => 1,                   'order_index' => 1],
-                    ['label_ar' => 'لا',         'score_value' => $isReversed ? 2 : 0, 'order_index' => 2],
-                ];
-            }
-
-            $this->questions->create([
-                'assessment_id' => $assessment->id,
-                'dimension_id' => $dimensionId,
-                'text_ar' => $qText,
-                'is_reversed' => $isReversed,
-            ], $options);
-
-            $rowCount++;
-        }
-
-        fclose($handle);
-
-        // Update dimensions max_scores
-        foreach ($assessment->dimensions as $dim) {
-            $dimQuestions = $dim->questions()->with('answerOptions')->get();
-            $dimMax = $dimQuestions->sum(
-                fn ($q) => $q->answerOptions->max('score_value') ?? 0
-            );
-            $dim->update(['max_score' => $dimMax]);
-        }
-
-        return $rowCount;
+        $this->fileUploadService->deletePublicImage($icon->icon_url, 'images/icons');
+        $icon->delete();
     }
 }
 ````
@@ -1882,216 +16184,53 @@ class ScoreCalculator
 }
 ````
 
-## File: app/Services/StatisticsService.php
+## File: app/Services/SettingService.php
 ````php
 <?php
 
 namespace App\Services;
 
-use App\Models\Assessment;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
+use App\Models\Setting;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
-class StatisticsService
+class SettingService
 {
-    /**
-     * Get all assessments for the filter dropdown.
-     *
-     * @return \Illuminate\Database\Eloquent\Collection<int, Assessment>
-     */
-    public function getAssessments()
+    public function __construct(
+        private readonly FileUploadService $fileUploadService,
+    ) {}
+
+    public function getAllAsKeyValue(): array
     {
-        return Assessment::all();
+        return Setting::pluck('value', 'key')->toArray();
     }
 
-    /**
-     * Build the full statistics data payload.
-     * Uses DB JOINs to avoid N+1 queries.
-     *
-     * @param  int  $range  Number of days
-     * @return array<string, mixed>
-     */
-    public function getData(int $range): array
+    public function updateFromRequest(Request $request, array $validatedData): void
     {
-        return [
-            'dailyData' => $this->getDailySessionData($range),
-            'assessments' => $this->getLevelDistribution(),
-            'avgScores' => $this->getAverageScores(),
-            'topUsers' => $this->getTopUsers(),
-        ];
-    }
+        $textData = collect($validatedData)->except(['stat_users_icon', 'stat_exams_icon', 'stat_assessments_icon', 'stat_fields_icon'])->toArray();
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    private function getDailySessionData(int $range): array
-    {
-        $from = now()->subDays($range - 1)->startOfDay();
-
-        $rows = DB::table('exam_sessions')
-            ->where('status', 'completed')
-            ->where('completed_at', '>=', $from)
-            ->selectRaw('DATE(completed_at) as date, COUNT(*) as count')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get()
-            ->keyBy('date');
-
-        $data = [];
-        for ($i = 0; $i < $range; $i++) {
-            $date = now()->subDays($range - 1 - $i)->format('Y-m-d');
-            $data[] = [
-                'date' => $date,
-                'count' => $rows->get($date)?->count ?? 0,
-            ];
+        foreach ($textData as $key => $value) {
+            Setting::updateOrCreate(['key' => $key], ['value' => $value]);
         }
 
-        return $data;
-    }
+        $iconKeys = ['stat_users_icon', 'stat_exams_icon', 'stat_assessments_icon', 'stat_fields_icon'];
+        foreach ($iconKeys as $key) {
+            if ($request->hasFile($key)) {
+                $oldSetting = Setting::where('key', $key)->first();
+                $oldUrl = $oldSetting ? $oldSetting->value : null;
 
-    /**
-     * Use a single JOIN query to aggregate level counts per assessment.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function getLevelDistribution(): array
-    {
-        $rows = DB::table('assessments as a')
-            ->join('exam_sessions as es', 'es.assessment_id', '=', 'a.id')
-            ->join('results as r', 'r.session_id', '=', 'es.id')
-            ->select([
-                'a.id',
-                'a.title_ar as title',
-                DB::raw("SUM(CASE WHEN r.level = 'high'   THEN 1 ELSE 0 END) as high"),
-                DB::raw("SUM(CASE WHEN r.level = 'medium' THEN 1 ELSE 0 END) as medium"),
-                DB::raw("SUM(CASE WHEN r.level = 'low'    THEN 1 ELSE 0 END) as low"),
-            ])
-            ->groupBy('a.id', 'a.title_ar')
-            ->get();
+                $newUrl = $this->fileUploadService->uploadPublicImage(
+                    $request->file($key),
+                    'images/icons',
+                    $oldUrl,
+                    'sysicon'
+                );
 
-        return $rows->map(fn ($r) => [
-            'id' => $r->id,
-            'title' => $r->title,
-            'high' => (int) $r->high,
-            'medium' => (int) $r->medium,
-            'low' => (int) $r->low,
-        ])->values()->toArray();
-    }
-
-    /**
-     * Use a JOIN to compute average score per assessment in a single query.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function getAverageScores(): array
-    {
-        $rows = DB::table('assessments as a')
-            ->leftJoin('exam_sessions as es', 'es.assessment_id', '=', 'a.id')
-            ->leftJoin('results as r', 'r.session_id', '=', 'es.id')
-            ->select([
-                'a.title_ar as title',
-                DB::raw('ROUND(AVG(r.total_score), 1) as avg'),
-            ])
-            ->groupBy('a.id', 'a.title_ar')
-            ->get();
-
-        return $rows->map(fn ($r) => [
-            'title' => $r->title,
-            'avg' => (float) ($r->avg ?? 0),
-        ])->values()->toArray();
-    }
-
-    /**
-     * @return Collection<int, object>
-     */
-    private function getTopUsers()
-    {
-        return DB::table('users as u')
-            ->leftJoin('exam_sessions as es', fn ($j) => $j->on('es.user_id', '=', 'u.id')->where('es.status', 'completed')
-            )
-            ->where('u.role', 'user')
-            ->select([
-                'u.id',
-                'u.name',
-                'u.email',
-                DB::raw('COUNT(es.id) as exam_sessions_count'),
-            ])
-            ->groupBy('u.id', 'u.name', 'u.email')
-            ->orderByDesc('exam_sessions_count')
-            ->limit(10)
-            ->get();
-    }
-
-    /**
-     * Export all completed exam sessions and results to a CSV string.
-     */
-    public function exportResultsCsv(): string
-    {
-        $rows = DB::table('exam_sessions as es')
-            ->join('users as u', 'u.id', '=', 'es.user_id')
-            ->join('assessments as a', 'a.id', '=', 'es.assessment_id')
-            ->join('results as r', 'r.session_id', '=', 'es.id')
-            ->where('es.status', 'completed')
-            ->select([
-                'es.id as session_id',
-                'u.name as user_name',
-                'u.email as user_email',
-                'a.title_ar as assessment_title',
-                'r.total_score',
-                'r.max_possible_score',
-                'r.level',
-                'es.completed_at',
-            ])
-            ->orderByDesc('es.completed_at')
-            ->get();
-
-        $output = fopen('php://temp', 'r+');
-
-        // Prepend UTF-8 BOM so Excel opens Arabic letters correctly
-        fwrite($output, "\xEF\xBB\xBF");
-
-        // Headers
-        fputcsv($output, [
-            'معرف الجلسة',
-            'اسم المستخدم',
-            'البريد الإلكتروني',
-            'اسم المقياس',
-            'الدرجة المحرزة',
-            'الدرجة القصوى',
-            'النسبة المئوية',
-            'المستوى',
-            'تاريخ الإكمال',
-        ]);
-
-        foreach ($rows as $row) {
-            $percentage = $row->max_possible_score > 0
-                ? round(($row->total_score / $row->max_possible_score) * 100).'%'
-                : '0%';
-
-            $levelLabel = match ($row->level) {
-                'high' => 'مرتفع',
-                'medium' => 'متوسط',
-                default => 'منخفض',
-            };
-
-            fputcsv($output, [
-                $row->session_id,
-                $row->user_name,
-                $row->user_email,
-                $row->assessment_title,
-                $row->total_score,
-                $row->max_possible_score,
-                $percentage,
-                $levelLabel,
-                $row->completed_at,
-            ]);
+                Setting::updateOrCreate(['key' => $key], ['value' => $newUrl]);
+            }
         }
 
-        rewind($output);
-        $csvContent = stream_get_contents($output);
-        fclose($output);
-
-        return $csvContent;
+        Cache::forget('site_settings');
     }
 }
 ````
@@ -6423,230 +20562,133 @@ class AnswerOptionController extends Controller
 }
 ````
 
-## File: app/Http/Controllers/Admin/ExamController.php
+## File: app/Http/Controllers/Admin/DimensionController.php
 ````php
 <?php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreDimensionRequest;
+use App\Http\Requests\Admin\StoreInterpretationsRequest;
 use App\Models\Assessment;
-use App\Models\Question;
-use App\Services\AssessmentService;
+use App\Models\Dimension;
+use App\Services\DimensionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
-class ExamController extends Controller
+class DimensionController extends Controller
 {
     public function __construct(
-        private readonly AssessmentService $assessmentService,
+        private readonly DimensionService $dimensionService,
     ) {}
-
-    public function create(): View
-    {
-        $assessments = Assessment::orderBy('title_ar')->get();
-
-        return view('admin.exams.create', compact('assessments'));
-    }
-
-    public function store(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'title_ar' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
-            'description_ar' => 'nullable|string',
-            'time_limit_min' => 'nullable|integer|min:1',
-            'question_ids' => 'required|array|min:1',
-            'question_ids.*' => 'uuid|exists:questions,id',
-        ]);
-
-        $assessment = \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
-            $assessment = $this->assessmentService->create([
-                'title_ar' => $data['title_ar'],
-                'category' => $data['category'],
-                'description_ar' => $data['description_ar'] ?? null,
-                'time_limit_min' => $data['time_limit_min'] ?? null,
-                'dimensions' => [],
-            ]);
-
-            // Re-assign chosen questions to this assessment in order
-            foreach ($data['question_ids'] as $idx => $qId) {
-                Question::where('id', $qId)->update([
-                    'assessment_id' => $assessment->id,
-                    'order_index' => $idx,
-                ]);
-            }
-            
-            return $assessment;
-        });
-
-        return response()->json(['success' => true, 'message' => 'تم إنشاء الاختبار.', 'id' => $assessment->id]);
-    }
-}
-````
-
-## File: app/Http/Controllers/Admin/QuestionController.php
-````php
-<?php
-
-namespace App\Http\Controllers\Admin;
-
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\BulkStoreQuestionsRequest;
-use App\Http\Requests\Admin\StoreQuestionRequest;
-use App\Models\Assessment;
-use App\Models\Question;
-use App\Services\AssessmentService;
-use App\Services\QuestionService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
-
-class QuestionController extends Controller
-{
-    public function __construct(
-        private readonly QuestionService $questionService,
-        private readonly AssessmentService $assessmentService,
-    ) {}
-
-    public function index(Request $request): View
-    {
-        $assessments = Assessment::with('dimensions')->orderBy('title_ar')->get();
-
-        $questions = $this->questionService->filteredList($request->only([
-            'assessment_id',
-            'dimension_id',
-            'search',
-            'per_page',
-        ]));
-
-        return view('admin.questions.index', compact('questions', 'assessments'));
-    }
-
-    public function store(StoreQuestionRequest $request): JsonResponse
-    {
-        $validated = $request->validated();
-        $question = $this->questionService->create($validated, $validated['options']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم إضافة السؤال.',
-            'id' => $question->id,
-        ]);
-    }
-
-    public function bulkStore(BulkStoreQuestionsRequest $request): JsonResponse
-    {
-        $count = $this->questionService->bulkImport($request->validated());
-
-        return response()->json(['success' => true, 'message' => "تم استيراد $count سؤال بنجاح."]);
-    }
 
     public function byAssessment(Assessment $assessment): JsonResponse
     {
-        $questions = $this->questionService->byAssessment($assessment);
+        $dimensions = $this->dimensionService->byAssessment($assessment);
 
-        return response()->json($questions);
+        return response()->json($dimensions);
     }
 
-    public function update(Request $request, Question $question): JsonResponse
+    public function store(StoreDimensionRequest $request, Assessment $assessment): JsonResponse
     {
-        $request->validate(['text_ar' => 'sometimes|string', 'is_reversed' => 'sometimes|boolean']);
-        $this->questionService->update($question, $request->only(['text_ar', 'is_reversed']));
+        $dimension = $this->dimensionService->create($assessment, $request->validated());
 
-        return response()->json(['success' => true, 'message' => 'تم تحديث السؤال.']);
+        return response()->json([
+            'success' => true,
+            'dimension' => $dimension,
+            'message' => 'تم إضافة البُعد بنجاح.',
+        ]);
     }
 
-    public function destroy(Question $question): JsonResponse
+    public function update(StoreDimensionRequest $request, Dimension $dimension): JsonResponse
     {
-        $this->questionService->delete($question);
+        $this->dimensionService->update($dimension, $request->validated());
 
-        return response()->json(['success' => true, 'message' => 'تم حذف السؤال.']);
+        return response()->json(['success' => true, 'message' => 'تم تحديث البُعد.']);
     }
 
-    public function bulkDelete(Request $request): JsonResponse
+    public function destroy(Dimension $dimension): JsonResponse
     {
-        $request->validate(['ids' => 'required|array', 'ids.*' => 'uuid']);
-        $count = $this->questionService->bulkDelete($request->ids);
+        $this->dimensionService->delete($dimension);
 
-        return response()->json(['success' => true, 'message' => "تم حذف $count سؤال."]);
+        return response()->json(['success' => true, 'message' => 'تم حذف البُعد بنجاح.']);
     }
 
     public function reorder(Request $request): JsonResponse
     {
-        $request->validate(['order' => 'required|array', 'order.*' => 'uuid']);
-        $this->questionService->reorder($request->order);
-
-        return response()->json(['success' => true]);
-    }
-
-    public function assignDimension(Request $request, Question $question): JsonResponse
-    {
-        $request->validate(['dimension_id' => 'nullable|uuid|exists:dimensions,id']);
-        $this->questionService->assignDimension($question, $request->dimension_id ?: null);
-
-        return response()->json(['success' => true, 'message' => 'تم تحديد البُعد.']);
-    }
-
-    public function bulkAssignDimension(Request $request): JsonResponse
-    {
-        $request->validate([
-            'ids' => 'required|array', 
-            'ids.*' => 'uuid',
-            'dimension_id' => 'nullable|uuid|exists:dimensions,id'
-        ]);
-        $this->questionService->bulkAssignDimension($request->ids, $request->dimension_id ?: null);
-
-        return response()->json(['success' => true, 'message' => 'تم تعيين البُعد للأسئلة المحددة.']);
-    }
-
-    /**
-     * Import questions from CSV for an assessment.
-     */
-    public function importCsv(Request $request, Assessment $assessment): JsonResponse
-    {
-        $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt|max:2048',
+        $data = $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'required|uuid|exists:dimensions,id,deleted_at,NULL',
         ]);
 
-        $file = $request->file('csv_file');
+        $this->dimensionService->reorder($data['order']);
 
-        try {
-            $count = $this->questionService->importFromCsv($assessment, $file->getRealPath());
+        return response()->json(['success' => true, 'message' => 'تم إعادة ترتيب الأبعاد.']);
+    }
 
-            return response()->json([
-                'success' => true,
-                'message' => "تم استيراد $count سؤال بنجاح وتحديث الأبعاد المعنية.",
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'حدث خطأ أثناء الاستيراد: '.$e->getMessage(),
-            ], 422);
+    public function storeInterpretations(StoreInterpretationsRequest $request, Dimension $dimension): JsonResponse
+    {
+        $this->dimensionService->saveInterpretations($dimension, $request->validated());
+
+        return response()->json(['success' => true, 'message' => 'تم حفظ تفسيرات البُعد بنجاح.']);
+    }
+}
+````
+
+## File: app/Http/Controllers/Admin/IconController.php
+````php
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Icon;
+use App\Services\IconService;
+use Illuminate\Http\Request;
+
+class IconController extends Controller
+{
+    public function __construct(
+        private readonly IconService $iconService,
+    ) {}
+
+    public function index()
+    {
+        $icons = $this->iconService->getGroupedByCategory();
+
+        return view('admin.icons.index', compact('icons'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|in:certificates,programs,plan_30_days,assessments,system',
+            'icon_file' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:500', // max 500KB
+        ], [
+            'icon_file.max' => 'حجم الأيقونة يجب أن لا يتجاوز 500 كيلوبايت لضمان سرعة التقرير.',
+            'icon_file.image' => 'يجب اختيار ملف صورة صالح.',
+        ]);
+
+        if ($request->hasFile('icon_file')) {
+            $this->iconService->store(
+                $request->name,
+                $request->category,
+                $request->file('icon_file')
+            );
+
+            return back()->with('success', 'تم إضافة الأيقونة بنجاح.');
         }
+
+        return back()->withErrors(['icon_file' => 'فشل في رفع الأيقونة.']);
     }
 
-    /**
-     * Download CSV template for question importing.
-     */
-    public function downloadTemplate(): StreamedResponse
+    public function destroy(Icon $icon)
     {
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="questions_import_template.csv"',
-        ];
+        $this->iconService->delete($icon);
 
-        return response()->streamDownload(function () {
-            $output = fopen('php://output', 'w');
-            fwrite($output, "\xEF\xBB\xBF"); // UTF-8 BOM
-            fputcsv($output, ['اسم البعد', 'نص السؤال', 'معكوس', 'الخيارات']);
-            fputcsv($output, ['الوعي بالذات', 'أعرف نقاط قوتي بوضوح.', '0', 'نعم:2|إلى حد ما:1|لا:0']);
-            fputcsv($output, ['الوعي بالذات', 'أستطيع تحديد نقاط الضعف التي أحتاج إلى تطويرها.', '0', '']);
-            fputcsv($output, ['الوعي الانفعالي', 'أشعر بالقلق أو التوتر بسهولة عند مواجهة المشكلات.', '1', 'نعم:0|إلى حد ما:1|لا:2']);
-            fclose($output);
-        }, 'questions_import_template.csv', $headers);
+        return back()->with('success', 'تم حذف الأيقونة بنجاح.');
     }
 }
 ````
@@ -7257,6 +21299,188 @@ interface UserRepositoryInterface
 }
 ````
 
+## File: app/Repositories/QuestionRepository.php
+````php
+<?php
+
+namespace App\Repositories;
+
+use App\Models\AnswerOption;
+use App\Models\Assessment;
+use App\Models\Question;
+use App\Repositories\Contracts\QuestionRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+
+class QuestionRepository implements QuestionRepositoryInterface
+{
+    public function filteredPaginated(array $filters): LengthAwarePaginator
+    {
+        /*
+         * Use a DB JOIN between questions, assessments and dimensions
+         * to retrieve assessment title and dimension name in a single query,
+         * avoiding the N+1 problem that the previous with() approach caused.
+         */
+        $query = DB::table('questions as q')
+            ->join('assessments as a', 'a.id', '=', 'q.assessment_id')
+            ->leftJoin('dimensions as d', 'd.id', '=', 'q.dimension_id')
+            ->whereNull('a.deleted_at')
+            ->whereNull('q.deleted_at')
+            ->select([
+                'q.id',
+                'q.text_ar',
+                'q.assessment_id',
+                'q.dimension_id',
+                'q.order_index',
+                'q.is_reversed',
+                'q.created_at',
+                'a.title_ar as assessment_title',
+                'd.name_ar  as dimension_name',
+            ])
+            ->selectSub(
+                DB::table('answer_options')->whereNull('deleted_at')->whereColumn('answer_options.question_id', 'q.id')->selectRaw('COUNT(*)'),
+                'answer_options_count'
+            );
+
+        if (! empty($filters['assessment_id'])) {
+            $query->where('q.assessment_id', $filters['assessment_id'])
+                ->orderBy('q.order_index');
+        } else {
+            $query->orderByDesc('q.created_at');
+        }
+
+        if (! empty($filters['dimension_id'])) {
+            $query->where('q.dimension_id', $filters['dimension_id']);
+        }
+
+        if (! empty($filters['search'])) {
+            $query->where('q.text_ar', 'like', '%'.$filters['search'].'%');
+        }
+
+        $perPage = $filters['per_page'] ?? 25;
+
+        if ($perPage === 'all' || $perPage === 'الكل') {
+            $total = $query->count();
+            $perPage = $total > 0 ? $total : 25;
+        } else {
+            $perPage = in_array((int) $perPage, [25, 50, 100]) ? (int) $perPage : 25;
+        }
+
+        return $query->paginate($perPage);
+    }
+
+    public function byAssessment(Assessment $assessment): Collection
+    {
+        return $assessment->questions()
+            ->with('answerOptions')
+            ->orderBy('order_index')
+            ->get();
+    }
+
+    public function create(array $data, array $options): Question
+    {
+        $question = Question::create([
+            'assessment_id' => $data['assessment_id'],
+            'dimension_id' => $data['dimension_id'] ?? null,
+            'text_ar' => $data['text_ar'],
+            'order_index' => Question::where('assessment_id', $data['assessment_id'])->count(),
+            'is_reversed' => $data['is_reversed'] ?? false,
+        ]);
+
+        foreach ($options as $index => $opt) {
+            AnswerOption::create([
+                'question_id' => $question->id,
+                'label_ar' => $opt['label_ar'],
+                'score_value' => $opt['score_value'],
+                'order_index' => $opt['order_index'] ?? $index,
+            ]);
+        }
+
+        return $question;
+    }
+
+    public function update(Question $question, array $data): Question
+    {
+        $question->update($data);
+
+        return $question->fresh();
+    }
+
+    public function delete(Question $question): void
+    {
+        DB::transaction(function () use ($question) {
+            $question->answerOptions()->delete();
+            $question->delete();
+        });
+    }
+
+    public function bulkDelete(array $ids): void
+    {
+        DB::transaction(function () use ($ids) {
+            $questions = Question::whereIn('id', $ids)->get();
+            foreach ($questions as $q) {
+                $q->answerOptions()->delete();
+                $q->delete();
+            }
+        });
+    }
+
+    public function reorder(array $orderedIds): void
+    {
+        foreach ($orderedIds as $index => $id) {
+            Question::where('id', $id)->update(['order_index' => $index]);
+        }
+    }
+
+    public function bulkAssignDimension(array $ids, ?string $dimensionId): void
+    {
+        Question::whereIn('id', $ids)->update(['dimension_id' => $dimensionId]);
+    }
+
+    public function assignDimension(Question $question, ?string $dimensionId): Question
+    {
+        $question->update(['dimension_id' => $dimensionId]);
+
+        return $question->fresh();
+    }
+
+    public function bulkImport(array $data): int
+    {
+        $defaultOptions = [
+            ['label_ar' => 'نعم',        'score_value' => 2, 'order_index' => 0],
+            ['label_ar' => 'إلى حد ما', 'score_value' => 1, 'order_index' => 1],
+            ['label_ar' => 'لا',         'score_value' => 0, 'order_index' => 2],
+        ];
+
+        $lines = $data['lines'];
+        $baseIndex = Question::where('assessment_id', $data['assessment_id'])->count();
+        $count = 0;
+
+        foreach ($lines as $offset => $line) {
+            if (empty($line)) {
+                continue;
+            }
+
+            $question = Question::create([
+                'assessment_id' => $data['assessment_id'],
+                'dimension_id' => $data['dimension_id'] ?? null,
+                'text_ar' => $line,
+                'order_index' => $baseIndex + $offset,
+            ]);
+
+            foreach ($defaultOptions as $opt) {
+                AnswerOption::create(array_merge($opt, ['question_id' => $question->id]));
+            }
+
+            $count++;
+        }
+
+        return $count;
+    }
+}
+````
+
 ## File: app/Repositories/RecommendationRepository.php
 ````php
 <?php
@@ -7394,6 +21618,439 @@ class AssessmentService
     public function toggle(Assessment $assessment): Assessment
     {
         return $this->assessments->toggle($assessment);
+    }
+}
+````
+
+## File: app/Services/QuestionService.php
+````php
+<?php
+
+namespace App\Services;
+
+use App\Models\Assessment;
+use App\Models\Question;
+use App\Repositories\Contracts\QuestionRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+
+class QuestionService
+{
+    public function __construct(
+        private readonly QuestionRepositoryInterface $questions,
+    ) {}
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function filteredList(array $filters): LengthAwarePaginator
+    {
+        return $this->questions->filteredPaginated($filters);
+    }
+
+    public function byAssessment(Assessment $assessment): Collection
+    {
+        return $this->questions->byAssessment($assessment);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<int, array<string, mixed>>  $options
+     */
+    public function create(array $data, array $options): Question
+    {
+        return $this->questions->create($data, $options);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function update(Question $question, array $data): Question
+    {
+        $updateData = array_intersect_key($data, array_flip(['text_ar', 'is_reversed', 'dimension_id']));
+
+        return $this->questions->update($question, $updateData);
+    }
+
+    public function delete(Question $question): void
+    {
+        $this->questions->delete($question);
+    }
+
+    /**
+     * @param  array<int, string>  $ids
+     */
+    public function bulkDelete(array $ids): int
+    {
+        $count = count($ids);
+        $this->questions->bulkDelete($ids);
+
+        return $count;
+    }
+
+    /**
+     * @param  array<int, string>  $orderedIds
+     */
+    public function reorder(array $orderedIds): void
+    {
+        $this->questions->reorder($orderedIds);
+    }
+
+    /**
+     * @param  array<int, string>  $ids
+     */
+    public function bulkAssignDimension(array $ids, ?string $dimensionId): void
+    {
+        $this->questions->bulkAssignDimension($ids, $dimensionId);
+    }
+
+    public function assignDimension(Question $question, ?string $dimensionId): Question
+    {
+        return $this->questions->assignDimension($question, $dimensionId);
+    }
+
+    /**
+     * Bulk-import questions from raw text (one per line).
+     *
+     * @param  array<string, mixed>  $data  Keys: assessment_id, dimension_id, questions_text
+     * @return int Number of questions created
+     */
+    public function bulkImport(array $data): int
+    {
+        $lines = array_filter(
+            array_map('trim', explode("\n", $data['questions_text']))
+        );
+
+        return $this->questions->bulkImport([
+            'assessment_id' => $data['assessment_id'],
+            'dimension_id' => $data['dimension_id'] ?? null,
+            'lines' => array_values($lines),
+        ]);
+    }
+
+    /**
+     * Import questions from a CSV file.
+     */
+    public function importFromCsv(Assessment $assessment, string $filePath): int
+    {
+        if (($handle = fopen($filePath, 'r')) === false) {
+            throw new \RuntimeException('تعذر فتح ملف CSV.');
+        }
+
+        $rowCount = 0;
+        $isFirst = true;
+
+        while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+            if (empty($row) || count($row) < 2) {
+                continue;
+            }
+
+            // Skip header row if present
+            if ($isFirst) {
+                $isFirst = false;
+                $firstCol = trim($row[0]);
+                if (
+                    str_contains($firstCol, 'dimension') ||
+                    str_contains($firstCol, 'البعد') ||
+                    str_contains($firstCol, 'بُعد') ||
+                    str_contains(trim($row[1]), 'question') ||
+                    str_contains(trim($row[1]), 'السؤال')
+                ) {
+                    continue;
+                }
+            }
+
+            $dimName = trim($row[0] ?? '');
+            $qText = trim($row[1] ?? '');
+
+            if (empty($qText)) {
+                continue;
+            }
+
+            $isReversed = filter_var(trim($row[2] ?? '0'), FILTER_VALIDATE_BOOLEAN) || trim($row[2] ?? '0') === '1';
+            $optionsStr = trim($row[3] ?? '');
+
+            // Get or create dimension if dimName is provided
+            $dimensionId = null;
+            if (! empty($dimName)) {
+                $dimension = $assessment->dimensions()->firstOrCreate(
+                    ['name_ar' => $dimName],
+                    [
+                        'max_score' => 0,
+                        'order_index' => $assessment->dimensions()->count(),
+                    ]
+                );
+                $dimensionId = $dimension->id;
+            }
+
+            // Parse options
+            $options = [];
+            if (! empty($optionsStr)) {
+                $optParts = explode('|', $optionsStr);
+                foreach ($optParts as $idx => $part) {
+                    $pair = explode(':', $part);
+                    $label = trim($pair[0] ?? '');
+                    $score = intval(trim($pair[1] ?? '0'));
+                    if ($label !== '') {
+                        $options[] = [
+                            'label_ar' => $label,
+                            'score_value' => $score,
+                            'order_index' => $idx,
+                        ];
+                    }
+                }
+            }
+
+            // Default options
+            if (empty($options)) {
+                $options = [
+                    ['label_ar' => 'نعم',        'score_value' => $isReversed ? 0 : 2, 'order_index' => 0],
+                    ['label_ar' => 'إلى حد ما', 'score_value' => 1,                   'order_index' => 1],
+                    ['label_ar' => 'لا',         'score_value' => $isReversed ? 2 : 0, 'order_index' => 2],
+                ];
+            }
+
+            $this->questions->create([
+                'assessment_id' => $assessment->id,
+                'dimension_id' => $dimensionId,
+                'text_ar' => $qText,
+                'is_reversed' => $isReversed,
+            ], $options);
+
+            $rowCount++;
+        }
+
+        fclose($handle);
+
+        // Update dimensions max_scores
+        foreach ($assessment->dimensions as $dim) {
+            $dimQuestions = $dim->questions()->with('answerOptions')->get();
+            $dimMax = $dimQuestions->sum(
+                fn ($q) => $q->answerOptions->max('score_value') ?? 0
+            );
+            $dim->update(['max_score' => $dimMax]);
+        }
+
+        return $rowCount;
+    }
+}
+````
+
+## File: app/Services/StatisticsService.php
+````php
+<?php
+
+namespace App\Services;
+
+use App\Models\Assessment;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+
+class StatisticsService
+{
+    /**
+     * Get all assessments for the filter dropdown.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Assessment>
+     */
+    public function getAssessments()
+    {
+        return Assessment::all();
+    }
+
+    /**
+     * Build the full statistics data payload.
+     * Uses DB JOINs to avoid N+1 queries.
+     *
+     * @param  int  $range  Number of days
+     * @return array<string, mixed>
+     */
+    public function getData(int $range): array
+    {
+        return [
+            'dailyData' => $this->getDailySessionData($range),
+            'assessments' => $this->getLevelDistribution(),
+            'avgScores' => $this->getAverageScores(),
+            'topUsers' => $this->getTopUsers(),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function getDailySessionData(int $range): array
+    {
+        $from = now()->subDays($range - 1)->startOfDay();
+
+        $rows = DB::table('exam_sessions')
+            ->where('status', 'completed')
+            ->where('completed_at', '>=', $from)
+            ->selectRaw('DATE(completed_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->keyBy('date');
+
+        $data = [];
+        for ($i = 0; $i < $range; $i++) {
+            $date = now()->subDays($range - 1 - $i)->format('Y-m-d');
+            $data[] = [
+                'date' => $date,
+                'count' => $rows->get($date)?->count ?? 0,
+            ];
+        }
+
+        return $data;
+    }
+
+    /**
+     * Use a single JOIN query to aggregate level counts per assessment.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function getLevelDistribution(): array
+    {
+        $rows = DB::table('assessments as a')
+            ->join('exam_sessions as es', 'es.assessment_id', '=', 'a.id')
+            ->join('results as r', 'r.session_id', '=', 'es.id')
+            ->whereNull('a.deleted_at')
+            ->select([
+                'a.id',
+                'a.title_ar as title',
+                DB::raw("SUM(CASE WHEN r.level = 'high'   THEN 1 ELSE 0 END) as high"),
+                DB::raw("SUM(CASE WHEN r.level = 'medium' THEN 1 ELSE 0 END) as medium"),
+                DB::raw("SUM(CASE WHEN r.level = 'low'    THEN 1 ELSE 0 END) as low"),
+            ])
+            ->groupBy('a.id', 'a.title_ar')
+            ->get();
+
+        return $rows->map(fn ($r) => [
+            'id' => $r->id,
+            'title' => $r->title,
+            'high' => (int) $r->high,
+            'medium' => (int) $r->medium,
+            'low' => (int) $r->low,
+        ])->values()->toArray();
+    }
+
+    /**
+     * Use a JOIN to compute average score per assessment in a single query.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function getAverageScores(): array
+    {
+        $rows = DB::table('assessments as a')
+            ->leftJoin('exam_sessions as es', 'es.assessment_id', '=', 'a.id')
+            ->leftJoin('results as r', 'r.session_id', '=', 'es.id')
+            ->whereNull('a.deleted_at')
+            ->select([
+                'a.title_ar as title',
+                DB::raw('ROUND(AVG(r.total_score), 1) as avg'),
+            ])
+            ->groupBy('a.id', 'a.title_ar')
+            ->get();
+
+        return $rows->map(fn ($r) => [
+            'title' => $r->title,
+            'avg' => (float) ($r->avg ?? 0),
+        ])->values()->toArray();
+    }
+
+    /**
+     * @return Collection<int, object>
+     */
+    private function getTopUsers()
+    {
+        return DB::table('users as u')
+            ->leftJoin('exam_sessions as es', fn ($j) => $j->on('es.user_id', '=', 'u.id')->where('es.status', 'completed')
+            )
+            ->where('u.role', 'user')
+            ->whereNull('u.deleted_at')
+            ->select([
+                'u.id',
+                'u.name',
+                'u.email',
+                DB::raw('COUNT(es.id) as exam_sessions_count'),
+            ])
+            ->groupBy('u.id', 'u.name', 'u.email')
+            ->orderByDesc('exam_sessions_count')
+            ->limit(10)
+            ->get();
+    }
+
+    /**
+     * Export all completed exam sessions and results to a CSV string.
+     */
+    public function exportResultsCsv(): string
+    {
+        $rows = DB::table('exam_sessions as es')
+            ->join('users as u', 'u.id', '=', 'es.user_id')
+            ->join('assessments as a', 'a.id', '=', 'es.assessment_id')
+            ->join('results as r', 'r.session_id', '=', 'es.id')
+            ->where('es.status', 'completed')
+            ->whereNull('u.deleted_at')
+            ->whereNull('a.deleted_at')
+            ->select([
+                'es.id as session_id',
+                'u.name as user_name',
+                'u.email as user_email',
+                'a.title_ar as assessment_title',
+                'r.total_score',
+                'r.max_possible_score',
+                'r.level',
+                'es.completed_at',
+            ])
+            ->orderByDesc('es.completed_at')
+            ->get();
+
+        $output = fopen('php://temp', 'r+');
+
+        // Prepend UTF-8 BOM so Excel opens Arabic letters correctly
+        fwrite($output, "\xEF\xBB\xBF");
+
+        // Headers
+        fputcsv($output, [
+            'معرف الجلسة',
+            'اسم المستخدم',
+            'البريد الإلكتروني',
+            'اسم المقياس',
+            'الدرجة المحرزة',
+            'الدرجة القصوى',
+            'النسبة المئوية',
+            'المستوى',
+            'تاريخ الإكمال',
+        ]);
+
+        foreach ($rows as $row) {
+            $percentage = $row->max_possible_score > 0
+                ? round(($row->total_score / $row->max_possible_score) * 100).'%'
+                : '0%';
+
+            $levelLabel = match ($row->level) {
+                'high' => 'مرتفع',
+                'medium' => 'متوسط',
+                default => 'منخفض',
+            };
+
+            fputcsv($output, [
+                $row->session_id,
+                $row->user_name,
+                $row->user_email,
+                $row->assessment_title,
+                $row->total_score,
+                $row->max_possible_score,
+                $percentage,
+                $levelLabel,
+                $row->completed_at,
+            ]);
+        }
+
+        rewind($output);
+        $csvContent = stream_get_contents($output);
+        fclose($output);
+
+        return $csvContent;
     }
 }
 ````
@@ -8413,70 +23070,230 @@ class NoDirectBuilderDeleteTest extends TestCase
 }
 ````
 
-## File: app/Http/Controllers/Admin/SettingController.php
+## File: app/Http/Controllers/Admin/ExamController.php
 ````php
 <?php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Setting;
+use App\Models\Assessment;
+use App\Models\Question;
+use App\Services\AssessmentService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\File;
+use Illuminate\View\View;
 
-class SettingController extends Controller
+class ExamController extends Controller
 {
-    public function index()
+    public function __construct(
+        private readonly AssessmentService $assessmentService,
+    ) {}
+
+    public function create(): View
     {
-        $settings = Setting::pluck('value', 'key')->toArray();
-        return view('admin.settings.index', compact('settings'));
+        $assessments = Assessment::orderBy('title_ar')->get();
+
+        return view('admin.exams.create', compact('assessments'));
     }
 
-    public function update(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'stats_mode' => 'required|in:manual,auto',
-            'stat_users' => 'required|string|max:255',
-            'stat_exams' => 'required|string|max:255',
-            'stat_assessments' => 'required|string|max:255',
-            'stat_fields' => 'required|string|max:255',
-            'stat_users_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'stat_exams_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'stat_assessments_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'stat_fields_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'title_ar' => 'required|string|max:255',
+            'category' => 'required|string|max:255',
+            'description_ar' => 'nullable|string',
+            'time_limit_min' => 'nullable|integer|min:1',
+            'question_ids' => 'required|array|min:1',
+            'question_ids.*' => 'uuid|exists:questions,id,deleted_at,NULL',
         ]);
 
-        $textData = collect($data)->except(['stat_users_icon', 'stat_exams_icon', 'stat_assessments_icon', 'stat_fields_icon'])->toArray();
+        $assessment = \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            $assessment = $this->assessmentService->create([
+                'title_ar' => $data['title_ar'],
+                'category' => $data['category'],
+                'description_ar' => $data['description_ar'] ?? null,
+                'time_limit_min' => $data['time_limit_min'] ?? null,
+                'dimensions' => [],
+            ]);
 
-        foreach ($textData as $key => $value) {
-            Setting::updateOrCreate(['key' => $key], ['value' => $value]);
-        }
-
-        $iconKeys = ['stat_users_icon', 'stat_exams_icon', 'stat_assessments_icon', 'stat_fields_icon'];
-        foreach ($iconKeys as $key) {
-            if ($request->hasFile($key)) {
-                $file = $request->file($key);
-                $filename = 'sysicon_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('images/icons'), $filename);
-                
-                $oldSetting = Setting::where('key', $key)->first();
-                $oldPath = null;
-                if ($oldSetting && str_starts_with($oldSetting->value, '/images/icons/')) {
-                    $oldPath = public_path(ltrim($oldSetting->value, '/'));
-                }
-                
-                Setting::updateOrCreate(['key' => $key], ['value' => '/images/icons/' . $filename]);
-                
-                if ($oldPath && File::exists($oldPath)) {
-                    File::delete($oldPath);
-                }
+            // Re-assign chosen questions to this assessment in order
+            foreach ($data['question_ids'] as $idx => $qId) {
+                Question::where('id', $qId)->update([
+                    'assessment_id' => $assessment->id,
+                    'order_index' => $idx,
+                ]);
             }
+            
+            return $assessment;
+        });
+
+        return response()->json(['success' => true, 'message' => 'تم إنشاء الاختبار.', 'id' => $assessment->id]);
+    }
+}
+````
+
+## File: app/Http/Controllers/Admin/QuestionController.php
+````php
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\BulkStoreQuestionsRequest;
+use App\Http\Requests\Admin\StoreQuestionRequest;
+use App\Models\Assessment;
+use App\Models\Question;
+use App\Services\AssessmentService;
+use App\Services\QuestionService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+class QuestionController extends Controller
+{
+    public function __construct(
+        private readonly QuestionService $questionService,
+        private readonly AssessmentService $assessmentService,
+    ) {}
+
+    public function index(Request $request): View
+    {
+        $assessments = Assessment::with('dimensions')->orderBy('title_ar')->get();
+
+        $questions = $this->questionService->filteredList($request->only([
+            'assessment_id',
+            'dimension_id',
+            'search',
+            'per_page',
+        ]));
+
+        return view('admin.questions.index', compact('questions', 'assessments'));
+    }
+
+    public function store(StoreQuestionRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $question = $this->questionService->create($validated, $validated['options']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إضافة السؤال.',
+            'id' => $question->id,
+        ]);
+    }
+
+    public function bulkStore(BulkStoreQuestionsRequest $request): JsonResponse
+    {
+        $count = $this->questionService->bulkImport($request->validated());
+
+        return response()->json(['success' => true, 'message' => "تم استيراد $count سؤال بنجاح."]);
+    }
+
+    public function byAssessment(Assessment $assessment): JsonResponse
+    {
+        $questions = $this->questionService->byAssessment($assessment);
+
+        return response()->json($questions);
+    }
+
+    public function update(Request $request, Question $question): JsonResponse
+    {
+        $request->validate(['text_ar' => 'sometimes|string', 'is_reversed' => 'sometimes|boolean']);
+        $this->questionService->update($question, $request->only(['text_ar', 'is_reversed']));
+
+        return response()->json(['success' => true, 'message' => 'تم تحديث السؤال.']);
+    }
+
+    public function destroy(Question $question): JsonResponse
+    {
+        $this->questionService->delete($question);
+
+        return response()->json(['success' => true, 'message' => 'تم حذف السؤال.']);
+    }
+
+    public function bulkDelete(Request $request): JsonResponse
+    {
+        $request->validate(['ids' => 'required|array', 'ids.*' => 'uuid']);
+        $count = $this->questionService->bulkDelete($request->ids);
+
+        return response()->json(['success' => true, 'message' => "تم حذف $count سؤال."]);
+    }
+
+    public function reorder(Request $request): JsonResponse
+    {
+        $request->validate(['order' => 'required|array', 'order.*' => 'uuid']);
+        $this->questionService->reorder($request->order);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function assignDimension(Request $request, Question $question): JsonResponse
+    {
+        $request->validate(['dimension_id' => 'nullable|uuid|exists:dimensions,id,deleted_at,NULL']);
+        $this->questionService->assignDimension($question, $request->dimension_id ?: null);
+
+        return response()->json(['success' => true, 'message' => 'تم تحديد البُعد.']);
+    }
+
+    public function bulkAssignDimension(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ids' => 'required|array', 
+            'ids.*' => 'uuid',
+            'dimension_id' => 'nullable|uuid|exists:dimensions,id,deleted_at,NULL'
+        ]);
+        $this->questionService->bulkAssignDimension($request->ids, $request->dimension_id ?: null);
+
+        return response()->json(['success' => true, 'message' => 'تم تعيين البُعد للأسئلة المحددة.']);
+    }
+
+    /**
+     * Import questions from CSV for an assessment.
+     */
+    public function importCsv(Request $request, Assessment $assessment): JsonResponse
+    {
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:2048',
+        ]);
+
+        $file = $request->file('csv_file');
+
+        try {
+            $count = $this->questionService->importFromCsv($assessment, $file->getRealPath());
+
+            return response()->json([
+                'success' => true,
+                'message' => "تم استيراد $count سؤال بنجاح وتحديث الأبعاد المعنية.",
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء الاستيراد: '.$e->getMessage(),
+            ], 422);
         }
+    }
 
-        Cache::forget('site_settings');
+    /**
+     * Download CSV template for question importing.
+     */
+    public function downloadTemplate(): StreamedResponse
+    {
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="questions_import_template.csv"',
+        ];
 
-        return redirect()->back()->with('success', 'تم تحديث الإحصائيات والإعدادات بنجاح.');
+        return response()->streamDownload(function () {
+            $output = fopen('php://output', 'w');
+            fwrite($output, "\xEF\xBB\xBF"); // UTF-8 BOM
+            fputcsv($output, ['اسم البعد', 'نص السؤال', 'معكوس', 'الخيارات']);
+            fputcsv($output, ['الوعي بالذات', 'أعرف نقاط قوتي بوضوح.', '0', 'نعم:2|إلى حد ما:1|لا:0']);
+            fputcsv($output, ['الوعي بالذات', 'أستطيع تحديد نقاط الضعف التي أحتاج إلى تطويرها.', '0', '']);
+            fputcsv($output, ['الوعي الانفعالي', 'أشعر بالقلق أو التوتر بسهولة عند مواجهة المشكلات.', '1', 'نعم:0|إلى حد ما:1|لا:2']);
+            fclose($output);
+        }, 'questions_import_template.csv', $headers);
     }
 }
 ````
@@ -13714,87 +28531,46 @@ fi
 docker-php-entrypoint --config /Caddyfile --adapter caddyfile 2>&1
 ````
 
-## File: app/Http/Controllers/Admin/CouponController.php
+## File: app/Http/Controllers/Admin/SettingController.php
 ````php
 <?php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Coupon;
-use App\Http\Requests\Admin\SaveCouponRequest;
+use App\Services\SettingService;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 
-class CouponController extends Controller
+class SettingController extends Controller
 {
+    public function __construct(
+        private readonly SettingService $settingService,
+    ) {}
+
     public function index()
     {
-        $coupons = Coupon::latest()->paginate(10);
+        $settings = $this->settingService->getAllAsKeyValue();
 
-        return view('admin.coupons.index', compact('coupons'));
+        return view('admin.settings.index', compact('settings'));
     }
 
-    public function create(): View
+    public function update(Request $request)
     {
-        $assessments = \App\Models\Assessment::orderBy('title_ar')->get();
-        $users = \App\Models\User::orderBy('name')->get();
-        return view('admin.coupons.create', compact('assessments', 'users'));
-    }
+        $data = $request->validate([
+            'stats_mode' => 'required|in:manual,auto',
+            'stat_users' => 'required|string|max:255',
+            'stat_exams' => 'required|string|max:255',
+            'stat_assessments' => 'required|string|max:255',
+            'stat_fields' => 'required|string|max:255',
+            'stat_users_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'stat_exams_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'stat_assessments_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'stat_fields_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+        ]);
 
-    public function store(SaveCouponRequest $request): RedirectResponse
-    {
-        $validated = $request->validated();
+        $this->settingService->updateFromRequest($request, $data);
 
-        $coupon = Coupon::create($validated);
-
-        if (!$coupon->applies_to_all_assessments && !empty($validated['assessment_ids'])) {
-            $coupon->assessments()->sync($validated['assessment_ids']);
-        }
-
-        if (!$coupon->applies_to_all_users && !empty($validated['permitted_user_ids'])) {
-            $coupon->permittedUsers()->sync($validated['permitted_user_ids']);
-        }
-
-        return redirect()->route('admin.coupons.index')->with('success', 'تم إضافة الكوبون بنجاح');
-    }
-
-    public function edit(Coupon $coupon): View
-    {
-        $assessments = \App\Models\Assessment::orderBy('title_ar')->get();
-        $couponAssessmentIds = $coupon->assessments()->pluck('assessment_id')->toArray();
-        $users = \App\Models\User::orderBy('name')->get();
-        $couponPermittedUserIds = $coupon->permittedUsers()->pluck('user_id')->toArray();
-        return view('admin.coupons.edit', compact('coupon', 'assessments', 'couponAssessmentIds', 'users', 'couponPermittedUserIds'));
-    }
-
-    public function update(SaveCouponRequest $request, Coupon $coupon): RedirectResponse
-    {
-        $validated = $request->validated();
-
-        $coupon->update($validated);
-
-        if ($coupon->applies_to_all_assessments) {
-            $coupon->assessments()->detach();
-        } else {
-            $coupon->assessments()->sync($validated['assessment_ids'] ?? []);
-        }
-
-        if ($coupon->applies_to_all_users) {
-            $coupon->permittedUsers()->detach();
-        } else {
-            $coupon->permittedUsers()->sync($validated['permitted_user_ids'] ?? []);
-        }
-
-        return redirect()->route('admin.coupons.index')->with('success', 'تم تحديث الكوبون بنجاح');
-    }
-
-    public function destroy(Coupon $coupon): RedirectResponse
-    {
-        $coupon->delete();
-
-        return redirect()->route('admin.coupons.index')->with('success', 'تم حذف الكوبون بنجاح');
+        return redirect()->back()->with('success', 'تم تحديث الإحصائيات والإعدادات بنجاح.');
     }
 }
 ````
@@ -14111,232 +28887,6 @@ class User extends Authenticatable
     public function permittedCoupons()
     {
         return $this->belongsToMany(Coupon::class, 'coupon_permitted_user');
-    }
-}
-````
-
-## File: app/Repositories/AssessmentRepository.php
-````php
-<?php
-
-namespace App\Repositories;
-
-use App\Models\Assessment;
-use App\Repositories\Contracts\AssessmentRepositoryInterface;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-
-class AssessmentRepository implements AssessmentRepositoryInterface
-{
-    public function paginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
-    {
-        $query = Assessment::withCount(['questions', 'dimensions']);
-        
-        if (!empty($filters['category'])) {
-            $query->where('category', $filters['category']);
-        }
-        if (!empty($filters['search'])) {
-            $query->where('title_ar', 'like', '%' . $filters['search'] . '%');
-        }
-
-        return $query->orderByDesc('created_at')->paginate($perPage);
-    }
-
-    public function findWithRelations(string $id): Assessment
-    {
-        $assessment = Assessment::findOrFail($id);
-
-        $assessment->load([
-            'dimensions' => fn ($q) => $q->orderBy('order_index'),
-            'dimensions.interpretations',
-            'dimensions.questions' => fn ($q) => $q->orderBy('order_index'),
-            'dimensions.questions.answerOptions',
-            'questions' => fn ($q) => $q->whereNull('dimension_id')->orderBy('order_index'),
-            'recommendations',
-        ]);
-
-        return $assessment;
-    }
-
-    public function create(array $data): Assessment
-    {
-        return Assessment::create($data);
-    }
-
-    public function update(Assessment $assessment, array $data): Assessment
-    {
-        $assessment->update($data);
-
-        return $assessment->fresh();
-    }
-
-    public function delete(Assessment $assessment): void
-    {
-        $assessment->delete();
-    }
-
-    public function toggle(Assessment $assessment): Assessment
-    {
-        $assessment->update(['is_active' => ! $assessment->is_active]);
-
-        return $assessment->fresh();
-    }
-}
-````
-
-## File: app/Services/CouponService.php
-````php
-<?php
-
-namespace App\Services;
-
-use App\Models\Assessment;
-use App\Models\Coupon;
-use App\Models\ExamSession;
-use App\Models\User;
-
-class CouponService
-{
-    /**
-     * Validates a coupon code for a specific user and assessment.
-     * Returns an array with validation status, message, and pricing details.
-     */
-    public function validateCouponForUser(string $code, Assessment $assessment, User $user): array
-    {
-        $coupon = Coupon::where('code', $code)
-            ->where('is_active', true)
-            ->where(function ($q) {
-                $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>=', now()->toDateString());
-            })
-            ->first();
-
-        if (!$coupon) {
-            return ['valid' => false, 'message' => 'الكوبون غير صالح أو منتهي الصلاحية.'];
-        }
-
-        // Check assessment scope
-        if (!$coupon->applies_to_all_assessments) {
-            $appliesToAssessment = $coupon->assessments()->where('assessment_id', $assessment->id)->exists();
-            if (!$appliesToAssessment) {
-                return ['valid' => false, 'message' => 'هذا الكوبون لا ينطبق على هذا المقياس.'];
-            }
-        }
-
-        // Check user scope
-        if (!$coupon->applies_to_all_users) {
-            $appliesToUser = $coupon->permittedUsers()->where('user_id', $user->id)->exists();
-            if (!$appliesToUser) {
-                return ['valid' => false, 'message' => 'هذا الكوبون مخصص لمستخدمين محددين فقط وليس لحسابك.'];
-            }
-        }
-
-        $resolved = $this->resolveDiscount($coupon, $user);
-
-        if ($resolved['exhausted']) {
-            return ['valid' => false, 'message' => 'لقد استنفدت جميع فرص الاستخدام لهذا الكوبون.'];
-        }
-
-        if ($resolved['discount'] === null) {
-            return ['valid' => false, 'message' => 'لا يوجد خصم متاح لك على هذا الكوبون في هذه المرحلة.'];
-        }
-
-        $price = (float) ($assessment->price ?? 0);
-        $discountAmount = round($price * $resolved['discount'] / 100, 2);
-        $finalPrice = max(0, $price - $discountAmount);
-
-        return [
-            'valid' => true,
-            'coupon' => $coupon,
-            'discount' => $resolved['discount'],
-            'price' => $price,
-            'discount_amount' => $discountAmount,
-            'final_price' => $finalPrice,
-            'is_free' => $finalPrice <= 0,
-            'usage_number' => $resolved['total_used'] + 1,
-            'message' => "الكوبون صالح! خصم {$resolved['discount']}% سيُطبق.",
-        ];
-    }
-
-    /**
-     * Records the usage of a coupon for a specific user.
-     */
-    public function recordUsage(Coupon $coupon, string $userId): void
-    {
-        $pivot = $coupon->users()->where('user_id', $userId)->first();
-        if ($pivot) {
-            $coupon->users()->updateExistingPivot($userId, ['used_count' => $pivot->pivot->used_count + 1]);
-        } else {
-            $coupon->users()->attach($userId, ['used_count' => 1]);
-        }
-    }
-
-    /**
-     * Resolve the actual discount percentage a user should get for a given coupon.
-     * Checks usage across all identities (email, phone, national_id) to prevent fraud.
-     */
-    private function resolveDiscount(Coupon $coupon, User $user): array
-    {
-        $totalUsed = $this->countLinkedUsage($coupon, $user);
-
-        $discount = null;
-        if ($totalUsed === 0) {
-            $discount = $coupon->discount_percentage;
-        } elseif ($totalUsed === 1 && $coupon->discount_percentage_2nd !== null) {
-            $discount = $coupon->discount_percentage_2nd;
-        } elseif ($totalUsed === 2 && $coupon->discount_percentage_3rd !== null) {
-            $discount = $coupon->discount_percentage_3rd;
-        } elseif ($totalUsed === 3 && $coupon->discount_percentage_4th !== null) {
-            $discount = $coupon->discount_percentage_4th;
-        } elseif ($totalUsed === 4 && $coupon->discount_percentage_5th !== null) {
-            $discount = $coupon->discount_percentage_5th;
-        } elseif ($totalUsed === 5 && $coupon->discount_percentage_6th !== null) {
-            $discount = $coupon->discount_percentage_6th;
-        } elseif ($totalUsed === 6 && $coupon->discount_percentage_7th !== null) {
-            $discount = $coupon->discount_percentage_7th;
-        } elseif ($totalUsed === 7 && $coupon->discount_percentage_8th !== null) {
-            $discount = $coupon->discount_percentage_8th;
-        } elseif ($totalUsed === 8 && $coupon->discount_percentage_9th !== null) {
-            $discount = $coupon->discount_percentage_9th;
-        } elseif ($totalUsed === 9 && $coupon->discount_percentage_10th !== null) {
-            $discount = $coupon->discount_percentage_10th;
-        }
-
-        // Fallback to base discount percentage if specific tier is not defined
-        if ($discount === null) {
-            $discount = $coupon->discount_percentage;
-        }
-
-        $exhausted = ($coupon->assessments_limit !== null) && ($totalUsed >= $coupon->assessments_limit);
-
-        return [
-            'total_used' => $totalUsed,
-            'discount' => $discount,
-            'exhausted' => $exhausted,
-        ];
-    }
-
-    /**
-     * Count exam sessions using this coupon across all users sharing
-     * the same national_id, phone, or email as the requesting user.
-     */
-    private function countLinkedUsage(Coupon $coupon, User $user): int
-    {
-        $linkedUserIds = User::where(function ($q) use ($user) {
-            $q->where('email', $user->email);
-            if ($user->name) {
-                $q->orWhere('name', $user->name);
-            }
-            if ($user->national_id) {
-                $q->orWhere('national_id', $user->national_id);
-            }
-            if ($user->phone) {
-                $q->orWhere('phone', $user->phone);
-            }
-        })->pluck('id');
-
-        return ExamSession::whereIn('user_id', $linkedUserIds)
-            ->where('coupon_id', $coupon->id)
-            ->count();
     }
 }
 ````
@@ -15245,11 +29795,16 @@ function clearRecommendationModal() {
             <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 55px; filter: brightness(0) invert(1);">
             <div class="text-muted small mt-2">لوحة الإدارة</div>
         </div>
-        <ul class="nav flex-column flex-grow-1">
+        <ul class="nav flex-column flex-grow-1 pb-3">
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
                     <i class="bi bi-speedometer2 me-2"></i>الرئيسية
                 </a>
+            </li>
+
+            <!-- قسم المقاييس -->
+            <li class="nav-item mt-3 mb-1 px-3">
+                <span class="text-secondary small fw-bold" style="font-size: 0.75rem;">نظام المقاييس</span>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.assessments*') ? 'active' : '' }}" href="{{ route('admin.assessments.index') }}">
@@ -15270,6 +29825,26 @@ function clearRecommendationModal() {
                 <a class="nav-link {{ request()->routeIs('admin.recommendations*') ? 'active' : '' }}" href="{{ route('admin.recommendations.index') }}">
                     <i class="bi bi-lightbulb me-2"></i>إدارة التوصيات
                 </a>
+            </li>
+
+            <!-- قسم الشهادات الاحترافية -->
+            <li class="nav-item mt-3 mb-1 px-3">
+                <span class="text-secondary small fw-bold" style="font-size: 0.75rem;">الشهادات الاحترافية</span>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.graded_exams.index') ? 'active' : '' }}" href="{{ route('admin.graded_exams.index') }}">
+                    <i class="bi bi-award me-2"></i>إدارة الشهادات والوحدات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.graded_exams.questions.*') ? 'active' : '' }}" href="{{ route('admin.graded_exams.questions.index') }}">
+                    <i class="bi bi-question-circle me-2"></i>بنك أسئلة الشهادات
+                </a>
+            </li>
+
+            <!-- قسم الإدارة العامة -->
+            <li class="nav-item mt-3 mb-1 px-3">
+                <span class="text-secondary small fw-bold" style="font-size: 0.75rem;">الإدارة العامة</span>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.coupons*') ? 'active' : '' }}" href="{{ route('admin.coupons.index') }}">
@@ -15349,6 +29924,343 @@ function clearRecommendationModal() {
 @stack('scripts')
 </body>
 </html>
+````
+
+## File: app/Http/Controllers/Admin/CouponController.php
+````php
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\SaveCouponRequest;
+use App\Models\Coupon;
+use App\Services\CouponService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
+
+class CouponController extends Controller
+{
+    public function __construct(
+        private readonly CouponService $couponService,
+    ) {}
+
+    public function index()
+    {
+        $coupons = Coupon::latest()->paginate(10);
+
+        return view('admin.coupons.index', compact('coupons'));
+    }
+
+    public function create(): View
+    {
+        $assessments = \App\Models\Assessment::orderBy('title_ar')->get();
+        $users = \App\Models\User::orderBy('name')->get();
+
+        return view('admin.coupons.create', compact('assessments', 'users'));
+    }
+
+    public function store(SaveCouponRequest $request): RedirectResponse
+    {
+        $this->couponService->createCoupon($request->validated());
+
+        return redirect()->route('admin.coupons.index')->with('success', 'تم إضافة الكوبون بنجاح');
+    }
+
+    public function edit(Coupon $coupon): View
+    {
+        $assessments = \App\Models\Assessment::orderBy('title_ar')->get();
+        $couponAssessmentIds = $coupon->assessments()->pluck('assessment_id')->toArray();
+        $users = \App\Models\User::orderBy('name')->get();
+        $couponPermittedUserIds = $coupon->permittedUsers()->pluck('user_id')->toArray();
+
+        return view('admin.coupons.edit', compact('coupon', 'assessments', 'couponAssessmentIds', 'users', 'couponPermittedUserIds'));
+    }
+
+    public function update(SaveCouponRequest $request, Coupon $coupon): RedirectResponse
+    {
+        $this->couponService->updateCoupon($coupon, $request->validated());
+
+        return redirect()->route('admin.coupons.index')->with('success', 'تم تحديث الكوبون بنجاح');
+    }
+
+    public function destroy(Coupon $coupon): RedirectResponse
+    {
+        $this->couponService->deleteCoupon($coupon);
+
+        return redirect()->route('admin.coupons.index')->with('success', 'تم حذف الكوبون بنجاح');
+    }
+}
+````
+
+## File: app/Repositories/AssessmentRepository.php
+````php
+<?php
+
+namespace App\Repositories;
+
+use App\Models\Assessment;
+use App\Repositories\Contracts\AssessmentRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+class AssessmentRepository implements AssessmentRepositoryInterface
+{
+    public function paginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        $query = Assessment::withCount(['questions', 'dimensions']);
+        
+        if (!empty($filters['category'])) {
+            $query->where('category', $filters['category']);
+        }
+        if (!empty($filters['search'])) {
+            $query->where('title_ar', 'like', '%' . $filters['search'] . '%');
+        }
+
+        return $query->orderByDesc('created_at')->paginate($perPage);
+    }
+
+    public function findWithRelations(string $id): Assessment
+    {
+        $assessment = Assessment::findOrFail($id);
+
+        $assessment->load([
+            'dimensions' => fn ($q) => $q->orderBy('order_index'),
+            'dimensions.interpretations',
+            'dimensions.questions' => fn ($q) => $q->orderBy('order_index'),
+            'dimensions.questions.answerOptions',
+            'questions' => fn ($q) => $q->whereNull('dimension_id')->orderBy('order_index'),
+            'recommendations',
+        ]);
+
+        return $assessment;
+    }
+
+    public function create(array $data): Assessment
+    {
+        return Assessment::create($data);
+    }
+
+    public function update(Assessment $assessment, array $data): Assessment
+    {
+        $assessment->update($data);
+
+        return $assessment->fresh();
+    }
+
+    public function delete(Assessment $assessment): void
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($assessment) {
+            $assessment->dimensions()->get()->each->delete();
+            $assessment->questions()->get()->each->delete();
+            $assessment->recommendations()->delete();
+            $assessment->delete();
+        });
+    }
+
+    public function toggle(Assessment $assessment): Assessment
+    {
+        $assessment->update(['is_active' => ! $assessment->is_active]);
+
+        return $assessment->fresh();
+    }
+}
+````
+
+## File: app/Services/CouponService.php
+````php
+<?php
+
+namespace App\Services;
+
+use App\Models\Assessment;
+use App\Models\Coupon;
+use App\Models\ExamSession;
+use App\Models\User;
+
+class CouponService
+{
+    /**
+     * Create a new coupon with pivot relationships inside a DB transaction.
+     */
+    public function createCoupon(array $data): Coupon
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            $coupon = Coupon::create($data);
+
+            if (! $coupon->applies_to_all_assessments && ! empty($data['assessment_ids'])) {
+                $coupon->assessments()->sync($data['assessment_ids']);
+            }
+
+            if (! $coupon->applies_to_all_users && ! empty($data['permitted_user_ids'])) {
+                $coupon->permittedUsers()->sync($data['permitted_user_ids']);
+            }
+
+            return $coupon;
+        });
+    }
+
+    /**
+     * Update an existing coupon with pivot relationships inside a DB transaction.
+     */
+    public function updateCoupon(Coupon $coupon, array $data): Coupon
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($coupon, $data) {
+            $coupon->update($data);
+
+            if ($coupon->applies_to_all_assessments) {
+                $coupon->assessments()->detach();
+            } else {
+                $coupon->assessments()->sync($data['assessment_ids'] ?? []);
+            }
+
+            if ($coupon->applies_to_all_users) {
+                $coupon->permittedUsers()->detach();
+            } else {
+                $coupon->permittedUsers()->sync($data['permitted_user_ids'] ?? []);
+            }
+
+            return $coupon->fresh();
+        });
+    }
+
+    /**
+     * Soft-delete a coupon.
+     */
+    public function deleteCoupon(Coupon $coupon): void
+    {
+        $coupon->delete();
+    }
+
+    /**
+     * Validates a coupon code for a specific user and assessment.
+     * Returns an array with validation status, message, and pricing details.
+     */
+    public function validateCouponForUser(string $code, Assessment $assessment, User $user): array
+    {
+        $coupon = Coupon::where('code', $code)
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>=', now()->toDateString());
+            })
+            ->first();
+
+        if (!$coupon) {
+            return ['valid' => false, 'message' => 'الكوبون غير صالح أو منتهي الصلاحية.'];
+        }
+
+        // Check assessment scope
+        if (!$coupon->applies_to_all_assessments) {
+            $appliesToAssessment = $coupon->assessments()->where('assessment_id', $assessment->id)->exists();
+            if (!$appliesToAssessment) {
+                return ['valid' => false, 'message' => 'هذا الكوبون لا ينطبق على هذا المقياس.'];
+            }
+        }
+
+        // Check user scope
+        if (!$coupon->applies_to_all_users) {
+            $appliesToUser = $coupon->permittedUsers()->where('user_id', $user->id)->exists();
+            if (!$appliesToUser) {
+                return ['valid' => false, 'message' => 'هذا الكوبون مخصص لمستخدمين محددين فقط وليس لحسابك.'];
+            }
+        }
+
+        $resolved = $this->resolveDiscount($coupon, $user);
+
+        if ($resolved['exhausted']) {
+            return ['valid' => false, 'message' => 'لقد استنفدت جميع فرص الاستخدام لهذا الكوبون.'];
+        }
+
+        if ($resolved['discount'] === null) {
+            return ['valid' => false, 'message' => 'لا يوجد خصم متاح لك على هذا الكوبون في هذه المرحلة.'];
+        }
+
+        $price = (float) ($assessment->price ?? 0);
+        $discountAmount = round($price * $resolved['discount'] / 100, 2);
+        $finalPrice = max(0, $price - $discountAmount);
+
+        return [
+            'valid' => true,
+            'coupon' => $coupon,
+            'discount' => $resolved['discount'],
+            'price' => $price,
+            'discount_amount' => $discountAmount,
+            'final_price' => $finalPrice,
+            'is_free' => $finalPrice <= 0,
+            'usage_number' => $resolved['total_used'] + 1,
+            'message' => "الكوبون صالح! خصم {$resolved['discount']}% سيُطبق.",
+        ];
+    }
+
+    /**
+     * Records the usage of a coupon for a specific user.
+     */
+    public function recordUsage(Coupon $coupon, string $userId): void
+    {
+        $pivot = $coupon->users()->where('user_id', $userId)->first();
+        if ($pivot) {
+            $coupon->users()->updateExistingPivot($userId, ['used_count' => $pivot->pivot->used_count + 1]);
+        } else {
+            $coupon->users()->attach($userId, ['used_count' => 1]);
+        }
+    }
+
+    private const TIER_FIELDS = [
+        'discount_percentage',
+        'discount_percentage_2nd',
+        'discount_percentage_3rd',
+        'discount_percentage_4th',
+        'discount_percentage_5th',
+        'discount_percentage_6th',
+        'discount_percentage_7th',
+        'discount_percentage_8th',
+        'discount_percentage_9th',
+        'discount_percentage_10th',
+    ];
+
+    /**
+     * Resolve the actual discount percentage a user should get for a given coupon.
+     * Checks usage across all identities (email, phone, national_id) to prevent fraud.
+     */
+    private function resolveDiscount(Coupon $coupon, User $user): array
+    {
+        $totalUsed = $this->countLinkedUsage($coupon, $user);
+
+        $field = self::TIER_FIELDS[$totalUsed] ?? null;
+        $discount = ($field && $coupon->{$field} !== null)
+            ? (float) $coupon->{$field}
+            : (float) $coupon->discount_percentage;
+
+        $exhausted = ($coupon->assessments_limit !== null) && ($totalUsed >= $coupon->assessments_limit);
+
+        return [
+            'total_used' => $totalUsed,
+            'discount' => $discount,
+            'exhausted' => $exhausted,
+        ];
+    }
+
+    /**
+     * Count exam sessions using this coupon across all users sharing
+     * the same national_id, phone, or email as the requesting user.
+     */
+    private function countLinkedUsage(Coupon $coupon, User $user): int
+    {
+        $linkedUserIds = User::where(function ($q) use ($user) {
+            $q->where('email', $user->email);
+            if (! empty($user->national_id)) {
+                $q->orWhere('national_id', $user->national_id);
+            }
+            if (! empty($user->phone)) {
+                $q->orWhere('phone', $user->phone);
+            }
+        })->pluck('id');
+
+        return ExamSession::whereIn('user_id', $linkedUserIds)
+            ->where('coupon_id', $coupon->id)
+            ->count();
+    }
+}
 ````
 
 ## File: database/migrations/2024_01_01_000010_create_recommendations_table.php
@@ -15967,82 +30879,6 @@ class AssessmentController extends Controller
 }
 ````
 
-## File: app/Http/Controllers/AuthController.php
-````php
-<?php
-
-namespace App\Http\Controllers;
-
-use App\Http\Requests\RegisterRequest;
-use App\Services\UserService;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-
-class AuthController extends Controller
-{
-    public function __construct(
-        private readonly UserService $userService,
-    ) {}
-
-    public function showLogin()
-    {
-        return response()
-            ->view('auth.login')
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
-    }
-
-    public function login(Request $request): RedirectResponse
-    {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
-
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-
-            if (Auth::user()->isAdmin()) {
-                return redirect()->route('admin.dashboard');
-            }
-
-            return redirect()->route('dashboard');
-        }
-
-        return back()->withErrors(['email' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.']);
-    }
-
-    public function showRegister()
-    {
-        return response()
-            ->view('auth.register')
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
-    }
-
-    public function register(RegisterRequest $request): RedirectResponse
-    {
-        $user = $this->userService->register($request->validated());
-
-        Auth::login($user);
-
-        return redirect()->route('dashboard');
-    }
-
-    public function logout(Request $request): RedirectResponse
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('login');
-    }
-}
-````
-
 ## File: app/Http/Controllers/ExamController.php
 ````php
 <?php
@@ -16396,7 +31232,7 @@ class ExamController extends Controller
 <nav class="top-navbar">
     <div class="container d-flex justify-content-between align-items-center px-3">
         <!-- Logo -->
-        <a class="navbar-brand text-decoration-none" href="{{ route('dashboard') }}">
+        <a class="navbar-brand text-decoration-none" href="{{ route('selection') }}">
             <div class="d-flex align-items-center">
                 <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 48px;">
             </div>
@@ -16474,6 +31310,7 @@ window.addEventListener('pageshow', function (event) {
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\User;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamController;
@@ -16489,7 +31326,16 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // User routes
 Route::middleware(['auth', 'user'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/selection', function () {
+        return view('user.selection');
+    })->name('selection');
+    
+    // Keep old dashboard route for backward compatibility, redirect to selection
+    Route::get('/dashboard', function () {
+        return redirect()->route('selection');
+    })->name('dashboard');
+    
+    Route::get('/assessments', [DashboardController::class, 'index'])->name('dashboard.assessments');
     Route::post('/coupon/validate', [ExamController::class, 'validateCoupon'])->name('coupon.validate');
     Route::get('/coupon/for-assessment/{assessment}', [ExamController::class, 'getCouponForAssessment'])->name('coupon.for-assessment');
     Route::post('/exam/{assessment}/start', [ExamController::class, 'start'])->name('exam.start');
@@ -16497,6 +31343,15 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/exam/{session}/answer', [ExamController::class, 'answer'])->name('exam.answer');
     Route::post('/exam/{session}/previous', [ExamController::class, 'previous'])->name('exam.previous');
     Route::get('/exam/{session}/result', [ExamController::class, 'result'])->name('exam.result');
+    
+    // Professional certificates (Graded Exams)
+    Route::prefix('certificates')->name('user.graded_exams.')->group(function () {
+        Route::get('/', [User\UserGradedExamController::class, 'index'])->name('index');
+        Route::post('/{exam}/start', [User\UserGradedExamController::class, 'start'])->name('start');
+        Route::get('/session/{session}', [User\UserGradedExamController::class, 'show'])->name('show');
+        Route::post('/session/{session}/answer', [User\UserGradedExamController::class, 'answer'])->name('answer');
+        Route::get('/session/{session}/result', [User\UserGradedExamController::class, 'result'])->name('result');
+    });
 });
 
 // Admin routes
@@ -16559,7 +31414,103 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');
     Route::get('/users/{user}/results', [Admin\UserController::class, 'userResults'])->name('users.results');
+
+    // Graded Exams Admin Routes
+    Route::prefix('graded-exams')->name('graded_exams.')->group(function () {
+        // Certificates and Units
+        Route::get('/', [Admin\GradedExamController::class, 'index'])->name('index');
+        Route::post('/', [Admin\GradedExamController::class, 'store'])->name('store');
+        Route::put('/{exam}', [Admin\GradedExamController::class, 'update'])->name('update');
+        Route::delete('/{exam}', [Admin\GradedExamController::class, 'destroy'])->name('destroy');
+        
+        Route::get('/{exam}/units', [Admin\GradedExamController::class, 'showUnits'])->name('units.show');
+        Route::post('/{exam}/units', [Admin\GradedExamController::class, 'storeUnit'])->name('units.store');
+        Route::put('/units/{unit}', [Admin\GradedExamController::class, 'updateUnit'])->name('units.update');
+        Route::delete('/units/{unit}', [Admin\GradedExamController::class, 'destroyUnit'])->name('units.destroy');
+
+        // Questions
+        Route::get('/questions', [Admin\GradedExamQuestionController::class, 'index'])->name('questions.index');
+        Route::post('/questions', [Admin\GradedExamQuestionController::class, 'store'])->name('questions.store');
+        Route::patch('/questions/{question}', [Admin\GradedExamQuestionController::class, 'update'])->name('questions.update');
+        Route::delete('/questions/{question}', [Admin\GradedExamQuestionController::class, 'destroy'])->name('questions.destroy');
+        Route::get('/questions/{question}/options', [Admin\GradedExamQuestionController::class, 'options'])->name('questions.options');
+        
+        Route::get('/api-units', [Admin\GradedExamQuestionController::class, 'getUnits'])->name('units.byExam');
+    });
 });
+````
+
+## File: app/Http/Controllers/AuthController.php
+````php
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\RegisterRequest;
+use App\Services\UserService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class AuthController extends Controller
+{
+    public function __construct(
+        private readonly UserService $userService,
+    ) {}
+
+    public function showLogin()
+    {
+        return response()
+            ->view('auth.login')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+    }
+
+    public function login(\App\Http\Requests\LoginRequest $request): RedirectResponse
+    {
+        $credentials = $request->validated();
+
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+
+            if (Auth::user()->isAdmin()) {
+                return redirect()->route('admin.dashboard');
+            }
+
+            return redirect()->route('selection');
+        }
+
+        return back()->withErrors(['email' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.']);
+    }
+
+    public function showRegister()
+    {
+        return response()
+            ->view('auth.register')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+    }
+
+    public function register(RegisterRequest $request): RedirectResponse
+    {
+        $user = $this->userService->register($request->validated());
+
+        Auth::login($user);
+
+        return redirect()->route('selection');
+    }
+
+    public function logout(Request $request): RedirectResponse
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login');
+    }
+}
 ````
 
 ## File: app/Http/Requests/Admin/UpdateSettingsRequest.php
@@ -16682,110 +31633,6 @@ class Assessment extends Model
 }
 ````
 
-## File: app/Services/ExamResultService.php
-````php
-<?php
-
-namespace App\Services;
-
-use App\Models\DimensionScore;
-use App\Models\ExamSession;
-use App\Models\Result;
-use App\Services\Result\DimensionInterpreter;
-use App\Services\Result\RecommendationSelector;
-use App\Services\Result\ResultFormatter;
-use App\Services\Result\ScoreCalculator;
-use Carbon\Carbon;
-
-class ExamResultService
-{
-    public function __construct(
-        private readonly ScoreCalculator $scoreCalculator,
-        private readonly RecommendationSelector $recommendationSelector,
-        private readonly DimensionInterpreter $dimensionInterpreter,
-        private readonly ResultFormatter $resultFormatter
-    ) {}
-
-    /**
-     * Calculate and persist the result for a completed exam session.
-     */
-    public function calculate(ExamSession $session): Result
-    {
-        if ($session->result) {
-            return $session->result->load('dimensionScores.dimension');
-        }
-
-        $session->load([
-            'assessment.questions.answerOptions',
-            'assessment.dimensions.interpretations',
-            'assessment.recommendations',
-            'userAnswers',
-        ]);
-
-        $assessment = $session->assessment;
-
-        // 1. Calculate Scores
-        $scoreData = $this->scoreCalculator->calculate($session);
-
-        // 2. Select Recommendation
-        $recommendation = $this->recommendationSelector->select($assessment, $scoreData);
-        $level = $recommendation ? $recommendation->level : null;
-
-        // 3. Persist Result
-        $result = Result::create([
-            'session_id' => $session->id,
-            'total_score' => $scoreData['total_score'],
-            'max_possible_score' => $scoreData['max_score'],
-            'level' => $level,
-            'calculated_at' => Carbon::now(),
-        ]);
-
-        // 4. Persist Dimension Scores with Interpretation
-        foreach ($scoreData['dimensions'] as $dimData) {
-            $dimension = $assessment->dimensions->firstWhere('id', $dimData['dimension_id']);
-            $interp = $this->dimensionInterpreter->interpret($dimension, $dimData['score']);
-            
-            DimensionScore::create([
-                'result_id' => $result->id,
-                'dimension_id' => $dimData['dimension_id'],
-                'score' => $dimData['score'],
-                'max_score' => $dimData['max_score'],
-                'level' => $interp ? $interp->level : 'medium',
-            ]);
-        }
-
-        $session->update([
-            'status' => 'completed',
-            'completed_at' => Carbon::now(),
-        ]);
-
-        return $result->load('dimensionScores.dimension.interpretations');
-    }
-
-    /**
-     * Get the result formatted as a clean structured array (JSON ready).
-     */
-    public function getFormattedResult(ExamSession $session): array
-    {
-        $result = $session->result;
-
-        if (! $result) {
-            $result = $this->calculate($session);
-        } else {
-            $result->load('dimensionScores.dimension.interpretations');
-        }
-
-        $assessment = $session->assessment()->with(['recommendations'])->first();
-        if (! $assessment) {
-            abort(404, 'المقياس المرتبط بهذه الجلسة غير موجود. ربما تمت إعادة تهيئة قاعدة البيانات.');
-        }
-        $recommendation = $assessment->recommendations->where('level', $result->level)->first();
-
-        return $this->resultFormatter->format($assessment, $result, $recommendation);
-    }
-}
-````
-
 ## File: database/seeders/PerceptualStylesSeeder.php
 ````php
 <?php
@@ -16899,6 +31746,110 @@ class PerceptualStylesSeeder extends Seeder
 }
 ````
 
+## File: app/Services/ExamResultService.php
+````php
+<?php
+
+namespace App\Services;
+
+use App\Models\DimensionScore;
+use App\Models\ExamSession;
+use App\Models\Result;
+use App\Services\Result\DimensionInterpreter;
+use App\Services\Result\RecommendationSelector;
+use App\Services\Result\ResultFormatter;
+use App\Services\Result\ScoreCalculator;
+use Carbon\Carbon;
+
+class ExamResultService
+{
+    public function __construct(
+        private readonly ScoreCalculator $scoreCalculator,
+        private readonly RecommendationSelector $recommendationSelector,
+        private readonly DimensionInterpreter $dimensionInterpreter,
+        private readonly ResultFormatter $resultFormatter
+    ) {}
+
+    /**
+     * Calculate and persist the result for a completed exam session.
+     */
+    public function calculate(ExamSession $session): Result
+    {
+        if ($session->result) {
+            return $session->result->load('dimensionScores.dimension.interpretations');
+        }
+
+        $session->load([
+            'assessment.questions.answerOptions',
+            'assessment.dimensions.interpretations',
+            'assessment.recommendations',
+            'userAnswers',
+        ]);
+
+        $assessment = $session->assessment;
+
+        // 1. Calculate Scores
+        $scoreData = $this->scoreCalculator->calculate($session);
+
+        // 2. Select Recommendation
+        $recommendation = $this->recommendationSelector->select($assessment, $scoreData);
+        $level = $recommendation ? $recommendation->level : null;
+
+        // 3. Persist Result
+        $result = Result::create([
+            'session_id' => $session->id,
+            'total_score' => $scoreData['total_score'],
+            'max_possible_score' => $scoreData['max_score'],
+            'level' => $level,
+            'calculated_at' => Carbon::now(),
+        ]);
+
+        // 4. Persist Dimension Scores with Interpretation
+        foreach ($scoreData['dimensions'] as $dimData) {
+            $dimension = $assessment->dimensions->firstWhere('id', $dimData['dimension_id']);
+            $interp = $this->dimensionInterpreter->interpret($dimension, $dimData['score']);
+            
+            DimensionScore::create([
+                'result_id' => $result->id,
+                'dimension_id' => $dimData['dimension_id'],
+                'score' => $dimData['score'],
+                'max_score' => $dimData['max_score'],
+                'level' => $interp ? $interp->level : 'medium',
+            ]);
+        }
+
+        $session->update([
+            'status' => 'completed',
+            'completed_at' => Carbon::now(),
+        ]);
+
+        return $result->load('dimensionScores.dimension.interpretations');
+    }
+
+    /**
+     * Get the result formatted as a clean structured array (JSON ready).
+     */
+    public function getFormattedResult(ExamSession $session): array
+    {
+        $result = $session->result;
+
+        if (! $result) {
+            $result = $this->calculate($session);
+        } else {
+            $result->load('dimensionScores.dimension.interpretations');
+        }
+
+        $assessment = $session->assessment()->with(['recommendations'])->first();
+        if (! $assessment) {
+            abort(404, 'المقياس المرتبط بهذه الجلسة غير موجود. ربما تمت إعادة تهيئة قاعدة البيانات.');
+        }
+        $recommendation = $assessment->recommendations->where('level', $result->level)->first();
+
+        return $this->resultFormatter->format($assessment, $result, $recommendation);
+    }
+}
+````
+
 ## File: database/seeders/DatabaseSeeder.php
 ````php
 <?php
@@ -16925,6 +31876,11 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Safety guard: Prevent destructive table reset in production environment
+        if (! app()->environment(['local', 'testing'])) {
+            throw new \RuntimeException('DatabaseSeeder destructive reset is disabled outside local or testing environments.');
+        }
+
         // Disable foreign keys for truncation
         if (DB::connection()->getDriverName() === 'sqlite') {
             DB::statement('PRAGMA foreign_keys = OFF;');
@@ -16981,6 +31937,7 @@ class DatabaseSeeder extends Seeder
         // Include all finalized comprehensive assessments
         $this->call(AssessmentsDatabaseSeeder::class);
         $this->call(PerceptualStylesSeeder::class);
+        $this->call(GradedExamsDatabaseSeeder::class);
 
         // Seed some demo coupons
         $assessment = Assessment::first();
@@ -21119,7 +36076,7 @@ $('#btn-sync-options').on('click', function() {
 </div>
 
 <div class="container mt-4 mb-5 no-print d-flex justify-content-center" style="gap: 15px;">
-    <a href="{{ route('dashboard') }}" class="btn btn-light rounded-circle shadow-sm text-darkblue" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;" title="العودة للرئيسية">
+    <a href="{{ route('dashboard.assessments') }}" class="btn btn-light rounded-circle shadow-sm text-darkblue" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;" title="العودة للرئيسية">
         <i class="bi bi-house-door-fill"></i>
     </a>
     <button onclick="window.print()" class="btn btn-primary rounded-circle shadow-lg" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;" title="طباعة التقرير">

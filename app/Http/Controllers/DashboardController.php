@@ -13,7 +13,9 @@ class DashboardController extends Controller
 
     public function index(): View
     {
-        $data = $this->dashboardService->getData(auth()->user());
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $data = $this->dashboardService->getData($user);
 
         return view('user.dashboard', $data);
     }
