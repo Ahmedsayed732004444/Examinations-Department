@@ -12,7 +12,8 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('session_id');
             $table->uuid('question_id');
-            $table->boolean('is_correct')->nullable(); // NULL لحد ما يتم التصحيح
+            $table->boolean('is_correct')->nullable(); // NULL لو لم يجب الممتحن
+            $table->decimal('points_earned', 5, 2)->default(0);
             $table->timestamp('answered_at')->nullable();
             $table->timestamps();
 

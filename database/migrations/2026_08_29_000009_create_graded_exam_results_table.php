@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('graded_exam_results', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('session_id');
-            $table->integer('correct_count');
-            $table->integer('incorrect_count');
+            $table->decimal('correct_count', 8, 2)->default(0);
+            $table->decimal('incorrect_count', 8, 2)->default(0);
             $table->integer('total_questions');
             $table->decimal('percentage', 5, 2);
             $table->string('pass_status')->nullable(); // 'ناجح' / 'راسب' حسب حد النجاح المعتمد
