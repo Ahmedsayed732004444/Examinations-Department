@@ -10,7 +10,7 @@ class GradedExamUserAnswer extends Model
     use HasUuids;
 
     protected $fillable = [
-        'session_id', 'question_id', 'is_correct', 'answered_at',
+        'session_id', 'question_id', 'is_correct', 'points_earned', 'answered_at',
     ];
 
     protected $casts = [
