@@ -137,10 +137,28 @@
     .q-grid { grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)); gap: 6px; }
     .q-btn { font-size: 0.8rem; border-radius: 6px; }
 }
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
 </style>
 @endpush
 
 @section('content')
+@php
+    $timeLimitMinutes = $session->gradedExam->time_limit_min;
+    $timeLeftSeconds = 0;
+    $hasTimer = false;
+    
+    if ($timeLimitMinutes) {
+        $hasTimer = true;
+        $startedAt = $session->started_at ?? $session->created_at;
+        $endTime = $startedAt->timestamp + ($timeLimitMinutes * 60);
+        $timeLeftSeconds = max(0, $endTime - now()->timestamp);
+    }
+@endphp
+
 <div class="exam-container">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="fw-bold" style="color: #1a2b56;">{{ $session->gradedExam->title_ar }}</h4>
@@ -157,6 +175,15 @@
 
             <div class="sidebar-map collapse d-lg-block" id="sidebarMapCollapse">
                 <h6 class="fw-bold mb-3 text-center d-none d-lg-block">خريطة الأسئلة</h6>
+                
+                @if($hasTimer)
+                <div class="alert alert-danger py-2 px-3 text-center mb-3 border-danger border-opacity-25" id="timer-container">
+                    <i class="bi bi-stopwatch fs-5 mb-1 d-block text-danger"></i>
+                    <div class="fw-bold fs-3 text-danger" id="exam-timer" dir="ltr">00:00</div>
+                    <div class="small text-danger fw-semibold">الوقت المتبقي</div>
+                </div>
+                @endif
+
                 <div class="d-flex justify-content-center gap-4 mb-3 small">
                     <div class="d-flex align-items-center gap-1"><span style="width: 14px; height: 14px; background: #22c55e; border-radius: 3px;"></span> مجاب</div>
                     <div class="d-flex align-items-center gap-1"><span style="width: 14px; height: 14px; background: #ef4444; border-radius: 3px;"></span> متروك</div>
@@ -363,8 +390,48 @@ $(document).ready(function() {
 
     // 5. Initialize First Question
     showQuestion(0);
-    // Explicitly remove skipped class from the first one on load since they haven't skipped it yet
-    $(`.q-btn[data-target="0"]`).removeClass('skipped');
+    // 6. Timer Logic
+    const hasTimer = {{ $hasTimer ? 'true' : 'false' }};
+    let timeLeft = {{ $timeLeftSeconds }};
+    
+    if (hasTimer) {
+        function updateTimerDisplay() {
+            let h = Math.floor(timeLeft / 3600);
+            let m = Math.floor((timeLeft % 3600) / 60);
+            let s = timeLeft % 60;
+            
+            let display = '';
+            if (h > 0) display += String(h).padStart(2, '0') + ':';
+            display += String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+            
+            $('#exam-timer').text(display);
+            
+            if (timeLeft <= 300) {
+                // last 5 minutes, blink or make it more prominent
+                $('#timer-container').removeClass('alert-danger border-opacity-25').addClass('alert-danger fw-bold').css('animation', 'pulse 1s infinite');
+            }
+        }
+        
+        updateTimerDisplay();
+        
+        let timerInterval = setInterval(function() {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                clearInterval(timerInterval);
+                updateTimerDisplay();
+                alert('انتهى الوقت المخصص للاختبار! سيتم تسليم إجاباتك الآن تلقائياً.');
+                
+                // Disable all inputs so user can't change while submitting
+                $('.option-input').prop('disabled', true);
+                $('#btn-submit, #btn-next, #btn-prev').prop('disabled', true);
+                
+                $('#exam-form').submit();
+            } else {
+                updateTimerDisplay();
+            }
+        }, 1000);
+    }
 });
 </script>
 @endpush

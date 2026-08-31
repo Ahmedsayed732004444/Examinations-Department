@@ -23,7 +23,7 @@
                             <i class="bi bi-three-dots-vertical"></i>
                         </button>
                         <ul class="dropdown-menu shadow-sm text-end">
-                            <li><a class="dropdown-item btn-edit-exam" href="#" data-id="{{ $exam->id }}" data-title="{{ $exam->title_ar }}" data-desc="{{ $exam->description_ar }}" data-active="{{ $exam->is_active ? 1 : 0 }}"><i class="bi bi-pencil me-2"></i>تعديل الشهادة</a></li>
+                            <li><a class="dropdown-item btn-edit-exam" href="#" data-id="{{ $exam->id }}" data-title="{{ $exam->title_ar }}" data-desc="{{ $exam->description_ar }}" data-time="{{ $exam->time_limit_min }}" data-active="{{ $exam->is_active ? 1 : 0 }}"><i class="bi bi-pencil me-2"></i>تعديل الشهادة</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger btn-delete-exam" href="#" data-url="{{ route('admin.graded_exams.destroy', $exam->id) }}"><i class="bi bi-trash me-2"></i>حذف الشهادة</a></li>
                         </ul>
@@ -97,6 +97,10 @@
                 <div class="mb-3">
                     <label class="form-label small fw-medium">الوصف</label>
                     <textarea class="form-control" id="e-desc" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-medium">مدة الاختبار (بالدقائق)</label>
+                    <input type="number" class="form-control" id="e-time-limit" min="1" value="120" placeholder="مثال: 120 لساعتين">
                 </div>
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="e-active" checked>
@@ -212,6 +216,7 @@ $('[data-bs-target="#addExamModal"]').on('click', function() {
     $('#e-id').val('');
     $('#e-title').val('');
     $('#e-desc').val('');
+    $('#e-time-limit').val('120'); // Default to 2 hours
     $('#e-active').prop('checked', true);
     new bootstrap.Modal(document.getElementById('examModal')).show();
 });
@@ -223,6 +228,7 @@ $('.btn-edit-exam').on('click', function(e) {
     $('#e-id').val($(this).data('id'));
     $('#e-title').val($(this).data('title'));
     $('#e-desc').val($(this).data('desc'));
+    $('#e-time-limit').val($(this).data('time'));
     $('#e-active').prop('checked', $(this).data('active') == 1);
     new bootstrap.Modal(document.getElementById('examModal')).show();
 });
@@ -232,6 +238,7 @@ $('#btn-save-exam').on('click', function() {
     const payload = {
         title_ar: $('#e-title').val().trim(),
         description_ar: $('#e-desc').val().trim(),
+        time_limit_min: $('#e-time-limit').val() ? parseInt($('#e-time-limit').val()) : null,
         is_active: $('#e-active').is(':checked') ? 1 : 0
     };
     
