@@ -64,11 +64,13 @@ class GradedExamConstraintSetting extends Model
             'medium' => GradedExamQuestion::where('graded_exam_id', $this->graded_exam_id)->medium()->count(),
             'hard'   => GradedExamQuestion::where('graded_exam_id', $this->graded_exam_id)->hard()->count(),
         ];
+        
+        $totalAvailable = array_sum($available);
 
-        foreach ($targets as $level => $needed) {
-            if ($needed > $available[$level]) {
-                $errors[] = "المطلوب {$needed} سؤال مستوى '{$level}' لكن المتاح فعليًا في البنك {$available[$level]} فقط.";
-            }
+        // Relaxed constraints: we only strictly require that the TOTAL questions available 
+        // is at least the total questions requested.
+        if ($this->total_questions > $totalAvailable) {
+            $errors[] = "إجمالي الأسئلة المطلوبة ({$this->total_questions}) أكبر من إجمالي المتاح في بنك الأسئلة ({$totalAvailable}). يرجى إضافة المزيد من الأسئلة أو تقليل العدد المطلوب.";
         }
 
         if (abs(($this->easy_percentage + $this->medium_percentage + $this->hard_percentage) - 100) > 0.01) {

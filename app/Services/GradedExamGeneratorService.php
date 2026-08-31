@@ -287,10 +287,51 @@ class GradedExamGeneratorService
             }
 
             if ($chosen->count() < $needed) {
-                throw new \RuntimeException(sprintf(
-                    'تعذّر إيجاد %d سؤال كافٍ (وحدة: %s، مستوى: %s، نوع: %s). المتاح فعليًا: %d.',
-                    $needed, $cell['unit_id'], $cell['level'], $cell['type'], $chosen->count()
-                ));
+                // FALLBACK 1: Try to find ANY question in the SAME unit and SAME type, 
+                // regardless of difficulty, that we haven't selected yet.
+                $deficit = $needed - $chosen->count();
+                $fallbackPool1 = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
+                    ->where('unit_id', $cell['unit_id'])
+                    ->where('question_type', $cell['type'])
+                    ->whereNotIn('id', $selected->pluck('id')->concat($chosen->pluck('id')))
+                    ->with('options')
+                    ->inRandomOrder()
+                    ->limit($deficit)
+                    ->get();
+                    
+                foreach ($fallbackPool1 as $fq) {
+                    if ($chosen->count() >= $needed) break;
+                    if ($fq->is_multi_correct && $multiCorrectCount >= $maxMultiCorrect) continue;
+                    $chosen->push($fq);
+                    if ($fq->is_multi_correct) $multiCorrectCount++;
+                }
+
+                // FALLBACK 2: If STILL not enough, fallback to ANY type in the same unit.
+                if ($chosen->count() < $needed) {
+                    $deficit = $needed - $chosen->count();
+                    $fallbackPool2 = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
+                        ->where('unit_id', $cell['unit_id'])
+                        ->whereNotIn('id', $selected->pluck('id')->concat($chosen->pluck('id')))
+                        ->with('options')
+                        ->inRandomOrder()
+                        ->limit($deficit)
+                        ->get();
+                        
+                    foreach ($fallbackPool2 as $fq) {
+                        if ($chosen->count() >= $needed) break;
+                        if ($fq->is_multi_correct && $multiCorrectCount >= $maxMultiCorrect) continue;
+                        $chosen->push($fq);
+                        if ($fq->is_multi_correct) $multiCorrectCount++;
+                    }
+                }
+
+                // If it STILL fails (meaning the entire unit is completely exhausted of questions)
+                if ($chosen->count() < $needed) {
+                    throw new \RuntimeException(sprintf(
+                        'تعذّر إيجاد %d سؤال كافٍ (وحدة: %s، نوع: %s) حتى بعد استعارة مستويات أخرى. المتاح فعليًا: %d.',
+                        $needed, $cell['unit_id'], $cell['type'], $chosen->count()
+                    ));
+                }
             }
 
             $selected = $selected->concat($chosen);
