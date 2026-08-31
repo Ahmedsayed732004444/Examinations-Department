@@ -35,14 +35,15 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/exam/{session}/previous', [ExamController::class, 'previous'])->name('exam.previous');
     Route::get('/exam/{session}/result', [ExamController::class, 'result'])->name('exam.result');
     
-    // Professional certificates (Graded Exams)
-    Route::prefix('certificates')->name('user.graded_exams.')->group(function () {
-        Route::get('/', [User\UserGradedExamController::class, 'index'])->name('index');
-        Route::post('/{exam}/start', [User\UserGradedExamController::class, 'start'])->name('start');
-        Route::get('/session/{session}', [User\UserGradedExamController::class, 'show'])->name('show');
-        Route::post('/session/{session}/answer', [User\UserGradedExamController::class, 'answer'])->name('answer');
-        Route::get('/session/{session}/result', [User\UserGradedExamController::class, 'result'])->name('result');
-    });
+});
+
+// Professional certificates (Graded Exams) - Publicly accessible for guest testing
+Route::prefix('certificates')->name('user.graded_exams.')->group(function () {
+    Route::get('/', [User\UserGradedExamController::class, 'index'])->name('index');
+    Route::post('/{exam}/start', [User\UserGradedExamController::class, 'start'])->name('start');
+    Route::get('/session/{session}', [User\UserGradedExamController::class, 'show'])->name('show');
+    Route::post('/session/{session}/answer', [User\UserGradedExamController::class, 'answer'])->name('answer');
+    Route::get('/session/{session}/result', [User\UserGradedExamController::class, 'result'])->name('result');
 });
 
 // Admin routes
