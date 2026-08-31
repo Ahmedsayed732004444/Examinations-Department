@@ -288,6 +288,7 @@ class UserGradedExamController extends Controller
                 $reviewData[] = [
                     'index' => $index + 1,
                     'text' => $q->text_ar,
+                    'unit_name' => $q->unit ? $q->unit->title_ar : '',
                     'is_correct' => $answer && $answer->points_earned == 1,
                     'points' => $answer ? $answer->points_earned : 0,
                     'selected_ids' => $selectedOptionIds,

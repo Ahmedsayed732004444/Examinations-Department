@@ -154,6 +154,9 @@
                                             <div class="fw-bold">
                                                 <span class="badge bg-secondary me-2">{{ $review['index'] }}</span>
                                                 {{ $review['text'] }}
+                                                @if($review['unit_name'])
+                                                    <span class="badge bg-light text-secondary border ms-2 fw-normal" style="font-size: 0.8rem;"><i class="bi bi-book me-1"></i> {{ $review['unit_name'] }}</span>
+                                                @endif
                                             </div>
                                             <div>
                                                 @if($review['points'] == 1)
