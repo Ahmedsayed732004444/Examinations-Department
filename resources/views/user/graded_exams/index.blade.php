@@ -140,53 +140,58 @@
 <div class="modal fade" id="examIntroModal" tabindex="-1" aria-labelledby="examIntroModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
-      <div class="modal-header bg-light">
-        <h5 class="modal-title fw-bold text-primary" id="examIntroModalLabel">تأكيد بدء الاختبار</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-header bg-light d-flex align-items-center">
+        <h5 class="modal-title fw-bold text-primary m-0" id="examIntroModalLabel">تأكيد بدء الاختبار</h5>
+        <button type="button" class="btn-close m-0 ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body p-4">
-          <h4 class="fw-bold mb-3">الاختبار التجريبي للشهادة الاحترافية</h4>
-          <h5 class="text-primary mb-4" id="modal-exam-title"></h5>
+      <div class="modal-body p-3 p-md-5 text-end" style="text-align: right !important; direction: rtl;">
+          
+          <div class="text-center text-md-end mb-4">
+              <h4 class="fw-bold mb-2">الاختبار التجريبي للشهادة الاحترافية</h4>
+              <h5 class="text-primary fw-bold" id="modal-exam-title"></h5>
+          </div>
           
           <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3">وصف الاختبار</h6>
-          <p class="mb-4">اختبار تجريبي لقياس مدى استيعابك لمفاهيم التسويق الأساسية وتقييم جاهزيتك قبل التقدم للاختبار النهائي للشهادة.</p>
+          <p class="mb-4 text-muted" style="font-size: 1rem; line-height: 1.6;">اختبار تجريبي لقياس مدى استيعابك لمفاهيم التسويق الأساسية وتقييم جاهزيتك قبل التقدم للاختبار النهائي للشهادة.</p>
           
           <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3">بيانات الاختبار</h6>
-          <ul class="list-unstyled mb-4" style="line-height: 1.8;">
-              <li><i class="bi bi-dot text-primary"></i> <strong>عدد الأسئلة:</strong> <span id="modal-exam-questions"></span> سؤالًا</li>
-              <li><i class="bi bi-dot text-primary"></i> <strong>مدة الاختبار:</strong> <span id="modal-exam-time"></span></li>
-              <li><i class="bi bi-dot text-primary"></i> <strong>درجة الاجتياز:</strong> 70%</li>
-              <li><i class="bi bi-dot text-primary"></i> <strong>عدد المحاولات:</strong> مفتوح</li>
-              <li><i class="bi bi-dot text-primary"></i> <strong>نوع الأسئلة:</strong> صح وخطأ واختيار من متعدد</li>
-              <li><i class="bi bi-dot text-primary"></i> <strong>ظهور النتيجة:</strong> فور انتهاء الاختبار</li>
+          <ul class="list-unstyled mb-4 ps-0 pe-3 text-muted" style="line-height: 2; font-size: 1rem;">
+              <li><i class="bi bi-circle-fill text-primary" style="font-size: 0.5rem; margin-left: 8px; vertical-align: middle;"></i> <strong>عدد الأسئلة:</strong> <span id="modal-exam-questions"></span> سؤالًا</li>
+              <li><i class="bi bi-circle-fill text-primary" style="font-size: 0.5rem; margin-left: 8px; vertical-align: middle;"></i> <strong>مدة الاختبار:</strong> <span id="modal-exam-time"></span></li>
+              <li><i class="bi bi-circle-fill text-primary" style="font-size: 0.5rem; margin-left: 8px; vertical-align: middle;"></i> <strong>درجة الاجتياز:</strong> 70%</li>
+              <li><i class="bi bi-circle-fill text-primary" style="font-size: 0.5rem; margin-left: 8px; vertical-align: middle;"></i> <strong>عدد المحاولات:</strong> مفتوح</li>
+              <li><i class="bi bi-circle-fill text-primary" style="font-size: 0.5rem; margin-left: 8px; vertical-align: middle;"></i> <strong>نوع الأسئلة:</strong> صح وخطأ واختيار من متعدد</li>
+              <li><i class="bi bi-circle-fill text-primary" style="font-size: 0.5rem; margin-left: 8px; vertical-align: middle;"></i> <strong>ظهور النتيجة:</strong> فور انتهاء الاختبار</li>
           </ul>
 
           <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3">تعليمات الاختبار</h6>
-          <ol class="mb-4" style="line-height: 1.8;">
+          <ol class="mb-4 ps-0 pe-4 text-muted" style="line-height: 2; font-size: 1rem;">
               <li>اقرأ السؤال وجميع البدائل بعناية قبل الإجابة.</li>
-              <li>قد يحتوي سؤال الاختيار من متعدد على <strong>إجابة صحيحة واحدة أو أكثر</strong>.</li>
-              <li>إذا كان للسؤال أكثر من إجابة صحيحة، فسيتم تحديد <strong>عدد الإجابات المطلوب اختيارها</strong>.</li>
+              <li>قد يحتوي سؤال الاختيار من متعدد على <strong class="text-dark">إجابة صحيحة واحدة أو أكثر</strong>.</li>
+              <li>إذا كان للسؤال أكثر من إجابة صحيحة، فسيتم تحديد <strong class="text-dark">عدد الإجابات المطلوب اختيارها</strong>.</li>
               <li>يمكنك التنقل بين الأسئلة ومراجعة إجاباتك قبل إنهاء الاختبار.</li>
-              <li>تأكد من الإجابة عن جميع الأسئلة قبل الضغط على <strong>«إنهاء الاختبار»</strong>.</li>
+              <li>تأكد من الإجابة عن جميع الأسئلة قبل الضغط على <strong class="text-dark">«إنهاء الاختبار»</strong>.</li>
               <li>هذا اختبار تجريبي للتدريب وقياس الجاهزية، وليس اختبار الشهادة النهائي المعتمد.</li>
           </ol>
           
-          <div class="alert alert-warning py-2 mb-4">
-              <strong><i class="bi bi-exclamation-triangle"></i> تنبيه:</strong><br>
-              قد يحتوي سؤال الاختيار من متعدد على إجابة صحيحة واحدة أو أكثر. اقرأ السؤال والبدائل بعناية وحدد الإجابة أو الإجابات الصحيحة.
+          <div class="alert alert-warning py-3 px-3 mb-4 rounded-3 border-warning border-opacity-50 text-end">
+              <strong class="d-flex align-items-center mb-2 text-dark"><i class="bi bi-exclamation-triangle-fill text-warning fs-5 ms-2"></i> تنبيه هام:</strong>
+              <span class="text-dark" style="font-size: 0.95rem; line-height: 1.6;">قد يحتوي سؤال الاختيار من متعدد على إجابة صحيحة واحدة أو أكثر. اقرأ السؤال والبدائل بعناية وحدد الإجابة أو الإجابات الصحيحة بناءً على المطلوب.</span>
           </div>
 
-          <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3">إقرار المتدرب</h6>
-          <div class="form-check">
-              <input class="form-check-input border-secondary" type="checkbox" id="agreeCheckbox" style="transform: scale(1.2); margin-left: 10px;">
-              <label class="form-check-label fw-bold cursor-pointer" for="agreeCheckbox" style="cursor: pointer;">
-                  قرأت تعليمات الاختبار وفهمتها، وأوافق على بدء الاختبار.
-              </label>
+          <div class="p-3 bg-light rounded-3 border">
+              <h6 class="fw-bold text-dark mb-3">إقرار المتدرب</h6>
+              <div class="form-check d-flex align-items-center">
+                  <input class="form-check-input border-secondary shadow-sm" type="checkbox" id="agreeCheckbox" style="width: 22px; height: 22px; margin-left: 12px; cursor: pointer;">
+                  <label class="form-check-label fw-bold text-dark w-100" for="agreeCheckbox" style="cursor: pointer; font-size: 0.95rem; line-height: 1.5; padding-top: 2px;">
+                      قرأت تعليمات الاختبار وفهمتها، وأوافق على بدء الاختبار.
+                  </label>
+              </div>
           </div>
       </div>
-      <div class="modal-footer bg-light">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-        <button type="button" class="btn btn-success" id="btn-confirm-start" disabled>ابدأ الاختبار <i class="bi bi-play-circle ms-1"></i></button>
+      <div class="modal-footer bg-light d-flex justify-content-between align-items-center w-100">
+        <button type="button" class="btn btn-outline-secondary px-4 fw-bold" data-bs-dismiss="modal">إلغاء</button>
+        <button type="button" class="btn btn-success px-4 fw-bold" id="btn-confirm-start" disabled>ابدأ الاختبار <i class="bi bi-play-circle-fill ms-2"></i></button>
       </div>
     </div>
   </div>
