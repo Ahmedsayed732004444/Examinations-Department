@@ -208,6 +208,11 @@
         let qCount = $(this).data('q');
         let timeMin = $(this).data('time');
         
+        // Default to 120 minutes if not set in DB
+        if (!timeMin || timeMin === '') {
+            timeMin = 120;
+        }
+        
         $('#modal-exam-title').text(title);
         $('#modal-exam-questions').text(qCount || 50);
         

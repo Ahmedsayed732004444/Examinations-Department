@@ -147,7 +147,8 @@
 
 @section('content')
 @php
-    $timeLimitMinutes = $session->gradedExam->time_limit_min;
+    // Default to 120 minutes if not set
+    $timeLimitMinutes = $session->gradedExam->time_limit_min ?? 120;
     $timeLeftSeconds = 0;
     $hasTimer = false;
     
@@ -160,13 +161,23 @@
 @endphp
 
 <div class="exam-container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold" style="color: #1a2b56;">{{ $session->gradedExam->title_ar }}</h4>
-        <span class="badge bg-primary fs-6 py-2 px-3">{{ $session->total_questions }} سؤال</span>
+    <!-- Top Sticky/Visible Header with Timer -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm border" style="position: sticky; top: 10px; z-index: 1000;">
+        <div class="mb-2 mb-md-0">
+            <h4 class="fw-bold mb-2" style="color: #1a2b56;">{{ $session->gradedExam->title_ar }}</h4>
+            <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill shadow-sm"><i class="bi bi-list-ol me-1"></i> {{ $session->total_questions }} سؤال</span>
+        </div>
+        
+        @if($hasTimer)
+        <div class="text-center px-4 py-2 rounded-3" id="timer-container" style="background-color: #fef2f2; border: 2px solid #fecaca; min-width: 160px;">
+            <div class="small text-danger fw-bold mb-1"><i class="bi bi-stopwatch fs-6"></i> الوقت المتبقي</div>
+            <div class="fw-bold text-danger font-monospace" id="exam-timer" dir="ltr" style="font-size: 1.6rem; line-height: 1; letter-spacing: 1px;">00:00:00</div>
+        </div>
+        @endif
     </div>
 
     <div class="row">
-        <!-- Sidebar / Question Map (First on Mobile, Right on Desktop since RTL) -->
+        <!-- Sidebar / Question Map -->
         <div class="col-lg-4 col-md-12 mb-4 order-1 order-lg-2">
             <!-- Mobile Toggle Button -->
             <button class="btn btn-outline-primary d-lg-none w-100 mb-2 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMapCollapse" aria-expanded="false" aria-controls="sidebarMapCollapse">
@@ -175,14 +186,6 @@
 
             <div class="sidebar-map collapse d-lg-block" id="sidebarMapCollapse">
                 <h6 class="fw-bold mb-3 text-center d-none d-lg-block">خريطة الأسئلة</h6>
-                
-                @if($hasTimer)
-                <div class="alert alert-danger py-2 px-3 text-center mb-3 border-danger border-opacity-25" id="timer-container">
-                    <i class="bi bi-stopwatch fs-5 mb-1 d-block text-danger"></i>
-                    <div class="fw-bold fs-3 text-danger" id="exam-timer" dir="ltr">00:00</div>
-                    <div class="small text-danger fw-semibold">الوقت المتبقي</div>
-                </div>
-                @endif
 
                 <div class="d-flex justify-content-center gap-4 mb-3 small">
                     <div class="d-flex align-items-center gap-1"><span style="width: 14px; height: 14px; background: #22c55e; border-radius: 3px;"></span> مجاب</div>
