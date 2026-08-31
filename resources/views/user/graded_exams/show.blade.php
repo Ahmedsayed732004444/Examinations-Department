@@ -6,141 +6,178 @@
 .exam-container {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 30px 15px;
+    padding: 20px 10px;
 }
 .question-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 30px;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    border: 1px solid #e2e8f0;
-    display: none; /* Hidden by default, JS will show the active one */
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    border: 1px solid #f1f5f9;
+    display: none;
+}
+@media (min-width: 768px) {
+    .exam-container {
+        padding: 30px 15px;
+    }
+    .question-card {
+        padding: 35px;
+        margin-bottom: 25px;
+    }
 }
 .question-card.active {
     display: block;
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(15px); }
     to { opacity: 1; transform: translateY(0); }
 }
 .question-text {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 700;
-    color: #1a2b56;
+    color: #1e293b;
     margin-bottom: 25px;
-    line-height: 1.6;
+    line-height: 1.7;
+}
+@media (min-width: 768px) {
+    .question-text {
+        font-size: 1.3rem;
+    }
 }
 .option-label {
-    display: block;
-    padding: 18px 20px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    border: 2px solid #f1f5f9;
+    border-radius: 12px;
     margin-bottom: 12px;
     cursor: pointer;
-    transition: all 0.2s;
-    font-size: 1.05rem;
-    color: #334155;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    color: #475569;
+    background: #ffffff;
+    position: relative;
+    overflow: hidden;
 }
 .option-label:hover {
     background: #f8fafc;
-    border-color: #cbd5e1;
+    border-color: #e2e8f0;
 }
 .option-input:checked + .option-label {
     border-color: #3b82f6;
     background: #eff6ff;
-    color: #1d4ed8;
+    color: #1e3a8a;
     font-weight: 600;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+}
+.option-input:checked + .option-label::before {
+    content: '\F26A'; /* bootstrap icon check-circle-fill */
+    font-family: 'bootstrap-icons';
+    position: absolute;
+    left: 20px;
+    font-size: 1.25rem;
+    color: #3b82f6;
 }
 
 /* Sidebar Styles */
 .sidebar-map {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    border: 1px solid #f1f5f9;
     position: sticky;
-    top: 20px;
+    top: 90px;
 }
 .q-grid-container {
-    max-height: 60vh;
+    max-height: 50vh;
     overflow-y: auto;
     padding-right: 5px;
 }
-/* Custom scrollbar for grid */
-.q-grid-container::-webkit-scrollbar { width: 5px; }
-.q-grid-container::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+.q-grid-container::-webkit-scrollbar { width: 4px; }
+.q-grid-container::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
 .q-grid-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 .q-grid-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 .q-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    gap: 10px;
     margin-top: 15px;
+}
+@media (max-width: 576px) {
+    .q-grid { grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 8px; }
 }
 .q-btn {
     width: 100%;
     aspect-ratio: 1;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
     background: #f8fafc;
-    color: #475569;
+    color: #64748b;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
 }
 .q-btn:hover {
     background: #e2e8f0;
+    color: #334155;
 }
 .q-btn.active {
-    border: 2px solid #3b82f6;
-    transform: scale(1.05);
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    border-color: #3b82f6;
+    background: #ffffff;
+    color: #3b82f6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
 }
 .q-btn.answered {
-    background: #22c55e;
-    border-color: #22c55e;
-    color: #fff;
+    background: #10b981;
+    border-color: #10b981;
+    color: #ffffff;
 }
 .q-btn.skipped {
     background: #ef4444;
     border-color: #ef4444;
-    color: #fff;
+    color: #ffffff;
 }
 
 /* Navigation Buttons */
 .nav-buttons {
     display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
+    gap: 12px;
+    margin-top: 25px;
 }
-
-/* Responsive Design */
-@media (max-width: 991px) {
-    .exam-container { padding: 15px 10px; }
-    .question-card { padding: 20px; margin-bottom: 15px; }
-    .question-text { font-size: 1.15rem; }
-    .option-label { padding: 12px 15px; font-size: 0.95rem; }
-    .sidebar-map { position: static; margin-bottom: 10px; }
-    .q-grid-container { max-height: 250px; } 
-    .nav-buttons .btn { flex: 1; padding: 10px; font-size: 0.95rem; }
-    .nav-buttons { gap: 10px; }
+.nav-buttons .btn {
+    flex: 1;
+    border-radius: 12px;
+    padding: 14px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
 }
-@media (max-width: 576px) {
-    .q-grid { grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)); gap: 6px; }
-    .q-btn { font-size: 0.8rem; border-radius: 6px; }
+@media (min-width: 768px) {
+    .nav-buttons {
+        justify-content: space-between;
+        gap: 0;
+    }
+    .nav-buttons .btn {
+        flex: none;
+        min-width: 160px;
+    }
 }
 @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.85; transform: scale(0.98); }
+    100% { opacity: 1; transform: scale(1); }
 }
 </style>
 @endpush
@@ -162,16 +199,16 @@
 
 <div class="exam-container">
     <!-- Top Sticky/Visible Header with Timer -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm border" style="position: sticky; top: 10px; z-index: 1000;">
-        <div class="mb-2 mb-md-0">
-            <h4 class="fw-bold mb-2" style="color: #1a2b56;">{{ $session->gradedExam->title_ar }}</h4>
-            <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill shadow-sm"><i class="bi bi-list-ol me-1"></i> {{ $session->total_questions }} سؤال</span>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm border" style="position: sticky; top: 10px; z-index: 1000; gap: 15px;">
+        <div class="text-center text-md-end w-100">
+            <h4 class="fw-bold mb-2 text-dark" style="font-size: 1.15rem; line-height: 1.5;">{{ $session->gradedExam->title_ar }}</h4>
+            <span class="badge bg-primary bg-opacity-10 text-primary fs-6 px-3 py-2 rounded-pill"><i class="bi bi-list-ol me-1"></i> {{ $session->total_questions }} سؤال</span>
         </div>
         
         @if($hasTimer)
-        <div class="text-center px-4 py-2 rounded-3" id="timer-container" style="background-color: #fef2f2; border: 2px solid #fecaca; min-width: 160px;">
+        <div class="text-center px-4 py-2 rounded-3 w-100" id="timer-container" style="background-color: #fef2f2; border: 2px solid #fecaca; max-width: 200px;">
             <div class="small text-danger fw-bold mb-1"><i class="bi bi-stopwatch fs-6"></i> الوقت المتبقي</div>
-            <div class="fw-bold text-danger font-monospace" id="exam-timer" dir="ltr" style="font-size: 1.6rem; line-height: 1; letter-spacing: 1px;">00:00:00</div>
+            <div class="fw-bold text-danger font-monospace" id="exam-timer" dir="ltr" style="font-size: 1.4rem; line-height: 1; letter-spacing: 1px;">00:00:00</div>
         </div>
         @endif
     </div>
@@ -180,11 +217,11 @@
         <!-- Sidebar / Question Map -->
         <div class="col-lg-4 col-md-12 mb-4 order-1 order-lg-2">
             <!-- Mobile Toggle Button -->
-            <button class="btn btn-outline-primary d-lg-none w-100 mb-2 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMapCollapse" aria-expanded="false" aria-controls="sidebarMapCollapse">
-                <i class="bi bi-map me-1"></i> عرض خريطة الأسئلة
+            <button class="btn btn-outline-primary d-lg-none w-100 mb-2 py-3 fw-bold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMapCollapse" aria-expanded="false" aria-controls="sidebarMapCollapse" style="border: 2px solid #e2e8f0; color: #475569; background: #f8fafc;">
+                <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> عرض خريطة الأسئلة
             </button>
 
-            <div class="sidebar-map collapse d-lg-block" id="sidebarMapCollapse">
+            <div class="sidebar-map collapse d-lg-block mt-2 mt-lg-0" id="sidebarMapCollapse">
                 <h6 class="fw-bold mb-3 text-center d-none d-lg-block">خريطة الأسئلة</h6>
 
                 <div class="d-flex justify-content-center gap-4 mb-3 small">

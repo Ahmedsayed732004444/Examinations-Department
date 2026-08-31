@@ -17,8 +17,14 @@
 .page-title {
     color: #1a2b56;
     font-weight: 800;
-    font-size: 2rem;
+    font-size: 1.75rem;
     margin-bottom: 10px;
+}
+
+@media (min-width: 768px) {
+    .page-title {
+        font-size: 2.25rem;
+    }
 }
 
 .page-subtitle {
@@ -29,14 +35,23 @@
 .exam-card {
     background: #ffffff;
     border-radius: 16px;
-    padding: 30px;
+    padding: 20px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     transition: all 0.3s ease;
     border: 1px solid #e2e8f0;
     margin-bottom: 20px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 20px;
+}
+
+@media (min-width: 768px) {
+    .exam-card {
+        padding: 30px;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
 }
 
 .exam-card:hover {
@@ -47,8 +62,15 @@
 .exam-info h3 {
     color: #1a2b56;
     font-weight: 700;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+@media (min-width: 768px) {
+    .exam-info h3 {
+        font-size: 1.4rem;
+    }
 }
 
 .exam-info p {
@@ -56,39 +78,57 @@
     font-size: 0.95rem;
     margin-bottom: 15px;
     max-width: 600px;
+    line-height: 1.6;
 }
 
 .exam-meta {
     display: flex;
-    gap: 20px;
-    color: #94a3b8;
-    font-size: 0.85rem;
+    flex-wrap: wrap;
+    gap: 15px;
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .exam-meta span {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 5px;
+    background: #f8fafc;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
 }
 
 .btn-start-exam {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: #10b981;
     color: #ffffff;
     border: none;
-    padding: 12px 25px;
-    border-radius: 8px;
+    padding: 14px 25px;
+    border-radius: 10px;
     font-weight: 600;
+    font-size: 1.05rem;
     text-decoration: none;
     transition: all 0.3s ease;
-    display: inline-flex;
+    display: flex;
+    justify-content: center;
     align-items: center;
     gap: 8px;
+    width: 100%;
     cursor: pointer;
 }
 
+@media (min-width: 768px) {
+    .btn-start-exam {
+        width: auto;
+        padding: 12px 30px;
+    }
+}
+
 .btn-start-exam:hover {
+    background: #059669;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 15px rgba(16, 185, 129, 0.25);
     color: #ffffff;
 }
 </style>
@@ -102,7 +142,7 @@
     </div>
     
     @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
+        <div class="alert alert-danger rounded-3 border-0 shadow-sm">{{ session('error') }}</div>
     @endif
 
     <div class="exams-list">
@@ -112,25 +152,27 @@
                     <h3>{{ $exam->title_ar }}</h3>
                     <p>{{ $exam->description_ar ?: 'لا يوجد وصف متوفر.' }}</p>
                     <div class="exam-meta">
-                        <span><i class="bi bi-question-circle"></i> {{ $exam->total_questions }} سؤال</span>
+                        <span><i class="bi bi-file-earmark-text text-primary"></i> {{ $exam->total_questions }} سؤال</span>
                         @if($exam->time_limit_min)
-                            <span><i class="bi bi-clock"></i> {{ $exam->time_limit_min }} دقيقة</span>
+                            <span><i class="bi bi-stopwatch text-primary"></i> {{ $exam->time_limit_min }} دقيقة</span>
                         @endif
                     </div>
                 </div>
                 <div class="exam-action">
-                    <form action="{{ route('user.graded_exams.start', $exam->id) }}" method="POST" id="form-start-{{ $exam->id }}">
+                    <form action="{{ route('user.graded_exams.start', $exam->id) }}" method="POST" id="form-start-{{ $exam->id }}" class="m-0">
                         @csrf
                         <button type="button" class="btn-start-exam btn-open-modal" data-id="{{ $exam->id }}" data-title="{{ $exam->title_ar }}" data-q="{{ $exam->total_questions }}" data-time="{{ $exam->time_limit_min }}">
-                            بدء الاختبار <i class="bi bi-arrow-left"></i>
+                            بدء الاختبار <i class="bi bi-arrow-left mt-1"></i>
                         </button>
                     </form>
                 </div>
             </div>
         @empty
             <div class="text-center py-5">
-                <i class="bi bi-journal-x text-muted mb-3" style="font-size: 3rem;"></i>
-                <h4 class="text-muted">لا توجد شهادات متوفرة حالياً</h4>
+                <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-3" style="width: 80px; height: 80px;">
+                    <i class="bi bi-journal-x text-muted" style="font-size: 2.5rem;"></i>
+                </div>
+                <h5 class="text-muted fw-bold">لا توجد شهادات متوفرة حالياً</h5>
             </div>
         @endforelse
     </div>
