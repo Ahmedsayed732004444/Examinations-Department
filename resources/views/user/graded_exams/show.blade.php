@@ -6,12 +6,12 @@
 .exam-container {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 20px 10px;
+    padding: 10px 5px;
 }
 .question-card {
     background: #ffffff;
     border-radius: 16px;
-    padding: 24px;
+    padding: 20px 15px;
     margin-bottom: 20px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.03);
     border: 1px solid #f1f5f9;
@@ -49,17 +49,23 @@
 .option-label {
     display: flex;
     align-items: center;
-    padding: 16px 20px;
+    padding: 12px 15px;
     border: 2px solid #f1f5f9;
     border-radius: 12px;
     margin-bottom: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: #475569;
     background: #ffffff;
     position: relative;
     overflow: hidden;
+}
+@media (min-width: 768px) {
+    .option-label {
+        padding: 16px 20px;
+        font-size: 1rem;
+    }
 }
 .option-label:hover {
     background: #f8fafc;
@@ -198,26 +204,30 @@
 @endphp
 
 <div class="exam-container">
-    <!-- Top Sticky/Visible Header with Timer -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm border" style="position: sticky; top: 10px; z-index: 1000; gap: 15px;">
-        <div class="text-center text-md-end w-100">
-            <h4 class="fw-bold mb-2 text-dark" style="font-size: 1.15rem; line-height: 1.5;">{{ $session->gradedExam->title_ar }}</h4>
-            <span class="badge bg-primary bg-opacity-10 text-primary fs-6 px-3 py-2 rounded-pill"><i class="bi bi-list-ol me-1"></i> {{ $session->total_questions }} سؤال</span>
+    <!-- Top Sticky/Visible Header with Timer (Compact for Mobile) -->
+    <div class="d-flex flex-column mb-3 bg-white p-2 p-md-3 rounded-3 shadow-sm border" style="position: sticky; top: 5px; z-index: 1000;">
+        <h1 class="fw-bold text-dark m-0 pb-2 mb-2 border-bottom" style="font-size: 0.95rem; line-height: 1.4;">
+            {{ $session->gradedExam->title_ar }}
+        </h1>
+        <div class="d-flex justify-content-between align-items-center">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill" style="font-size: 0.85rem;">
+                <i class="bi bi-list-ol me-1"></i> {{ $session->total_questions }} سؤال
+            </span>
+            
+            @if($hasTimer)
+            <div class="d-flex align-items-center px-2 py-1 rounded-2" id="timer-container" style="background-color: #fef2f2; border: 1px solid #fecaca;">
+                <i class="bi bi-stopwatch text-danger me-2" style="font-size: 0.9rem;"></i>
+                <div class="fw-bold text-danger font-monospace" id="exam-timer" dir="ltr" style="font-size: 1rem; line-height: 1; padding-top: 2px;">00:00:00</div>
+            </div>
+            @endif
         </div>
-        
-        @if($hasTimer)
-        <div class="text-center px-4 py-2 rounded-3 w-100" id="timer-container" style="background-color: #fef2f2; border: 2px solid #fecaca; max-width: 200px;">
-            <div class="small text-danger fw-bold mb-1"><i class="bi bi-stopwatch fs-6"></i> الوقت المتبقي</div>
-            <div class="fw-bold text-danger font-monospace" id="exam-timer" dir="ltr" style="font-size: 1.4rem; line-height: 1; letter-spacing: 1px;">00:00:00</div>
-        </div>
-        @endif
     </div>
 
     <div class="row">
         <!-- Sidebar / Question Map -->
         <div class="col-lg-4 col-md-12 mb-4 order-1 order-lg-2">
             <!-- Mobile Toggle Button -->
-            <button class="btn btn-outline-primary d-lg-none w-100 mb-2 py-3 fw-bold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMapCollapse" aria-expanded="false" aria-controls="sidebarMapCollapse" style="border: 2px solid #e2e8f0; color: #475569; background: #f8fafc;">
+            <button class="btn btn-outline-primary d-lg-none w-100 mb-2 py-2 fw-bold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMapCollapse" aria-expanded="false" aria-controls="sidebarMapCollapse" style="border: 2px solid #e2e8f0; color: #475569; background: #f8fafc; font-size: 0.95rem;">
                 <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> عرض خريطة الأسئلة
             </button>
 
