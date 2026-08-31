@@ -23,13 +23,17 @@ class UserGradedExamController extends Controller
 
     public function start(Request $request, GradedExam $exam, GradedExamGeneratorService $generator)
     {
-        $activeSession = GradedExamSession::where('user_id', Auth::id())
-            ->where('graded_exam_id', $exam->id)
-            ->where('status', 'in_progress')
-            ->first();
+        $userId = Auth::id();
 
-        if ($activeSession) {
-            return redirect()->route('user.graded_exams.show', $activeSession->id);
+        if ($userId) {
+            $activeSession = GradedExamSession::where('user_id', $userId)
+                ->where('graded_exam_id', $exam->id)
+                ->where('status', 'in_progress')
+                ->first();
+
+            if ($activeSession) {
+                return redirect()->route('user.graded_exams.show', $activeSession->id);
+            }
         }
 
         try {
