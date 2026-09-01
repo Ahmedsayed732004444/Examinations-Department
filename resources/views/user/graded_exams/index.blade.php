@@ -136,10 +136,7 @@
 
 @section('content')
 <div class="exams-container">
-    <div class="page-header">
-        <h1 class="page-title">الشهادات الاحترافية المتوفرة</h1>
-        <p class="page-subtitle">اختر الشهادة التي ترغب في التقدم لها وابدأ الاختبار الآن</p>
-    </div>
+
     
     @if(session('error'))
         <div class="alert alert-danger rounded-3 border-0 shadow-sm">{{ session('error') }}</div>
