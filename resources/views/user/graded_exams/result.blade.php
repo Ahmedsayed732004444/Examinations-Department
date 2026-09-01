@@ -5,7 +5,7 @@
 <style>
 @media print {
     /* Hide specific elements during print */
-    .no-print, #reviewAnswers, #answersAccordion, .btn, .navbar, footer {
+    .no-print, #reviewAnswers, #answersAccordion, .btn, .top-navbar, footer {
         display: none !important;
     }
     
