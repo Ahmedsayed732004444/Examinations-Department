@@ -27,6 +27,7 @@
                             <div class="col-md-6 p-4">
                                 <h5 class="text-muted mb-2">النتيجة الإجمالية</h5>
                                 <h1 class="display-3 fw-bold text-darkblue mb-0">{{ floatval($result->percentage) }}%</h1>
+                                <h4 class="text-secondary mt-2">{{ floatval($result->correct_count) }} من {{ $session->total_questions }} درجة</h4>
                                 <h5 class="mt-2 fw-bold {{ $overallPerformance['class'] }}">{{ $overallPerformance['name'] }}</h5>
                             </div>
                         </div>

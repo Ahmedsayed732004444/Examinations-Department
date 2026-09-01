@@ -347,20 +347,21 @@ $(document).ready(function() {
         }
     }
 
-    // 3. Status Checking (Answered vs Skipped)
-    function checkAndMarkStatus(index, isNavigatingAway = false) {
+    function isCurrentAnswered(index) {
         let card = $(`.question-card[data-index="${index}"]`);
         let isMulti = card.data('is-multi');
         let requiredCount = parseInt(card.data('required-count'), 10);
         let checkedCount = card.find('.option-input:checked').length;
         
-        let hasAnswer = false;
         if (isMulti === true) {
-            hasAnswer = (checkedCount === requiredCount); // MUST select exactly required
-        } else {
-            hasAnswer = (checkedCount > 0);
+            return (checkedCount === requiredCount); // MUST select exactly required
         }
+        return (checkedCount > 0);
+    }
 
+    // 3. Status Checking (Answered vs Skipped)
+    function checkAndMarkStatus(index, isNavigatingAway = false) {
+        let hasAnswer = isCurrentAnswered(index);
         let btn = $(`.q-btn[data-target="${index}"]`);
 
         if (hasAnswer) {
@@ -395,6 +396,10 @@ $(document).ready(function() {
 
     // 4. Bind Events
     $('#btn-next').on('click', function() {
+        if (!isCurrentAnswered(currentIndex)) {
+            alert('يرجى اختيار إجابة للسؤال الحالي قبل الانتقال للسؤال التالي.');
+            return;
+        }
         if(currentIndex < totalQuestions - 1) {
             showQuestion(currentIndex + 1);
         }
@@ -408,6 +413,13 @@ $(document).ready(function() {
 
     $('.q-btn').on('click', function() {
         let target = $(this).data('target');
+        
+        // منع الانتقال للأسئلة القادمة فقط إذا لم يجب على الحالي
+        if (target > currentIndex && !isCurrentAnswered(currentIndex)) {
+            alert('يرجى اختيار إجابة للسؤال الحالي قبل التقدم لأسئلة أخرى.');
+            return;
+        }
+
         showQuestion(target);
         
         // Auto-close sidebar on mobile after selection
