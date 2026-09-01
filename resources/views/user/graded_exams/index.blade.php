@@ -152,7 +152,7 @@
                     <h3>{{ $exam->title_ar }}</h3>
                     <p>{{ $exam->description_ar ?: 'لا يوجد وصف متوفر.' }}</p>
                     <div class="exam-meta">
-                        <span><i class="bi bi-file-earmark-text text-primary"></i> {{ $exam->total_questions }} سؤال</span>
+                        <span><i class="bi bi-file-earmark-text text-primary"></i> {{ $exam->constraintSettings ? $exam->constraintSettings->total_questions : 50 }} سؤال</span>
                         @if($exam->time_limit_min)
                             <span><i class="bi bi-stopwatch text-primary"></i> {{ $exam->time_limit_min }} دقيقة</span>
                         @endif
@@ -161,7 +161,7 @@
                 <div class="exam-action">
                     <form action="{{ route('user.graded_exams.start', $exam->id) }}" method="POST" id="form-start-{{ $exam->id }}" class="m-0">
                         @csrf
-                        <button type="button" class="btn-start-exam btn-open-modal" data-id="{{ $exam->id }}" data-title="{{ $exam->title_ar }}" data-q="{{ $exam->total_questions }}" data-time="{{ $exam->time_limit_min }}">
+                        <button type="button" class="btn-start-exam btn-open-modal" data-id="{{ $exam->id }}" data-title="{{ $exam->title_ar }}" data-q="{{ $exam->constraintSettings ? $exam->constraintSettings->total_questions : 50 }}" data-time="{{ $exam->time_limit_min }}">
                             بدء الاختبار <i class="bi bi-arrow-left mt-1"></i>
                         </button>
                     </form>
