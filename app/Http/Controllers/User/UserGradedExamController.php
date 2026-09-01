@@ -268,8 +268,24 @@ class UserGradedExamController extends Controller
             });
 
             if (count($unitsStats) > 0) {
+                $maxPercentage = $unitsStats[0]['percentage'];
+                $minPercentage = $unitsStats[count($unitsStats) - 1]['percentage'];
+
+                $highestUnits = array_filter($unitsStats, fn($u) => $u['percentage'] == $maxPercentage);
+                $lowestUnits = array_filter($unitsStats, fn($u) => $u['percentage'] == $minPercentage);
+
+                $highestNames = array_column($highestUnits, 'name');
+                $lowestNames = array_column($lowestUnits, 'name');
+
                 $highestUnit = $unitsStats[0];
                 $lowestUnit = $unitsStats[count($unitsStats) - 1];
+
+                if (count($highestNames) > 1) {
+                    $highestUnit['name'] = count($highestNames) <= 2 ? implode(' و ', $highestNames) : 'عدة وحدات (' . count($highestNames) . ')';
+                }
+                if (count($lowestNames) > 1) {
+                    $lowestUnit['name'] = count($lowestNames) <= 2 ? implode(' و ', $lowestNames) : 'عدة وحدات (' . count($lowestNames) . ')';
+                }
             }
         }
 
