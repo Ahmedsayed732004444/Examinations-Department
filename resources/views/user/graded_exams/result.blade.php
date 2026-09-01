@@ -34,8 +34,9 @@
     /* Maintain Grid for Desktop-like layout on Print */
     .row {
         display: flex !important;
-        flex-wrap: nowrap !important;
-        margin: 0 !important;
+        flex-wrap: wrap !important;
+        margin-right: -10px !important;
+        margin-left: -10px !important;
     }
     .col-md-8 {
         width: 100% !important;
@@ -50,6 +51,12 @@
         padding: 0 10px !important;
     }
 
+    /* Prevent breaking inside summary row and legend */
+    .row.g-4, .card {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
     /* Keep table layout clean and remove scrollbars */
     .table-responsive {
         overflow: visible !important;
@@ -58,8 +65,6 @@
     /* Adjust Cards */
     .card {
         box-shadow: none !important;
-        border: 2px solid #e2e8f0 !important;
-        break-inside: avoid;
     }
 
     /* Print colors accurately */
