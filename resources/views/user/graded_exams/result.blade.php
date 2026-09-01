@@ -9,22 +9,78 @@
         display: none !important;
     }
     
+    body {
+        background-color: #fff !important;
+    }
+    
     /* Ensure the main container takes full width for printing */
     .container {
         max-width: 100% !important;
         width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    h1.display-3 {
+        font-size: 2.5rem !important; /* Smaller to fit */
+    }
+
+    .py-5, .mb-5, .my-5 {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+        margin-bottom: 1.5rem !important;
     }
     
-    /* Remove shadows and borders for cleaner print */
+    /* Maintain Grid for Desktop-like layout on Print */
+    .row {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        margin: 0 !important;
+    }
+    .col-md-8 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+        margin: 0 auto !important;
+    }
+    .col-md-6 {
+        width: 50% !important;
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+        padding: 0 10px !important;
+    }
+
+    /* Keep table layout clean and remove scrollbars */
+    .table-responsive {
+        overflow: visible !important;
+    }
+    
+    /* Adjust Cards */
     .card {
         box-shadow: none !important;
-        border: 1px solid #dee2e6 !important;
+        border: 2px solid #e2e8f0 !important;
+        break-inside: avoid;
     }
-    
-    /* Force background colors to print */
+
+    /* Print colors accurately */
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+    }
+    
+    /* Progress bar outline */
+    .progress {
+        border: 1px solid #dee2e6;
+        background-color: #f8f9fa !important;
+    }
+
+    /* Avoid breaking units table */
+    .table {
+        break-inside: avoid;
+        font-size: 0.9rem !important;
+    }
+    .table th, .table td {
+        padding: 6px !important;
     }
 }
 </style>
