@@ -1,6 +1,35 @@
 @extends('layouts.user')
 @section('title', 'نتيجة الاختبار')
 
+@push('styles')
+<style>
+@media print {
+    /* Hide specific elements during print */
+    .no-print, #reviewAnswers, #answersAccordion, .btn, .navbar, footer {
+        display: none !important;
+    }
+    
+    /* Ensure the main container takes full width for printing */
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    
+    /* Remove shadows and borders for cleaner print */
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+    }
+    
+    /* Force background colors to print */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+</style>
+@endpush
+
 @section('content')
 <div class="container py-5">
     @if($result)
@@ -135,9 +164,12 @@
             </div>
         </div>
 
-        <!-- Review Answers Button -->
-        <div class="text-center mb-4">
-            <button class="btn btn-outline-darkblue btn-lg px-5 rounded-pill shadow-sm" type="button" data-bs-toggle="collapse" data-bs-toggle="collapse" data-bs-target="#reviewAnswers" aria-expanded="false" aria-controls="reviewAnswers">
+        <!-- Actions Buttons -->
+        <div class="text-center mb-4 d-flex gap-3 justify-content-center flex-wrap no-print">
+            <button onclick="window.print()" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm">
+                <i class="bi bi-printer me-2"></i> طباعة التقرير
+            </button>
+            <button class="btn btn-outline-darkblue btn-lg px-5 rounded-pill shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#reviewAnswers" aria-expanded="false" aria-controls="reviewAnswers">
                 <i class="bi bi-journal-text me-2"></i> مراجعة الإجابات التفصيلية
             </button>
         </div>
