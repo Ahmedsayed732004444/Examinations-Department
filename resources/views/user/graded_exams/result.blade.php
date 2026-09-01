@@ -169,8 +169,13 @@
                         <div>
                             <h5 class="text-danger mb-0">أولوية المراجعة:</h5>
                             <small class="text-muted d-block mb-2" style="font-size: 0.8rem;">(أقل وحدة حصلت فيها على درجة)</small>
-                            <h6 class="fw-bold mb-1">{{ $lowestUnit ? $lowestUnit['name'] : '-' }}</h6>
-                            <h3 class="fw-bold text-danger mb-0">{{ $lowestUnit ? $lowestUnit['percentage'].'%' : '-' }}</h3>
+                            @if($lowestUnit && $lowestUnit['percentage'] == 100)
+                                <h6 class="fw-bold text-success mb-1">لا يوجد</h6>
+                                <h5 class="fw-bold text-success mb-0">أداء مثالي 🌟</h5>
+                            @else
+                                <h6 class="fw-bold mb-1">{{ $lowestUnit ? $lowestUnit['name'] : '-' }}</h6>
+                                <h3 class="fw-bold text-danger mb-0">{{ $lowestUnit ? $lowestUnit['percentage'].'%' : '-' }}</h3>
+                            @endif
                         </div>
                     </div>
                 </div>
