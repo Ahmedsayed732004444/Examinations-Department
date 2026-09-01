@@ -163,11 +163,12 @@
             <div class="col-md-6">
                 <div class="card border-danger bg-light-danger h-100 rounded-4">
                     <div class="card-body text-center p-4 d-flex align-items-center justify-content-center gap-3">
-                        <div class="rounded-circle border border-danger border-2 text-danger d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                        <div class="rounded-circle border border-danger border-2 text-danger d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; flex-shrink: 0;">
                             <i class="bi bi-graph-down-arrow"></i>
                         </div>
                         <div>
-                            <h5 class="text-danger mb-1">أولوية المراجعة:</h5>
+                            <h5 class="text-danger mb-0">أولوية المراجعة:</h5>
+                            <small class="text-muted d-block mb-2" style="font-size: 0.8rem;">(أقل وحدة حصلت فيها على درجة)</small>
                             <h6 class="fw-bold mb-1">{{ $lowestUnit ? $lowestUnit['name'] : '-' }}</h6>
                             <h3 class="fw-bold text-danger mb-0">{{ $lowestUnit ? $lowestUnit['percentage'].'%' : '-' }}</h3>
                         </div>
@@ -178,11 +179,12 @@
             <div class="col-md-6">
                 <div class="card border-success bg-light-success h-100 rounded-4">
                     <div class="card-body text-center p-4 d-flex align-items-center justify-content-center gap-3">
-                        <div class="rounded-circle border border-success border-2 text-success d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                        <div class="rounded-circle border border-success border-2 text-success d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; flex-shrink: 0;">
                             <i class="bi bi-graph-up-arrow"></i>
                         </div>
                         <div>
-                            <h5 class="text-success mb-1">أعلى أداء:</h5>
+                            <h5 class="text-success mb-0">أعلى أداء:</h5>
+                            <small class="text-muted d-block mb-2" style="font-size: 0.8rem;">(أعلى وحدة حصلت فيها على درجة)</small>
                             <h6 class="fw-bold mb-1">{{ $highestUnit ? $highestUnit['name'] : '-' }}</h6>
                             <h3 class="fw-bold text-success mb-0">{{ $highestUnit ? $highestUnit['percentage'].'%' : '-' }}</h3>
                         </div>
