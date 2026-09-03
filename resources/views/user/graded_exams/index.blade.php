@@ -198,7 +198,7 @@
           
           <div class="mb-3">
               <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.9rem;">وصف الاختبار:</h6>
-              <p class="text-muted mb-0" style="font-size: 0.85rem; line-height: 1.5;">اختبار تجريبي لقياس مدى استيعابك للمفاهيم وتقييم جاهزيتك قبل التقدم للاختبار النهائي.</p>
+              <p class="text-muted mb-0" style="font-size: 0.85rem; line-height: 1.5;">يهدف هذا الاختبار إلى قياس مدي استيعابك للمفاهيم والمعارف الأساسية في التسويق،ومساعدتك علي تقييم جاهزيتك قبل التقدم إلى الاختبار النهائي للشهادة الاحترافية.</p>
           </div>
           
           <div class="mb-3">
