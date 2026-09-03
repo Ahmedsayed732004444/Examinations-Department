@@ -76,7 +76,16 @@ class UserGradedExamController extends Controller
             $session = $generator->generate($exam, Auth::id());
             return redirect()->route('user.graded_exams.show', $session->id);
         } catch (\Exception $e) {
-            return back()->with('error', 'حدث خطأ أثناء إعداد الاختبار: ' . $e->getMessage());
+            // الرسالة الكاملة (بتفاصيل داخلية) اتسجلت بالفعل جوه GradedExamGeneratorService
+            // نفسه بعد آخر محاولة فاشلة. هنا بنوري المستخدم رسالة نظيفة بس، من غير أي
+            // تفاصيل تقنية داخلية زي UUID الوحدة.
+            \Log::error('فشل بدء اختبار للمستخدم', [
+                'graded_exam_id' => $exam->id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'تعذّر إعداد الاختبار حاليًا، برجاء المحاولة مرة أخرى بعد قليل.');
         }
     }
 

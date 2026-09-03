@@ -26,12 +26,60 @@ class GradedExamGeneratorService
     /** أقصى عدد محاولات لموازنة صح/خطأ أو مواقع الإجابة قبل ما نكتفي بأقرب نتيجة ممكنة */
     private const MAX_BALANCE_ATTEMPTS = 200;
 
+    /** كام مرة نحاول نولّد الامتحان من الصفر لو المحاولة فشلت لسبب متعلق بالعشوائية */
+    private const MAX_GENERATION_ATTEMPTS = 5;
+
     public function generate(GradedExam $exam, ?string $userId = null): GradedExamSession
     {
         $settings = $exam->constraintSettings ?? $this->defaultSettings($exam);
 
+        // تحقق سريع أول (مجموع النسب = 100%، إلخ) - رخيص وما يحتاجش نحاول توليد كامل عشانه
         $this->validateFeasibility($exam, $settings);
 
+        $lastException = null;
+
+        for ($attempt = 1; $attempt <= self::MAX_GENERATION_ATTEMPTS; $attempt++) {
+            try {
+                return $this->attemptGeneration($exam, $settings, $userId);
+            } catch (\RuntimeException $e) {
+                $lastException = $e;
+
+                \Log::warning('GradedExamGeneratorService: فشلت محاولة توليد امتحان', [
+                    'graded_exam_id' => $exam->id,
+                    'user_id' => $userId,
+                    'attempt' => $attempt,
+                    'max_attempts' => self::MAX_GENERATION_ATTEMPTS,
+                    'error' => $e->getMessage(),
+                ]);
+                // نكمل للمحاولة الجاية - كل محاولة بترتيب/خلط عشوائي مختلف
+                // (شكل شجرة الاحتمالات بيتغير، فممكن مشكلة عابرة تتحل من نفسها)
+            }
+        }
+
+        // كل المحاولات الـ5 فشلت بنفس السبب تقريبًا - ده مش عيب عشوائية، ده على
+        // الأرجح نقص حقيقي في بنك الأسئلة يحتاج تدخّل الأدمن. نسجّله كـ error
+        // واضح (مش warning) عشان يبان في مراقبة اللوجات، ونطلع رسالة نظيفة
+        // للمستخدم النهائي من غير تفاصيل داخلية (UUIDs إلخ).
+        \Log::error('GradedExamGeneratorService: فشل توليد الامتحان بعد كل المحاولات - على الأرجح نقص بيانات حقيقي في بنك الأسئلة، يحتاج مراجعة الأدمن', [
+            'graded_exam_id' => $exam->id,
+            'user_id' => $userId,
+            'attempts_tried' => self::MAX_GENERATION_ATTEMPTS,
+            'last_error' => $lastException?->getMessage(),
+        ]);
+
+        throw new \RuntimeException(
+            'تعذّر إعداد الاختبار حاليًا بسبب نقص في بعض الأسئلة ضمن معايير التوزيع الحالية. تم إبلاغ فريق الدعم، برجاء المحاولة لاحقًا.',
+            0,
+            $lastException
+        );
+    }
+
+    /**
+     * محاولة توليد واحدة كاملة (كل الخطوات 1-8). مفصولة في دالة لوحدها
+     * عشان generate() يقدر يعيد استدعاءها براحة في حلقة الـ retry.
+     */
+    private function attemptGeneration(GradedExam $exam, GradedExamConstraintSetting $settings, ?string $userId): GradedExamSession
+    {
         return DB::transaction(function () use ($exam, $settings, $userId) {
 
             // === الخطوة 1: تثبيت تخصيص الوحدات (largest remainder method) ===
@@ -273,6 +321,7 @@ class GradedExamGeneratorService
             $needed = $cell['count'];
             $chosen = collect();
 
+            // === تمريرة أولى: نحترم حد max_multi_correct_questions (قيد soft) ===
             foreach ($pool as $question) {
                 if ($chosen->count() >= $needed) break;
 
@@ -286,10 +335,26 @@ class GradedExamGeneratorService
                 }
             }
 
+            // === تمريرة ثانية (fallback): لو لسه ناقص، اكسر حد الأسئلة المتعددة ===
+            // تغطية الوحدة/المستوى/النوع قيد "hard" (لازم يتحقق دايمًا)، بينما حد
+            // الأسئلة المتعددة قيد "soft" (أفضل جهد). لو الاحترام الصارم للقيد الـ
+            // soft هيمنع تحقيق القيد الـ hard، نكسر الـ soft بدل ما نفشل التوليد كله.
+            if ($chosen->count() < $needed) {
+                foreach ($pool as $question) {
+                    if ($chosen->count() >= $needed) break;
+                    if ($chosen->contains('id', $question->id)) continue;
+
+                    $chosen->push($question);
+                    if ($question->is_multi_correct) {
+                        $multiCorrectCount++;
+                    }
+                }
+            }
+
             if ($chosen->count() < $needed) {
                 throw new \RuntimeException(sprintf(
-                    'تعذّر إيجاد %d سؤال كافٍ (وحدة: %s، مستوى: %s، نوع: %s). المتاح فعليًا: %d.',
-                    $needed, $cell['unit_id'], $cell['level'], $cell['type'], $chosen->count()
+                    'تعذّر إيجاد %d سؤال كافٍ (وحدة: %s، مستوى: %s، نوع: %s). المتاح فعليًا في البنك: %d.',
+                    $needed, $cell['unit_id'], $cell['level'], $cell['type'], $pool->count()
                 ));
             }
 

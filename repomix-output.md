@@ -379,6 +379,7 @@ resources/views/user/coming-soon.blade.php
 resources/views/user/dashboard.blade.php
 resources/views/user/exam.blade.php
 resources/views/user/graded_exams/index.blade.php
+resources/views/user/graded_exams/progress.blade.php
 resources/views/user/graded_exams/result.blade.php
 resources/views/user/graded_exams/show.blade.php
 resources/views/user/result.blade.php
@@ -391,6 +392,4162 @@ vite.config.js
 ```
 
 # Files
+
+## File: .editorconfig
+````
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[compose.yaml]
+indent_size = 4
+````
+
+## File: .gitattributes
+````
+* text=auto eol=lf
+
+*.blade.php diff=html
+*.css diff=css
+*.html diff=html
+*.md diff=markdown
+*.php diff=php
+
+/.github export-ignore
+CHANGELOG.md export-ignore
+.styleci.yml export-ignore
+````
+
+## File: .gitignore
+````
+*.log
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
+````
+
+## File: app/Http/Controllers/Admin/DashboardController.php
+````php
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Services\AdminDashboardService;
+use Illuminate\View\View;
+
+class DashboardController extends Controller
+{
+    public function __construct(
+        private readonly AdminDashboardService $dashboardService,
+    ) {}
+
+    public function index(): View
+    {
+        $data = $this->dashboardService->getData();
+
+        return view('admin.dashboard', $data);
+    }
+}
+````
+
+## File: app/Http/Controllers/Controller.php
+````php
+<?php
+
+namespace App\Http\Controllers;
+
+abstract class Controller
+{
+    //
+}
+````
+
+## File: app/Http/Middleware/AdminMiddleware.php
+````php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class AdminMiddleware
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        if (! auth()->check() || ! auth()->user()->isAdmin()) {
+            abort(403, 'غير مصرح لك بالوصول.');
+        }
+
+        return $next($request);
+    }
+}
+````
+
+## File: app/Http/Middleware/UserMiddleware.php
+````php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class UserMiddleware
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        if (! auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        if (auth()->user()->isAdmin() && ! $request->is('exam/*/result')) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return $next($request);
+    }
+}
+````
+
+## File: app/Http/Requests/Admin/StoreDimensionRequest.php
+````php
+<?php
+
+namespace App\Http\Requests\Admin;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreDimensionRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /** @return array<string, mixed> */
+    public function rules(): array
+    {
+        return [
+            'name_ar' => 'required|string|max:255',
+            'max_score' => 'required|integer|min:1',
+        ];
+    }
+}
+````
+
+## File: app/Models/DimensionScore.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+
+class DimensionScore extends Model
+{
+    use HasUuids;
+
+    protected $fillable = ['result_id', 'dimension_id', 'score', 'max_score', 'level'];
+
+    public function result()
+    {
+        return $this->belongsTo(Result::class);
+    }
+
+    public function dimension()
+    {
+        return $this->belongsTo(Dimension::class);
+    }
+}
+````
+
+## File: app/Models/UserAnswer.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+
+class UserAnswer extends Model
+{
+    use HasUuids;
+
+    protected $fillable = ['session_id', 'question_id', 'selected_option_id', 'score_earned'];
+
+    public function examSession()
+    {
+        return $this->belongsTo(ExamSession::class, 'session_id');
+    }
+
+    public function question()
+    {
+        return $this->belongsTo(Question::class);
+    }
+
+    public function selectedOption()
+    {
+        return $this->belongsTo(AnswerOption::class, 'selected_option_id');
+    }
+}
+````
+
+## File: app/Repositories/Contracts/DimensionRepositoryInterface.php
+````php
+<?php
+
+namespace App\Repositories\Contracts;
+
+use App\Models\Assessment;
+use App\Models\Dimension;
+use Illuminate\Database\Eloquent\Collection;
+
+interface DimensionRepositoryInterface
+{
+    /**
+     * Get all dimensions for an assessment ordered by order_index, with question count.
+     */
+    public function byAssessment(Assessment $assessment): Collection;
+
+    /**
+     * Create a new dimension.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function create(array $data): Dimension;
+
+    /**
+     * Update a dimension.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(Dimension $dimension, array $data): Dimension;
+
+    /**
+     * Delete a dimension (unlinks its questions first).
+     */
+    public function delete(Dimension $dimension): void;
+
+    /**
+     * Reorder dimensions by providing an ordered array of UUIDs.
+     *
+     * @param  array<int, string>  $orderedIds
+     */
+    public function reorder(array $orderedIds): void;
+
+    /**
+     * Upsert dimension interpretations (high / medium / low).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function upsertInterpretations(Dimension $dimension, array $data): void;
+}
+````
+
+## File: app/Repositories/Contracts/ExamSessionRepositoryInterface.php
+````php
+<?php
+
+namespace App\Repositories\Contracts;
+
+use App\Models\Assessment;
+use App\Models\ExamSession;
+
+interface ExamSessionRepositoryInterface
+{
+    /**
+     * Find an in-progress session for a user and assessment.
+     */
+    public function findInProgress(string $userId, string $assessmentId): ?ExamSession;
+
+    /**
+     * Create a new exam session.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function create(array $data): ExamSession;
+
+    /**
+     * Update an exam session with the given attributes.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(ExamSession $session, array $data): ExamSession;
+}
+````
+
+## File: app/Repositories/Contracts/QuestionRepositoryInterface.php
+````php
+<?php
+
+namespace App\Repositories\Contracts;
+
+use App\Models\Assessment;
+use App\Models\Question;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+
+interface QuestionRepositoryInterface
+{
+    /**
+     * Return a paginated, filtered list of questions.
+     * Uses DB JOINs to fetch assessment and dimension names efficiently.
+     *
+     * @param  array<string, mixed>  $filters  Keys: assessment_id, dimension_id, search, per_page
+     */
+    public function filteredPaginated(array $filters): LengthAwarePaginator;
+
+    /**
+     * Get all questions for an assessment with their answer options.
+     */
+    public function byAssessment(Assessment $assessment): Collection;
+
+    /**
+     * Create a question together with its answer options.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<int, array<string, mixed>>  $options
+     */
+    public function create(array $data, array $options): Question;
+
+    /**
+     * Update the question text.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(Question $question, array $data): Question;
+
+    /**
+     * Delete a single question.
+     */
+    public function delete(Question $question): void;
+
+    /**
+     * Delete multiple questions by IDs.
+     *
+     * @param  array<int, string>  $ids
+     */
+    public function bulkDelete(array $ids): void;
+
+    /**
+     * Reorder questions by providing an ordered array of UUIDs.
+     *
+     * @param  array<int, string>  $orderedIds
+     */
+    public function reorder(array $orderedIds): void;
+
+    /**
+     * Assign a dimension to multiple questions.
+     *
+     * @param  array<int, string>  $ids
+     */
+    public function bulkAssignDimension(array $ids, ?string $dimensionId): void;
+
+    /**
+     * Assign a dimension to a single question.
+     */
+    public function assignDimension(Question $question, ?string $dimensionId): Question;
+
+    /**
+     * Bulk-import questions from plain text lines with default answer options.
+     *
+     * @param  array<string, mixed>  $data  Keys: assessment_id, dimension_id, lines
+     * @return int Number of questions created
+     */
+    public function bulkImport(array $data): int;
+}
+````
+
+## File: app/Repositories/Contracts/RecommendationRepositoryInterface.php
+````php
+<?php
+
+namespace App\Repositories\Contracts;
+
+use App\Models\Recommendation;
+use Illuminate\Support\Collection;
+
+interface RecommendationRepositoryInterface
+{
+    /**
+     * Get all recommendations joined with assessment names, grouped by assessment_id.
+     *
+     * @return Collection<string, Collection<int, Recommendation>>
+     */
+    public function allGrouped(): Collection;
+
+    /**
+     * Upsert a recommendation (update-or-create by assessment_id + level).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function upsert(array $data): Recommendation;
+
+    /**
+     * Delete a recommendation.
+     */
+    public function delete(Recommendation $recommendation): void;
+}
+````
+
+## File: app/Repositories/DimensionRepository.php
+````php
+<?php
+
+namespace App\Repositories;
+
+use App\Models\Assessment;
+use App\Models\Dimension;
+use App\Repositories\Contracts\DimensionRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
+
+class DimensionRepository implements DimensionRepositoryInterface
+{
+    public function byAssessment(Assessment $assessment): Collection
+    {
+        return $assessment->dimensions()
+            ->withCount('questions')
+            ->orderBy('order_index')
+            ->get();
+    }
+
+    public function create(array $data): Dimension
+    {
+        return Dimension::create($data);
+    }
+
+    public function update(Dimension $dimension, array $data): Dimension
+    {
+        $dimension->update($data);
+
+        return $dimension->fresh();
+    }
+
+    public function delete(Dimension $dimension): void
+    {
+        // Unlink questions so they are not orphaned
+        $dimension->questions()->update(['dimension_id' => null]);
+        $dimension->delete();
+    }
+
+    public function reorder(array $orderedIds): void
+    {
+        foreach ($orderedIds as $index => $id) {
+            Dimension::where('id', $id)->update(['order_index' => $index]);
+        }
+    }
+
+    public function upsertInterpretations(Dimension $dimension, array $data): void
+    {
+        foreach (['high', 'medium', 'low'] as $level) {
+            $dimension->interpretations()->updateOrCreate(
+                ['level' => $level],
+                [
+                    'interpretation_text_ar' => $data['interpretations'][$level],
+                    'high_threshold' => $data['high_threshold'],
+                    'low_threshold' => $data['low_threshold'],
+                ]
+            );
+        }
+    }
+}
+````
+
+## File: app/Repositories/ExamSessionRepository.php
+````php
+<?php
+
+namespace App\Repositories;
+
+use App\Models\ExamSession;
+use App\Repositories\Contracts\ExamSessionRepositoryInterface;
+
+class ExamSessionRepository implements ExamSessionRepositoryInterface
+{
+    public function findInProgress(string $userId, string $assessmentId): ?ExamSession
+    {
+        return ExamSession::where('user_id', $userId)
+            ->where('assessment_id', $assessmentId)
+            ->where('status', 'in_progress')
+            ->first();
+    }
+
+    public function create(array $data): ExamSession
+    {
+        return ExamSession::create($data);
+    }
+
+    public function update(ExamSession $session, array $data): ExamSession
+    {
+        $session->update($data);
+
+        return $session->fresh();
+    }
+}
+````
+
+## File: app/Services/AdminDashboardService.php
+````php
+<?php
+
+namespace App\Services;
+
+use App\Models\Assessment;
+use App\Models\ExamSession;
+use Illuminate\Support\Facades\DB;
+
+class AdminDashboardService
+{
+    /**
+     * Build all data needed for the admin dashboard.
+     *
+     * @return array<string, mixed>
+     */
+    public function getData(): array
+    {
+        $totalUsers = DB::table('users')->where('role', 'user')->count();
+        $todaySessions = DB::table('exam_sessions')
+            ->where('status', 'completed')
+            ->whereDate('completed_at', today())
+            ->count();
+
+        /*
+         * Most-used assessment: join exam_sessions and count completed ones
+         * to avoid the N+1 withCount pattern.
+         */
+        $mostUsedAssessment = Assessment::withCount([
+            'examSessions' => fn ($q) => $q->where('status', 'completed'),
+        ])
+            ->orderByDesc('exam_sessions_count')
+            ->first();
+
+        $avgScore = DB::table('results')->avg('total_score');
+
+        /*
+         * Recent sessions: JOIN users, assessments, results in a single query.
+         */
+        $recentSessions = ExamSession::where('status', 'completed')
+            ->with(['user', 'assessment', 'result'])
+            ->orderByDesc('completed_at')
+            ->limit(10)
+            ->get();
+
+        return compact(
+            'totalUsers',
+            'todaySessions',
+            'mostUsedAssessment',
+            'avgScore',
+            'recentSessions'
+        );
+    }
+}
+````
+
+## File: app/Services/DimensionService.php
+````php
+<?php
+
+namespace App\Services;
+
+use App\Models\Assessment;
+use App\Models\Dimension;
+use App\Repositories\Contracts\DimensionRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
+
+class DimensionService
+{
+    public function __construct(
+        private readonly DimensionRepositoryInterface $dimensions,
+    ) {}
+
+    public function byAssessment(Assessment $assessment): Collection
+    {
+        return $this->dimensions->byAssessment($assessment);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function create(Assessment $assessment, array $data): Dimension
+    {
+        return $this->dimensions->create([
+            'assessment_id' => $assessment->id,
+            'name_ar' => $data['name_ar'],
+            'max_score' => $data['max_score'],
+            'order_index' => $assessment->dimensions()->count(),
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function update(Dimension $dimension, array $data): Dimension
+    {
+        return $this->dimensions->update($dimension, $data);
+    }
+
+    public function delete(Dimension $dimension): void
+    {
+        $this->dimensions->delete($dimension);
+    }
+
+    /**
+     * @param  array<int, string>  $orderedIds
+     */
+    public function reorder(array $orderedIds): void
+    {
+        $this->dimensions->reorder($orderedIds);
+    }
+
+    /**
+     * Save all three level interpretations for a dimension.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function saveInterpretations(Dimension $dimension, array $data): void
+    {
+        $this->dimensions->upsertInterpretations($dimension, $data);
+    }
+}
+````
+
+## File: app/Services/RecommendationService.php
+````php
+<?php
+
+namespace App\Services;
+
+use App\Models\Recommendation;
+use App\Repositories\Contracts\RecommendationRepositoryInterface;
+use Illuminate\Support\Collection;
+
+class RecommendationService
+{
+    public function __construct(
+        private readonly RecommendationRepositoryInterface $recommendations,
+    ) {}
+
+    /**
+     * @return Collection<string, Collection<int, Recommendation>>
+     */
+    public function allGrouped(): Collection
+    {
+        return $this->recommendations->allGrouped();
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function upsert(array $data): Recommendation
+    {
+        return $this->recommendations->upsert($data);
+    }
+
+    public function delete(Recommendation $recommendation): void
+    {
+        $this->recommendations->delete($recommendation);
+    }
+}
+````
+
+## File: artisan
+````
+#!/usr/bin/env php
+<?php
+
+use Illuminate\Foundation\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+
+define('LARAVEL_START', microtime(true));
+
+// Register the Composer autoloader...
+require __DIR__.'/vendor/autoload.php';
+
+// Bootstrap Laravel and handle the command...
+/** @var Application $app */
+$app = require_once __DIR__.'/bootstrap/app.php';
+
+$status = $app->handleCommand(new ArgvInput);
+
+exit($status);
+````
+
+## File: bootstrap/cache/.gitignore
+````
+*
+!.gitignore
+````
+
+## File: bootstrap/providers.php
+````php
+<?php
+
+use App\Providers\AppServiceProvider;
+
+return [
+    AppServiceProvider::class,
+];
+````
+
+## File: config/app.php
+````php
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Name
+    |--------------------------------------------------------------------------
+    |
+    | This value is the name of your application, which will be used when the
+    | framework needs to place the application's name in a notification or
+    | other UI elements where an application name needs to be displayed.
+    |
+    */
+
+    'name' => env('APP_NAME', 'Laravel'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Environment
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the "environment" your application is currently
+    | running in. This may determine how you prefer to configure various
+    | services the application utilizes. Set this in your ".env" file.
+    |
+    */
+
+    'env' => env('APP_ENV', 'production'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Debug Mode
+    |--------------------------------------------------------------------------
+    |
+    | When your application is in debug mode, detailed error messages with
+    | stack traces will be shown on every error that occurs within your
+    | application. If disabled, a simple generic error page is shown.
+    |
+    */
+
+    'debug' => (bool) env('APP_DEBUG', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application URL
+    |--------------------------------------------------------------------------
+    |
+    | This URL is used by the console to properly generate URLs when using
+    | the Artisan command line tool. You should set this to the root of
+    | the application so that it's available within Artisan commands.
+    |
+    */
+
+    'url' => env('APP_URL', 'http://localhost'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Timezone
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the default timezone for your application, which
+    | will be used by the PHP date and date-time functions. The timezone
+    | is set to "UTC" by default as it is suitable for most use cases.
+    |
+    */
+
+    'timezone' => 'UTC',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Locale Configuration
+    |--------------------------------------------------------------------------
+    |
+    | The application locale determines the default locale that will be used
+    | by Laravel's translation / localization methods. This option can be
+    | set to any locale for which you plan to have translation strings.
+    |
+    */
+
+    'locale' => env('APP_LOCALE', 'en'),
+
+    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+
+    'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Encryption Key
+    |--------------------------------------------------------------------------
+    |
+    | This key is utilized by Laravel's encryption services and should be set
+    | to a random, 32 character string to ensure that all encrypted values
+    | are secure. You should do this prior to deploying the application.
+    |
+    */
+
+    'cipher' => 'AES-256-CBC',
+
+    'key' => env('APP_KEY'),
+
+    'previous_keys' => [
+        ...array_filter(
+            explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
+        ),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Maintenance Mode Driver
+    |--------------------------------------------------------------------------
+    |
+    | These configuration options determine the driver used to determine and
+    | manage Laravel's "maintenance mode" status. The "cache" driver will
+    | allow maintenance mode to be controlled across multiple machines.
+    |
+    | Supported drivers: "file", "cache"
+    |
+    */
+
+    'maintenance' => [
+        'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
+        'store' => env('APP_MAINTENANCE_STORE', 'database'),
+    ],
+
+];
+````
+
+## File: config/auth.php
+````php
+<?php
+
+use App\Models\User;
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication Defaults
+    |--------------------------------------------------------------------------
+    |
+    | This option defines the default authentication "guard" and password
+    | reset "broker" for your application. You may change these values
+    | as required, but they're a perfect start for most applications.
+    |
+    */
+
+    'defaults' => [
+        'guard' => env('AUTH_GUARD', 'web'),
+        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication Guards
+    |--------------------------------------------------------------------------
+    |
+    | Next, you may define every authentication guard for your application.
+    | Of course, a great default configuration has been defined for you
+    | which utilizes session storage plus the Eloquent user provider.
+    |
+    | All authentication guards have a user provider, which defines how the
+    | users are actually retrieved out of your database or other storage
+    | system used by the application. Typically, Eloquent is utilized.
+    |
+    | Supported: "session"
+    |
+    */
+
+    'guards' => [
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | User Providers
+    |--------------------------------------------------------------------------
+    |
+    | All authentication guards have a user provider, which defines how the
+    | users are actually retrieved out of your database or other storage
+    | system used by the application. Typically, Eloquent is utilized.
+    |
+    | If you have multiple user tables or models you may configure multiple
+    | providers to represent the model / table. These providers may then
+    | be assigned to any extra authentication guards you have defined.
+    |
+    | Supported: "database", "eloquent"
+    |
+    */
+
+    'providers' => [
+        'users' => [
+            'driver' => 'eloquent',
+            'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        // 'users' => [
+        //     'driver' => 'database',
+        //     'table' => 'users',
+        // ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Resetting Passwords
+    |--------------------------------------------------------------------------
+    |
+    | These configuration options specify the behavior of Laravel's password
+    | reset functionality, including the table utilized for token storage
+    | and the user provider that is invoked to actually retrieve users.
+    |
+    | The expiry time is the number of minutes that each reset token will be
+    | considered valid. This security feature keeps tokens short-lived so
+    | they have less time to be guessed. You may change this as needed.
+    |
+    | The throttle setting is the number of seconds a user must wait before
+    | generating more password reset tokens. This prevents the user from
+    | quickly generating a very large amount of password reset tokens.
+    |
+    */
+
+    'passwords' => [
+        'users' => [
+            'provider' => 'users',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Password Confirmation Timeout
+    |--------------------------------------------------------------------------
+    |
+    | Here you may define the number of seconds before a password confirmation
+    | window expires and users are asked to re-enter their password via the
+    | confirmation screen. By default, the timeout lasts for three hours.
+    |
+    */
+
+    'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+
+];
+````
+
+## File: config/cache.php
+````php
+<?php
+
+use Illuminate\Support\Str;
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Cache Store
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the default cache store that will be used by the
+    | framework. This connection is utilized if another isn't explicitly
+    | specified when running a cache operation inside the application.
+    |
+    */
+
+    'default' => env('CACHE_STORE', 'database'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cache Stores
+    |--------------------------------------------------------------------------
+    |
+    | Here you may define all of the cache "stores" for your application as
+    | well as their drivers. You may even define multiple stores for the
+    | same cache driver to group types of items stored in your caches.
+    |
+    | Supported drivers: "array", "database", "file", "memcached",
+    |                    "redis", "dynamodb", "octane",
+    |                    "failover", "null"
+    |
+    */
+
+    'stores' => [
+
+        'array' => [
+            'driver' => 'array',
+            'serialize' => false,
+        ],
+
+        'database' => [
+            'driver' => 'database',
+            'connection' => env('DB_CACHE_CONNECTION'),
+            'table' => env('DB_CACHE_TABLE', 'cache'),
+            'lock_connection' => env('DB_CACHE_LOCK_CONNECTION'),
+            'lock_table' => env('DB_CACHE_LOCK_TABLE'),
+        ],
+
+        'file' => [
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/data'),
+            'lock_path' => storage_path('framework/cache/data'),
+        ],
+
+        'memcached' => [
+            'driver' => 'memcached',
+            'persistent_id' => env('MEMCACHED_PERSISTENT_ID'),
+            'sasl' => [
+                env('MEMCACHED_USERNAME'),
+                env('MEMCACHED_PASSWORD'),
+            ],
+            'options' => [
+                // Memcached::OPT_CONNECT_TIMEOUT => 2000,
+            ],
+            'servers' => [
+                [
+                    'host' => env('MEMCACHED_HOST', '127.0.0.1'),
+                    'port' => env('MEMCACHED_PORT', 11211),
+                    'weight' => 100,
+                ],
+            ],
+        ],
+
+        'redis' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
+            'lock_connection' => env('REDIS_CACHE_LOCK_CONNECTION', 'default'),
+        ],
+
+        'dynamodb' => [
+            'driver' => 'dynamodb',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+            'table' => env('DYNAMODB_CACHE_TABLE', 'cache'),
+            'endpoint' => env('DYNAMODB_ENDPOINT'),
+        ],
+
+        'octane' => [
+            'driver' => 'octane',
+        ],
+
+        'failover' => [
+            'driver' => 'failover',
+            'stores' => [
+                'database',
+                'array',
+            ],
+        ],
+
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cache Key Prefix
+    |--------------------------------------------------------------------------
+    |
+    | When utilizing the APC, database, memcached, Redis, and DynamoDB cache
+    | stores, there might be other applications using the same cache. For
+    | that reason, you may prefix every cache key to avoid collisions.
+    |
+    */
+
+    'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
+
+];
+````
+
+## File: config/database.php
+````php
+<?php
+
+use Illuminate\Support\Str;
+use Pdo\Mysql;
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Database Connection Name
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify which of the database connections below you wish
+    | to use as your default connection for database operations. This is
+    | the connection which will be utilized unless another connection
+    | is explicitly specified when you execute a query / statement.
+    |
+    */
+
+    'default' => env('DB_CONNECTION', 'sqlite'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Database Connections
+    |--------------------------------------------------------------------------
+    |
+    | Below are all of the database connections defined for your application.
+    | An example configuration is provided for each database system which
+    | is supported by Laravel. You're free to add / remove connections.
+    |
+    */
+
+    'connections' => [
+
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'url' => env('DB_URL'),
+            'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            'prefix' => '',
+            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+            'busy_timeout' => null,
+            'journal_mode' => null,
+            'synchronous' => null,
+            'transaction_mode' => 'DEFERRED',
+        ],
+
+        'mysql' => [
+            'driver' => 'mysql',
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('DB_DATABASE', 'laravel'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
+        'mariadb' => [
+            'driver' => 'mariadb',
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('DB_DATABASE', 'laravel'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
+        'pgsql' => [
+            'driver' => 'pgsql',
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '5432'),
+            'database' => env('DB_DATABASE', 'laravel'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => env('DB_CHARSET', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
+        ],
+
+        'sqlsrv' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST', 'localhost'),
+            'port' => env('DB_PORT', '1433'),
+            'database' => env('DB_DATABASE', 'laravel'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => env('DB_CHARSET', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
+            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+        ],
+
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Migration Repository Table
+    |--------------------------------------------------------------------------
+    |
+    | This table keeps track of all the migrations that have already run for
+    | your application. Using this information, we can determine which of
+    | the migrations on disk haven't actually been run on the database.
+    |
+    */
+
+    'migrations' => [
+        'table' => 'migrations',
+        'update_date_on_publish' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Redis Databases
+    |--------------------------------------------------------------------------
+    |
+    | Redis is an open source, fast, and advanced key-value store that also
+    | provides a richer body of commands than a typical key-value system
+    | such as Memcached. You may define your connection settings here.
+    |
+    */
+
+    'redis' => [
+
+        'client' => env('REDIS_CLIENT', 'phpredis'),
+
+        'options' => [
+            'cluster' => env('REDIS_CLUSTER', 'redis'),
+            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
+            'persistent' => env('REDIS_PERSISTENT', false),
+        ],
+
+        'default' => [
+            'url' => env('REDIS_URL'),
+            'host' => env('REDIS_HOST', '127.0.0.1'),
+            'username' => env('REDIS_USERNAME'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_DB', '0'),
+            'max_retries' => env('REDIS_MAX_RETRIES', 3),
+            'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
+            'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
+            'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
+        ],
+
+        'cache' => [
+            'url' => env('REDIS_URL'),
+            'host' => env('REDIS_HOST', '127.0.0.1'),
+            'username' => env('REDIS_USERNAME'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_CACHE_DB', '1'),
+            'max_retries' => env('REDIS_MAX_RETRIES', 3),
+            'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
+            'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
+            'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
+        ],
+
+    ],
+
+];
+````
+
+## File: config/filesystems.php
+````php
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Filesystem Disk
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the default filesystem disk that should be used
+    | by the framework. The "local" disk, as well as a variety of cloud
+    | based disks are available to your application for file storage.
+    |
+    */
+
+    'default' => env('FILESYSTEM_DISK', 'local'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Filesystem Disks
+    |--------------------------------------------------------------------------
+    |
+    | Below you may configure as many filesystem disks as necessary, and you
+    | may even configure multiple disks for the same driver. Examples for
+    | most supported storage drivers are configured here for reference.
+    |
+    | Supported drivers: "local", "ftp", "sftp", "s3"
+    |
+    */
+
+    'disks' => [
+
+        'local' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+            'serve' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'public' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        's3' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_BUCKET'),
+            'url' => env('AWS_URL'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => false,
+            'report' => false,
+        ],
+
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Symbolic Links
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the symbolic links that will be created when the
+    | `storage:link` Artisan command is executed. The array keys should be
+    | the locations of the links and the values should be their targets.
+    |
+    */
+
+    'links' => [
+        public_path('storage') => storage_path('app/public'),
+    ],
+
+];
+````
+
+## File: config/logging.php
+````php
+<?php
+
+use Monolog\Handler\NullHandler;
+use Monolog\Handler\StreamHandler;
+use Monolog\Handler\SyslogUdpHandler;
+use Monolog\Processor\PsrLogMessageProcessor;
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Log Channel
+    |--------------------------------------------------------------------------
+    |
+    | This option defines the default log channel that is utilized to write
+    | messages to your logs. The value provided here should match one of
+    | the channels present in the list of "channels" configured below.
+    |
+    */
+
+    'default' => env('LOG_CHANNEL', 'stack'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Deprecations Log Channel
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the log channel that should be used to log warnings
+    | regarding deprecated PHP and library features. This allows you to get
+    | your application ready for upcoming major versions of dependencies.
+    |
+    */
+
+    'deprecations' => [
+        'channel' => env('LOG_DEPRECATIONS_CHANNEL', 'null'),
+        'trace' => env('LOG_DEPRECATIONS_TRACE', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Log Channels
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the log channels for your application. Laravel
+    | utilizes the Monolog PHP logging library, which includes a variety
+    | of powerful log handlers and formatters that you're free to use.
+    |
+    | Available drivers: "single", "daily", "slack", "syslog",
+    |                    "errorlog", "monolog", "custom", "stack"
+    |
+    */
+
+    'channels' => [
+
+        'stack' => [
+            'driver' => 'stack',
+            'channels' => explode(',', (string) env('LOG_STACK', 'single')),
+            'ignore_exceptions' => false,
+        ],
+
+        'single' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/laravel.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
+        'daily' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/laravel.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        'slack' => [
+            'driver' => 'slack',
+            'url' => env('LOG_SLACK_WEBHOOK_URL'),
+            'username' => env('LOG_SLACK_USERNAME', env('APP_NAME', 'Laravel')),
+            'emoji' => env('LOG_SLACK_EMOJI', ':boom:'),
+            'level' => env('LOG_LEVEL', 'critical'),
+            'replace_placeholders' => true,
+        ],
+
+        'papertrail' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'debug'),
+            'handler' => env('LOG_PAPERTRAIL_HANDLER', SyslogUdpHandler::class),
+            'handler_with' => [
+                'host' => env('PAPERTRAIL_URL'),
+                'port' => env('PAPERTRAIL_PORT'),
+                'connectionString' => 'tls://'.env('PAPERTRAIL_URL').':'.env('PAPERTRAIL_PORT'),
+            ],
+            'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        'stderr' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'debug'),
+            'handler' => StreamHandler::class,
+            'handler_with' => [
+                'stream' => 'php://stderr',
+            ],
+            'formatter' => env('LOG_STDERR_FORMATTER'),
+            'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        'syslog' => [
+            'driver' => 'syslog',
+            'level' => env('LOG_LEVEL', 'debug'),
+            'facility' => env('LOG_SYSLOG_FACILITY', LOG_USER),
+            'replace_placeholders' => true,
+        ],
+
+        'errorlog' => [
+            'driver' => 'errorlog',
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
+        'null' => [
+            'driver' => 'monolog',
+            'handler' => NullHandler::class,
+        ],
+
+        'emergency' => [
+            'path' => storage_path('logs/laravel.log'),
+        ],
+
+    ],
+
+];
+````
+
+## File: config/mail.php
+````php
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Mailer
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the default mailer that is used to send all email
+    | messages unless another mailer is explicitly specified when sending
+    | the message. All additional mailers can be configured within the
+    | "mailers" array. Examples of each type of mailer are provided.
+    |
+    */
+
+    'default' => env('MAIL_MAILER', 'log'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mailer Configurations
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure all of the mailers used by your application plus
+    | their respective settings. Several examples have been configured for
+    | you and you are free to add your own as your application requires.
+    |
+    | Laravel supports a variety of mail "transport" drivers that can be used
+    | when delivering an email. You may specify which one you're using for
+    | your mailers below. You may also add additional mailers if needed.
+    |
+    | Supported: "smtp", "sendmail", "mailgun", "ses", "ses-v2",
+    |            "postmark", "resend", "log", "array",
+    |            "failover", "roundrobin"
+    |
+    */
+
+    'mailers' => [
+
+        'smtp' => [
+            'transport' => 'smtp',
+            'scheme' => env('MAIL_SCHEME'),
+            'url' => env('MAIL_URL'),
+            'host' => env('MAIL_HOST', '127.0.0.1'),
+            'port' => env('MAIL_PORT', 2525),
+            'username' => env('MAIL_USERNAME'),
+            'password' => env('MAIL_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
+        'ses' => [
+            'transport' => 'ses',
+        ],
+
+        'postmark' => [
+            'transport' => 'postmark',
+            // 'message_stream_id' => env('POSTMARK_MESSAGE_STREAM_ID'),
+            // 'client' => [
+            //     'timeout' => 5,
+            // ],
+        ],
+
+        'resend' => [
+            'transport' => 'resend',
+        ],
+
+        'sendmail' => [
+            'transport' => 'sendmail',
+            'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
+        ],
+
+        'log' => [
+            'transport' => 'log',
+            'channel' => env('MAIL_LOG_CHANNEL'),
+        ],
+
+        'array' => [
+            'transport' => 'array',
+        ],
+
+        'failover' => [
+            'transport' => 'failover',
+            'mailers' => [
+                'smtp',
+                'log',
+            ],
+            'retry_after' => 60,
+        ],
+
+        'roundrobin' => [
+            'transport' => 'roundrobin',
+            'mailers' => [
+                'ses',
+                'postmark',
+            ],
+            'retry_after' => 60,
+        ],
+
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Global "From" Address
+    |--------------------------------------------------------------------------
+    |
+    | You may wish for all emails sent by your application to be sent from
+    | the same address. Here you may specify a name and address that is
+    | used globally for all emails that are sent by your application.
+    |
+    */
+
+    'from' => [
+        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+    ],
+
+];
+````
+
+## File: config/queue.php
+````php
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Queue Connection Name
+    |--------------------------------------------------------------------------
+    |
+    | Laravel's queue supports a variety of backends via a single, unified
+    | API, giving you convenient access to each backend using identical
+    | syntax for each. The default queue connection is defined below.
+    |
+    */
+
+    'default' => env('QUEUE_CONNECTION', 'database'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Queue Connections
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the connection options for every queue backend
+    | used by your application. An example configuration is provided for
+    | each backend supported by Laravel. You're also free to add more.
+    |
+    | Drivers: "sync", "database", "beanstalkd", "sqs", "redis",
+    |          "deferred", "background", "failover", "null"
+    |
+    */
+
+    'connections' => [
+
+        'sync' => [
+            'driver' => 'sync',
+        ],
+
+        'database' => [
+            'driver' => 'database',
+            'connection' => env('DB_QUEUE_CONNECTION'),
+            'table' => env('DB_QUEUE_TABLE', 'jobs'),
+            'queue' => env('DB_QUEUE', 'default'),
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
+            'after_commit' => false,
+        ],
+
+        'beanstalkd' => [
+            'driver' => 'beanstalkd',
+            'host' => env('BEANSTALKD_QUEUE_HOST', 'localhost'),
+            'queue' => env('BEANSTALKD_QUEUE', 'default'),
+            'retry_after' => (int) env('BEANSTALKD_QUEUE_RETRY_AFTER', 90),
+            'block_for' => 0,
+            'after_commit' => false,
+        ],
+
+        'sqs' => [
+            'driver' => 'sqs',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'prefix' => env('SQS_PREFIX', 'https://sqs.us-east-1.amazonaws.com/your-account-id'),
+            'queue' => env('SQS_QUEUE', 'default'),
+            'suffix' => env('SQS_SUFFIX'),
+            'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+            'after_commit' => false,
+        ],
+
+        'redis' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
+            'queue' => env('REDIS_QUEUE', 'default'),
+            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 90),
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
+        'deferred' => [
+            'driver' => 'deferred',
+        ],
+
+        'background' => [
+            'driver' => 'background',
+        ],
+
+        'failover' => [
+            'driver' => 'failover',
+            'connections' => [
+                'database',
+                'deferred',
+            ],
+        ],
+
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Job Batching
+    |--------------------------------------------------------------------------
+    |
+    | The following options configure the database and table that store job
+    | batching information. These options can be updated to any database
+    | connection and table which has been defined by your application.
+    |
+    */
+
+    'batching' => [
+        'database' => env('DB_CONNECTION', 'sqlite'),
+        'table' => 'job_batches',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Failed Queue Jobs
+    |--------------------------------------------------------------------------
+    |
+    | These options configure the behavior of failed queue job logging so you
+    | can control how and where failed jobs are stored. Laravel ships with
+    | support for storing failed jobs in a simple file or in a database.
+    |
+    | Supported drivers: "database-uuids", "dynamodb", "file", "null"
+    |
+    */
+
+    'failed' => [
+        'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),
+        'database' => env('DB_CONNECTION', 'sqlite'),
+        'table' => 'failed_jobs',
+    ],
+
+];
+````
+
+## File: config/services.php
+````php
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Third Party Services
+    |--------------------------------------------------------------------------
+    |
+    | This file is for storing the credentials for third party services such
+    | as Mailgun, Postmark, AWS and more. This file provides the de facto
+    | location for this type of information, allowing packages to have
+    | a conventional file to locate the various service credentials.
+    |
+    */
+
+    'postmark' => [
+        'key' => env('POSTMARK_API_KEY'),
+    ],
+
+    'resend' => [
+        'key' => env('RESEND_API_KEY'),
+    ],
+
+    'ses' => [
+        'key' => env('AWS_ACCESS_KEY_ID'),
+        'secret' => env('AWS_SECRET_ACCESS_KEY'),
+        'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+    ],
+
+    'slack' => [
+        'notifications' => [
+            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
+            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+        ],
+    ],
+
+];
+````
+
+## File: config/session.php
+````php
+<?php
+
+use Illuminate\Support\Str;
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Session Driver
+    |--------------------------------------------------------------------------
+    |
+    | This option determines the default session driver that is utilized for
+    | incoming requests. Laravel supports a variety of storage options to
+    | persist session data. Database storage is a great default choice.
+    |
+    | Supported: "file", "cookie", "database", "memcached",
+    |            "redis", "dynamodb", "array"
+    |
+    */
+
+    'driver' => env('SESSION_DRIVER', 'database'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Lifetime
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the number of minutes that you wish the session
+    | to be allowed to remain idle before it expires. If you want them
+    | to expire immediately when the browser is closed then you may
+    | indicate that via the expire_on_close configuration option.
+    |
+    */
+
+    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+
+    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Encryption
+    |--------------------------------------------------------------------------
+    |
+    | This option allows you to easily specify that all of your session data
+    | should be encrypted before it's stored. All encryption is performed
+    | automatically by Laravel and you may use the session like normal.
+    |
+    */
+
+    'encrypt' => env('SESSION_ENCRYPT', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session File Location
+    |--------------------------------------------------------------------------
+    |
+    | When utilizing the "file" session driver, the session files are placed
+    | on disk. The default storage location is defined here; however, you
+    | are free to provide another location where they should be stored.
+    |
+    */
+
+    'files' => storage_path('framework/sessions'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Database Connection
+    |--------------------------------------------------------------------------
+    |
+    | When using the "database" or "redis" session drivers, you may specify a
+    | connection that should be used to manage these sessions. This should
+    | correspond to a connection in your database configuration options.
+    |
+    */
+
+    'connection' => env('SESSION_CONNECTION'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Database Table
+    |--------------------------------------------------------------------------
+    |
+    | When using the "database" session driver, you may specify the table to
+    | be used to store sessions. Of course, a sensible default is defined
+    | for you; however, you're welcome to change this to another table.
+    |
+    */
+
+    'table' => env('SESSION_TABLE', 'sessions'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Cache Store
+    |--------------------------------------------------------------------------
+    |
+    | When using one of the framework's cache driven session backends, you may
+    | define the cache store which should be used to store the session data
+    | between requests. This must match one of your defined cache stores.
+    |
+    | Affects: "dynamodb", "memcached", "redis"
+    |
+    */
+
+    'store' => env('SESSION_STORE'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Sweeping Lottery
+    |--------------------------------------------------------------------------
+    |
+    | Some session drivers must manually sweep their storage location to get
+    | rid of old sessions from storage. Here are the chances that it will
+    | happen on a given request. By default, the odds are 2 out of 100.
+    |
+    */
+
+    'lottery' => [2, 100],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Cookie Name
+    |--------------------------------------------------------------------------
+    |
+    | Here you may change the name of the session cookie that is created by
+    | the framework. Typically, you should not need to change this value
+    | since doing so does not grant a meaningful security improvement.
+    |
+    */
+
+    'cookie' => env(
+        'SESSION_COOKIE',
+        Str::slug((string) env('APP_NAME', 'laravel')).'-session'
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Cookie Path
+    |--------------------------------------------------------------------------
+    |
+    | The session cookie path determines the path for which the cookie will
+    | be regarded as available. Typically, this will be the root path of
+    | your application, but you're free to change this when necessary.
+    |
+    */
+
+    'path' => env('SESSION_PATH', '/'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Cookie Domain
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the domain and subdomains the session cookie is
+    | available to. By default, the cookie will be available to the root
+    | domain without subdomains. Typically, this shouldn't be changed.
+    |
+    */
+
+    'domain' => env('SESSION_DOMAIN'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | HTTPS Only Cookies
+    |--------------------------------------------------------------------------
+    |
+    | By setting this option to true, session cookies will only be sent back
+    | to the server if the browser has a HTTPS connection. This will keep
+    | the cookie from being sent to you when it can't be done securely.
+    |
+    */
+
+    'secure' => env('SESSION_SECURE_COOKIE'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | HTTP Access Only
+    |--------------------------------------------------------------------------
+    |
+    | Setting this value to true will prevent JavaScript from accessing the
+    | value of the cookie and the cookie will only be accessible through
+    | the HTTP protocol. It's unlikely you should disable this option.
+    |
+    */
+
+    'http_only' => env('SESSION_HTTP_ONLY', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Same-Site Cookies
+    |--------------------------------------------------------------------------
+    |
+    | This option determines how your cookies behave when cross-site requests
+    | take place, and can be used to mitigate CSRF attacks. By default, we
+    | will set this value to "lax" to permit secure cross-site requests.
+    |
+    | See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#samesitesamesite-value
+    |
+    | Supported: "lax", "strict", "none", null
+    |
+    */
+
+    'same_site' => env('SESSION_SAME_SITE', 'lax'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Partitioned Cookies
+    |--------------------------------------------------------------------------
+    |
+    | Setting this value to true will tie the cookie to the top-level site for
+    | a cross-site context. Partitioned cookies are accepted by the browser
+    | when flagged "secure" and the Same-Site attribute is set to "none".
+    |
+    */
+
+    'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
+
+];
+````
+
+## File: database/.gitignore
+````
+*.sqlite*
+````
+
+## File: database/factories/UserFactory.php
+````php
+<?php
+
+namespace Database\Factories;
+
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
+/**
+ * @extends Factory<User>
+ */
+class UserFactory extends Factory
+{
+    /**
+     * The current password being used by the factory.
+     */
+    protected static ?string $password;
+
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'name' => fake()->name(),
+            'email' => fake()->unique()->safeEmail(),
+            'email_verified_at' => now(),
+            'password' => static::$password ??= Hash::make('password'),
+            'remember_token' => Str::random(10),
+        ];
+    }
+
+    /**
+     * Indicate that the model's email address should be unverified.
+     */
+    public function unverified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => null,
+        ]);
+    }
+}
+````
+
+## File: database/migrations/0001_01_01_000001_create_cache_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('cache', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->mediumText('value');
+            $table->integer('expiration')->index();
+        });
+
+        Schema::create('cache_locks', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->string('owner');
+            $table->integer('expiration')->index();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('cache');
+        Schema::dropIfExists('cache_locks');
+    }
+};
+````
+
+## File: database/migrations/0001_01_01_000002_create_jobs_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('jobs', function (Blueprint $table) {
+            $table->id();
+            $table->string('queue')->index();
+            $table->longText('payload');
+            $table->unsignedTinyInteger('attempts');
+            $table->unsignedInteger('reserved_at')->nullable();
+            $table->unsignedInteger('available_at');
+            $table->unsignedInteger('created_at');
+        });
+
+        Schema::create('job_batches', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->string('name');
+            $table->integer('total_jobs');
+            $table->integer('pending_jobs');
+            $table->integer('failed_jobs');
+            $table->longText('failed_job_ids');
+            $table->mediumText('options')->nullable();
+            $table->integer('cancelled_at')->nullable();
+            $table->integer('created_at');
+            $table->integer('finished_at')->nullable();
+        });
+
+        Schema::create('failed_jobs', function (Blueprint $table) {
+            $table->id();
+            $table->string('uuid')->unique();
+            $table->text('connection');
+            $table->text('queue');
+            $table->longText('payload');
+            $table->longText('exception');
+            $table->timestamp('failed_at')->useCurrent();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('jobs');
+        Schema::dropIfExists('job_batches');
+        Schema::dropIfExists('failed_jobs');
+    }
+};
+````
+
+## File: database/migrations/2026_06_24_085954_add_performance_indexes_to_tables.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('recommendations', function (Blueprint $table) {
+            $table->unique(['assessment_id', 'level'], 'recommendations_assessment_level_unique');
+        });
+
+        Schema::table('dimensions', function (Blueprint $table) {
+            $table->index(['assessment_id', 'order_index'], 'dimensions_assessment_order_index');
+        });
+
+        Schema::table('questions', function (Blueprint $table) {
+            $table->index(['assessment_id', 'order_index'], 'questions_assessment_order_index');
+            $table->index(['dimension_id', 'order_index'], 'questions_dimension_order_index');
+        });
+
+        Schema::table('answer_options', function (Blueprint $table) {
+            $table->index(['question_id', 'order_index'], 'answer_options_question_order_index');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('recommendations', function (Blueprint $table) {
+            $table->dropUnique('recommendations_assessment_level_unique');
+        });
+
+        Schema::table('dimensions', function (Blueprint $table) {
+            $table->dropIndex('dimensions_assessment_order_index');
+        });
+
+        Schema::table('questions', function (Blueprint $table) {
+            $table->dropIndex('questions_assessment_order_index');
+            $table->dropIndex('questions_dimension_order_index');
+        });
+
+        Schema::table('answer_options', function (Blueprint $table) {
+            $table->dropIndex('answer_options_question_order_index');
+        });
+    }
+};
+````
+
+## File: database/migrations/2026_06_25_120000_add_is_reversed_to_questions_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('questions', function (Blueprint $table) {
+            // Reversed questions score inversely: نعم=0, إلى حد ما=1, لا=2
+            $table->boolean('is_reversed')->default(false)->after('order_index');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('questions', function (Blueprint $table) {
+            $table->dropColumn('is_reversed');
+        });
+    }
+};
+````
+
+## File: database/migrations/2026_07_01_122729_add_price_and_rating_to_assessments_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('assessments', function (Blueprint $table) {
+            $table->decimal('price', 8, 2)->nullable()->after('time_limit_min');
+            $table->decimal('rating', 3, 2)->nullable()->after('price');
+            $table->integer('rating_count')->default(0)->after('rating');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('assessments', function (Blueprint $table) {
+            $table->dropColumn(['price', 'rating', 'rating_count']);
+        });
+    }
+};
+````
+
+## File: database/migrations/2026_07_01_140449_add_image_url_to_assessments_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('assessments', function (Blueprint $table) {
+            $table->string('image_url')->nullable()->after('description_ar');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('assessments', function (Blueprint $table) {
+            $table->dropColumn('image_url');
+        });
+    }
+};
+````
+
+## File: package.json
+````json
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.0.0",
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^2.0.0",
+        "tailwindcss": "^4.0.0",
+        "vite": "^7.0.7"
+    }
+}
+````
+
+## File: phpunit.xml
+````xml
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="DB_URL" value=""/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="PULSE_ENABLED" value="false"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="NIGHTWATCH_ENABLED" value="false"/>
+    </php>
+</phpunit>
+````
+
+## File: public/.htaccess
+````
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+````
+
+## File: public/css/app.css
+````css
+/* ============================================
+   Dar Alroaya Exam System — Global Styles
+   ============================================ */
+
+:root {
+    --font-ar: 'Noto Kufi Arabic', sans-serif;
+}
+
+*, body {
+    font-family: var(--font-ar) !important;
+}
+
+/* Smooth transitions */
+.transition-all { transition: all .3s ease; }
+
+/* Card hover lift */
+.card {
+    transition: box-shadow .2s ease;
+}
+.card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,.08) !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f3f5; }
+::-webkit-scrollbar-thumb { background: #adb5bd; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #6c757d; }
+
+/* Badge subtle variants (Bootstrap 5.3 polyfill) */
+.bg-success-subtle { background-color: #d1e7dd !important; }
+.bg-warning-subtle { background-color: #fff3cd !important; }
+.bg-danger-subtle  { background-color: #f8d7da !important; }
+.bg-primary-subtle { background-color: #cfe2ff !important; }
+.bg-secondary-subtle { background-color: #e2e3e5 !important; }
+
+/* Progress bar animation */
+.progress-bar { transition: width 0.8s ease; }
+
+/* Alert container flash */
+#alert-container .alert {
+    animation: slideDown .3s ease;
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Exam page specific */
+.option-card {
+    cursor: pointer;
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    transition: all .2s ease;
+    padding: 14px 16px;
+}
+.option-card:hover {
+    border-color: #0d6efd;
+    background: #f0f5ff;
+    transform: translateX(-3px);
+}
+.option-card.selected {
+    border-color: #0d6efd;
+    background: #e8f0fe;
+}
+
+/* Sidebar active glow */
+.sidebar .nav-link.active {
+    box-shadow: 0 2px 10px rgba(13,110,253,.3);
+}
+
+/* Table improvements */
+.table th {
+    font-weight: 600;
+    font-size: .875rem;
+    color: #495057;
+}
+
+/* Form label */
+.form-label {
+    color: #495057;
+    margin-bottom: .4rem;
+}
+
+/* Print styles */
+@media print {
+    .navbar, .footer, .no-print, .sidebar, .topbar { display: none !important; }
+    .card { break-inside: avoid; }
+    body { background: #fff !important; }
+}
+````
+
+## File: public/index.php
+````php
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+// Determine if the application is in maintenance mode...
+if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+    require $maintenance;
+}
+
+// Register the Composer autoloader...
+require __DIR__.'/../vendor/autoload.php';
+
+// Bootstrap Laravel and handle the request...
+/** @var Application $app */
+$app = require_once __DIR__.'/../bootstrap/app.php';
+
+$app->handleRequest(Request::capture());
+````
+
+## File: public/js/app.js
+````javascript
+/**
+ * Dar Alroaya Exam System — Global JS Helpers
+ */
+
+$.ajaxSetup({
+    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+});
+
+/**
+ * Show a dismissible alert in #alert-container
+ */
+function showAlert(message, type = 'info') {
+    const icons = { success: 'check-circle', danger: 'exclamation-triangle', warning: 'exclamation-circle', info: 'info-circle' };
+    const icon  = icons[type] || 'info-circle';
+    const html  = `
+        <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-${icon} me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>`;
+    $('#alert-container').html(html);
+    // Auto-dismiss after 4s
+    setTimeout(() => $('#alert-container .alert').alert('close'), 4000);
+}
+
+/**
+ * Toggle loading state on a button
+ */
+function setLoading(btn, loading) {
+    const spinner = btn.find('.spinner-border');
+    const text    = btn.find('.btn-text');
+    if (loading) {
+        btn.prop('disabled', true);
+        text.addClass('d-none');
+        spinner.removeClass('d-none');
+    } else {
+        btn.prop('disabled', false);
+        text.removeClass('d-none');
+        spinner.addClass('d-none');
+    }
+}
+
+/**
+ * Confirm delete using the shared modal
+ */
+let _deleteCallback = null;
+let _deleteUrl      = null;
+
+function confirmDelete(message, url, onSuccess) {
+    _deleteUrl      = url;
+    _deleteCallback = onSuccess;
+    $('#confirmDeleteMessage').text(message);
+    new bootstrap.Modal(document.getElementById('confirmDeleteModal')).show();
+}
+
+$(document).on('click', '#confirmDeleteBtn', function() {
+    if (!_deleteUrl) return;
+    const btn = $(this);
+    btn.prop('disabled', true).text('جاري الحذف...');
+
+    $.ajax({
+        url: _deleteUrl,
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        success: function(res) {
+            bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal')).hide();
+            showAlert(res.message || 'تم الحذف بنجاح.', 'success');
+            btn.prop('disabled', false).text('حذف');
+            if (typeof _deleteCallback === 'function') _deleteCallback();
+        },
+        error: function(xhr) {
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ أثناء الحذف.', 'danger');
+            btn.prop('disabled', false).text('حذف');
+        }
+    });
+});
+````
+
+## File: public/robots.txt
+````
+User-agent: *
+Disallow:
+````
+
+## File: resources/css/app.css
+````css
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+````
+
+## File: resources/js/app.js
+````javascript
+import './bootstrap';
+````
+
+## File: resources/js/bootstrap.js
+````javascript
+import axios from 'axios';
+window.axios = axios;
+
+window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+````
+
+## File: resources/views/admin/exams/create.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'إنشاء اختبار جديد')
+@section('page-title', 'إنشاء اختبار جديد')
+
+@push('styles')
+<style>
+/* ── Layout ── */
+.sidebar-card  { position:sticky; top:80px; border-radius:16px; border:0; box-shadow:0 4px 20px rgba(0,0,0,.08); }
+.main-card     { border-radius:16px; border:0; box-shadow:0 4px 20px rgba(0,0,0,.08); }
+
+/* ── Question pool ── */
+.pool-scroll   { max-height:420px; overflow-y:auto; }
+.q-pool-item {
+    cursor:pointer; border:2px solid #e5e7eb; border-radius:10px;
+    transition:all .15s; background:#fff; padding:.6rem .9rem;
+}
+.q-pool-item:hover  { border-color:#6366f1; background:#f5f3ff; }
+.q-pool-item.selected { border-color:#6366f1; background:#ede9fe; }
+.q-pool-item .q-num { font-size:.72rem; color:#6366f1; font-weight:700; }
+
+/* ── Selected list ── */
+.sel-item {
+    background:#fff; border:1px solid #e5e7eb; border-radius:10px;
+    padding:.5rem .75rem; display:flex; align-items:center; gap:.5rem;
+}
+.sel-item .drag-handle { color:#9ca3af; cursor:grab; }
+.sel-num {
+    width:24px; height:24px; border-radius:50%;
+    background:linear-gradient(135deg,#6366f1,#8b5cf6);
+    color:#fff; font-size:.72rem; font-weight:700;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+#selected-list { min-height:80px; }
+
+/* ── New question inline ── */
+.option-row { background:#f9fafb; border-radius:8px; padding:.5rem; }
+
+/* ── Reversed badge ── */
+.rev-label {
+    background:#fef3c7; border:1px solid #fcd34d; border-radius:6px;
+    color:#92400e; font-size:.72rem; padding:.15rem .5rem;
+}
+
+/* ── Tab styling ── */
+.nav-pills .nav-link { border-radius:50px; font-size:.85rem; font-weight:600; color:#6b7280; }
+.nav-pills .nav-link.active {
+    background:linear-gradient(135deg,#6366f1,#8b5cf6);
+    color:#fff; box-shadow:0 2px 8px rgba(99,102,241,.35);
+}
+
+/* ── Save button ── */
+.btn-save-main {
+    border:0; border-radius:50px; padding:.65rem 2rem; font-weight:700;
+    background:linear-gradient(135deg,#6366f1,#8b5cf6);
+    color:#fff; width:100%;
+    box-shadow:0 4px 16px rgba(99,102,241,.35); transition:all .2s;
+}
+.btn-save-main:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(99,102,241,.45); color:#fff; }
+
+/* ── Category dropdown ── */
+.category-presets { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.4rem; }
+.preset-chip {
+    background:#f3f4f6; border:1px solid #e5e7eb; border-radius:50px;
+    font-size:.72rem; padding:.2rem .7rem; cursor:pointer; transition:all .15s;
+}
+.preset-chip:hover { background:#ede9fe; border-color:#6366f1; color:#6366f1; }
+</style>
+@endpush
+
+@section('content')
+<div class="row g-4">
+
+    {{-- ─── LEFT: Assessment info ─────────────────────────────── --}}
+    <div class="col-lg-4">
+        <div class="card sidebar-card">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-4">
+                    <i class="bi bi-info-circle-fill text-primary me-2"></i>بيانات المقياس
+                </h6>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">اسم المقياس *</label>
+                    <input type="text" class="form-control" id="e-title_ar"
+                           placeholder="مثال: مقياس معرفة الذات">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">المجال / الفئة *</label>
+                    <input type="text" class="form-control" id="e-category"
+                           placeholder="اختر أو اكتب...">
+                    <div class="category-presets">
+                        @foreach([
+                            'مقاييس معرفة الذات والشخصية',
+                            'مقاييس الكفاءة الشخصية والنجاح المهني',
+                            'مقاييس الاتصال والعلاقات المهنية',
+                            'مقاييس القيادة والإدارة',
+                            'مقاييس التوجيه والتوافق المهني',
+                            'مقاييس الصحة المهنية',
+                        ] as $cat)
+                        <span class="preset-chip" data-cat="{{ $cat }}">{{ $cat }}</span>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">وصف المقياس</label>
+                    <textarea class="form-control" id="e-description_ar" rows="3"
+                              placeholder="اكتب وصفاً موجزاً للمقياس وهدفه..."></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold">الوقت المحدد (دقائق)</label>
+                    <input type="number" class="form-control" id="e-time_limit_min"
+                           placeholder="فارغ = بلا حد زمني" min="1">
+                </div>
+
+                <hr>
+
+                {{-- Selected summary --}}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="small fw-semibold text-muted">الأسئلة المختارة</span>
+                    <span class="badge rounded-pill" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)"
+                          id="selected-count">0</span>
+                </div>
+
+                <div id="selected-list" class="d-flex flex-column gap-2 mb-4">
+                    <div class="text-center text-muted small py-3 empty-msg">
+                        <i class="bi bi-arrow-left-circle fs-5 d-block mb-1"></i>
+                        أضف أسئلة من القسم المجاور
+                    </div>
+                </div>
+
+                <button class="btn-save-main btn" id="btn-save-exam">
+                    <span class="btn-text"><i class="bi bi-save2 me-1"></i>حفظ المقياس</span>
+                    <span class="spinner-border spinner-border-sm d-none"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ─── RIGHT: Question sources ─────────────────────────── --}}
+    <div class="col-lg-8">
+        <div class="card main-card">
+            <div class="card-body p-4">
+
+                {{-- Tabs --}}
+                <ul class="nav nav-pills mb-4 gap-2" id="source-tabs">
+                    <li class="nav-item">
+                        <button class="nav-link active" data-tab="bank">
+                            <i class="bi bi-database me-1"></i>بنك الأسئلة
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-tab="new">
+                            <i class="bi bi-plus-circle me-1"></i>سؤال جديد
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-tab="bulk">
+                            <i class="bi bi-file-text me-1"></i>استيراد نصي
+                        </button>
+                    </li>
+                </ul>
+
+                {{-- ── Tab 1: Question Bank ── --}}
+                <div id="tab-bank">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">فلتر بالمقياس</label>
+                            <select class="form-select form-select-sm" id="pool-assessment-filter">
+                                <option value="">— كل المقاييس —</option>
+                                @foreach($assessments as $a)
+                                    <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">بحث في النص</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white">
+                                    <i class="bi bi-search text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control" id="pool-search"
+                                       placeholder="اكتب للبحث...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small text-muted" id="pool-count">اختر مقياساً أو ابحث</span>
+                        <button class="btn btn-sm btn-outline-primary rounded-pill" id="btn-select-all" style="display:none">
+                            تحديد الكل
+                        </button>
+                    </div>
+
+                    <div class="pool-scroll" id="questions-pool">
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-database fs-2 d-block mb-2 opacity-25"></i>
+                            اختر مقياساً أو ابحث لعرض الأسئلة
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ── Tab 2: New Question Inline ── --}}
+                <div id="tab-new" class="d-none">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">نص السؤال *</label>
+                        <textarea class="form-control" id="new-q-text" rows="3"
+                                  placeholder="اكتب نص السؤال هنا..."></textarea>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">المقياس *</label>
+                            <select class="form-select form-select-sm" id="new-q-assessment">
+                                <option value="">— اختر المقياس —</option>
+                                @foreach($assessments as $a)
+                                    <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">البُعد</label>
+                            <select class="form-select form-select-sm" id="new-q-dimension">
+                                <option value="">— بدون بُعد —</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="new-q-reversed">
+                        <label class="form-check-label small" for="new-q-reversed">
+                            سؤال معكوس
+                            <span class="rev-label ms-1">نعم=0 | لا=2</span>
+                        </label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">خيارات الإجابة</label>
+                        <div class="d-flex flex-column gap-2" id="new-options-container">
+                            <div class="option-row d-flex gap-2 align-items-center">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle small">نعم</span>
+                                <input type="number" class="form-control form-control-sm w-25" value="2" data-score-label="نعم" id="opt-score-0" placeholder="الدرجة">
+                            </div>
+                            <div class="option-row d-flex gap-2 align-items-center">
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle small">إلى حد ما</span>
+                                <input type="number" class="form-control form-control-sm w-25" value="1" data-score-label="إلى حد ما" id="opt-score-1" placeholder="الدرجة">
+                            </div>
+                            <div class="option-row d-flex gap-2 align-items-center">
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle small">لا</span>
+                                <input type="number" class="form-control form-control-sm w-25" value="0" data-score-label="لا" id="opt-score-2" placeholder="الدرجة">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-outline-primary rounded-pill px-4" id="btn-add-new-q">
+                        <i class="bi bi-plus-circle me-1"></i>إضافة وتأكيد السؤال
+                    </button>
+                    <div id="new-q-feedback" class="mt-2"></div>
+                </div>
+
+                {{-- ── Tab 3: Bulk Text Import ── --}}
+                <div id="tab-bulk" class="d-none">
+                    <div class="alert alert-info small py-2 mb-3">
+                        <i class="bi bi-lightbulb me-1"></i>
+                        اكتب كل سؤال في سطر منفصل. ستُضاف تلقائياً بخيارات (نعم=2 / إلى حد ما=1 / لا=0).
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">المقياس *</label>
+                            <select class="form-select form-select-sm" id="bulk-assessment">
+                                <option value="">— اختر المقياس —</option>
+                                @foreach($assessments as $a)
+                                    <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">البُعد</label>
+                            <select class="form-select form-select-sm" id="bulk-dimension">
+                                <option value="">— بدون بُعد —</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">الأسئلة (سطر لكل سؤال)</label>
+                        <textarea class="form-control" id="bulk-text" rows="10"
+                                  dir="rtl"
+                                  placeholder="أعرف نقاط قوتي بوضوح.&#10;أستطيع تحديد نقاط الضعف التي أحتاج إلى تطويرها.&#10;أفهم الأسباب التي تدفعني لاتخاذ قراراتي."></textarea>
+                    </div>
+
+                    <button class="btn btn-outline-success rounded-pill px-4" id="btn-bulk-import">
+                        <span class="btn-text"><i class="bi bi-cloud-upload me-1"></i>استيراد وإضافة للاختبار</span>
+                        <span class="spinner-border spinner-border-sm d-none"></span>
+                    </button>
+                    <div id="bulk-feedback" class="mt-2"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+/* ═══════════════════════════════════════════
+   State
+═══════════════════════════════════════════ */
+let allPoolQuestions = [];
+let selectedIds  = [];   // question IDs picked from bank
+let inlineQs     = [];   // questions created inline (not yet in DB)
+
+const CSRF = $('meta[name="csrf-token"]').attr('content');
+
+/* ═══════════════════════════════════════════
+   Tabs
+═══════════════════════════════════════════ */
+$('[data-tab]').on('click', function () {
+    $('[data-tab]').removeClass('active');
+    $(this).addClass('active');
+    $('#tab-bank, #tab-new, #tab-bulk').addClass('d-none');
+    $(`#tab-${$(this).data('tab')}`).removeClass('d-none');
+});
+
+/* ═══════════════════════════════════════════
+   Category presets
+═══════════════════════════════════════════ */
+$(document).on('click', '.preset-chip', function () {
+    $('#e-category').val($(this).data('cat'));
+});
+
+/* ═══════════════════════════════════════════
+   TAB 1 — Question Bank
+═══════════════════════════════════════════ */
+function loadPool() {
+    const assessmentId = $('#pool-assessment-filter').val();
+    const search = $('#pool-search').val().trim();
+
+    if (!assessmentId && !search) {
+        $('#questions-pool').html('<div class="text-center text-muted py-5"><i class="bi bi-database fs-2 d-block mb-2 opacity-25"></i>اختر مقياساً أو ابحث لعرض الأسئلة</div>');
+        $('#pool-count').text('اختر مقياساً أو ابحث');
+        $('#btn-select-all').hide();
+        return;
+    }
+
+    $('#questions-pool').html('<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>');
+
+    let url = '{{ route("admin.questions.index") }}?per_page=all';
+    if (assessmentId) url += `&assessment_id=${assessmentId}`;
+    if (search)       url += `&search=${encodeURIComponent(search)}`;
+
+    $.get(url, null, null, 'html').fail(function () {
+        // fallback: load JSON via by-assessment
+        if (assessmentId) {
+            $.get(`{{ url('admin/questions/by-assessment') }}/${assessmentId}`, function (data) {
+                allPoolQuestions = data;
+                const filtered = search ? data.filter(q => q.text_ar.includes(search)) : data;
+                renderPool(filtered);
+            });
+        }
+    });
+
+    // Direct JSON endpoint (by-assessment is JSON)
+    if (assessmentId) {
+        $.get(`{{ url('admin/questions/by-assessment') }}/${assessmentId}`, function (data) {
+            allPoolQuestions = data;
+            const filtered = search ? data.filter(q => q.text_ar.includes(search)) : data;
+            renderPool(filtered);
+        });
+    }
+}
+
+$('#pool-assessment-filter').on('change', loadPool);
+$('#pool-search').on('input', function () {
+    if ($('#pool-assessment-filter').val()) {
+        const q = $(this).val().trim();
+        renderPool(q ? allPoolQuestions.filter(x => x.text_ar.includes(q)) : allPoolQuestions);
+    } else {
+        loadPool();
+    }
+});
+
+function renderPool(questions) {
+    if (!questions.length) {
+        $('#questions-pool').html('<div class="text-center text-muted py-5"><i class="bi bi-search fs-2 d-block mb-2 opacity-25"></i>لا توجد أسئلة مطابقة</div>');
+        $('#pool-count').text('0 سؤال');
+        $('#btn-select-all').hide();
+        return;
+    }
+
+    $('#pool-count').text(`${questions.length} سؤال`);
+    $('#btn-select-all').show();
+
+    let html = '';
+    questions.forEach((q, i) => {
+        const sel = selectedIds.includes(q.id);
+        const rev = q.is_reversed ? '<span class="rev-label ms-1">معكوس</span>' : '';
+        html += `<div class="q-pool-item mb-2 ${sel ? 'selected' : ''}" data-id="${q.id}" data-text="${q.text_ar.replace(/"/g,'&quot;')}">
+            <div class="d-flex align-items-start gap-2">
+                <i class="bi ${sel ? 'bi-check-circle-fill text-primary' : 'bi-circle text-muted'} mt-1 flex-shrink-0 pool-icon"></i>
+                <div class="flex-grow-1">
+                    <div class="q-num">سؤال ${i+1}${rev}</div>
+                    <div class="small mt-1">${q.text_ar}</div>
+                </div>
+            </div>
+        </div>`;
+    });
+    $('#questions-pool').html(html);
+}
+
+// Select all visible
+$('#btn-select-all').on('click', function () {
+    $('.q-pool-item').each(function () {
+        const id   = $(this).data('id');
+        const text = $(this).data('text');
+        if (!selectedIds.includes(id)) addSelected(id, text);
+    });
+    syncPool();
+});
+
+$(document).on('click', '.q-pool-item', function () {
+    const id = $(this).data('id'), text = $(this).data('text');
+    selectedIds.includes(id) ? removeSelected(id) : addSelected(id, text);
+    syncPool();
+});
+
+function syncPool() {
+    $('.q-pool-item').each(function () {
+        const sel = selectedIds.includes($(this).data('id'));
+        $(this).toggleClass('selected', sel);
+        $(this).find('.pool-icon').attr('class', `bi ${sel ? 'bi-check-circle-fill text-primary' : 'bi-circle text-muted'} mt-1 flex-shrink-0 pool-icon`);
+    });
+}
+
+/* ═══════════════════════════════════════════
+   TAB 2 — Dimension loader for new Q
+═══════════════════════════════════════════ */
+function loadDimensions(assessmentId, targetSelect) {
+    $(targetSelect).html('<option value="">— جاري التحميل —</option>');
+    if (!assessmentId) { $(targetSelect).html('<option value="">— بدون بُعد —</option>'); return; }
+    $.get(`{{ url('admin/dimensions/by-assessment') }}/${assessmentId}`, function (data) {
+        let opts = '<option value="">— بدون بُعد —</option>';
+        data.forEach(d => { opts += `<option value="${d.id}">${d.name_ar}</option>`; });
+        $(targetSelect).html(opts);
+    });
+}
+
+$('#new-q-assessment').on('change', function () { loadDimensions($(this).val(), '#new-q-dimension'); });
+$('#bulk-assessment').on('change', function () { loadDimensions($(this).val(), '#bulk-dimension'); });
+
+/* ── Add inline question ── */
+$('#btn-add-new-q').on('click', function () {
+    const text       = $('#new-q-text').val().trim();
+    const assessmentId = $('#new-q-assessment').val();
+    const dimensionId  = $('#new-q-dimension').val();
+    const isReversed   = $('#new-q-reversed').is(':checked');
+    const options = [
+        { label_ar: 'نعم',        score_value: parseInt($('#opt-score-0').val()), order_index: 0 },
+        { label_ar: 'إلى حد ما', score_value: parseInt($('#opt-score-1').val()), order_index: 1 },
+        { label_ar: 'لا',         score_value: parseInt($('#opt-score-2').val()), order_index: 2 },
+    ];
+
+    if (!text)         { $('#new-q-feedback').html('<div class="alert alert-warning py-2 small">اكتب نص السؤال.</div>'); return; }
+    if (!assessmentId) { $('#new-q-feedback').html('<div class="alert alert-warning py-2 small">اختر المقياس.</div>'); return; }
+
+    const btn = $(this);
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> جاري الحفظ...');
+
+    $.ajax({
+        url: '{{ route("admin.questions.store") }}', method: 'POST', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': CSRF },
+        data: JSON.stringify({ assessment_id: assessmentId, dimension_id: dimensionId || null,
+                               text_ar: text, is_reversed: isReversed, options }),
+        success(res) {
+            btn.prop('disabled', false).html('<i class="bi bi-plus-circle me-1"></i>إضافة وتأكيد السؤال');
+            $('#new-q-feedback').html(`<div class="alert alert-success py-2 small"><i class="bi bi-check-circle me-1"></i>تم حفظ السؤال وإضافته للقائمة.</div>`);
+            addSelected(res.id, text);
+            $('#new-q-text').val('');
+            $('#new-q-reversed').prop('checked', false);
+        },
+        error(xhr) {
+            btn.prop('disabled', false).html('<i class="bi bi-plus-circle me-1"></i>إضافة وتأكيد السؤال');
+            const msg = xhr.responseJSON?.message || 'حدث خطأ.';
+            $('#new-q-feedback').html(`<div class="alert alert-danger py-2 small">${msg}</div>`);
+        }
+    });
+});
+
+/* ═══════════════════════════════════════════
+   TAB 3 — Bulk Import
+═══════════════════════════════════════════ */
+$('#btn-bulk-import').on('click', function () {
+    const assessmentId  = $('#bulk-assessment').val();
+    const dimensionId   = $('#bulk-dimension').val();
+    const questionsText = $('#bulk-text').val().trim();
+
+    if (!assessmentId)  { showAlert('اختر المقياس أولاً.', 'warning'); return; }
+    if (!questionsText) { showAlert('اكتب الأسئلة أولاً.', 'warning'); return; }
+
+    const btn = $(this);
+    setLoading(btn, true);
+
+    $.ajax({
+        url: '{{ route("admin.questions.bulk") }}', method: 'POST', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': CSRF },
+        data: JSON.stringify({ assessment_id: assessmentId, dimension_id: dimensionId || null,
+                               questions_text: questionsText }),
+        success(res) {
+            setLoading(btn, false);
+            $('#bulk-feedback').html(`<div class="alert alert-success py-2 small"><i class="bi bi-check-circle me-1"></i>${res.message}</div>`);
+            $('#bulk-text').val('');
+            // Reload pool from this assessment
+            $('#pool-assessment-filter').val(assessmentId).trigger('change');
+            $('[data-tab="bank"]').trigger('click');
+        },
+        error(xhr) {
+            setLoading(btn, false);
+            $('#bulk-feedback').html(`<div class="alert alert-danger py-2 small">${xhr.responseJSON?.message || 'حدث خطأ.'}</div>`);
+        }
+    });
+});
+
+/* ═══════════════════════════════════════════
+   Selected list management
+═══════════════════════════════════════════ */
+function addSelected(id, text) {
+    if (selectedIds.includes(id)) return;
+    selectedIds.push(id);
+    $('.empty-msg').remove();
+    const n = selectedIds.length;
+    $('#selected-list').append(
+        `<div class="sel-item" data-id="${id}">
+            <i class="bi bi-grip-vertical drag-handle"></i>
+            <span class="sel-num">${n}</span>
+            <span class="small flex-grow-1 text-truncate" style="max-width:200px" title="${text}">${text}</span>
+            <button type="button" class="btn btn-sm btn-link text-danger p-0 btn-remove-sel flex-shrink-0">
+                <i class="bi bi-x-circle"></i>
+            </button>
+        </div>`
+    );
+    updateCount();
+}
+
+function removeSelected(id) {
+    selectedIds = selectedIds.filter(x => x !== id);
+    $(`#selected-list .sel-item[data-id="${id}"]`).remove();
+    if (!selectedIds.length) $('#selected-list').html('<div class="text-center text-muted small py-3 empty-msg"><i class="bi bi-arrow-left-circle fs-5 d-block mb-1"></i>أضف أسئلة من القسم المجاور</div>');
+    renumberSelected();
+    updateCount();
+}
+
+function renumberSelected() {
+    $('#selected-list .sel-num').each(function (i) { $(this).text(i+1); });
+}
+
+$(document).on('click', '.btn-remove-sel', function () {
+    const id = $(this).closest('.sel-item').data('id');
+    removeSelected(id); syncPool();
+});
+
+function updateCount() { $('#selected-count').text(selectedIds.length); }
+
+// Sortable for selected
+new Sortable(document.getElementById('selected-list'), {
+    handle: '.drag-handle', animation: 150,
+    onEnd() {
+        const order = [];
+        $('#selected-list .sel-item').each(function () { order.push($(this).data('id')); });
+        selectedIds = order;
+        renumberSelected();
+    }
+});
+
+/* ═══════════════════════════════════════════
+   Save exam
+═══════════════════════════════════════════ */
+$('#btn-save-exam').on('click', function () {
+    const btn = $(this);
+    if (!selectedIds.length) { showAlert('أضف على الأقل سؤالاً واحداً.', 'warning'); return; }
+
+    const payload = {
+        title_ar:       $('#e-title_ar').val().trim(),
+        category:       $('#e-category').val().trim(),
+        description_ar: $('#e-description_ar').val().trim(),
+        time_limit_min: $('#e-time_limit_min').val() || null,
+        question_ids:   selectedIds,
+        dimensions:     [],
+    };
+
+    if (!payload.title_ar || !payload.category) { showAlert('اسم المقياس والمجال مطلوبان.', 'warning'); return; }
+
+    setLoading(btn, true);
+    $.ajax({
+        url: '{{ route("admin.exams.store") }}', method: 'POST', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': CSRF },
+        data: JSON.stringify(payload),
+        success(res) {
+            setLoading(btn, false);
+            showAlert(res.message, 'success');
+            setTimeout(() => window.location.href = '{{ route("admin.assessments.index") }}', 1200);
+        },
+        error(xhr) {
+            setLoading(btn, false);
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
+        }
+    });
+});
+</script>
+@endpush
+````
+
+## File: resources/views/admin/questions/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'بنك الأسئلة')
+@section('page-title', 'بنك الأسئلة')
+
+@section('content')
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('admin.questions.index') }}" class="row g-2 align-items-end" id="filter-form">
+            <input type="hidden" name="per_page" id="filter-per-page" value="{{ request('per_page', 25) }}">
+            <div class="col-md-4">
+                <label class="form-label small fw-medium">المقياس</label>
+                <select name="assessment_id" class="form-select form-select-sm" id="filter-assessment">
+                    <option value="">كل المقاييس</option>
+                    @foreach($assessments as $a)
+                        <option value="{{ $a->id }}" {{ request('assessment_id') == $a->id ? 'selected' : '' }}>
+                            {{ $a->title_ar }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-medium">البُعد</label>
+                <select name="dimension_id" class="form-select form-select-sm" id="filter-dimension">
+                    <option value="">كل الأبعاد</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-medium">بحث في النص</label>
+                <input type="text" name="search" class="form-control form-control-sm"
+                    value="{{ request('search') }}" placeholder="كلمة بحث...">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-search me-1"></i>بحث
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-2">
+        <span class="text-muted small">{{ $questions->total() }} سؤال</span>
+        <span class="text-muted small text-black-50">|</span>
+        <label class="small text-muted mb-0">عرض:</label>
+        <select id="per-page-select" class="form-select form-select-sm d-inline-block w-auto py-0 px-2" style="height: 28px;">
+            <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25</option>
+            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+            <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
+        </select>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#bulkModal">
+            <i class="bi bi-upload me-1"></i>استيراد بالجملة
+        </button>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#questionModal">
+            <i class="bi bi-plus-circle me-1"></i>إضافة سؤال
+        </button>
+    </div>
+</div>
+
+<div id="questions-table-wrapper">
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 40px;" class="text-center">
+                        <input type="checkbox" class="form-check-input" id="check-all">
+                    </th>
+                    @if(request('assessment_id'))
+                        <th style="width: 40px;"></th>
+                    @endif
+                    <th style="width:45%">نص السؤال</th>
+                    <th>المقياس</th>
+                    <th style="width:20%">البُعد</th>
+                    <th>الخيارات</th>
+                    <th class="text-end" style="width:100px;">العمليات</th>
+                </tr>
+            </thead>
+            <tbody id="sortable-questions">
+                @forelse($questions as $q)
+                <tr data-id="{{ $q->id }}">
+                    <td class="text-center">
+                        <input type="checkbox" class="form-check-input check-row" data-id="{{ $q->id }}">
+                    </td>
+                    @if(request('assessment_id'))
+                        <td>
+                            <span class="drag-handle text-muted">
+                                <i class="bi bi-grip-vertical fs-5"></i>
+                            </span>
+                        </td>
+                    @endif
+                    <td class="question-text-cell small" data-id="{{ $q->id }}">
+                        <span class="question-text-display">{{ $q->text_ar }}</span>
+                    </td>
+                    @php
+                        $currentAssessment = $assessments->firstWhere('id', $q->assessment_id);
+                    @endphp
+                    <td class="small text-muted">{{ $q->assessment_title }}</td>
+                    <td>
+                        @if(!$currentAssessment || $currentAssessment->dimensions->isEmpty())
+                            <span class="text-muted small">لا توجد أبعاد</span>
+                        @else
+                            <select class="form-select form-select-sm select-dimension" data-question-id="{{ $q->id }}">
+                                <option value="">بدون بُعد</option>
+                                @foreach($currentAssessment->dimensions as $d)
+                                    <option value="{{ $d->id }}" {{ $q->dimension_id == $d->id ? 'selected' : '' }}>
+                                        {{ $d->name_ar }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
+                    </td>
+                    <td><span class="badge bg-light text-dark border">{{ $q->answer_options_count }}</span></td>
+                    <td>
+                        <div class="d-flex gap-1 justify-content-end">
+                            <button class="btn btn-sm btn-outline-primary btn-edit-q" data-id="{{ $q->id }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger btn-delete-q"
+                                    data-id="{{ $q->id }}"
+                                    data-url="{{ route('admin.questions.destroy', $q->id) }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="{{ request('assessment_id') ? 7 : 6 }}" class="text-center text-muted py-4">
+                        لا توجد أسئلة.
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-transparent border-0">{{ $questions->appends(request()->query())->links() }}</div>
+</div>
+</div>
+
+<!-- Add Question Modal -->
+<div class="modal fade" id="questionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">إضافة سؤال جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">المقياس *</label>
+                        <select class="form-select" id="q-assessment_id">
+                            <option value="">اختر المقياس</option>
+                            @foreach($assessments as $a)
+                                <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">البُعد</label>
+                        <select class="form-select" id="q-dimension_id">
+                            <option value="">اختر البُعد</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">نص السؤال *</label>
+                        <textarea class="form-control" id="q-text_ar" rows="3" placeholder="اكتب نص السؤال هنا..."></textarea>
+                    </div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 fw-semibold">خيارات الإجابة</h6>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-add-option">
+                        <i class="bi bi-plus me-1"></i>إضافة خيار
+                    </button>
+                </div>
+                <div id="options-container"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="btn-save-question">
+                    <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ السؤال</span>
+                    <span class="spinner-border spinner-border-sm d-none"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Import Modal -->
+<div class="modal fade" id="bulkModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">استيراد أسئلة بالجملة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">المقياس *</label>
+                        <select class="form-select" id="bulk-assessment_id">
+                            <option value="">اختر المقياس</option>
+                            @foreach($assessments as $a)
+                                <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">البُعد</label>
+                        <select class="form-select" id="bulk-dimension_id">
+                            <option value="">اختر البُعد (اختياري)</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">الأسئلة (سؤال في كل سطر)</label>
+                        <textarea class="form-control" id="bulk-questions_text" rows="8"
+                            placeholder="السؤال الأول هنا&#10;السؤال الثاني هنا&#10;السؤال الثالث هنا"></textarea>
+                        <div class="form-text">سيتم إنشاء خيارات افتراضية: نعم (2) / إلى حد ما (1) / لا (0)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="btn-bulk-import">
+                    <span class="btn-text"><i class="bi bi-upload me-1"></i>استيراد</span>
+                    <span class="spinner-border spinner-border-sm d-none"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('styles')
+<style>
+    .drag-handle {
+        cursor: grab;
+    }
+    .drag-handle:active {
+        cursor: grabbing;
+    }
+    .fs-7 {
+        font-size: 0.8rem;
+    }
+    #bulk-action-bar {
+        transition: all 0.3s ease-in-out;
+    }
+    .question-edit-textarea {
+        min-height: 60px;
+        resize: none;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+let optIndex = 0;
+
+function addOptionRow(label='', score='') {
+    const idx = optIndex++;
+    $('#options-container').append(`
+        <div class="row g-2 mb-2 opt-row">
+            <div class="col-7">
+                <input type="text" class="form-control form-control-sm opt-label" placeholder="نص الخيار" value="${label}">
+            </div>
+            <div class="col-3">
+                <input type="number" class="form-control form-control-sm opt-score" placeholder="القيمة" value="${score}">
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-sm btn-outline-danger w-100 btn-remove-opt">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `);
+}
+
+// Default options on modal open
+$('#questionModal').on('show.bs.modal', function() {
+    $('#options-container').html('');
+    optIndex = 0;
+    addOptionRow('نعم', 2);
+    addOptionRow('إلى حد ما', 1);
+    addOptionRow('لا', 0);
+});
+
+$('#btn-add-option').on('click', () => addOptionRow());
+
+$(document).on('click', '.btn-remove-opt', function() {
+    $(this).closest('.opt-row').remove();
+});
+
+// Dynamic dimensions on assessment change
+function loadDimensions(assessmentId, targetSelect, selectedId='') {
+    let defaultText = 'بدون بُعد';
+    if (targetSelect.attr('id') === 'filter-dimension') {
+        defaultText = 'كل الأبعاد';
+    } else if (targetSelect.attr('id') === 'q-dimension_id') {
+        defaultText = 'اختر البُعد';
+    } else if (targetSelect.attr('id') === 'bulk-dimension_id') {
+        defaultText = 'اختر البُعد (اختياري)';
+    } else if (targetSelect.attr('id') === 'bulk-dimension-id') {
+        defaultText = 'تعيين البُعد للمحددة...';
+    }
+
+    if (!assessmentId) {
+        targetSelect.html(`<option value="">${defaultText}</option>`);
+        return;
+    }
+
+    $.get('{{ route('admin.dimensions.byAssessment', ':id') }}'.replace(':id', assessmentId), function(dims) {
+        let opts = `<option value="">${defaultText}</option>`;
+        dims.forEach(d => {
+            let label = d.name_ar;
+            if (targetSelect.attr('id') === 'filter-dimension' && d.questions_count !== undefined) {
+                label += ` (${d.questions_count})`;
+            }
+            opts += `<option value="${d.id}" ${d.id == selectedId ? 'selected' : ''}>${label}</option>`;
+        });
+        targetSelect.html(opts);
+    });
+}
+
+$('#q-assessment_id').on('change', function() {
+    loadDimensions($(this).val(), $('#q-dimension_id'));
+});
+
+$('#bulk-assessment_id').on('change', function() {
+    loadDimensions($(this).val(), $('#bulk-dimension_id'));
+});
+
+$('#filter-assessment').on('change', function() {
+    loadDimensions($(this).val(), $('#filter-dimension'), '');
+});
+
+// Initialize filter dimension if assessment already selected
+@if(request('assessment_id'))
+loadDimensions('{{ request('assessment_id') }}', $('#filter-dimension'), '{{ request('dimension_id') }}');
+@endif
+
+// Reload table container via AJAX
+function reloadTable() {
+    $('#questions-table-wrapper').css('opacity', 0.5);
+    $('#questions-table-wrapper').load(window.location.href + ' #questions-table-wrapper > *', function() {
+        $('#questions-table-wrapper').css('opacity', 1);
+        initSortable();
+        resetBulkActions();
+    });
+}
+
+// Bulk Actions selection logic
+$(document).on('change', '#check-all', function() {
+    const isChecked = $(this).is(':checked');
+    $('.check-row').prop('checked', isChecked);
+    updateBulkBar();
+});
+
+$(document).on('change', '.check-row', function() {
+    const allChecked = $('.check-row').length === $('.check-row:checked').length;
+    $('#check-all').prop('checked', allChecked);
+    updateBulkBar();
+});
+
+function updateBulkBar() {
+    const selectedIds = [];
+    $('.check-row:checked').each(function() {
+        selectedIds.push($(this).data('id'));
+    });
+
+    const count = selectedIds.length;
+    if (count > 0) {
+        $('#selected-count').text(count);
+        $('#bulk-action-bar').removeClass('d-none');
+    } else {
+        $('#bulk-action-bar').addClass('d-none');
+    }
+}
+
+function resetBulkActions() {
+    $('#check-all').prop('checked', false);
+    $('.check-row').prop('checked', false);
+    $('#bulk-action-bar').addClass('d-none');
+}
+
+// Bulk Delete Action
+$(document).on('click', '.btn-bulk-delete', function() {
+    const selectedIds = [];
+    $('.check-row:checked').each(function() {
+        selectedIds.push($(this).data('id'));
+    });
+
+    if (selectedIds.length === 0) return;
+
+    const url = '{{ route('admin.questions.bulkDelete') }}?' + selectedIds.map(id => `ids[]=${id}`).join('&');
+    confirmDelete(`هل تريد حذف ${selectedIds.length} سؤال محدد نهائياً؟`, url, function() {
+        reloadTable();
+    });
+});
+
+// Bulk Assign Dimension Action
+$(document).on('click', '.btn-bulk-assign', function() {
+    const selectedIds = [];
+    $('.check-row:checked').each(function() {
+        selectedIds.push($(this).data('id'));
+    });
+
+    if (selectedIds.length === 0) return;
+
+    const dimensionId = $('#bulk-dimension-id').val();
+    const payload = {
+        ids: selectedIds,
+        dimension_id: dimensionId === 'none' ? null : dimensionId
+    };
+
+    const btn = $(this);
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+
+    $.ajax({
+        url: '{{ route('admin.questions.bulkAssignDimension') }}',
+        method: 'PATCH',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        success: function(res) {
+            btn.prop('disabled', false).html('<i class="bi bi-tag me-1"></i>تعيين');
+            showAlert(res.message || 'تم تعيين البُعد بنجاح.', 'success');
+            reloadTable();
+        },
+        error: function(xhr) {
+            btn.prop('disabled', false).html('<i class="bi bi-tag me-1"></i>تعيين');
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
+        }
+    });
+});
+
+// Single inline dimension change
+$(document).on('change', '.select-dimension', function() {
+    const select = $(this);
+    const questionId = select.data('question-id');
+    const dimensionId = select.val();
+
+    select.prop('disabled', true);
+
+    $.ajax({
+        url: '{{ route('admin.questions.assignDimension', ':id') }}'.replace(':id', questionId),
+        method: 'PATCH',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: { dimension_id: dimensionId },
+        success: function(res) {
+            select.prop('disabled', false);
+            showAlert(res.message || 'تم تحديد البُعد.', 'success');
+        },
+        error: function(xhr) {
+            select.prop('disabled', false);
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
+        }
+    });
+});
+
+// Inline Edit Textarea Auto-resize
+$(document).on('input', '.question-edit-textarea', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+});
+
+// Inline Edit Click
+$(document).on('click', '.btn-edit-q', function() {
+    const row = $(this).closest('tr');
+    const qId = $(this).data('id');
+    const textCell = row.find('.question-text-cell');
+
+    if (textCell.find('.edit-mode-container').length > 0) return;
+
+    const displaySpan = textCell.find('.question-text-display');
+    const originalText = displaySpan.text().trim();
+    textCell.data('original-text', originalText);
+
+    textCell.html(`
+        <div class="edit-mode-container">
+            <textarea class="form-control form-control-sm question-edit-textarea">${originalText}</textarea>
+            <div class="d-flex gap-1 mt-1 justify-content-end">
+                <button class="btn btn-sm btn-success btn-save-inline py-0 px-2 fs-7" data-id="${qId}">حفظ</button>
+                <button class="btn btn-sm btn-secondary btn-cancel-inline py-0 px-2 fs-7" data-id="${qId}">إلغاء</button>
+            </div>
+        </div>
+    `);
+
+    row.find('.btn-edit-q, .btn-delete-q').addClass('d-none');
+
+    const textarea = textCell.find('.question-edit-textarea');
+    textarea.focus();
+    textarea.each(function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+});
+
+// Inline Edit Cancel
+$(document).on('click', '.btn-cancel-inline', function() {
+    const row = $(this).closest('tr');
+    const textCell = row.find('.question-text-cell');
+    const originalText = textCell.data('original-text');
+
+    textCell.html(`<span class="question-text-display">${originalText}</span>`);
+    row.find('.btn-edit-q, .btn-delete-q').removeClass('d-none');
+});
+
+// Inline Edit Save
+$(document).on('click', '.btn-save-inline', function() {
+    const btn = $(this);
+    const row = btn.closest('tr');
+    const qId = btn.data('id');
+    const textCell = row.find('.question-text-cell');
+    const newText = textCell.find('.question-edit-textarea').val().trim();
+
+    if (newText === '') {
+        showAlert('نص السؤال مطلوب.', 'warning');
+        return;
+    }
+
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+
+    $.ajax({
+        url: `{{ route('admin.questions.index') }}/${qId}`,
+        method: 'PATCH',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: { text_ar: newText },
+        success: function(res) {
+            showAlert(res.message || 'تم تحديث السؤال.', 'success');
+            textCell.html(`<span class="question-text-display">${newText}</span>`);
+            row.find('.btn-edit-q, .btn-delete-q').removeClass('d-none');
+        },
+        error: function(xhr) {
+            btn.prop('disabled', false).text('حفظ');
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
+        }
+    });
+});
+
+// Page size change
+$(document).on('change', '#per-page-select', function() {
+    $('#filter-per-page').val($(this).val());
+    $('#filter-form').submit();
+});
+
+// Save question modal
+$('#btn-save-question').on('click', function() {
+    const btn = $(this);
+    const options = [];
+    $('.opt-row').each(function(i) {
+        const label = $(this).find('.opt-label').val().trim();
+        const score = $(this).find('.opt-score').val();
+        if (label !== '') {
+            options.push({ label_ar: label, score_value: parseInt(score) || 0, order_index: i });
+        }
+    });
+
+    const payload = {
+        assessment_id: $('#q-assessment_id').val(),
+        dimension_id:  $('#q-dimension_id').val() || null,
+        text_ar:       $('#q-text_ar').val().trim(),
+        options:       options,
+    };
+
+    if (!payload.assessment_id || !payload.text_ar) {
+        showAlert('المقياس ونص السؤال مطلوبان.', 'warning'); return;
+    }
+
+    setLoading(btn, true);
+    $.ajax({
+        url: '{{ route('admin.questions.store') }}',
+        method: 'POST', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify(payload),
+        success: function(res) {
+            setLoading(btn, false);
+            bootstrap.Modal.getInstance($('#questionModal')).hide();
+            showAlert(res.message, 'success');
+            reloadTable();
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
+        }
+    });
+});
+
+// Bulk import modal
+$('#btn-bulk-import').on('click', function() {
+    const btn = $(this);
+    const payload = {
+        assessment_id:   $('#bulk-assessment_id').val(),
+        dimension_id:    $('#bulk-dimension_id').val() || null,
+        questions_text:  $('#bulk-questions_text').val().trim(),
+    };
+    if (!payload.assessment_id || !payload.questions_text) {
+        showAlert('اختر المقياس وأدخل الأسئلة.', 'warning'); return;
+    }
+    setLoading(btn, true);
+    $.ajax({
+        url: '{{ route('admin.questions.bulk') }}',
+        method: 'POST', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify(payload),
+        success: function(res) {
+            setLoading(btn, false);
+            bootstrap.Modal.getInstance($('#bulkModal')).hide();
+            showAlert(res.message, 'success');
+            reloadTable();
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
+        }
+    });
+});
+
+// Delete question
+$(document).on('click', '.btn-delete-q', function() {
+    const url = $(this).data('url');
+    confirmDelete('هل تريد حذف هذا السؤال نهائياً؟', url, () => reloadTable());
+});
+
+// SortableJS initialization
+function initSortable() {
+    @if(request('assessment_id'))
+    const el = document.getElementById('sortable-questions');
+    if (el) {
+        new Sortable(el, {
+            handle: '.drag-handle',
+            animation: 150,
+            onEnd: function (evt) {
+                const order = [];
+                $('#sortable-questions tr').each(function() {
+                    const id = $(this).data('id');
+                    if (id) {
+                        order.push(id);
+                    }
+                });
+
+                $.ajax({
+                    url: '{{ route('admin.questions.reorder') }}',
+                    method: 'PATCH',
+                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                    data: { order: order },
+                    success: function(res) {
+                        showAlert('تم تحديث ترتيب الأسئلة بنجاح.', 'success');
+                    },
+                    error: function(xhr) {
+                        showAlert('حدث خطأ أثناء إعادة الترتيب.', 'danger');
+                    }
+                });
+            }
+        });
+    }
+    @endif
+}
+
+// Initial calls
+$(document).ready(function() {
+    initSortable();
+});
+</script>
+@endpush
+````
+
+## File: resources/views/admin/statistics/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'الإحصائيات')
+@section('page-title', 'الإحصائيات والتقارير')
+
+@push('styles')
+<style>
+canvas { max-height: 320px; }
+</style>
+@endpush
+
+@section('content')
+<!-- Range selector & Export -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex gap-2">
+        @foreach([7=>'أسبوع', 30=>'شهر', 90=>'3 أشهر'] as $days => $label)
+            <button class="btn btn-sm {{ $days == 30 ? 'btn-primary' : 'btn-outline-secondary' }} btn-range" data-range="{{ $days }}">
+                {{ $label }}
+            </button>
+        @endforeach
+    </div>
+    <a href="{{ route('admin.statistics.exportCsv') }}" class="btn btn-sm btn-success shadow-sm">
+        <i class="bi bi-file-earmark-excel me-1"></i>تصدير جميع النتائج (CSV)
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Daily sessions chart -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-semibold mb-3"><i class="bi bi-bar-chart text-primary me-2"></i>الجلسات اليومية</h6>
+                <canvas id="dailyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level distribution -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-semibold mb-3"><i class="bi bi-pie-chart text-success me-2"></i>توزيع المستويات</h6>
+                <div class="mb-3">
+                    <label class="form-label small fw-medium">المقياس</label>
+                    <select class="form-select form-select-sm" id="level-assessment-filter">
+                        <option value="all">كل المقاييس</option>
+                    </select>
+                </div>
+                <canvas id="levelChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avg score per assessment -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-semibold mb-3"><i class="bi bi-graph-up text-warning me-2"></i>متوسط الدرجات</h6>
+                <canvas id="avgChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top users -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 py-3">
+                <h6 class="mb-0 fw-semibold"><i class="bi bi-trophy text-warning me-2"></i>أكثر المستخدمين نشاطاً</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small" id="top-users-table">
+                    <thead class="table-light">
+                        <tr><th>#</th><th>الاسم</th><th>البريد</th><th>الجلسات</th></tr>
+                    </thead>
+                    <tbody id="top-users-body">
+                        <tr><td colspan="4" class="text-center text-muted py-3">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+Chart.defaults.font.family = 'Noto Kufi Arabic';
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+let dailyChart, levelChart, avgChart;
+let currentRange = 30;
+let statsData = null;
+
+function initCharts() {
+    dailyChart = new Chart(document.getElementById('dailyChart'), {
+        type: 'bar',
+        data: { labels: [], datasets: [{ label: 'الجلسات', data: [], backgroundColor: 'rgba(13,110,253,.7)', borderRadius: 6 }] },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+
+    levelChart = new Chart(document.getElementById('levelChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['مرتفع', 'متوسط', 'منخفض'],
+            datasets: [{ data: [0,0,0], backgroundColor: ['#198754','#ffc107','#dc3545'], borderWidth: 2 }]
+        },
+        options: { cutout: '65%', plugins: { legend: { position: 'bottom' } } }
+    });
+
+    avgChart = new Chart(document.getElementById('avgChart'), {
+        type: 'bar',
+        data: { labels: [], datasets: [{ label: 'متوسط الدرجة', data: [], backgroundColor: 'rgba(255,193,7,.8)', borderRadius: 6 }] },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+    });
+}
+
+function loadStats(range) {
+    $.get('{{ route('admin.statistics.data') }}', { range }, function(data) {
+        statsData = data;
+
+        // Daily chart
+        dailyChart.data.labels = data.dailyData.map(d => d.date);
+        dailyChart.data.datasets[0].data = data.dailyData.map(d => d.count);
+        dailyChart.update();
+
+        // Populate assessment filter
+        const sel = $('#level-assessment-filter');
+        sel.find('option:not([value="all"])').remove();
+        data.assessments.forEach(a => sel.append(`<option value="${a.id}">${a.title}</option>`));
+
+        // Level chart (all)
+        updateLevelChart('all');
+
+        // Avg chart
+        avgChart.data.labels = data.avgScores.map(a => a.title);
+        avgChart.data.datasets[0].data = data.avgScores.map(a => a.avg);
+        avgChart.update();
+
+        // Top users
+        let rows = '';
+        data.topUsers.forEach((u, i) => {
+            rows += `<tr><td>${i+1}</td><td>${u.name}</td><td class="text-muted">${u.email}</td><td><span class="badge bg-primary">${u.exam_sessions_count}</span></td></tr>`;
+        });
+        $('#top-users-body').html(rows || '<tr><td colspan="4" class="text-center text-muted">لا بيانات.</td></tr>');
+    });
+}
+
+function updateLevelChart(assessmentId) {
+    if (!statsData) return;
+    let high = 0, medium = 0, low = 0;
+    statsData.assessments.forEach(a => {
+        if (assessmentId === 'all' || a.id === assessmentId) {
+            high   += a.high;
+            medium += a.medium;
+            low    += a.low;
+        }
+    });
+    levelChart.data.datasets[0].data = [high, medium, low];
+    levelChart.update();
+}
+
+$('#level-assessment-filter').on('change', function() { updateLevelChart($(this).val()); });
+
+$('.btn-range').on('click', function() {
+    currentRange = parseInt($(this).data('range'));
+    $('.btn-range').removeClass('btn-primary').addClass('btn-outline-secondary');
+    $(this).removeClass('btn-outline-secondary').addClass('btn-primary');
+    loadStats(currentRange);
+});
+
+$(document).ready(function() {
+    initCharts();
+    loadStats(currentRange);
+});
+</script>
+@endpush
+````
+
+## File: routes/console.php
+````php
+<?php
+
+use Illuminate\Foundation\Inspiring;
+use Illuminate\Support\Facades\Artisan;
+
+Artisan::command('inspire', function () {
+    $this->comment(Inspiring::quote());
+})->purpose('Display an inspiring quote');
+````
+
+## File: vite.config.js
+````javascript
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: ['resources/css/app.css', 'resources/js/app.js'],
+            refresh: true,
+        }),
+        tailwindcss(),
+    ],
+    server: {
+        watch: {
+            ignored: ['**/storage/framework/views/**'],
+        },
+    },
+});
+````
 
 ## File: _ide_helper_models.php
 ````php
@@ -29863,71 +34020,6 @@ namespace  {
 }
 ````
 
-## File: .editorconfig
-````
-root = true
-
-[*]
-charset = utf-8
-end_of_line = lf
-indent_size = 4
-indent_style = space
-insert_final_newline = true
-trim_trailing_whitespace = true
-
-[*.md]
-trim_trailing_whitespace = false
-
-[*.{yml,yaml}]
-indent_size = 2
-
-[compose.yaml]
-indent_size = 4
-````
-
-## File: .gitattributes
-````
-* text=auto eol=lf
-
-*.blade.php diff=html
-*.css diff=css
-*.html diff=html
-*.md diff=markdown
-*.php diff=php
-
-/.github export-ignore
-CHANGELOG.md export-ignore
-.styleci.yml export-ignore
-````
-
-## File: .gitignore
-````
-*.log
-.DS_Store
-.env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
-/node_modules
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
-/vendor
-Homestead.json
-Homestead.yaml
-Thumbs.db
-````
-
 ## File: .phpstorm.meta.php
 ````php
 <?php
@@ -32469,27 +36561,76 @@ class ConvertRecommendationsJson extends Command
 }
 ````
 
-## File: app/Http/Controllers/Admin/DashboardController.php
+## File: app/Http/Controllers/Admin/DimensionController.php
 ````php
 <?php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\AdminDashboardService;
-use Illuminate\View\View;
+use App\Http\Requests\Admin\StoreDimensionRequest;
+use App\Http\Requests\Admin\StoreInterpretationsRequest;
+use App\Models\Assessment;
+use App\Models\Dimension;
+use App\Services\DimensionService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class DashboardController extends Controller
+class DimensionController extends Controller
 {
     public function __construct(
-        private readonly AdminDashboardService $dashboardService,
+        private readonly DimensionService $dimensionService,
     ) {}
 
-    public function index(): View
+    public function byAssessment(Assessment $assessment): JsonResponse
     {
-        $data = $this->dashboardService->getData();
+        $dimensions = $this->dimensionService->byAssessment($assessment);
 
-        return view('admin.dashboard', $data);
+        return response()->json($dimensions);
+    }
+
+    public function store(StoreDimensionRequest $request, Assessment $assessment): JsonResponse
+    {
+        $dimension = $this->dimensionService->create($assessment, $request->validated());
+
+        return response()->json([
+            'success' => true,
+            'dimension' => $dimension,
+            'message' => 'تم إضافة البُعد بنجاح.',
+        ]);
+    }
+
+    public function update(StoreDimensionRequest $request, Dimension $dimension): JsonResponse
+    {
+        $this->dimensionService->update($dimension, $request->validated());
+
+        return response()->json(['success' => true, 'message' => 'تم تحديث البُعد.']);
+    }
+
+    public function destroy(Dimension $dimension): JsonResponse
+    {
+        $this->dimensionService->delete($dimension);
+
+        return response()->json(['success' => true, 'message' => 'تم حذف البُعد بنجاح.']);
+    }
+
+    public function reorder(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'required|uuid|exists:dimensions,id,deleted_at,NULL',
+        ]);
+
+        $this->dimensionService->reorder($data['order']);
+
+        return response()->json(['success' => true, 'message' => 'تم إعادة ترتيب الأبعاد.']);
+    }
+
+    public function storeInterpretations(StoreInterpretationsRequest $request, Dimension $dimension): JsonResponse
+    {
+        $this->dimensionService->saveInterpretations($dimension, $request->validated());
+
+        return response()->json(['success' => true, 'message' => 'تم حفظ تفسيرات البُعد بنجاح.']);
     }
 }
 ````
@@ -32802,69 +36943,192 @@ class GradedExamQuestionController extends Controller
 }
 ````
 
-## File: app/Http/Controllers/Controller.php
+## File: app/Http/Controllers/Admin/RecommendationController.php
+````php
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreRecommendationRequest;
+use App\Models\Assessment;
+use App\Models\Recommendation;
+use App\Services\RecommendationService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\View\View;
+
+class RecommendationController extends Controller
+{
+    public function __construct(
+        private readonly RecommendationService $recommendationService,
+    ) {}
+
+    public function index(): View
+    {
+        $recommendations = $this->recommendationService->allGrouped();
+        $assessments = Assessment::orderBy('title_ar')->get();
+        $icons = \App\Models\Icon::all()->groupBy('category');
+
+        return view('admin.recommendations.index', compact('recommendations', 'assessments', 'icons'));
+    }
+
+    public function store(StoreRecommendationRequest $request): JsonResponse
+    {
+        $rec = $this->recommendationService->upsert($request->validated());
+
+        return response()->json(['success' => true, 'message' => 'تم حفظ التوصية.', 'id' => $rec->id]);
+    }
+
+    public function destroy(Recommendation $recommendation): JsonResponse
+    {
+        $this->recommendationService->delete($recommendation);
+
+        return response()->json(['success' => true, 'message' => 'تم حذف التوصية.']);
+    }
+}
+````
+
+## File: app/Http/Controllers/Admin/StatisticsController.php
+````php
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Services\StatisticsService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+class StatisticsController extends Controller
+{
+    public function __construct(
+        private readonly StatisticsService $statisticsService,
+    ) {}
+
+    public function index(): View
+    {
+        $assessments = $this->statisticsService->getAssessments();
+
+        return view('admin.statistics.index', compact('assessments'));
+    }
+
+    public function data(Request $request): JsonResponse
+    {
+        $range = max(1, min((int) $request->query('range', 30), 365));
+        $data = $this->statisticsService->getData($range);
+
+        return response()->json($data);
+    }
+
+    /**
+     * Export completed exam results to a CSV file.
+     */
+    public function exportCsv(): StreamedResponse
+    {
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="exam_results_export.csv"',
+        ];
+
+        $csvContent = $this->statisticsService->exportResultsCsv();
+
+        return response()->streamDownload(function () use ($csvContent) {
+            echo $csvContent;
+        }, 'exam_results_export.csv', $headers);
+    }
+}
+````
+
+## File: app/Http/Controllers/Admin/UserController.php
+````php
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\UserService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+class UserController extends Controller
+{
+    public function __construct(
+        private readonly UserService $userService,
+    ) {}
+
+    public function index(Request $request): View
+    {
+        $search = $request->query('search');
+        $users = $this->userService->searchPaginated($search);
+
+        return view('admin.users.index', compact('users', 'search'));
+    }
+
+    public function userResults(User $user): JsonResponse
+    {
+        $sessions = $this->userService->getUserResults($user->id);
+
+        $levelTranslations = [
+            'high' => 'مرتفع',
+            'medium' => 'متوسط',
+            'low' => 'منخفض',
+        ];
+
+        $formatted = $sessions->map(function ($session) use ($levelTranslations) {
+            return [
+                'id' => $session->id,
+                'assessment_title' => $session->assessment->title_ar,
+                'completed_at' => $session->completed_at ? $session->completed_at->format('Y-m-d H:i') : null,
+                'total_score' => $session->result ? $session->result->total_score : 0,
+                'max_possible_score' => $session->result ? $session->result->max_possible_score : 0,
+                'level' => $session->result ? ($levelTranslations[$session->result->level] ?? $session->result->level) : 'غير متوفر',
+                'level_raw' => $session->result ? $session->result->level : 'unknown',
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+            'results' => $formatted,
+        ]);
+    }
+}
+````
+
+## File: app/Http/Controllers/DashboardController.php
 ````php
 <?php
 
 namespace App\Http\Controllers;
 
-abstract class Controller
+use App\Services\UserDashboardService;
+use Illuminate\View\View;
+
+class DashboardController extends Controller
 {
-    //
-}
-````
+    public function __construct(
+        private readonly UserDashboardService $dashboardService,
+    ) {}
 
-## File: app/Http/Middleware/AdminMiddleware.php
-````php
-<?php
-
-namespace App\Http\Middleware;
-
-use Closure;
-use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-
-class AdminMiddleware
-{
-    public function handle(Request $request, Closure $next): Response
+    public function index(): View
     {
-        if (! auth()->check() || ! auth()->user()->isAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول.');
-        }
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $data = $this->dashboardService->getData($user);
 
-        return $next($request);
+        return view('user.dashboard', $data);
     }
 }
 ````
 
-## File: app/Http/Middleware/UserMiddleware.php
-````php
-<?php
-
-namespace App\Http\Middleware;
-
-use Closure;
-use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-
-class UserMiddleware
-{
-    public function handle(Request $request, Closure $next): Response
-    {
-        if (! auth()->check()) {
-            return redirect()->route('login');
-        }
-
-        if (auth()->user()->isAdmin() && ! $request->is('exam/*/result')) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        return $next($request);
-    }
-}
-````
-
-## File: app/Http/Requests/Admin/StoreDimensionRequest.php
+## File: app/Http/Requests/Admin/BulkStoreQuestionsRequest.php
 ````php
 <?php
 
@@ -32872,7 +37136,7 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreDimensionRequest extends FormRequest
+class BulkStoreQuestionsRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -32883,8 +37147,127 @@ class StoreDimensionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name_ar' => 'required|string|max:255',
-            'max_score' => 'required|integer|min:1',
+            'assessment_id' => 'required|uuid|exists:assessments,id,deleted_at,NULL',
+            'dimension_id' => 'nullable|uuid|exists:dimensions,id,deleted_at,NULL',
+            'questions_text' => 'required|string',
+        ];
+    }
+}
+````
+
+## File: app/Http/Requests/Admin/StoreInterpretationsRequest.php
+````php
+<?php
+
+namespace App\Http\Requests\Admin;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreInterpretationsRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /** @return array<string, mixed> */
+    public function rules(): array
+    {
+        return [
+            'high_threshold' => 'nullable|integer|min:0',
+            'low_threshold' => 'nullable|integer|min:0',
+            'interpretations' => 'required|array',
+            'interpretations.*' => 'required|string',
+        ];
+    }
+}
+````
+
+## File: app/Http/Requests/Admin/StoreQuestionRequest.php
+````php
+<?php
+
+namespace App\Http\Requests\Admin;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreQuestionRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /** @return array<string, mixed> */
+    public function rules(): array
+    {
+        return [
+            'assessment_id' => 'required|uuid|exists:assessments,id,deleted_at,NULL',
+            'dimension_id' => 'nullable|uuid|exists:dimensions,id,deleted_at,NULL',
+            'text_ar' => 'required|string',
+            'is_reversed' => 'nullable|boolean',
+            'options' => 'required|array|min:2',
+            'options.*.label_ar' => 'required|string',
+            'options.*.score_value' => 'required|integer',
+        ];
+    }
+}
+````
+
+## File: app/Http/Requests/Admin/UpdateAssessmentRequest.php
+````php
+<?php
+
+namespace App\Http\Requests\Admin;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class UpdateAssessmentRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /** @return array<string, mixed> */
+    public function rules(): array
+    {
+        return [
+            'title_ar' => 'required|string|max:255',
+            'category' => 'required|string|max:255',
+            'description_ar' => 'nullable|string',
+            'time_limit_min' => 'nullable|integer|min:1',
+            'is_active' => 'boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'certificates_ar' => 'nullable|string',
+            'programs_ar' => 'nullable|string',
+            'plan_30_days_ar' => 'nullable|string',
+        ];
+    }
+}
+````
+
+## File: app/Http/Requests/AnswerQuestionRequest.php
+````php
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class AnswerQuestionRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /** @return array<string, mixed> */
+    public function rules(): array
+    {
+        return [
+            'question_id' => 'required|uuid|exists:questions,id,deleted_at,NULL',
+            'selected_option_id' => 'required|uuid|exists:answer_options,id,deleted_at,NULL',
         ];
     }
 }
@@ -32949,7 +37332,7 @@ class RegisterRequest extends FormRequest
 }
 ````
 
-## File: app/Models/DimensionScore.php
+## File: app/Models/AnswerOption.php
 ````php
 <?php
 
@@ -32957,17 +37340,85 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class DimensionScore extends Model
+class AnswerOption extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
-    protected $fillable = ['result_id', 'dimension_id', 'score', 'max_score', 'level'];
+    protected $fillable = ['question_id', 'label_ar', 'score_value', 'order_index'];
 
-    public function result()
+    public function question()
     {
-        return $this->belongsTo(Result::class);
+        return $this->belongsTo(Question::class);
     }
+
+    public function userAnswers()
+    {
+        return $this->hasMany(UserAnswer::class, 'selected_option_id');
+    }
+}
+````
+
+## File: app/Models/Dimension.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Dimension extends Model
+{
+    use HasUuids, SoftDeletes;
+
+    protected $fillable = ['assessment_id', 'name_ar', 'max_score', 'order_index'];
+
+    public function assessment()
+    {
+        return $this->belongsTo(Assessment::class);
+    }
+
+    public function questions()
+    {
+        return $this->hasMany(Question::class);
+    }
+
+    public function dimensionScores()
+    {
+        return $this->hasMany(DimensionScore::class);
+    }
+
+    public function interpretations()
+    {
+        return $this->hasMany(DimensionInterpretation::class);
+    }
+}
+````
+
+## File: app/Models/DimensionInterpretation.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class DimensionInterpretation extends Model
+{
+    use HasUuids, SoftDeletes;
+
+    protected $fillable = [
+        'dimension_id',
+        'level',
+        'interpretation_text_ar',
+        'high_threshold',
+        'low_threshold',
+    ];
 
     public function dimension()
     {
@@ -33357,6 +37808,82 @@ class Icon extends Model
 }
 ````
 
+## File: app/Models/Question.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Question extends Model
+{
+    use HasUuids, SoftDeletes;
+
+    protected $fillable = ['assessment_id', 'dimension_id', 'text_ar', 'order_index', 'is_reversed'];
+
+    protected $casts = [
+        'is_reversed' => 'boolean',
+    ];
+
+    public function assessment()
+    {
+        return $this->belongsTo(Assessment::class);
+    }
+
+    public function dimension()
+    {
+        return $this->belongsTo(Dimension::class);
+    }
+
+    public function answerOptions()
+    {
+        return $this->hasMany(AnswerOption::class)->orderBy('order_index');
+    }
+
+    public function userAnswers()
+    {
+        return $this->hasMany(UserAnswer::class);
+    }
+}
+````
+
+## File: app/Models/Result.php
+````php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Result extends Model
+{
+    use HasUuids, SoftDeletes;
+
+    protected $fillable = [
+        'session_id', 'total_score', 'max_possible_score', 'level', 'calculated_at',
+    ];
+
+    protected $casts = [
+        'calculated_at' => 'datetime',
+    ];
+
+    public function examSession()
+    {
+        return $this->belongsTo(ExamSession::class, 'session_id');
+    }
+
+    public function dimensionScores()
+    {
+        return $this->hasMany(DimensionScore::class);
+    }
+}
+````
+
 ## File: app/Models/Setting.php
 ````php
 <?php
@@ -33371,453 +37898,456 @@ class Setting extends Model
 }
 ````
 
-## File: app/Models/UserAnswer.php
+## File: app/Providers/AppServiceProvider.php
 ````php
 <?php
 
-namespace App\Models;
+namespace App\Providers;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
+use App\Repositories\AssessmentRepository;
+use App\Repositories\Contracts\AssessmentRepositoryInterface;
+use App\Repositories\Contracts\DimensionRepositoryInterface;
+use App\Repositories\Contracts\ExamSessionRepositoryInterface;
+use App\Repositories\Contracts\QuestionRepositoryInterface;
+use App\Repositories\Contracts\RecommendationRepositoryInterface;
+use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\DimensionRepository;
+use App\Repositories\ExamSessionRepository;
+use App\Repositories\QuestionRepository;
+use App\Repositories\RecommendationRepository;
+use App\Repositories\UserRepository;
+use Illuminate\Support\ServiceProvider;
 
-class UserAnswer extends Model
+class AppServiceProvider extends ServiceProvider
 {
-    use HasUuids;
-
-    protected $fillable = ['session_id', 'question_id', 'selected_option_id', 'score_earned'];
-
-    public function examSession()
+    /**
+     * Register repository interface → implementation bindings.
+     * This enables constructor injection throughout the application.
+     */
+    public function register(): void
     {
-        return $this->belongsTo(ExamSession::class, 'session_id');
+        $this->app->bind(AssessmentRepositoryInterface::class, AssessmentRepository::class);
+        $this->app->bind(DimensionRepositoryInterface::class, DimensionRepository::class);
+        $this->app->bind(QuestionRepositoryInterface::class, QuestionRepository::class);
+        $this->app->bind(RecommendationRepositoryInterface::class, RecommendationRepository::class);
+        $this->app->bind(ExamSessionRepositoryInterface::class, ExamSessionRepository::class);
+        $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
     }
 
-    public function question()
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
     {
-        return $this->belongsTo(Question::class);
-    }
-
-    public function selectedOption()
-    {
-        return $this->belongsTo(AnswerOption::class, 'selected_option_id');
+        if ($this->app->environment('production') || env('FORCE_HTTPS', false)) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
     }
 }
 ````
 
-## File: app/Repositories/Contracts/DimensionRepositoryInterface.php
+## File: app/Repositories/Contracts/AssessmentRepositoryInterface.php
 ````php
 <?php
 
 namespace App\Repositories\Contracts;
 
 use App\Models\Assessment;
-use App\Models\Dimension;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-interface DimensionRepositoryInterface
+interface AssessmentRepositoryInterface
 {
     /**
-     * Get all dimensions for an assessment ordered by order_index, with question count.
+     * Return paginated list of assessments with questions/dimensions counts.
      */
-    public function byAssessment(Assessment $assessment): Collection;
+    public function paginated(array $filters = [], int $perPage = 15): LengthAwarePaginator;
 
     /**
-     * Create a new dimension.
+     * Find an assessment and eager-load all nested relations needed for the show page.
+     */
+    public function findWithRelations(string $id): Assessment;
+
+    /**
+     * Create a new assessment and return it.
      *
      * @param  array<string, mixed>  $data
      */
-    public function create(array $data): Dimension;
+    public function create(array $data): Assessment;
 
     /**
-     * Update a dimension.
+     * Update an assessment with the given attributes.
      *
      * @param  array<string, mixed>  $data
      */
-    public function update(Dimension $dimension, array $data): Dimension;
+    public function update(Assessment $assessment, array $data): Assessment;
 
     /**
-     * Delete a dimension (unlinks its questions first).
+     * Delete an assessment.
      */
-    public function delete(Dimension $dimension): void;
+    public function delete(Assessment $assessment): void;
 
     /**
-     * Reorder dimensions by providing an ordered array of UUIDs.
-     *
-     * @param  array<int, string>  $orderedIds
+     * Toggle the is_active flag.
      */
-    public function reorder(array $orderedIds): void;
-
-    /**
-     * Upsert dimension interpretations (high / medium / low).
-     *
-     * @param  array<string, mixed>  $data
-     */
-    public function upsertInterpretations(Dimension $dimension, array $data): void;
+    public function toggle(Assessment $assessment): Assessment;
 }
 ````
 
-## File: app/Repositories/Contracts/ExamSessionRepositoryInterface.php
+## File: app/Repositories/Contracts/UserRepositoryInterface.php
 ````php
 <?php
 
 namespace App\Repositories\Contracts;
 
-use App\Models\Assessment;
-use App\Models\ExamSession;
-
-interface ExamSessionRepositoryInterface
-{
-    /**
-     * Find an in-progress session for a user and assessment.
-     */
-    public function findInProgress(string $userId, string $assessmentId): ?ExamSession;
-
-    /**
-     * Create a new exam session.
-     *
-     * @param  array<string, mixed>  $data
-     */
-    public function create(array $data): ExamSession;
-
-    /**
-     * Update an exam session with the given attributes.
-     *
-     * @param  array<string, mixed>  $data
-     */
-    public function update(ExamSession $session, array $data): ExamSession;
-}
-````
-
-## File: app/Repositories/Contracts/QuestionRepositoryInterface.php
-````php
-<?php
-
-namespace App\Repositories\Contracts;
-
-use App\Models\Assessment;
-use App\Models\Question;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
-interface QuestionRepositoryInterface
+interface UserRepositoryInterface
 {
     /**
-     * Return a paginated, filtered list of questions.
-     * Uses DB JOINs to fetch assessment and dimension names efficiently.
+     * Create a new user record.
      *
-     * @param  array<string, mixed>  $filters  Keys: assessment_id, dimension_id, search, per_page
+     * @param array $data
+     * @return User
      */
-    public function filteredPaginated(array $filters): LengthAwarePaginator;
+    public function create(array $data): User;
 
     /**
-     * Get all questions for an assessment with their answer options.
-     */
-    public function byAssessment(Assessment $assessment): Collection;
-
-    /**
-     * Create a question together with its answer options.
+     * Search and paginate users with their completed exam session count.
      *
-     * @param  array<string, mixed>  $data
-     * @param  array<int, array<string, mixed>>  $options
+     * @return LengthAwarePaginator
      */
-    public function create(array $data, array $options): Question;
+    public function searchPaginated(?string $search, int $perPage = 15);
 
     /**
-     * Update the question text.
+     * Retrieve completed exam sessions for a specific user.
      *
-     * @param  array<string, mixed>  $data
+     * @return Collection
      */
-    public function update(Question $question, array $data): Question;
-
-    /**
-     * Delete a single question.
-     */
-    public function delete(Question $question): void;
-
-    /**
-     * Delete multiple questions by IDs.
-     *
-     * @param  array<int, string>  $ids
-     */
-    public function bulkDelete(array $ids): void;
-
-    /**
-     * Reorder questions by providing an ordered array of UUIDs.
-     *
-     * @param  array<int, string>  $orderedIds
-     */
-    public function reorder(array $orderedIds): void;
-
-    /**
-     * Assign a dimension to multiple questions.
-     *
-     * @param  array<int, string>  $ids
-     */
-    public function bulkAssignDimension(array $ids, ?string $dimensionId): void;
-
-    /**
-     * Assign a dimension to a single question.
-     */
-    public function assignDimension(Question $question, ?string $dimensionId): Question;
-
-    /**
-     * Bulk-import questions from plain text lines with default answer options.
-     *
-     * @param  array<string, mixed>  $data  Keys: assessment_id, dimension_id, lines
-     * @return int Number of questions created
-     */
-    public function bulkImport(array $data): int;
+    public function getUserResults(string $userId);
 }
 ````
 
-## File: app/Repositories/Contracts/RecommendationRepositoryInterface.php
-````php
-<?php
-
-namespace App\Repositories\Contracts;
-
-use App\Models\Recommendation;
-use Illuminate\Support\Collection;
-
-interface RecommendationRepositoryInterface
-{
-    /**
-     * Get all recommendations joined with assessment names, grouped by assessment_id.
-     *
-     * @return Collection<string, Collection<int, Recommendation>>
-     */
-    public function allGrouped(): Collection;
-
-    /**
-     * Upsert a recommendation (update-or-create by assessment_id + level).
-     *
-     * @param  array<string, mixed>  $data
-     */
-    public function upsert(array $data): Recommendation;
-
-    /**
-     * Delete a recommendation.
-     */
-    public function delete(Recommendation $recommendation): void;
-}
-````
-
-## File: app/Repositories/DimensionRepository.php
+## File: app/Repositories/QuestionRepository.php
 ````php
 <?php
 
 namespace App\Repositories;
 
+use App\Models\AnswerOption;
 use App\Models\Assessment;
-use App\Models\Dimension;
-use App\Repositories\Contracts\DimensionRepositoryInterface;
+use App\Models\Question;
+use App\Repositories\Contracts\QuestionRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
-class DimensionRepository implements DimensionRepositoryInterface
+class QuestionRepository implements QuestionRepositoryInterface
 {
+    public function filteredPaginated(array $filters): LengthAwarePaginator
+    {
+        /*
+         * Use a DB JOIN between questions, assessments and dimensions
+         * to retrieve assessment title and dimension name in a single query,
+         * avoiding the N+1 problem that the previous with() approach caused.
+         */
+        $query = DB::table('questions as q')
+            ->join('assessments as a', 'a.id', '=', 'q.assessment_id')
+            ->leftJoin('dimensions as d', 'd.id', '=', 'q.dimension_id')
+            ->whereNull('a.deleted_at')
+            ->whereNull('q.deleted_at')
+            ->select([
+                'q.id',
+                'q.text_ar',
+                'q.assessment_id',
+                'q.dimension_id',
+                'q.order_index',
+                'q.is_reversed',
+                'q.created_at',
+                'a.title_ar as assessment_title',
+                'd.name_ar  as dimension_name',
+            ])
+            ->selectSub(
+                DB::table('answer_options')->whereNull('deleted_at')->whereColumn('answer_options.question_id', 'q.id')->selectRaw('COUNT(*)'),
+                'answer_options_count'
+            );
+
+        if (! empty($filters['assessment_id'])) {
+            $query->where('q.assessment_id', $filters['assessment_id'])
+                ->orderBy('q.order_index');
+        } else {
+            $query->orderByDesc('q.created_at');
+        }
+
+        if (! empty($filters['dimension_id'])) {
+            $query->where('q.dimension_id', $filters['dimension_id']);
+        }
+
+        if (! empty($filters['search'])) {
+            $query->where('q.text_ar', 'like', '%'.$filters['search'].'%');
+        }
+
+        $perPage = $filters['per_page'] ?? 25;
+
+        if ($perPage === 'all' || $perPage === 'الكل') {
+            $total = $query->count();
+            $perPage = $total > 0 ? $total : 25;
+        } else {
+            $perPage = in_array((int) $perPage, [25, 50, 100]) ? (int) $perPage : 25;
+        }
+
+        return $query->paginate($perPage);
+    }
+
     public function byAssessment(Assessment $assessment): Collection
     {
-        return $assessment->dimensions()
-            ->withCount('questions')
+        return $assessment->questions()
+            ->with('answerOptions')
             ->orderBy('order_index')
             ->get();
     }
 
-    public function create(array $data): Dimension
+    public function create(array $data, array $options): Question
     {
-        return Dimension::create($data);
+        $question = Question::create([
+            'assessment_id' => $data['assessment_id'],
+            'dimension_id' => $data['dimension_id'] ?? null,
+            'text_ar' => $data['text_ar'],
+            'order_index' => Question::where('assessment_id', $data['assessment_id'])->count(),
+            'is_reversed' => $data['is_reversed'] ?? false,
+        ]);
+
+        foreach ($options as $index => $opt) {
+            AnswerOption::create([
+                'question_id' => $question->id,
+                'label_ar' => $opt['label_ar'],
+                'score_value' => $opt['score_value'],
+                'order_index' => $opt['order_index'] ?? $index,
+            ]);
+        }
+
+        return $question;
     }
 
-    public function update(Dimension $dimension, array $data): Dimension
+    public function update(Question $question, array $data): Question
     {
-        $dimension->update($data);
+        $question->update($data);
 
-        return $dimension->fresh();
+        return $question->fresh();
     }
 
-    public function delete(Dimension $dimension): void
+    public function delete(Question $question): void
     {
-        // Unlink questions so they are not orphaned
-        $dimension->questions()->update(['dimension_id' => null]);
-        $dimension->delete();
+        DB::transaction(function () use ($question) {
+            $question->answerOptions()->delete();
+            $question->delete();
+        });
+    }
+
+    public function bulkDelete(array $ids): void
+    {
+        DB::transaction(function () use ($ids) {
+            $questions = Question::whereIn('id', $ids)->get();
+            foreach ($questions as $q) {
+                $q->answerOptions()->delete();
+                $q->delete();
+            }
+        });
     }
 
     public function reorder(array $orderedIds): void
     {
         foreach ($orderedIds as $index => $id) {
-            Dimension::where('id', $id)->update(['order_index' => $index]);
+            Question::where('id', $id)->update(['order_index' => $index]);
         }
     }
 
-    public function upsertInterpretations(Dimension $dimension, array $data): void
+    public function bulkAssignDimension(array $ids, ?string $dimensionId): void
     {
-        foreach (['high', 'medium', 'low'] as $level) {
-            $dimension->interpretations()->updateOrCreate(
-                ['level' => $level],
-                [
-                    'interpretation_text_ar' => $data['interpretations'][$level],
-                    'high_threshold' => $data['high_threshold'],
-                    'low_threshold' => $data['low_threshold'],
-                ]
-            );
+        Question::whereIn('id', $ids)->update(['dimension_id' => $dimensionId]);
+    }
+
+    public function assignDimension(Question $question, ?string $dimensionId): Question
+    {
+        $question->update(['dimension_id' => $dimensionId]);
+
+        return $question->fresh();
+    }
+
+    public function bulkImport(array $data): int
+    {
+        $defaultOptions = [
+            ['label_ar' => 'نعم',        'score_value' => 2, 'order_index' => 0],
+            ['label_ar' => 'إلى حد ما', 'score_value' => 1, 'order_index' => 1],
+            ['label_ar' => 'لا',         'score_value' => 0, 'order_index' => 2],
+        ];
+
+        $lines = $data['lines'];
+        $baseIndex = Question::where('assessment_id', $data['assessment_id'])->count();
+        $count = 0;
+
+        foreach ($lines as $offset => $line) {
+            if (empty($line)) {
+                continue;
+            }
+
+            $question = Question::create([
+                'assessment_id' => $data['assessment_id'],
+                'dimension_id' => $data['dimension_id'] ?? null,
+                'text_ar' => $line,
+                'order_index' => $baseIndex + $offset,
+            ]);
+
+            foreach ($defaultOptions as $opt) {
+                AnswerOption::create(array_merge($opt, ['question_id' => $question->id]));
+            }
+
+            $count++;
         }
+
+        return $count;
     }
 }
 ````
 
-## File: app/Repositories/ExamSessionRepository.php
+## File: app/Repositories/RecommendationRepository.php
 ````php
 <?php
 
 namespace App\Repositories;
 
-use App\Models\ExamSession;
-use App\Repositories\Contracts\ExamSessionRepositoryInterface;
+use App\Models\Recommendation;
+use App\Repositories\Contracts\RecommendationRepositoryInterface;
+use Illuminate\Support\Collection;
 
-class ExamSessionRepository implements ExamSessionRepositoryInterface
+class RecommendationRepository implements RecommendationRepositoryInterface
 {
-    public function findInProgress(string $userId, string $assessmentId): ?ExamSession
+    public function allGrouped(): Collection
     {
-        return ExamSession::where('user_id', $userId)
-            ->where('assessment_id', $assessmentId)
-            ->where('status', 'in_progress')
-            ->first();
-    }
-
-    public function create(array $data): ExamSession
-    {
-        return ExamSession::create($data);
-    }
-
-    public function update(ExamSession $session, array $data): ExamSession
-    {
-        $session->update($data);
-
-        return $session->fresh();
-    }
-}
-````
-
-## File: app/Services/AdminDashboardService.php
-````php
-<?php
-
-namespace App\Services;
-
-use App\Models\Assessment;
-use App\Models\ExamSession;
-use Illuminate\Support\Facades\DB;
-
-class AdminDashboardService
-{
-    /**
-     * Build all data needed for the admin dashboard.
-     *
-     * @return array<string, mixed>
-     */
-    public function getData(): array
-    {
-        $totalUsers = DB::table('users')->where('role', 'user')->count();
-        $todaySessions = DB::table('exam_sessions')
-            ->where('status', 'completed')
-            ->whereDate('completed_at', today())
-            ->count();
-
         /*
-         * Most-used assessment: join exam_sessions and count completed ones
-         * to avoid the N+1 withCount pattern.
+         * JOIN recommendations with assessments to retrieve assessment title
+         * alongside each recommendation in a single query.
          */
-        $mostUsedAssessment = Assessment::withCount([
-            'examSessions' => fn ($q) => $q->where('status', 'completed'),
-        ])
-            ->orderByDesc('exam_sessions_count')
-            ->first();
+        return Recommendation::with('assessment')
+            ->orderBy('assessment_id')
+            ->get()
+            ->groupBy('assessment_id');
+    }
 
-        $avgScore = DB::table('results')->avg('total_score');
+    public function upsert(array $data): Recommendation
+    {
+        if (!empty($data['id'])) {
+            /** @var Recommendation $rec */
+            $rec = Recommendation::findOrFail($data['id']);
+            $rec->update($data);
+            return $rec;
+        }
 
-        /*
-         * Recent sessions: JOIN users, assessments, results in a single query.
-         */
-        $recentSessions = ExamSession::where('status', 'completed')
-            ->with(['user', 'assessment', 'result'])
-            ->orderByDesc('completed_at')
-            ->limit(10)
-            ->get();
-
-        return compact(
-            'totalUsers',
-            'todaySessions',
-            'mostUsedAssessment',
-            'avgScore',
-            'recentSessions'
+        /** @var Recommendation $rec */
+        $rec = Recommendation::updateOrCreate(
+            [
+                'assessment_id' => $data['assessment_id'],
+                'level' => $data['level'],
+            ],
+            $data
         );
+
+        return $rec;
+    }
+
+    public function delete(Recommendation $recommendation): void
+    {
+        $recommendation->delete();
     }
 }
 ````
 
-## File: app/Services/DimensionService.php
+## File: app/Services/AssessmentService.php
 ````php
 <?php
 
 namespace App\Services;
 
 use App\Models\Assessment;
-use App\Models\Dimension;
+use App\Repositories\Contracts\AssessmentRepositoryInterface;
 use App\Repositories\Contracts\DimensionRepositoryInterface;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-class DimensionService
+class AssessmentService
 {
     public function __construct(
+        private readonly AssessmentRepositoryInterface $assessments,
         private readonly DimensionRepositoryInterface $dimensions,
     ) {}
 
-    public function byAssessment(Assessment $assessment): Collection
+    public function list(array $filters = []): LengthAwarePaginator
     {
-        return $this->dimensions->byAssessment($assessment);
+        return $this->assessments->paginated($filters);
+    }
+
+    public function getForManagement(string $id): Assessment
+    {
+        return $this->assessments->findWithRelations($id);
     }
 
     /**
-     * @param  array<string, mixed>  $data
-     */
-    public function create(Assessment $assessment, array $data): Dimension
-    {
-        return $this->dimensions->create([
-            'assessment_id' => $assessment->id,
-            'name_ar' => $data['name_ar'],
-            'max_score' => $data['max_score'],
-            'order_index' => $assessment->dimensions()->count(),
-        ]);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function update(Dimension $dimension, array $data): Dimension
-    {
-        return $this->dimensions->update($dimension, $data);
-    }
-
-    public function delete(Dimension $dimension): void
-    {
-        $this->dimensions->delete($dimension);
-    }
-
-    /**
-     * @param  array<int, string>  $orderedIds
-     */
-    public function reorder(array $orderedIds): void
-    {
-        $this->dimensions->reorder($orderedIds);
-    }
-
-    /**
-     * Save all three level interpretations for a dimension.
+     * Create an assessment along with its initial dimensions.
      *
      * @param  array<string, mixed>  $data
      */
-    public function saveInterpretations(Dimension $dimension, array $data): void
+    public function create(array $data): Assessment
     {
-        $this->dimensions->upsertInterpretations($dimension, $data);
+        $assessment = $this->assessments->create([
+            'title_ar' => $data['title_ar'],
+            'category' => $data['category'],
+            'description_ar' => $data['description_ar'] ?? null,
+            'time_limit_min' => $data['time_limit_min'] ?? null,
+            'created_by' => auth()->id(),
+        ]);
+
+        if (! empty($data['dimensions'])) {
+            foreach ($data['dimensions'] as $index => $dim) {
+                $this->dimensions->create([
+                    'assessment_id' => $assessment->id,
+                    'name_ar' => $dim['name_ar'],
+                    'max_score' => $dim['max_score'],
+                    'order_index' => $index,
+                ]);
+            }
+        }
+
+        return $assessment;
+    }
+
+    /**
+     * Update basic assessment fields.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(Assessment $assessment, array $data): Assessment
+    {
+        return $this->assessments->update($assessment, $data);
+    }
+
+    /**
+     * Update assessment settings (includes is_active flag).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function updateSettings(Assessment $assessment, array $data): Assessment
+    {
+        return $this->assessments->update($assessment, $data);
+    }
+
+    public function delete(Assessment $assessment): void
+    {
+        $this->assessments->delete($assessment);
+    }
+
+    public function toggle(Assessment $assessment): Assessment
+    {
+        return $this->assessments->toggle($assessment);
     }
 }
 ````
@@ -33922,41 +38452,216 @@ class IconService
 }
 ````
 
-## File: app/Services/RecommendationService.php
+## File: app/Services/QuestionService.php
 ````php
 <?php
 
 namespace App\Services;
 
-use App\Models\Recommendation;
-use App\Repositories\Contracts\RecommendationRepositoryInterface;
-use Illuminate\Support\Collection;
+use App\Models\Assessment;
+use App\Models\Question;
+use App\Repositories\Contracts\QuestionRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
-class RecommendationService
+class QuestionService
 {
     public function __construct(
-        private readonly RecommendationRepositoryInterface $recommendations,
+        private readonly QuestionRepositoryInterface $questions,
     ) {}
 
     /**
-     * @return Collection<string, Collection<int, Recommendation>>
+     * @param  array<string, mixed>  $filters
      */
-    public function allGrouped(): Collection
+    public function filteredList(array $filters): LengthAwarePaginator
     {
-        return $this->recommendations->allGrouped();
+        return $this->questions->filteredPaginated($filters);
+    }
+
+    public function byAssessment(Assessment $assessment): Collection
+    {
+        return $this->questions->byAssessment($assessment);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<int, array<string, mixed>>  $options
+     */
+    public function create(array $data, array $options): Question
+    {
+        return $this->questions->create($data, $options);
     }
 
     /**
      * @param  array<string, mixed>  $data
      */
-    public function upsert(array $data): Recommendation
+    public function update(Question $question, array $data): Question
     {
-        return $this->recommendations->upsert($data);
+        $updateData = array_intersect_key($data, array_flip(['text_ar', 'is_reversed', 'dimension_id']));
+
+        return $this->questions->update($question, $updateData);
     }
 
-    public function delete(Recommendation $recommendation): void
+    public function delete(Question $question): void
     {
-        $this->recommendations->delete($recommendation);
+        $this->questions->delete($question);
+    }
+
+    /**
+     * @param  array<int, string>  $ids
+     */
+    public function bulkDelete(array $ids): int
+    {
+        $count = count($ids);
+        $this->questions->bulkDelete($ids);
+
+        return $count;
+    }
+
+    /**
+     * @param  array<int, string>  $orderedIds
+     */
+    public function reorder(array $orderedIds): void
+    {
+        $this->questions->reorder($orderedIds);
+    }
+
+    /**
+     * @param  array<int, string>  $ids
+     */
+    public function bulkAssignDimension(array $ids, ?string $dimensionId): void
+    {
+        $this->questions->bulkAssignDimension($ids, $dimensionId);
+    }
+
+    public function assignDimension(Question $question, ?string $dimensionId): Question
+    {
+        return $this->questions->assignDimension($question, $dimensionId);
+    }
+
+    /**
+     * Bulk-import questions from raw text (one per line).
+     *
+     * @param  array<string, mixed>  $data  Keys: assessment_id, dimension_id, questions_text
+     * @return int Number of questions created
+     */
+    public function bulkImport(array $data): int
+    {
+        $lines = array_filter(
+            array_map('trim', explode("\n", $data['questions_text']))
+        );
+
+        return $this->questions->bulkImport([
+            'assessment_id' => $data['assessment_id'],
+            'dimension_id' => $data['dimension_id'] ?? null,
+            'lines' => array_values($lines),
+        ]);
+    }
+
+    /**
+     * Import questions from a CSV file.
+     */
+    public function importFromCsv(Assessment $assessment, string $filePath): int
+    {
+        if (($handle = fopen($filePath, 'r')) === false) {
+            throw new \RuntimeException('تعذر فتح ملف CSV.');
+        }
+
+        $rowCount = 0;
+        $isFirst = true;
+
+        while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+            if (empty($row) || count($row) < 2) {
+                continue;
+            }
+
+            // Skip header row if present
+            if ($isFirst) {
+                $isFirst = false;
+                $firstCol = trim($row[0]);
+                if (
+                    str_contains($firstCol, 'dimension') ||
+                    str_contains($firstCol, 'البعد') ||
+                    str_contains($firstCol, 'بُعد') ||
+                    str_contains(trim($row[1]), 'question') ||
+                    str_contains(trim($row[1]), 'السؤال')
+                ) {
+                    continue;
+                }
+            }
+
+            $dimName = trim($row[0] ?? '');
+            $qText = trim($row[1] ?? '');
+
+            if (empty($qText)) {
+                continue;
+            }
+
+            $isReversed = filter_var(trim($row[2] ?? '0'), FILTER_VALIDATE_BOOLEAN) || trim($row[2] ?? '0') === '1';
+            $optionsStr = trim($row[3] ?? '');
+
+            // Get or create dimension if dimName is provided
+            $dimensionId = null;
+            if (! empty($dimName)) {
+                $dimension = $assessment->dimensions()->firstOrCreate(
+                    ['name_ar' => $dimName],
+                    [
+                        'max_score' => 0,
+                        'order_index' => $assessment->dimensions()->count(),
+                    ]
+                );
+                $dimensionId = $dimension->id;
+            }
+
+            // Parse options
+            $options = [];
+            if (! empty($optionsStr)) {
+                $optParts = explode('|', $optionsStr);
+                foreach ($optParts as $idx => $part) {
+                    $pair = explode(':', $part);
+                    $label = trim($pair[0] ?? '');
+                    $score = intval(trim($pair[1] ?? '0'));
+                    if ($label !== '') {
+                        $options[] = [
+                            'label_ar' => $label,
+                            'score_value' => $score,
+                            'order_index' => $idx,
+                        ];
+                    }
+                }
+            }
+
+            // Default options
+            if (empty($options)) {
+                $options = [
+                    ['label_ar' => 'نعم',        'score_value' => $isReversed ? 0 : 2, 'order_index' => 0],
+                    ['label_ar' => 'إلى حد ما', 'score_value' => 1,                   'order_index' => 1],
+                    ['label_ar' => 'لا',         'score_value' => $isReversed ? 2 : 0, 'order_index' => 2],
+                ];
+            }
+
+            $this->questions->create([
+                'assessment_id' => $assessment->id,
+                'dimension_id' => $dimensionId,
+                'text_ar' => $qText,
+                'is_reversed' => $isReversed,
+            ], $options);
+
+            $rowCount++;
+        }
+
+        fclose($handle);
+
+        // Update dimensions max_scores
+        foreach ($assessment->dimensions as $dim) {
+            $dimQuestions = $dim->questions()->with('answerOptions')->get();
+            $dimMax = $dimQuestions->sum(
+                fn ($q) => $q->answerOptions->max('score_value') ?? 0
+            );
+            $dim->update(['max_score' => $dimMax]);
+        }
+
+        return $rowCount;
     }
 }
 ````
@@ -34113,43 +38818,288 @@ class SettingService
 }
 ````
 
-## File: artisan
-````
-#!/usr/bin/env php
-<?php
-
-use Illuminate\Foundation\Application;
-use Symfony\Component\Console\Input\ArgvInput;
-
-define('LARAVEL_START', microtime(true));
-
-// Register the Composer autoloader...
-require __DIR__.'/vendor/autoload.php';
-
-// Bootstrap Laravel and handle the command...
-/** @var Application $app */
-$app = require_once __DIR__.'/bootstrap/app.php';
-
-$status = $app->handleCommand(new ArgvInput);
-
-exit($status);
-````
-
-## File: bootstrap/cache/.gitignore
-````
-*
-!.gitignore
-````
-
-## File: bootstrap/providers.php
+## File: app/Services/StatisticsService.php
 ````php
 <?php
 
-use App\Providers\AppServiceProvider;
+namespace App\Services;
 
-return [
-    AppServiceProvider::class,
-];
+use App\Models\Assessment;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+
+class StatisticsService
+{
+    /**
+     * Get all assessments for the filter dropdown.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Assessment>
+     */
+    public function getAssessments()
+    {
+        return Assessment::all();
+    }
+
+    /**
+     * Build the full statistics data payload.
+     * Uses DB JOINs to avoid N+1 queries.
+     *
+     * @param  int  $range  Number of days
+     * @return array<string, mixed>
+     */
+    public function getData(int $range): array
+    {
+        return [
+            'dailyData' => $this->getDailySessionData($range),
+            'assessments' => $this->getLevelDistribution(),
+            'avgScores' => $this->getAverageScores(),
+            'topUsers' => $this->getTopUsers(),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function getDailySessionData(int $range): array
+    {
+        $from = now()->subDays($range - 1)->startOfDay();
+
+        $rows = DB::table('exam_sessions')
+            ->where('status', 'completed')
+            ->where('completed_at', '>=', $from)
+            ->selectRaw('DATE(completed_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->keyBy('date');
+
+        $data = [];
+        for ($i = 0; $i < $range; $i++) {
+            $date = now()->subDays($range - 1 - $i)->format('Y-m-d');
+            $data[] = [
+                'date' => $date,
+                'count' => $rows->get($date)?->count ?? 0,
+            ];
+        }
+
+        return $data;
+    }
+
+    /**
+     * Use a single JOIN query to aggregate level counts per assessment.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function getLevelDistribution(): array
+    {
+        $rows = DB::table('assessments as a')
+            ->join('exam_sessions as es', 'es.assessment_id', '=', 'a.id')
+            ->join('results as r', 'r.session_id', '=', 'es.id')
+            ->whereNull('a.deleted_at')
+            ->select([
+                'a.id',
+                'a.title_ar as title',
+                DB::raw("SUM(CASE WHEN r.level = 'high'   THEN 1 ELSE 0 END) as high"),
+                DB::raw("SUM(CASE WHEN r.level = 'medium' THEN 1 ELSE 0 END) as medium"),
+                DB::raw("SUM(CASE WHEN r.level = 'low'    THEN 1 ELSE 0 END) as low"),
+            ])
+            ->groupBy('a.id', 'a.title_ar')
+            ->get();
+
+        return $rows->map(fn ($r) => [
+            'id' => $r->id,
+            'title' => $r->title,
+            'high' => (int) $r->high,
+            'medium' => (int) $r->medium,
+            'low' => (int) $r->low,
+        ])->values()->toArray();
+    }
+
+    /**
+     * Use a JOIN to compute average score per assessment in a single query.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function getAverageScores(): array
+    {
+        $rows = DB::table('assessments as a')
+            ->leftJoin('exam_sessions as es', 'es.assessment_id', '=', 'a.id')
+            ->leftJoin('results as r', 'r.session_id', '=', 'es.id')
+            ->whereNull('a.deleted_at')
+            ->select([
+                'a.title_ar as title',
+                DB::raw('ROUND(AVG(r.total_score), 1) as avg'),
+            ])
+            ->groupBy('a.id', 'a.title_ar')
+            ->get();
+
+        return $rows->map(fn ($r) => [
+            'title' => $r->title,
+            'avg' => (float) ($r->avg ?? 0),
+        ])->values()->toArray();
+    }
+
+    /**
+     * @return Collection<int, object>
+     */
+    private function getTopUsers()
+    {
+        return DB::table('users as u')
+            ->leftJoin('exam_sessions as es', fn ($j) => $j->on('es.user_id', '=', 'u.id')->where('es.status', 'completed')
+            )
+            ->where('u.role', 'user')
+            ->whereNull('u.deleted_at')
+            ->select([
+                'u.id',
+                'u.name',
+                'u.email',
+                DB::raw('COUNT(es.id) as exam_sessions_count'),
+            ])
+            ->groupBy('u.id', 'u.name', 'u.email')
+            ->orderByDesc('exam_sessions_count')
+            ->limit(10)
+            ->get();
+    }
+
+    /**
+     * Export all completed exam sessions and results to a CSV string.
+     */
+    public function exportResultsCsv(): string
+    {
+        $rows = DB::table('exam_sessions as es')
+            ->join('users as u', 'u.id', '=', 'es.user_id')
+            ->join('assessments as a', 'a.id', '=', 'es.assessment_id')
+            ->join('results as r', 'r.session_id', '=', 'es.id')
+            ->where('es.status', 'completed')
+            ->whereNull('u.deleted_at')
+            ->whereNull('a.deleted_at')
+            ->select([
+                'es.id as session_id',
+                'u.name as user_name',
+                'u.email as user_email',
+                'a.title_ar as assessment_title',
+                'r.total_score',
+                'r.max_possible_score',
+                'r.level',
+                'es.completed_at',
+            ])
+            ->orderByDesc('es.completed_at')
+            ->get();
+
+        $output = fopen('php://temp', 'r+');
+
+        // Prepend UTF-8 BOM so Excel opens Arabic letters correctly
+        fwrite($output, "\xEF\xBB\xBF");
+
+        // Headers
+        fputcsv($output, [
+            'معرف الجلسة',
+            'اسم المستخدم',
+            'البريد الإلكتروني',
+            'اسم المقياس',
+            'الدرجة المحرزة',
+            'الدرجة القصوى',
+            'النسبة المئوية',
+            'المستوى',
+            'تاريخ الإكمال',
+        ]);
+
+        foreach ($rows as $row) {
+            $percentage = $row->max_possible_score > 0
+                ? round(($row->total_score / $row->max_possible_score) * 100).'%'
+                : '0%';
+
+            $levelLabel = match ($row->level) {
+                'high' => 'مرتفع',
+                'medium' => 'متوسط',
+                default => 'منخفض',
+            };
+
+            fputcsv($output, [
+                $row->session_id,
+                $row->user_name,
+                $row->user_email,
+                $row->assessment_title,
+                $row->total_score,
+                $row->max_possible_score,
+                $percentage,
+                $levelLabel,
+                $row->completed_at,
+            ]);
+        }
+
+        rewind($output);
+        $csvContent = stream_get_contents($output);
+        fclose($output);
+
+        return $csvContent;
+    }
+}
+````
+
+## File: app/Services/UserService.php
+````php
+<?php
+
+namespace App\Services;
+
+use App\Models\User;
+use App\Repositories\Contracts\UserRepositoryInterface;
+use Illuminate\Support\Facades\Hash;
+
+class UserService
+{
+    public function __construct(
+        private readonly UserRepositoryInterface $userRepository,
+    ) {}
+
+    public function register(array $data): User
+    {
+        $data['password'] = Hash::make($data['password']);
+        $data['role'] = 'user';
+
+        return $this->userRepository->create($data);
+    }
+
+    public function searchPaginated(?string $search, int $perPage = 15)
+    {
+        return $this->userRepository->searchPaginated($search, $perPage);
+    }
+
+    public function getUserResults(string $userId)
+    {
+        return $this->userRepository->getUserResults($userId);
+    }
+}
+````
+
+## File: bootstrap/app.php
+````php
+<?php
+
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\UserMiddleware;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
+
+        $middleware->alias([
+            'admin' => AdminMiddleware::class,
+            'user' => UserMiddleware::class,
+        ]);
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        //
+    })->create();
 ````
 
 ## File: check-seed.php
@@ -34166,1337 +39116,97 @@ try {
 }
 ````
 
-## File: config/app.php
-````php
-<?php
-
-return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Name
-    |--------------------------------------------------------------------------
-    |
-    | This value is the name of your application, which will be used when the
-    | framework needs to place the application's name in a notification or
-    | other UI elements where an application name needs to be displayed.
-    |
-    */
-
-    'name' => env('APP_NAME', 'Laravel'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Environment
-    |--------------------------------------------------------------------------
-    |
-    | This value determines the "environment" your application is currently
-    | running in. This may determine how you prefer to configure various
-    | services the application utilizes. Set this in your ".env" file.
-    |
-    */
-
-    'env' => env('APP_ENV', 'production'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Debug Mode
-    |--------------------------------------------------------------------------
-    |
-    | When your application is in debug mode, detailed error messages with
-    | stack traces will be shown on every error that occurs within your
-    | application. If disabled, a simple generic error page is shown.
-    |
-    */
-
-    'debug' => (bool) env('APP_DEBUG', false),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application URL
-    |--------------------------------------------------------------------------
-    |
-    | This URL is used by the console to properly generate URLs when using
-    | the Artisan command line tool. You should set this to the root of
-    | the application so that it's available within Artisan commands.
-    |
-    */
-
-    'url' => env('APP_URL', 'http://localhost'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Timezone
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
-    |
-    */
-
-    'timezone' => 'UTC',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Locale Configuration
-    |--------------------------------------------------------------------------
-    |
-    | The application locale determines the default locale that will be used
-    | by Laravel's translation / localization methods. This option can be
-    | set to any locale for which you plan to have translation strings.
-    |
-    */
-
-    'locale' => env('APP_LOCALE', 'en'),
-
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
-
-    'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Encryption Key
-    |--------------------------------------------------------------------------
-    |
-    | This key is utilized by Laravel's encryption services and should be set
-    | to a random, 32 character string to ensure that all encrypted values
-    | are secure. You should do this prior to deploying the application.
-    |
-    */
-
-    'cipher' => 'AES-256-CBC',
-
-    'key' => env('APP_KEY'),
-
-    'previous_keys' => [
-        ...array_filter(
-            explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
-        ),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Maintenance Mode Driver
-    |--------------------------------------------------------------------------
-    |
-    | These configuration options determine the driver used to determine and
-    | manage Laravel's "maintenance mode" status. The "cache" driver will
-    | allow maintenance mode to be controlled across multiple machines.
-    |
-    | Supported drivers: "file", "cache"
-    |
-    */
-
-    'maintenance' => [
-        'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
-        'store' => env('APP_MAINTENANCE_STORE', 'database'),
-    ],
-
-];
-````
-
-## File: config/auth.php
-````php
-<?php
-
-use App\Models\User;
-
-return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Authentication Defaults
-    |--------------------------------------------------------------------------
-    |
-    | This option defines the default authentication "guard" and password
-    | reset "broker" for your application. You may change these values
-    | as required, but they're a perfect start for most applications.
-    |
-    */
-
-    'defaults' => [
-        'guard' => env('AUTH_GUARD', 'web'),
-        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Authentication Guards
-    |--------------------------------------------------------------------------
-    |
-    | Next, you may define every authentication guard for your application.
-    | Of course, a great default configuration has been defined for you
-    | which utilizes session storage plus the Eloquent user provider.
-    |
-    | All authentication guards have a user provider, which defines how the
-    | users are actually retrieved out of your database or other storage
-    | system used by the application. Typically, Eloquent is utilized.
-    |
-    | Supported: "session"
-    |
-    */
-
-    'guards' => [
-        'web' => [
-            'driver' => 'session',
-            'provider' => 'users',
+## File: composer.json
+````json
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "laravel/laravel",
+    "type": "project",
+    "description": "The skeleton application for the Laravel framework.",
+    "keywords": ["laravel", "framework"],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^12.0",
+        "laravel/tinker": "^2.10.1"
+    },
+    "require-dev": {
+        "barryvdh/laravel-ide-helper": "*",
+        "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.10",
+        "laravel/pail": "^1.2.2",
+        "laravel/pint": "^1.24",
+        "laravel/sail": "^1.41",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "nunomaduro/larastan": "^3.10",
+        "phpunit/phpunit": "^11.5.50"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "setup": [
+            "composer install",
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php artisan key:generate",
+            "@php artisan migrate --force",
+            "npm install",
+            "npm run build"
         ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | User Providers
-    |--------------------------------------------------------------------------
-    |
-    | All authentication guards have a user provider, which defines how the
-    | users are actually retrieved out of your database or other storage
-    | system used by the application. Typically, Eloquent is utilized.
-    |
-    | If you have multiple user tables or models you may configure multiple
-    | providers to represent the model / table. These providers may then
-    | be assigned to any extra authentication guards you have defined.
-    |
-    | Supported: "database", "eloquent"
-    |
-    */
-
-    'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Resetting Passwords
-    |--------------------------------------------------------------------------
-    |
-    | These configuration options specify the behavior of Laravel's password
-    | reset functionality, including the table utilized for token storage
-    | and the user provider that is invoked to actually retrieve users.
-    |
-    | The expiry time is the number of minutes that each reset token will be
-    | considered valid. This security feature keeps tokens short-lived so
-    | they have less time to be guessed. You may change this as needed.
-    |
-    | The throttle setting is the number of seconds a user must wait before
-    | generating more password reset tokens. This prevents the user from
-    | quickly generating a very large amount of password reset tokens.
-    |
-    */
-
-    'passwords' => [
-        'users' => [
-            'provider' => 'users',
-            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 60,
-            'throttle' => 60,
+        "test": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test"
         ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Password Confirmation Timeout
-    |--------------------------------------------------------------------------
-    |
-    | Here you may define the number of seconds before a password confirmation
-    | window expires and users are asked to re-enter their password via the
-    | confirmation screen. By default, the timeout lasts for three hours.
-    |
-    */
-
-    'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
-
-];
-````
-
-## File: config/cache.php
-````php
-<?php
-
-use Illuminate\Support\Str;
-
-return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Cache Store
-    |--------------------------------------------------------------------------
-    |
-    | This option controls the default cache store that will be used by the
-    | framework. This connection is utilized if another isn't explicitly
-    | specified when running a cache operation inside the application.
-    |
-    */
-
-    'default' => env('CACHE_STORE', 'database'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cache Stores
-    |--------------------------------------------------------------------------
-    |
-    | Here you may define all of the cache "stores" for your application as
-    | well as their drivers. You may even define multiple stores for the
-    | same cache driver to group types of items stored in your caches.
-    |
-    | Supported drivers: "array", "database", "file", "memcached",
-    |                    "redis", "dynamodb", "octane",
-    |                    "failover", "null"
-    |
-    */
-
-    'stores' => [
-
-        'array' => [
-            'driver' => 'array',
-            'serialize' => false,
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
         ],
-
-        'database' => [
-            'driver' => 'database',
-            'connection' => env('DB_CACHE_CONNECTION'),
-            'table' => env('DB_CACHE_TABLE', 'cache'),
-            'lock_connection' => env('DB_CACHE_LOCK_CONNECTION'),
-            'lock_table' => env('DB_CACHE_LOCK_TABLE'),
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
         ],
-
-        'file' => [
-            'driver' => 'file',
-            'path' => storage_path('framework/cache/data'),
-            'lock_path' => storage_path('framework/cache/data'),
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
         ],
-
-        'memcached' => [
-            'driver' => 'memcached',
-            'persistent_id' => env('MEMCACHED_PERSISTENT_ID'),
-            'sasl' => [
-                env('MEMCACHED_USERNAME'),
-                env('MEMCACHED_PASSWORD'),
-            ],
-            'options' => [
-                // Memcached::OPT_CONNECT_TIMEOUT => 2000,
-            ],
-            'servers' => [
-                [
-                    'host' => env('MEMCACHED_HOST', '127.0.0.1'),
-                    'port' => env('MEMCACHED_PORT', 11211),
-                    'weight' => 100,
-                ],
-            ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "@php artisan migrate --graceful --ansi"
         ],
-
-        'redis' => [
-            'driver' => 'redis',
-            'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
-            'lock_connection' => env('REDIS_CACHE_LOCK_CONNECTION', 'default'),
-        ],
-
-        'dynamodb' => [
-            'driver' => 'dynamodb',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
-            'table' => env('DYNAMODB_CACHE_TABLE', 'cache'),
-            'endpoint' => env('DYNAMODB_ENDPOINT'),
-        ],
-
-        'octane' => [
-            'driver' => 'octane',
-        ],
-
-        'failover' => [
-            'driver' => 'failover',
-            'stores' => [
-                'database',
-                'array',
-            ],
-        ],
-
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cache Key Prefix
-    |--------------------------------------------------------------------------
-    |
-    | When utilizing the APC, database, memcached, Redis, and DynamoDB cache
-    | stores, there might be other applications using the same cache. For
-    | that reason, you may prefix every cache key to avoid collisions.
-    |
-    */
-
-    'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
-
-];
-````
-
-## File: config/database.php
-````php
-<?php
-
-use Illuminate\Support\Str;
-use Pdo\Mysql;
-
-return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Database Connection Name
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify which of the database connections below you wish
-    | to use as your default connection for database operations. This is
-    | the connection which will be utilized unless another connection
-    | is explicitly specified when you execute a query / statement.
-    |
-    */
-
-    'default' => env('DB_CONNECTION', 'sqlite'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Database Connections
-    |--------------------------------------------------------------------------
-    |
-    | Below are all of the database connections defined for your application.
-    | An example configuration is provided for each database system which
-    | is supported by Laravel. You're free to add / remove connections.
-    |
-    */
-
-    'connections' => [
-
-        'sqlite' => [
-            'driver' => 'sqlite',
-            'url' => env('DB_URL'),
-            'database' => env('DB_DATABASE', database_path('database.sqlite')),
-            'prefix' => '',
-            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => null,
-            'journal_mode' => null,
-            'synchronous' => null,
-            'transaction_mode' => 'DEFERRED',
-        ],
-
-        'mysql' => [
-            'driver' => 'mysql',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'unix_socket' => env('DB_SOCKET', ''),
-            'charset' => env('DB_CHARSET', 'utf8mb4'),
-            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'strict' => true,
-            'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
-        ],
-
-        'mariadb' => [
-            'driver' => 'mariadb',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'unix_socket' => env('DB_SOCKET', ''),
-            'charset' => env('DB_CHARSET', 'utf8mb4'),
-            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'strict' => true,
-            'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
-        ],
-
-        'pgsql' => [
-            'driver' => 'pgsql',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'search_path' => 'public',
-            'sslmode' => env('DB_SSLMODE', 'prefer'),
-        ],
-
-        'sqlsrv' => [
-            'driver' => 'sqlsrv',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', 'localhost'),
-            'port' => env('DB_PORT', '1433'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
-            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
-        ],
-
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Migration Repository Table
-    |--------------------------------------------------------------------------
-    |
-    | This table keeps track of all the migrations that have already run for
-    | your application. Using this information, we can determine which of
-    | the migrations on disk haven't actually been run on the database.
-    |
-    */
-
-    'migrations' => [
-        'table' => 'migrations',
-        'update_date_on_publish' => true,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Redis Databases
-    |--------------------------------------------------------------------------
-    |
-    | Redis is an open source, fast, and advanced key-value store that also
-    | provides a richer body of commands than a typical key-value system
-    | such as Memcached. You may define your connection settings here.
-    |
-    */
-
-    'redis' => [
-
-        'client' => env('REDIS_CLIENT', 'phpredis'),
-
-        'options' => [
-            'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
-            'persistent' => env('REDIS_PERSISTENT', false),
-        ],
-
-        'default' => [
-            'url' => env('REDIS_URL'),
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'username' => env('REDIS_USERNAME'),
-            'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_DB', '0'),
-            'max_retries' => env('REDIS_MAX_RETRIES', 3),
-            'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
-            'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
-            'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
-        ],
-
-        'cache' => [
-            'url' => env('REDIS_URL'),
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'username' => env('REDIS_USERNAME'),
-            'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_CACHE_DB', '1'),
-            'max_retries' => env('REDIS_MAX_RETRIES', 3),
-            'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
-            'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
-            'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
-        ],
-
-    ],
-
-];
-````
-
-## File: config/filesystems.php
-````php
-<?php
-
-return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Filesystem Disk
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the default filesystem disk that should be used
-    | by the framework. The "local" disk, as well as a variety of cloud
-    | based disks are available to your application for file storage.
-    |
-    */
-
-    'default' => env('FILESYSTEM_DISK', 'local'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Filesystem Disks
-    |--------------------------------------------------------------------------
-    |
-    | Below you may configure as many filesystem disks as necessary, and you
-    | may even configure multiple disks for the same driver. Examples for
-    | most supported storage drivers are configured here for reference.
-    |
-    | Supported drivers: "local", "ftp", "sftp", "s3"
-    |
-    */
-
-    'disks' => [
-
-        'local' => [
-            'driver' => 'local',
-            'root' => storage_path('app/private'),
-            'serve' => true,
-            'throw' => false,
-            'report' => false,
-        ],
-
-        'public' => [
-            'driver' => 'local',
-            'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
-            'visibility' => 'public',
-            'throw' => false,
-            'report' => false,
-        ],
-
-        's3' => [
-            'driver' => 's3',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
-            'report' => false,
-        ],
-
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Symbolic Links
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure the symbolic links that will be created when the
-    | `storage:link` Artisan command is executed. The array keys should be
-    | the locations of the links and the values should be their targets.
-    |
-    */
-
-    'links' => [
-        public_path('storage') => storage_path('app/public'),
-    ],
-
-];
-````
-
-## File: config/graded_exams.php
-````php
-<?php
-
-// إعدادات عامة لمحرك توليد الامتحانات العشوائية.
-// دي إعدادات على مستوى النظام كله (مش لكل امتحان لوحده - دي موجودة
-// في جدول graded_exam_constraint_settings بدل كده).
-return [
-
-    // كام آخر محاولة نرجع لها لتجنب تكرار نفس الأسئلة على نفس المستخدم
-    'repeat_avoidance_lookback' => 3,
-
-];
-````
-
-## File: config/logging.php
-````php
-<?php
-
-use Monolog\Handler\NullHandler;
-use Monolog\Handler\StreamHandler;
-use Monolog\Handler\SyslogUdpHandler;
-use Monolog\Processor\PsrLogMessageProcessor;
-
-return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Log Channel
-    |--------------------------------------------------------------------------
-    |
-    | This option defines the default log channel that is utilized to write
-    | messages to your logs. The value provided here should match one of
-    | the channels present in the list of "channels" configured below.
-    |
-    */
-
-    'default' => env('LOG_CHANNEL', 'stack'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Deprecations Log Channel
-    |--------------------------------------------------------------------------
-    |
-    | This option controls the log channel that should be used to log warnings
-    | regarding deprecated PHP and library features. This allows you to get
-    | your application ready for upcoming major versions of dependencies.
-    |
-    */
-
-    'deprecations' => [
-        'channel' => env('LOG_DEPRECATIONS_CHANNEL', 'null'),
-        'trace' => env('LOG_DEPRECATIONS_TRACE', false),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Log Channels
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure the log channels for your application. Laravel
-    | utilizes the Monolog PHP logging library, which includes a variety
-    | of powerful log handlers and formatters that you're free to use.
-    |
-    | Available drivers: "single", "daily", "slack", "syslog",
-    |                    "errorlog", "monolog", "custom", "stack"
-    |
-    */
-
-    'channels' => [
-
-        'stack' => [
-            'driver' => 'stack',
-            'channels' => explode(',', (string) env('LOG_STACK', 'single')),
-            'ignore_exceptions' => false,
-        ],
-
-        'single' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/laravel.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
-            'replace_placeholders' => true,
-        ],
-
-        'daily' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/laravel.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
-            'days' => env('LOG_DAILY_DAYS', 14),
-            'replace_placeholders' => true,
-        ],
-
-        'slack' => [
-            'driver' => 'slack',
-            'url' => env('LOG_SLACK_WEBHOOK_URL'),
-            'username' => env('LOG_SLACK_USERNAME', env('APP_NAME', 'Laravel')),
-            'emoji' => env('LOG_SLACK_EMOJI', ':boom:'),
-            'level' => env('LOG_LEVEL', 'critical'),
-            'replace_placeholders' => true,
-        ],
-
-        'papertrail' => [
-            'driver' => 'monolog',
-            'level' => env('LOG_LEVEL', 'debug'),
-            'handler' => env('LOG_PAPERTRAIL_HANDLER', SyslogUdpHandler::class),
-            'handler_with' => [
-                'host' => env('PAPERTRAIL_URL'),
-                'port' => env('PAPERTRAIL_PORT'),
-                'connectionString' => 'tls://'.env('PAPERTRAIL_URL').':'.env('PAPERTRAIL_PORT'),
-            ],
-            'processors' => [PsrLogMessageProcessor::class],
-        ],
-
-        'stderr' => [
-            'driver' => 'monolog',
-            'level' => env('LOG_LEVEL', 'debug'),
-            'handler' => StreamHandler::class,
-            'handler_with' => [
-                'stream' => 'php://stderr',
-            ],
-            'formatter' => env('LOG_STDERR_FORMATTER'),
-            'processors' => [PsrLogMessageProcessor::class],
-        ],
-
-        'syslog' => [
-            'driver' => 'syslog',
-            'level' => env('LOG_LEVEL', 'debug'),
-            'facility' => env('LOG_SYSLOG_FACILITY', LOG_USER),
-            'replace_placeholders' => true,
-        ],
-
-        'errorlog' => [
-            'driver' => 'errorlog',
-            'level' => env('LOG_LEVEL', 'debug'),
-            'replace_placeholders' => true,
-        ],
-
-        'null' => [
-            'driver' => 'monolog',
-            'handler' => NullHandler::class,
-        ],
-
-        'emergency' => [
-            'path' => storage_path('logs/laravel.log'),
-        ],
-
-    ],
-
-];
-````
-
-## File: config/mail.php
-````php
-<?php
-
-return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Mailer
-    |--------------------------------------------------------------------------
-    |
-    | This option controls the default mailer that is used to send all email
-    | messages unless another mailer is explicitly specified when sending
-    | the message. All additional mailers can be configured within the
-    | "mailers" array. Examples of each type of mailer are provided.
-    |
-    */
-
-    'default' => env('MAIL_MAILER', 'log'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Mailer Configurations
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure all of the mailers used by your application plus
-    | their respective settings. Several examples have been configured for
-    | you and you are free to add your own as your application requires.
-    |
-    | Laravel supports a variety of mail "transport" drivers that can be used
-    | when delivering an email. You may specify which one you're using for
-    | your mailers below. You may also add additional mailers if needed.
-    |
-    | Supported: "smtp", "sendmail", "mailgun", "ses", "ses-v2",
-    |            "postmark", "resend", "log", "array",
-    |            "failover", "roundrobin"
-    |
-    */
-
-    'mailers' => [
-
-        'smtp' => [
-            'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
-            'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
-            'username' => env('MAIL_USERNAME'),
-            'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
-            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
-        ],
-
-        'ses' => [
-            'transport' => 'ses',
-        ],
-
-        'postmark' => [
-            'transport' => 'postmark',
-            // 'message_stream_id' => env('POSTMARK_MESSAGE_STREAM_ID'),
-            // 'client' => [
-            //     'timeout' => 5,
-            // ],
-        ],
-
-        'resend' => [
-            'transport' => 'resend',
-        ],
-
-        'sendmail' => [
-            'transport' => 'sendmail',
-            'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
-        ],
-
-        'log' => [
-            'transport' => 'log',
-            'channel' => env('MAIL_LOG_CHANNEL'),
-        ],
-
-        'array' => [
-            'transport' => 'array',
-        ],
-
-        'failover' => [
-            'transport' => 'failover',
-            'mailers' => [
-                'smtp',
-                'log',
-            ],
-            'retry_after' => 60,
-        ],
-
-        'roundrobin' => [
-            'transport' => 'roundrobin',
-            'mailers' => [
-                'ses',
-                'postmark',
-            ],
-            'retry_after' => 60,
-        ],
-
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Global "From" Address
-    |--------------------------------------------------------------------------
-    |
-    | You may wish for all emails sent by your application to be sent from
-    | the same address. Here you may specify a name and address that is
-    | used globally for all emails that are sent by your application.
-    |
-    */
-
-    'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
-    ],
-
-];
-````
-
-## File: config/queue.php
-````php
-<?php
-
-return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Queue Connection Name
-    |--------------------------------------------------------------------------
-    |
-    | Laravel's queue supports a variety of backends via a single, unified
-    | API, giving you convenient access to each backend using identical
-    | syntax for each. The default queue connection is defined below.
-    |
-    */
-
-    'default' => env('QUEUE_CONNECTION', 'database'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Queue Connections
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure the connection options for every queue backend
-    | used by your application. An example configuration is provided for
-    | each backend supported by Laravel. You're also free to add more.
-    |
-    | Drivers: "sync", "database", "beanstalkd", "sqs", "redis",
-    |          "deferred", "background", "failover", "null"
-    |
-    */
-
-    'connections' => [
-
-        'sync' => [
-            'driver' => 'sync',
-        ],
-
-        'database' => [
-            'driver' => 'database',
-            'connection' => env('DB_QUEUE_CONNECTION'),
-            'table' => env('DB_QUEUE_TABLE', 'jobs'),
-            'queue' => env('DB_QUEUE', 'default'),
-            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
-            'after_commit' => false,
-        ],
-
-        'beanstalkd' => [
-            'driver' => 'beanstalkd',
-            'host' => env('BEANSTALKD_QUEUE_HOST', 'localhost'),
-            'queue' => env('BEANSTALKD_QUEUE', 'default'),
-            'retry_after' => (int) env('BEANSTALKD_QUEUE_RETRY_AFTER', 90),
-            'block_for' => 0,
-            'after_commit' => false,
-        ],
-
-        'sqs' => [
-            'driver' => 'sqs',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'prefix' => env('SQS_PREFIX', 'https://sqs.us-east-1.amazonaws.com/your-account-id'),
-            'queue' => env('SQS_QUEUE', 'default'),
-            'suffix' => env('SQS_SUFFIX'),
-            'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
-            'after_commit' => false,
-        ],
-
-        'redis' => [
-            'driver' => 'redis',
-            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
-            'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 90),
-            'block_for' => null,
-            'after_commit' => false,
-        ],
-
-        'deferred' => [
-            'driver' => 'deferred',
-        ],
-
-        'background' => [
-            'driver' => 'background',
-        ],
-
-        'failover' => [
-            'driver' => 'failover',
-            'connections' => [
-                'database',
-                'deferred',
-            ],
-        ],
-
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Job Batching
-    |--------------------------------------------------------------------------
-    |
-    | The following options configure the database and table that store job
-    | batching information. These options can be updated to any database
-    | connection and table which has been defined by your application.
-    |
-    */
-
-    'batching' => [
-        'database' => env('DB_CONNECTION', 'sqlite'),
-        'table' => 'job_batches',
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Failed Queue Jobs
-    |--------------------------------------------------------------------------
-    |
-    | These options configure the behavior of failed queue job logging so you
-    | can control how and where failed jobs are stored. Laravel ships with
-    | support for storing failed jobs in a simple file or in a database.
-    |
-    | Supported drivers: "database-uuids", "dynamodb", "file", "null"
-    |
-    */
-
-    'failed' => [
-        'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),
-        'database' => env('DB_CONNECTION', 'sqlite'),
-        'table' => 'failed_jobs',
-    ],
-
-];
-````
-
-## File: config/services.php
-````php
-<?php
-
-return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Third Party Services
-    |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
-    */
-
-    'postmark' => [
-        'key' => env('POSTMARK_API_KEY'),
-    ],
-
-    'resend' => [
-        'key' => env('RESEND_API_KEY'),
-    ],
-
-    'ses' => [
-        'key' => env('AWS_ACCESS_KEY_ID'),
-        'secret' => env('AWS_SECRET_ACCESS_KEY'),
-        'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
-    ],
-
-    'slack' => [
-        'notifications' => [
-            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
-            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
-        ],
-    ],
-
-];
-````
-
-## File: config/session.php
-````php
-<?php
-
-use Illuminate\Support\Str;
-
-return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Session Driver
-    |--------------------------------------------------------------------------
-    |
-    | This option determines the default session driver that is utilized for
-    | incoming requests. Laravel supports a variety of storage options to
-    | persist session data. Database storage is a great default choice.
-    |
-    | Supported: "file", "cookie", "database", "memcached",
-    |            "redis", "dynamodb", "array"
-    |
-    */
-
-    'driver' => env('SESSION_DRIVER', 'database'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Lifetime
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the number of minutes that you wish the session
-    | to be allowed to remain idle before it expires. If you want them
-    | to expire immediately when the browser is closed then you may
-    | indicate that via the expire_on_close configuration option.
-    |
-    */
-
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
-
-    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Encryption
-    |--------------------------------------------------------------------------
-    |
-    | This option allows you to easily specify that all of your session data
-    | should be encrypted before it's stored. All encryption is performed
-    | automatically by Laravel and you may use the session like normal.
-    |
-    */
-
-    'encrypt' => env('SESSION_ENCRYPT', false),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session File Location
-    |--------------------------------------------------------------------------
-    |
-    | When utilizing the "file" session driver, the session files are placed
-    | on disk. The default storage location is defined here; however, you
-    | are free to provide another location where they should be stored.
-    |
-    */
-
-    'files' => storage_path('framework/sessions'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Database Connection
-    |--------------------------------------------------------------------------
-    |
-    | When using the "database" or "redis" session drivers, you may specify a
-    | connection that should be used to manage these sessions. This should
-    | correspond to a connection in your database configuration options.
-    |
-    */
-
-    'connection' => env('SESSION_CONNECTION'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Database Table
-    |--------------------------------------------------------------------------
-    |
-    | When using the "database" session driver, you may specify the table to
-    | be used to store sessions. Of course, a sensible default is defined
-    | for you; however, you're welcome to change this to another table.
-    |
-    */
-
-    'table' => env('SESSION_TABLE', 'sessions'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Cache Store
-    |--------------------------------------------------------------------------
-    |
-    | When using one of the framework's cache driven session backends, you may
-    | define the cache store which should be used to store the session data
-    | between requests. This must match one of your defined cache stores.
-    |
-    | Affects: "dynamodb", "memcached", "redis"
-    |
-    */
-
-    'store' => env('SESSION_STORE'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Sweeping Lottery
-    |--------------------------------------------------------------------------
-    |
-    | Some session drivers must manually sweep their storage location to get
-    | rid of old sessions from storage. Here are the chances that it will
-    | happen on a given request. By default, the odds are 2 out of 100.
-    |
-    */
-
-    'lottery' => [2, 100],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Cookie Name
-    |--------------------------------------------------------------------------
-    |
-    | Here you may change the name of the session cookie that is created by
-    | the framework. Typically, you should not need to change this value
-    | since doing so does not grant a meaningful security improvement.
-    |
-    */
-
-    'cookie' => env(
-        'SESSION_COOKIE',
-        Str::slug((string) env('APP_NAME', 'laravel')).'-session'
-    ),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Cookie Path
-    |--------------------------------------------------------------------------
-    |
-    | The session cookie path determines the path for which the cookie will
-    | be regarded as available. Typically, this will be the root path of
-    | your application, but you're free to change this when necessary.
-    |
-    */
-
-    'path' => env('SESSION_PATH', '/'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Cookie Domain
-    |--------------------------------------------------------------------------
-    |
-    | This value determines the domain and subdomains the session cookie is
-    | available to. By default, the cookie will be available to the root
-    | domain without subdomains. Typically, this shouldn't be changed.
-    |
-    */
-
-    'domain' => env('SESSION_DOMAIN'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | HTTPS Only Cookies
-    |--------------------------------------------------------------------------
-    |
-    | By setting this option to true, session cookies will only be sent back
-    | to the server if the browser has a HTTPS connection. This will keep
-    | the cookie from being sent to you when it can't be done securely.
-    |
-    */
-
-    'secure' => env('SESSION_SECURE_COOKIE'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | HTTP Access Only
-    |--------------------------------------------------------------------------
-    |
-    | Setting this value to true will prevent JavaScript from accessing the
-    | value of the cookie and the cookie will only be accessible through
-    | the HTTP protocol. It's unlikely you should disable this option.
-    |
-    */
-
-    'http_only' => env('SESSION_HTTP_ONLY', true),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Same-Site Cookies
-    |--------------------------------------------------------------------------
-    |
-    | This option determines how your cookies behave when cross-site requests
-    | take place, and can be used to mitigate CSRF attacks. By default, we
-    | will set this value to "lax" to permit secure cross-site requests.
-    |
-    | See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#samesitesamesite-value
-    |
-    | Supported: "lax", "strict", "none", null
-    |
-    */
-
-    'same_site' => env('SESSION_SAME_SITE', 'lax'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Partitioned Cookies
-    |--------------------------------------------------------------------------
-    |
-    | Setting this value to true will tie the cookie to the top-level site for
-    | a cross-site context. Partitioned cookies are accepted by the browser
-    | when flagged "secure" and the Same-Site attribute is set to "none".
-    |
-    */
-
-    'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
-
-];
-````
-
-## File: database/.gitignore
-````
-*.sqlite*
-````
-
-## File: database/data/graded_exams/marketing_ibta/meta.php
-````php
-<?php
-
-// بيانات الامتحان نفسه: الاختبار التجريبي للشهادة الاحترافية في التسويق (IBTA)
-return [
-    'title_ar' => 'الاختبار التجريبي للشهادة الاحترافية في التسويق (IBTA)',
-    'description_ar' => 'بنك أسئلة شامل مكون من 404 سؤال موزعة على 13 وحدة دراسية، لإعداد الطلاب للشهادة الاحترافية في التسويق الصادرة عن IBTA.',
-    'category' => 'marketing_certification',
-    'total_questions' => 404,
-    'time_limit_min' => null,
-    'is_active' => true,
-];
+        "pre-package-uninstall": [
+            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
 ````
 
 ## File: database/data/graded_exams/marketing_ibta/units/unit_01.php
@@ -46853,56 +50563,7 @@ return [
 ];
 ````
 
-## File: database/factories/UserFactory.php
-````php
-<?php
-
-namespace Database\Factories;
-
-use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-
-/**
- * @extends Factory<User>
- */
-class UserFactory extends Factory
-{
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
-
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
-    public function definition(): array
-    {
-        return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
-        ];
-    }
-
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
-    }
-}
-````
-
-## File: database/migrations/0001_01_01_000001_create_cache_table.php
+## File: database/migrations/0001_01_01_000000_create_users_table.php
 ````php
 <?php
 
@@ -46912,237 +50573,40 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('cache', function (Blueprint $table) {
-            $table->string('key')->primary();
-            $table->mediumText('value');
-            $table->integer('expiration')->index();
-        });
-
-        Schema::create('cache_locks', function (Blueprint $table) {
-            $table->string('key')->primary();
-            $table->string('owner');
-            $table->integer('expiration')->index();
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('cache');
-        Schema::dropIfExists('cache_locks');
-    }
-};
-````
-
-## File: database/migrations/0001_01_01_000002_create_jobs_table.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::create('jobs', function (Blueprint $table) {
-            $table->id();
-            $table->string('queue')->index();
-            $table->longText('payload');
-            $table->unsignedTinyInteger('attempts');
-            $table->unsignedInteger('reserved_at')->nullable();
-            $table->unsignedInteger('available_at');
-            $table->unsignedInteger('created_at');
-        });
-
-        Schema::create('job_batches', function (Blueprint $table) {
-            $table->string('id')->primary();
+        Schema::create('users', function (Blueprint $table) {
+            $table->uuid('id')->primary();
             $table->string('name');
-            $table->integer('total_jobs');
-            $table->integer('pending_jobs');
-            $table->integer('failed_jobs');
-            $table->longText('failed_job_ids');
-            $table->mediumText('options')->nullable();
-            $table->integer('cancelled_at')->nullable();
-            $table->integer('created_at');
-            $table->integer('finished_at')->nullable();
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->string('role')->default('user');
+            $table->rememberToken();
+            $table->timestamps();
         });
 
-        Schema::create('failed_jobs', function (Blueprint $table) {
-            $table->id();
-            $table->string('uuid')->unique();
-            $table->text('connection');
-            $table->text('queue');
+        Schema::create('password_reset_tokens', function (Blueprint $table) {
+            $table->string('email')->primary();
+            $table->string('token');
+            $table->timestamp('created_at')->nullable();
+        });
+
+        Schema::create('sessions', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->string('user_id', 36)->nullable()->index();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
             $table->longText('payload');
-            $table->longText('exception');
-            $table->timestamp('failed_at')->useCurrent();
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('jobs');
-        Schema::dropIfExists('job_batches');
-        Schema::dropIfExists('failed_jobs');
-    }
-};
-````
-
-## File: database/migrations/2026_06_24_085954_add_performance_indexes_to_tables.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::table('recommendations', function (Blueprint $table) {
-            $table->unique(['assessment_id', 'level'], 'recommendations_assessment_level_unique');
-        });
-
-        Schema::table('dimensions', function (Blueprint $table) {
-            $table->index(['assessment_id', 'order_index'], 'dimensions_assessment_order_index');
-        });
-
-        Schema::table('questions', function (Blueprint $table) {
-            $table->index(['assessment_id', 'order_index'], 'questions_assessment_order_index');
-            $table->index(['dimension_id', 'order_index'], 'questions_dimension_order_index');
-        });
-
-        Schema::table('answer_options', function (Blueprint $table) {
-            $table->index(['question_id', 'order_index'], 'answer_options_question_order_index');
+            $table->integer('last_activity')->index();
         });
     }
 
     public function down(): void
     {
-        Schema::table('recommendations', function (Blueprint $table) {
-            $table->dropUnique('recommendations_assessment_level_unique');
-        });
-
-        Schema::table('dimensions', function (Blueprint $table) {
-            $table->dropIndex('dimensions_assessment_order_index');
-        });
-
-        Schema::table('questions', function (Blueprint $table) {
-            $table->dropIndex('questions_assessment_order_index');
-            $table->dropIndex('questions_dimension_order_index');
-        });
-
-        Schema::table('answer_options', function (Blueprint $table) {
-            $table->dropIndex('answer_options_question_order_index');
-        });
-    }
-};
-````
-
-## File: database/migrations/2026_06_25_120000_add_is_reversed_to_questions_table.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::table('questions', function (Blueprint $table) {
-            // Reversed questions score inversely: نعم=0, إلى حد ما=1, لا=2
-            $table->boolean('is_reversed')->default(false)->after('order_index');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::table('questions', function (Blueprint $table) {
-            $table->dropColumn('is_reversed');
-        });
-    }
-};
-````
-
-## File: database/migrations/2026_07_01_122729_add_price_and_rating_to_assessments_table.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::table('assessments', function (Blueprint $table) {
-            $table->decimal('price', 8, 2)->nullable()->after('time_limit_min');
-            $table->decimal('rating', 3, 2)->nullable()->after('price');
-            $table->integer('rating_count')->default(0)->after('rating');
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('assessments', function (Blueprint $table) {
-            $table->dropColumn(['price', 'rating', 'rating_count']);
-        });
-    }
-};
-````
-
-## File: database/migrations/2026_07_01_140449_add_image_url_to_assessments_table.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::table('assessments', function (Blueprint $table) {
-            $table->string('image_url')->nullable()->after('description_ar');
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('assessments', function (Blueprint $table) {
-            $table->dropColumn('image_url');
-        });
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('sessions');
     }
 };
 ````
@@ -48079,27 +51543,6 @@ cmds = [
 ]
 ````
 
-## File: package.json
-````json
-{
-    "$schema": "https://www.schemastore.org/package.json",
-    "private": true,
-    "type": "module",
-    "scripts": {
-        "build": "vite build",
-        "dev": "vite"
-    },
-    "devDependencies": {
-        "@tailwindcss/vite": "^4.0.0",
-        "axios": "^1.11.0",
-        "concurrently": "^9.0.1",
-        "laravel-vite-plugin": "^2.0.0",
-        "tailwindcss": "^4.0.0",
-        "vite": "^7.0.7"
-    }
-}
-````
-
 ## File: phpstan.neon
 ````
 includes:
@@ -48113,925 +51556,221 @@ parameters:
     level: 1
 ````
 
-## File: phpunit.xml
-````xml
-<?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
-         colors="true"
->
-    <testsuites>
-        <testsuite name="Unit">
-            <directory>tests/Unit</directory>
-        </testsuite>
-        <testsuite name="Feature">
-            <directory>tests/Feature</directory>
-        </testsuite>
-    </testsuites>
-    <source>
-        <include>
-            <directory>app</directory>
-        </include>
-    </source>
-    <php>
-        <env name="APP_ENV" value="testing"/>
-        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
-        <env name="BCRYPT_ROUNDS" value="4"/>
-        <env name="BROADCAST_CONNECTION" value="null"/>
-        <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
-        <env name="DB_URL" value=""/>
-        <env name="MAIL_MAILER" value="array"/>
-        <env name="QUEUE_CONNECTION" value="sync"/>
-        <env name="SESSION_DRIVER" value="array"/>
-        <env name="PULSE_ENABLED" value="false"/>
-        <env name="TELESCOPE_ENABLED" value="false"/>
-        <env name="NIGHTWATCH_ENABLED" value="false"/>
-    </php>
-</phpunit>
-````
-
 ## File: Procfile
 ````
 web: php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
 ````
 
-## File: public/.htaccess
-````
-<IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
+## File: README.md
+````markdown
+<div align="center">
+  <h1 align="center">نظام المقاييس والاختبارات المهنية</h1>
+  <p align="center">
+    <strong>نظام متكامل واحترافي لإدارة المقاييس والاختبارات النفسية والمهنية</strong>
+    <br />
+    <br />
+    <a href="#المميزات-الرئيسية">المميزات</a>
+    ·
+    <a href="#التقنيات-المستخدمة">التقنيات</a>
+    ·
+    <a href="#التثبيت-والتشغيل">التشغيل</a>
+  </p>
+</div>
 
-    RewriteEngine On
+<hr />
 
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+## 🌟 نبذة عن المشروع
+**نظام المقاييس والاختبارات المهنية** هو منصة ويب متطورة مبنية باستخدام إطار عمل Laravel. تهدف المنصة إلى توفير بيئة متكاملة للمؤسسات والأفراد لإدارة وإجراء المقاييس والاختبارات (النفسية، المهنية، وغيرها) بمرونة عالية، مع تقديم تقارير تفصيلية ورسومات بيانية تحليلية دقيقة للمستخدمين.
 
-    # Handle X-XSRF-Token Header
-    RewriteCond %{HTTP:x-xsrf-token} .
-    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+## ✨ المميزات الرئيسية
+### 👨‍💼 لوحة تحكم الإدارة (Admin Dashboard)
+- **إدارة ديناميكية للمقاييس:** إضافة، تعديل، وحذف المقاييس بكل سهولة (اسم، وصف، صورة، مدة زمنية، سعر).
+- **بناء المقاييس بمرونة:** تقسيم المقياس إلى عدة أبعاد (Dimensions) وإضافة أسئلة لكل بعد مع تحديد خيارات الإجابات وأوزانها.
+- **التفسير الذكي للنتائج:** إضافة تفسيرات مخصصة لكل بعد بناءً على المستوى (مرتفع، متوسط، منخفض) وتحديد نقاط القوة وجوانب التطوير.
+- **نظام الكوبونات والتخفيضات:** إنشاء كوبونات خصم أو وصول مجاني للمقاييس وتحديد عدد الاستخدامات المسموحة وتواريخ الانتهاء.
+- **إحصائيات متقدمة:** واجهة رسومية توضح المبيعات، أعداد المستخدمين، المقاييس الأكثر استخداماً، وتحليلات تفصيلية للأداء.
 
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
+### 👤 بوابة المستخدم (User Portal)
+- **تصميم عصري (UI/UX):** واجهة مستخدم احترافية وسريعة الاستجابة على جميع الأجهزة (Mobile Friendly).
+- **التخزين المؤقت الذكي (Smart Caching):** أداء فائق السرعة عبر نظام Caching يعتمد على التحديث اللحظي للبيانات.
+- **إجراء المقاييس والتوقف المؤقت:** إمكانية بدء المقياس، التوقف في أي وقت، واستئناف الحل لاحقاً دون فقدان البيانات.
+- **نظام الدفع والكوبونات:** شاشة منبثقة (Modal) احترافية تتيح للمستخدم إدخال كوبون مجاني أو التوجه للدفع الإلكتروني للحصول على المقياس.
+- **تقارير نتائج احترافية:**
+  - عرض النتيجة النهائية كنسبة مئوية مع تقييم المستوى.
+  - رسم بياني شبكي (Radar Chart) ديناميكي يوضح درجات جميع الأبعاد بحلقات متدرجة.
+  - تحليل مفصل لنقاط القوة والضعف (Areas of Improvement) بناءً على درجات المستخدم.
 
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
-</IfModule>
-````
+## 🛠️ التقنيات المستخدمة
+- **الواجهة الخلفية (Backend):** PHP 8.x, Laravel 11.x
+- **قواعد البيانات:** MySQL
+- **الواجهة الأمامية (Frontend):** Blade Templates, HTML5, CSS3, Vanilla JavaScript, Bootstrap 5
+- **الرسوم البيانية (Charts):** Chart.js
+- **الأيقونات (Icons):** Bootstrap Icons
+- **معايير الكود:** PSR-12, Laravel Pint (لضمان نظافة الكود Clean Code)
 
-## File: public/css/app.css
-````css
-/* ============================================
-   Dar Alroaya Exam System — Global Styles
-   ============================================ */
+## 🚀 التثبيت والتشغيل
+اتبع الخطوات التالية لتشغيل المشروع على بيئتك المحلية:
 
-:root {
-    --font-ar: 'Noto Kufi Arabic', sans-serif;
-}
+1. **استنساخ المستودع (Clone):**
+   ```bash
+   git clone https://github.com/Ahmedsayed732004444/Examinations-Department.git
+   cd Examinations-Department
+   ```
 
-*, body {
-    font-family: var(--font-ar) !important;
-}
+2. **تثبيت الحزم (Dependencies):**
+   ```bash
+   composer install
+   npm install
+   npm run build
+   ```
 
-/* Smooth transitions */
-.transition-all { transition: all .3s ease; }
+3. **إعداد البيئة:**
+   قم بنسخ ملف `.env.example` إلى `.env` وقم بإعداد اتصال قاعدة البيانات الخاصة بك.
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-/* Card hover lift */
-.card {
-    transition: box-shadow .2s ease;
-}
-.card:hover {
-    box-shadow: 0 4px 20px rgba(0,0,0,.08) !important;
-}
+4. **تجهيز قاعدة البيانات (Migrations & Seeding):**
+   ```bash
+   php artisan migrate --seed
+   ```
+   *(ملاحظة: يقوم الـ Seeder بإضافة بيانات تجريبية وحسابات مدير لتتمكن من تجربة النظام فوراً)*
 
-/* Custom scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #f1f3f5; }
-::-webkit-scrollbar-thumb { background: #adb5bd; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #6c757d; }
+5. **ربط مجلد الصور:**
+   ```bash
+   php artisan storage:link
+   ```
 
-/* Badge subtle variants (Bootstrap 5.3 polyfill) */
-.bg-success-subtle { background-color: #d1e7dd !important; }
-.bg-warning-subtle { background-color: #fff3cd !important; }
-.bg-danger-subtle  { background-color: #f8d7da !important; }
-.bg-primary-subtle { background-color: #cfe2ff !important; }
-.bg-secondary-subtle { background-color: #e2e3e5 !important; }
+6. **تشغيل الخادم المحلي:**
+   ```bash
+   php artisan serve
+   ```
+   يمكنك الآن زيارة الموقع عبر الرابط `http://localhost:8000`
 
-/* Progress bar animation */
-.progress-bar { transition: width 0.8s ease; }
+## 🔒 الصلاحيات والوصول
+- للوصول إلى لوحة الإدارة، يتم استخدام مسارات `admin/` المحمية بـ `AdminMiddleware`.
+- بوابة المستخدمين تعمل عبر المسارات الأساسية محمية بـ `UserMiddleware`.
 
-/* Alert container flash */
-#alert-container .alert {
-    animation: slideDown .3s ease;
-}
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
+<hr />
 
-/* Exam page specific */
-.option-card {
-    cursor: pointer;
-    border: 2px solid #dee2e6;
-    border-radius: 12px;
-    transition: all .2s ease;
-    padding: 14px 16px;
-}
-.option-card:hover {
-    border-color: #0d6efd;
-    background: #f0f5ff;
-    transform: translateX(-3px);
-}
-.option-card.selected {
-    border-color: #0d6efd;
-    background: #e8f0fe;
-}
-
-/* Sidebar active glow */
-.sidebar .nav-link.active {
-    box-shadow: 0 2px 10px rgba(13,110,253,.3);
-}
-
-/* Table improvements */
-.table th {
-    font-weight: 600;
-    font-size: .875rem;
-    color: #495057;
-}
-
-/* Form label */
-.form-label {
-    color: #495057;
-    margin-bottom: .4rem;
-}
-
-/* Print styles */
-@media print {
-    .navbar, .footer, .no-print, .sidebar, .topbar { display: none !important; }
-    .card { break-inside: avoid; }
-    body { background: #fff !important; }
-}
+<div align="center">
+  <sub>تم تطوير هذا النظام باحترافية عالية لتقديم تجربة تقييم مميزة وسلسة.</sub>
+</div>
 ````
 
-## File: public/index.php
-````php
-<?php
-
-use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
-
-define('LARAVEL_START', microtime(true));
-
-// Determine if the application is in maintenance mode...
-if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
-    require $maintenance;
-}
-
-// Register the Composer autoloader...
-require __DIR__.'/../vendor/autoload.php';
-
-// Bootstrap Laravel and handle the request...
-/** @var Application $app */
-$app = require_once __DIR__.'/../bootstrap/app.php';
-
-$app->handleRequest(Request::capture());
-````
-
-## File: public/js/app.js
-````javascript
-/**
- * Dar Alroaya Exam System — Global JS Helpers
- */
-
-$.ajaxSetup({
-    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
-});
-
-/**
- * Show a dismissible alert in #alert-container
- */
-function showAlert(message, type = 'info') {
-    const icons = { success: 'check-circle', danger: 'exclamation-triangle', warning: 'exclamation-circle', info: 'info-circle' };
-    const icon  = icons[type] || 'info-circle';
-    const html  = `
-        <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-${icon} me-2"></i>${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>`;
-    $('#alert-container').html(html);
-    // Auto-dismiss after 4s
-    setTimeout(() => $('#alert-container .alert').alert('close'), 4000);
-}
-
-/**
- * Toggle loading state on a button
- */
-function setLoading(btn, loading) {
-    const spinner = btn.find('.spinner-border');
-    const text    = btn.find('.btn-text');
-    if (loading) {
-        btn.prop('disabled', true);
-        text.addClass('d-none');
-        spinner.removeClass('d-none');
-    } else {
-        btn.prop('disabled', false);
-        text.removeClass('d-none');
-        spinner.addClass('d-none');
-    }
-}
-
-/**
- * Confirm delete using the shared modal
- */
-let _deleteCallback = null;
-let _deleteUrl      = null;
-
-function confirmDelete(message, url, onSuccess) {
-    _deleteUrl      = url;
-    _deleteCallback = onSuccess;
-    $('#confirmDeleteMessage').text(message);
-    new bootstrap.Modal(document.getElementById('confirmDeleteModal')).show();
-}
-
-$(document).on('click', '#confirmDeleteBtn', function() {
-    if (!_deleteUrl) return;
-    const btn = $(this);
-    btn.prop('disabled', true).text('جاري الحذف...');
-
-    $.ajax({
-        url: _deleteUrl,
-        method: 'DELETE',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        success: function(res) {
-            bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal')).hide();
-            showAlert(res.message || 'تم الحذف بنجاح.', 'success');
-            btn.prop('disabled', false).text('حذف');
-            if (typeof _deleteCallback === 'function') _deleteCallback();
-        },
-        error: function(xhr) {
-            showAlert(xhr.responseJSON?.message || 'حدث خطأ أثناء الحذف.', 'danger');
-            btn.prop('disabled', false).text('حذف');
-        }
-    });
-});
-````
-
-## File: public/robots.txt
-````
-User-agent: *
-Disallow:
-````
-
-## File: resources/css/app.css
-````css
-@import 'tailwindcss';
-
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
-
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
-}
-````
-
-## File: resources/js/app.js
-````javascript
-import './bootstrap';
-````
-
-## File: resources/js/bootstrap.js
-````javascript
-import axios from 'axios';
-window.axios = axios;
-
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-````
-
-## File: resources/views/admin/exams/create.blade.php
+## File: resources/views/admin/dashboard.blade.php
 ````php
 @extends('layouts.admin')
-@section('title', 'إنشاء اختبار جديد')
-@section('page-title', 'إنشاء اختبار جديد')
-
-@push('styles')
-<style>
-/* ── Layout ── */
-.sidebar-card  { position:sticky; top:80px; border-radius:16px; border:0; box-shadow:0 4px 20px rgba(0,0,0,.08); }
-.main-card     { border-radius:16px; border:0; box-shadow:0 4px 20px rgba(0,0,0,.08); }
-
-/* ── Question pool ── */
-.pool-scroll   { max-height:420px; overflow-y:auto; }
-.q-pool-item {
-    cursor:pointer; border:2px solid #e5e7eb; border-radius:10px;
-    transition:all .15s; background:#fff; padding:.6rem .9rem;
-}
-.q-pool-item:hover  { border-color:#6366f1; background:#f5f3ff; }
-.q-pool-item.selected { border-color:#6366f1; background:#ede9fe; }
-.q-pool-item .q-num { font-size:.72rem; color:#6366f1; font-weight:700; }
-
-/* ── Selected list ── */
-.sel-item {
-    background:#fff; border:1px solid #e5e7eb; border-radius:10px;
-    padding:.5rem .75rem; display:flex; align-items:center; gap:.5rem;
-}
-.sel-item .drag-handle { color:#9ca3af; cursor:grab; }
-.sel-num {
-    width:24px; height:24px; border-radius:50%;
-    background:linear-gradient(135deg,#6366f1,#8b5cf6);
-    color:#fff; font-size:.72rem; font-weight:700;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-}
-#selected-list { min-height:80px; }
-
-/* ── New question inline ── */
-.option-row { background:#f9fafb; border-radius:8px; padding:.5rem; }
-
-/* ── Reversed badge ── */
-.rev-label {
-    background:#fef3c7; border:1px solid #fcd34d; border-radius:6px;
-    color:#92400e; font-size:.72rem; padding:.15rem .5rem;
-}
-
-/* ── Tab styling ── */
-.nav-pills .nav-link { border-radius:50px; font-size:.85rem; font-weight:600; color:#6b7280; }
-.nav-pills .nav-link.active {
-    background:linear-gradient(135deg,#6366f1,#8b5cf6);
-    color:#fff; box-shadow:0 2px 8px rgba(99,102,241,.35);
-}
-
-/* ── Save button ── */
-.btn-save-main {
-    border:0; border-radius:50px; padding:.65rem 2rem; font-weight:700;
-    background:linear-gradient(135deg,#6366f1,#8b5cf6);
-    color:#fff; width:100%;
-    box-shadow:0 4px 16px rgba(99,102,241,.35); transition:all .2s;
-}
-.btn-save-main:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(99,102,241,.45); color:#fff; }
-
-/* ── Category dropdown ── */
-.category-presets { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.4rem; }
-.preset-chip {
-    background:#f3f4f6; border:1px solid #e5e7eb; border-radius:50px;
-    font-size:.72rem; padding:.2rem .7rem; cursor:pointer; transition:all .15s;
-}
-.preset-chip:hover { background:#ede9fe; border-color:#6366f1; color:#6366f1; }
-</style>
-@endpush
+@section('title', 'لوحة الإدارة')
+@section('page-title', 'لوحة الإدارة')
 
 @section('content')
-<div class="row g-4">
-
-    {{-- ─── LEFT: Assessment info ─────────────────────────────── --}}
-    <div class="col-lg-4">
-        <div class="card sidebar-card">
-            <div class="card-body p-4">
-                <h6 class="fw-bold mb-4">
-                    <i class="bi bi-info-circle-fill text-primary me-2"></i>بيانات المقياس
-                </h6>
-
-                <div class="mb-3">
-                    <label class="form-label small fw-semibold">اسم المقياس *</label>
-                    <input type="text" class="form-control" id="e-title_ar"
-                           placeholder="مثال: مقياس معرفة الذات">
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                    <i class="bi bi-people text-primary fs-4"></i>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label small fw-semibold">المجال / الفئة *</label>
-                    <input type="text" class="form-control" id="e-category"
-                           placeholder="اختر أو اكتب...">
-                    <div class="category-presets">
-                        @foreach([
-                            'مقاييس معرفة الذات والشخصية',
-                            'مقاييس الكفاءة الشخصية والنجاح المهني',
-                            'مقاييس الاتصال والعلاقات المهنية',
-                            'مقاييس القيادة والإدارة',
-                            'مقاييس التوجيه والتوافق المهني',
-                            'مقاييس الصحة المهنية',
-                        ] as $cat)
-                        <span class="preset-chip" data-cat="{{ $cat }}">{{ $cat }}</span>
-                        @endforeach
-                    </div>
+                <div>
+                    <div class="fs-3 fw-bold">{{ $totalUsers }}</div>
+                    <div class="text-muted small">إجمالي المستخدمين</div>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label small fw-semibold">وصف المقياس</label>
-                    <textarea class="form-control" id="e-description_ar" rows="3"
-                              placeholder="اكتب وصفاً موجزاً للمقياس وهدفه..."></textarea>
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label small fw-semibold">الوقت المحدد (دقائق)</label>
-                    <input type="number" class="form-control" id="e-time_limit_min"
-                           placeholder="فارغ = بلا حد زمني" min="1">
-                </div>
-
-                <hr>
-
-                {{-- Selected summary --}}
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="small fw-semibold text-muted">الأسئلة المختارة</span>
-                    <span class="badge rounded-pill" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)"
-                          id="selected-count">0</span>
-                </div>
-
-                <div id="selected-list" class="d-flex flex-column gap-2 mb-4">
-                    <div class="text-center text-muted small py-3 empty-msg">
-                        <i class="bi bi-arrow-left-circle fs-5 d-block mb-1"></i>
-                        أضف أسئلة من القسم المجاور
-                    </div>
-                </div>
-
-                <button class="btn-save-main btn" id="btn-save-exam">
-                    <span class="btn-text"><i class="bi bi-save2 me-1"></i>حفظ المقياس</span>
-                    <span class="spinner-border spinner-border-sm d-none"></span>
-                </button>
             </div>
         </div>
     </div>
-
-    {{-- ─── RIGHT: Question sources ─────────────────────────── --}}
-    <div class="col-lg-8">
-        <div class="card main-card">
-            <div class="card-body p-4">
-
-                {{-- Tabs --}}
-                <ul class="nav nav-pills mb-4 gap-2" id="source-tabs">
-                    <li class="nav-item">
-                        <button class="nav-link active" data-tab="bank">
-                            <i class="bi bi-database me-1"></i>بنك الأسئلة
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-tab="new">
-                            <i class="bi bi-plus-circle me-1"></i>سؤال جديد
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-tab="bulk">
-                            <i class="bi bi-file-text me-1"></i>استيراد نصي
-                        </button>
-                    </li>
-                </ul>
-
-                {{-- ── Tab 1: Question Bank ── --}}
-                <div id="tab-bank">
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">فلتر بالمقياس</label>
-                            <select class="form-select form-select-sm" id="pool-assessment-filter">
-                                <option value="">— كل المقاييس —</option>
-                                @foreach($assessments as $a)
-                                    <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">بحث في النص</label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-white">
-                                    <i class="bi bi-search text-muted"></i>
-                                </span>
-                                <input type="text" class="form-control" id="pool-search"
-                                       placeholder="اكتب للبحث...">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="small text-muted" id="pool-count">اختر مقياساً أو ابحث</span>
-                        <button class="btn btn-sm btn-outline-primary rounded-pill" id="btn-select-all" style="display:none">
-                            تحديد الكل
-                        </button>
-                    </div>
-
-                    <div class="pool-scroll" id="questions-pool">
-                        <div class="text-center text-muted py-5">
-                            <i class="bi bi-database fs-2 d-block mb-2 opacity-25"></i>
-                            اختر مقياساً أو ابحث لعرض الأسئلة
-                        </div>
-                    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                    <i class="bi bi-clipboard-check text-success fs-4"></i>
                 </div>
-
-                {{-- ── Tab 2: New Question Inline ── --}}
-                <div id="tab-new" class="d-none">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">نص السؤال *</label>
-                        <textarea class="form-control" id="new-q-text" rows="3"
-                                  placeholder="اكتب نص السؤال هنا..."></textarea>
-                    </div>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">المقياس *</label>
-                            <select class="form-select form-select-sm" id="new-q-assessment">
-                                <option value="">— اختر المقياس —</option>
-                                @foreach($assessments as $a)
-                                    <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">البُعد</label>
-                            <select class="form-select form-select-sm" id="new-q-dimension">
-                                <option value="">— بدون بُعد —</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" id="new-q-reversed">
-                        <label class="form-check-label small" for="new-q-reversed">
-                            سؤال معكوس
-                            <span class="rev-label ms-1">نعم=0 | لا=2</span>
-                        </label>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">خيارات الإجابة</label>
-                        <div class="d-flex flex-column gap-2" id="new-options-container">
-                            <div class="option-row d-flex gap-2 align-items-center">
-                                <span class="badge bg-success-subtle text-success border border-success-subtle small">نعم</span>
-                                <input type="number" class="form-control form-control-sm w-25" value="2" data-score-label="نعم" id="opt-score-0" placeholder="الدرجة">
-                            </div>
-                            <div class="option-row d-flex gap-2 align-items-center">
-                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle small">إلى حد ما</span>
-                                <input type="number" class="form-control form-control-sm w-25" value="1" data-score-label="إلى حد ما" id="opt-score-1" placeholder="الدرجة">
-                            </div>
-                            <div class="option-row d-flex gap-2 align-items-center">
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle small">لا</span>
-                                <input type="number" class="form-control form-control-sm w-25" value="0" data-score-label="لا" id="opt-score-2" placeholder="الدرجة">
-                            </div>
-                        </div>
-                    </div>
-
-                    <button class="btn btn-outline-primary rounded-pill px-4" id="btn-add-new-q">
-                        <i class="bi bi-plus-circle me-1"></i>إضافة وتأكيد السؤال
-                    </button>
-                    <div id="new-q-feedback" class="mt-2"></div>
+                <div>
+                    <div class="fs-3 fw-bold">{{ $todaySessions }}</div>
+                    <div class="text-muted small">اختبارات اليوم</div>
                 </div>
-
-                {{-- ── Tab 3: Bulk Text Import ── --}}
-                <div id="tab-bulk" class="d-none">
-                    <div class="alert alert-info small py-2 mb-3">
-                        <i class="bi bi-lightbulb me-1"></i>
-                        اكتب كل سؤال في سطر منفصل. ستُضاف تلقائياً بخيارات (نعم=2 / إلى حد ما=1 / لا=0).
-                    </div>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">المقياس *</label>
-                            <select class="form-select form-select-sm" id="bulk-assessment">
-                                <option value="">— اختر المقياس —</option>
-                                @foreach($assessments as $a)
-                                    <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">البُعد</label>
-                            <select class="form-select form-select-sm" id="bulk-dimension">
-                                <option value="">— بدون بُعد —</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">الأسئلة (سطر لكل سؤال)</label>
-                        <textarea class="form-control" id="bulk-text" rows="10"
-                                  dir="rtl"
-                                  placeholder="أعرف نقاط قوتي بوضوح.&#10;أستطيع تحديد نقاط الضعف التي أحتاج إلى تطويرها.&#10;أفهم الأسباب التي تدفعني لاتخاذ قراراتي."></textarea>
-                    </div>
-
-                    <button class="btn btn-outline-success rounded-pill px-4" id="btn-bulk-import">
-                        <span class="btn-text"><i class="bi bi-cloud-upload me-1"></i>استيراد وإضافة للاختبار</span>
-                        <span class="spinner-border spinner-border-sm d-none"></span>
-                    </button>
-                    <div id="bulk-feedback" class="mt-2"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                    <i class="bi bi-stars text-warning fs-4"></i>
                 </div>
-
+                <div>
+                    <div class="fs-5 fw-bold text-truncate" style="max-width:130px">
+                        {{ $mostUsedAssessment?->title_ar ?? '—' }}
+                    </div>
+                    <div class="text-muted small">الأكثر استخداماً</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                    <i class="bi bi-bar-chart text-info fs-4"></i>
+                </div>
+                <div>
+                    <div class="fs-3 fw-bold">{{ round($avgScore ?? 0, 1) }}</div>
+                    <div class="text-muted small">متوسط الدرجات</div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-clock-history me-2 text-muted"></i>آخر الجلسات المكتملة</h6>
+        <a href="{{ route('admin.statistics.exportCsv') }}" class="btn btn-sm btn-outline-success shadow-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i>تصدير جميع النتائج (CSV)
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>المستخدم</th>
+                    <th>المقياس</th>
+                    <th>وقت الإتمام</th>
+                    <th>الدرجة</th>
+                    <th>المستوى</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($recentSessions as $session)
+                <tr>
+                    <td>
+                        <div class="fw-medium">{{ $session->user?->name ?? 'مستخدم محذوف' }}</div>
+                        <div class="text-muted small">{{ $session->user?->email ?? '-' }}</div>
+                    </td>
+                    <td>{{ $session->assessment?->title_ar ?? 'مقياس محذوف' }}</td>
+                    <td class="text-muted small">{{ $session->completed_at?->format('Y/m/d H:i') }}</td>
+                    <td>
+                        @if($session->result)
+                            {{ $session->result->total_score }}/{{ $session->result->max_possible_score }}
+                        @else — @endif
+                    </td>
+                    <td>
+                        @if($session->result)
+                            @php $lc = match($session->result->level) { 'high'=>'success','medium'=>'warning',default=>'danger' }; @endphp
+                            @php $ll = match($session->result->level) { 'high'=>'مرتفع','medium'=>'متوسط',default=>'منخفض' }; @endphp
+                            <span class="badge bg-{{ $lc }}-subtle text-{{ $lc }} border border-{{ $lc }}-subtle">{{ $ll }}</span>
+                        @else — @endif
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="5" class="text-center text-muted py-4">لا توجد جلسات بعد.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 @endsection
-
-@push('scripts')
-<script>
-/* ═══════════════════════════════════════════
-   State
-═══════════════════════════════════════════ */
-let allPoolQuestions = [];
-let selectedIds  = [];   // question IDs picked from bank
-let inlineQs     = [];   // questions created inline (not yet in DB)
-
-const CSRF = $('meta[name="csrf-token"]').attr('content');
-
-/* ═══════════════════════════════════════════
-   Tabs
-═══════════════════════════════════════════ */
-$('[data-tab]').on('click', function () {
-    $('[data-tab]').removeClass('active');
-    $(this).addClass('active');
-    $('#tab-bank, #tab-new, #tab-bulk').addClass('d-none');
-    $(`#tab-${$(this).data('tab')}`).removeClass('d-none');
-});
-
-/* ═══════════════════════════════════════════
-   Category presets
-═══════════════════════════════════════════ */
-$(document).on('click', '.preset-chip', function () {
-    $('#e-category').val($(this).data('cat'));
-});
-
-/* ═══════════════════════════════════════════
-   TAB 1 — Question Bank
-═══════════════════════════════════════════ */
-function loadPool() {
-    const assessmentId = $('#pool-assessment-filter').val();
-    const search = $('#pool-search').val().trim();
-
-    if (!assessmentId && !search) {
-        $('#questions-pool').html('<div class="text-center text-muted py-5"><i class="bi bi-database fs-2 d-block mb-2 opacity-25"></i>اختر مقياساً أو ابحث لعرض الأسئلة</div>');
-        $('#pool-count').text('اختر مقياساً أو ابحث');
-        $('#btn-select-all').hide();
-        return;
-    }
-
-    $('#questions-pool').html('<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>');
-
-    let url = '{{ route("admin.questions.index") }}?per_page=all';
-    if (assessmentId) url += `&assessment_id=${assessmentId}`;
-    if (search)       url += `&search=${encodeURIComponent(search)}`;
-
-    $.get(url, null, null, 'html').fail(function () {
-        // fallback: load JSON via by-assessment
-        if (assessmentId) {
-            $.get(`{{ url('admin/questions/by-assessment') }}/${assessmentId}`, function (data) {
-                allPoolQuestions = data;
-                const filtered = search ? data.filter(q => q.text_ar.includes(search)) : data;
-                renderPool(filtered);
-            });
-        }
-    });
-
-    // Direct JSON endpoint (by-assessment is JSON)
-    if (assessmentId) {
-        $.get(`{{ url('admin/questions/by-assessment') }}/${assessmentId}`, function (data) {
-            allPoolQuestions = data;
-            const filtered = search ? data.filter(q => q.text_ar.includes(search)) : data;
-            renderPool(filtered);
-        });
-    }
-}
-
-$('#pool-assessment-filter').on('change', loadPool);
-$('#pool-search').on('input', function () {
-    if ($('#pool-assessment-filter').val()) {
-        const q = $(this).val().trim();
-        renderPool(q ? allPoolQuestions.filter(x => x.text_ar.includes(q)) : allPoolQuestions);
-    } else {
-        loadPool();
-    }
-});
-
-function renderPool(questions) {
-    if (!questions.length) {
-        $('#questions-pool').html('<div class="text-center text-muted py-5"><i class="bi bi-search fs-2 d-block mb-2 opacity-25"></i>لا توجد أسئلة مطابقة</div>');
-        $('#pool-count').text('0 سؤال');
-        $('#btn-select-all').hide();
-        return;
-    }
-
-    $('#pool-count').text(`${questions.length} سؤال`);
-    $('#btn-select-all').show();
-
-    let html = '';
-    questions.forEach((q, i) => {
-        const sel = selectedIds.includes(q.id);
-        const rev = q.is_reversed ? '<span class="rev-label ms-1">معكوس</span>' : '';
-        html += `<div class="q-pool-item mb-2 ${sel ? 'selected' : ''}" data-id="${q.id}" data-text="${q.text_ar.replace(/"/g,'&quot;')}">
-            <div class="d-flex align-items-start gap-2">
-                <i class="bi ${sel ? 'bi-check-circle-fill text-primary' : 'bi-circle text-muted'} mt-1 flex-shrink-0 pool-icon"></i>
-                <div class="flex-grow-1">
-                    <div class="q-num">سؤال ${i+1}${rev}</div>
-                    <div class="small mt-1">${q.text_ar}</div>
-                </div>
-            </div>
-        </div>`;
-    });
-    $('#questions-pool').html(html);
-}
-
-// Select all visible
-$('#btn-select-all').on('click', function () {
-    $('.q-pool-item').each(function () {
-        const id   = $(this).data('id');
-        const text = $(this).data('text');
-        if (!selectedIds.includes(id)) addSelected(id, text);
-    });
-    syncPool();
-});
-
-$(document).on('click', '.q-pool-item', function () {
-    const id = $(this).data('id'), text = $(this).data('text');
-    selectedIds.includes(id) ? removeSelected(id) : addSelected(id, text);
-    syncPool();
-});
-
-function syncPool() {
-    $('.q-pool-item').each(function () {
-        const sel = selectedIds.includes($(this).data('id'));
-        $(this).toggleClass('selected', sel);
-        $(this).find('.pool-icon').attr('class', `bi ${sel ? 'bi-check-circle-fill text-primary' : 'bi-circle text-muted'} mt-1 flex-shrink-0 pool-icon`);
-    });
-}
-
-/* ═══════════════════════════════════════════
-   TAB 2 — Dimension loader for new Q
-═══════════════════════════════════════════ */
-function loadDimensions(assessmentId, targetSelect) {
-    $(targetSelect).html('<option value="">— جاري التحميل —</option>');
-    if (!assessmentId) { $(targetSelect).html('<option value="">— بدون بُعد —</option>'); return; }
-    $.get(`{{ url('admin/dimensions/by-assessment') }}/${assessmentId}`, function (data) {
-        let opts = '<option value="">— بدون بُعد —</option>';
-        data.forEach(d => { opts += `<option value="${d.id}">${d.name_ar}</option>`; });
-        $(targetSelect).html(opts);
-    });
-}
-
-$('#new-q-assessment').on('change', function () { loadDimensions($(this).val(), '#new-q-dimension'); });
-$('#bulk-assessment').on('change', function () { loadDimensions($(this).val(), '#bulk-dimension'); });
-
-/* ── Add inline question ── */
-$('#btn-add-new-q').on('click', function () {
-    const text       = $('#new-q-text').val().trim();
-    const assessmentId = $('#new-q-assessment').val();
-    const dimensionId  = $('#new-q-dimension').val();
-    const isReversed   = $('#new-q-reversed').is(':checked');
-    const options = [
-        { label_ar: 'نعم',        score_value: parseInt($('#opt-score-0').val()), order_index: 0 },
-        { label_ar: 'إلى حد ما', score_value: parseInt($('#opt-score-1').val()), order_index: 1 },
-        { label_ar: 'لا',         score_value: parseInt($('#opt-score-2').val()), order_index: 2 },
-    ];
-
-    if (!text)         { $('#new-q-feedback').html('<div class="alert alert-warning py-2 small">اكتب نص السؤال.</div>'); return; }
-    if (!assessmentId) { $('#new-q-feedback').html('<div class="alert alert-warning py-2 small">اختر المقياس.</div>'); return; }
-
-    const btn = $(this);
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> جاري الحفظ...');
-
-    $.ajax({
-        url: '{{ route("admin.questions.store") }}', method: 'POST', contentType: 'application/json',
-        headers: { 'X-CSRF-TOKEN': CSRF },
-        data: JSON.stringify({ assessment_id: assessmentId, dimension_id: dimensionId || null,
-                               text_ar: text, is_reversed: isReversed, options }),
-        success(res) {
-            btn.prop('disabled', false).html('<i class="bi bi-plus-circle me-1"></i>إضافة وتأكيد السؤال');
-            $('#new-q-feedback').html(`<div class="alert alert-success py-2 small"><i class="bi bi-check-circle me-1"></i>تم حفظ السؤال وإضافته للقائمة.</div>`);
-            addSelected(res.id, text);
-            $('#new-q-text').val('');
-            $('#new-q-reversed').prop('checked', false);
-        },
-        error(xhr) {
-            btn.prop('disabled', false).html('<i class="bi bi-plus-circle me-1"></i>إضافة وتأكيد السؤال');
-            const msg = xhr.responseJSON?.message || 'حدث خطأ.';
-            $('#new-q-feedback').html(`<div class="alert alert-danger py-2 small">${msg}</div>`);
-        }
-    });
-});
-
-/* ═══════════════════════════════════════════
-   TAB 3 — Bulk Import
-═══════════════════════════════════════════ */
-$('#btn-bulk-import').on('click', function () {
-    const assessmentId  = $('#bulk-assessment').val();
-    const dimensionId   = $('#bulk-dimension').val();
-    const questionsText = $('#bulk-text').val().trim();
-
-    if (!assessmentId)  { showAlert('اختر المقياس أولاً.', 'warning'); return; }
-    if (!questionsText) { showAlert('اكتب الأسئلة أولاً.', 'warning'); return; }
-
-    const btn = $(this);
-    setLoading(btn, true);
-
-    $.ajax({
-        url: '{{ route("admin.questions.bulk") }}', method: 'POST', contentType: 'application/json',
-        headers: { 'X-CSRF-TOKEN': CSRF },
-        data: JSON.stringify({ assessment_id: assessmentId, dimension_id: dimensionId || null,
-                               questions_text: questionsText }),
-        success(res) {
-            setLoading(btn, false);
-            $('#bulk-feedback').html(`<div class="alert alert-success py-2 small"><i class="bi bi-check-circle me-1"></i>${res.message}</div>`);
-            $('#bulk-text').val('');
-            // Reload pool from this assessment
-            $('#pool-assessment-filter').val(assessmentId).trigger('change');
-            $('[data-tab="bank"]').trigger('click');
-        },
-        error(xhr) {
-            setLoading(btn, false);
-            $('#bulk-feedback').html(`<div class="alert alert-danger py-2 small">${xhr.responseJSON?.message || 'حدث خطأ.'}</div>`);
-        }
-    });
-});
-
-/* ═══════════════════════════════════════════
-   Selected list management
-═══════════════════════════════════════════ */
-function addSelected(id, text) {
-    if (selectedIds.includes(id)) return;
-    selectedIds.push(id);
-    $('.empty-msg').remove();
-    const n = selectedIds.length;
-    $('#selected-list').append(
-        `<div class="sel-item" data-id="${id}">
-            <i class="bi bi-grip-vertical drag-handle"></i>
-            <span class="sel-num">${n}</span>
-            <span class="small flex-grow-1 text-truncate" style="max-width:200px" title="${text}">${text}</span>
-            <button type="button" class="btn btn-sm btn-link text-danger p-0 btn-remove-sel flex-shrink-0">
-                <i class="bi bi-x-circle"></i>
-            </button>
-        </div>`
-    );
-    updateCount();
-}
-
-function removeSelected(id) {
-    selectedIds = selectedIds.filter(x => x !== id);
-    $(`#selected-list .sel-item[data-id="${id}"]`).remove();
-    if (!selectedIds.length) $('#selected-list').html('<div class="text-center text-muted small py-3 empty-msg"><i class="bi bi-arrow-left-circle fs-5 d-block mb-1"></i>أضف أسئلة من القسم المجاور</div>');
-    renumberSelected();
-    updateCount();
-}
-
-function renumberSelected() {
-    $('#selected-list .sel-num').each(function (i) { $(this).text(i+1); });
-}
-
-$(document).on('click', '.btn-remove-sel', function () {
-    const id = $(this).closest('.sel-item').data('id');
-    removeSelected(id); syncPool();
-});
-
-function updateCount() { $('#selected-count').text(selectedIds.length); }
-
-// Sortable for selected
-new Sortable(document.getElementById('selected-list'), {
-    handle: '.drag-handle', animation: 150,
-    onEnd() {
-        const order = [];
-        $('#selected-list .sel-item').each(function () { order.push($(this).data('id')); });
-        selectedIds = order;
-        renumberSelected();
-    }
-});
-
-/* ═══════════════════════════════════════════
-   Save exam
-═══════════════════════════════════════════ */
-$('#btn-save-exam').on('click', function () {
-    const btn = $(this);
-    if (!selectedIds.length) { showAlert('أضف على الأقل سؤالاً واحداً.', 'warning'); return; }
-
-    const payload = {
-        title_ar:       $('#e-title_ar').val().trim(),
-        category:       $('#e-category').val().trim(),
-        description_ar: $('#e-description_ar').val().trim(),
-        time_limit_min: $('#e-time_limit_min').val() || null,
-        question_ids:   selectedIds,
-        dimensions:     [],
-    };
-
-    if (!payload.title_ar || !payload.category) { showAlert('اسم المقياس والمجال مطلوبان.', 'warning'); return; }
-
-    setLoading(btn, true);
-    $.ajax({
-        url: '{{ route("admin.exams.store") }}', method: 'POST', contentType: 'application/json',
-        headers: { 'X-CSRF-TOKEN': CSRF },
-        data: JSON.stringify(payload),
-        success(res) {
-            setLoading(btn, false);
-            showAlert(res.message, 'success');
-            setTimeout(() => window.location.href = '{{ route("admin.assessments.index") }}', 1200);
-        },
-        error(xhr) {
-            setLoading(btn, false);
-            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
-        }
-    });
-});
-</script>
-@endpush
 ````
 
 ## File: resources/views/admin/graded_exam_questions/index.blade.php
@@ -49752,858 +52491,314 @@ $('#btn-save-new-question').on('click', function() {
 @endsection
 ````
 
-## File: resources/views/admin/questions/index.blade.php
+## File: resources/views/admin/users/index.blade.php
 ````php
 @extends('layouts.admin')
-@section('title', 'بنك الأسئلة')
-@section('page-title', 'بنك الأسئلة')
+@section('title', 'المستخدمين والنتائج')
+@section('page-title', 'إدارة المستخدمين وجلسات الاختبار')
 
 @section('content')
-<!-- Filters -->
 <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <form method="GET" action="{{ route('admin.questions.index') }}" class="row g-2 align-items-end" id="filter-form">
-            <input type="hidden" name="per_page" id="filter-per-page" value="{{ request('per_page', 25) }}">
-            <div class="col-md-4">
-                <label class="form-label small fw-medium">المقياس</label>
-                <select name="assessment_id" class="form-select form-select-sm" id="filter-assessment">
-                    <option value="">كل المقاييس</option>
-                    @foreach($assessments as $a)
-                        <option value="{{ $a->id }}" {{ request('assessment_id') == $a->id ? 'selected' : '' }}>
-                            {{ $a->title_ar }}
-                        </option>
-                    @endforeach
-                </select>
+    <div class="card-body p-4">
+        <!-- Search & Info -->
+        <div class="row g-3 justify-content-between align-items-center">
+            <div class="col-md-6">
+                <form method="GET" action="{{ route('admin.users.index') }}" class="d-flex gap-2">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="ابحث بالاسم أو البريد أو الجوال أو الهوية..." value="{{ $search }}">
+                        @if($search)
+                            <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary d-flex align-items-center"><i class="bi bi-x-lg"></i></a>
+                        @endif
+                    </div>
+                    <button type="submit" class="btn btn-primary px-4">بحث</button>
+                </form>
             </div>
-            <div class="col-md-3">
-                <label class="form-label small fw-medium">البُعد</label>
-                <select name="dimension_id" class="form-select form-select-sm" id="filter-dimension">
-                    <option value="">كل الأبعاد</option>
-                </select>
+            <div class="col-md-auto">
+                <span class="text-muted small">إجمالي المستخدمين: <strong>{{ $users->total() }}</strong></span>
             </div>
-            <div class="col-md-3">
-                <label class="form-label small fw-medium">بحث في النص</label>
-                <input type="text" name="search" class="form-control form-control-sm"
-                    value="{{ request('search') }}" placeholder="كلمة بحث...">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary btn-sm w-100">
-                    <i class="bi bi-search me-1"></i>بحث
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div class="d-flex align-items-center gap-2">
-        <span class="text-muted small">{{ $questions->total() }} سؤال</span>
-        <span class="text-muted small text-black-50">|</span>
-        <label class="small text-muted mb-0">عرض:</label>
-        <select id="per-page-select" class="form-select form-select-sm d-inline-block w-auto py-0 px-2" style="height: 28px;">
-            <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25</option>
-            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-            <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>الكل</option>
-        </select>
-    </div>
-    <div class="d-flex gap-2">
-        <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#bulkModal">
-            <i class="bi bi-upload me-1"></i>استيراد بالجملة
-        </button>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#questionModal">
-            <i class="bi bi-plus-circle me-1"></i>إضافة سؤال
-        </button>
-    </div>
-</div>
-
-<div id="questions-table-wrapper">
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th style="width: 40px;" class="text-center">
-                        <input type="checkbox" class="form-check-input" id="check-all">
-                    </th>
-                    @if(request('assessment_id'))
-                        <th style="width: 40px;"></th>
-                    @endif
-                    <th style="width:45%">نص السؤال</th>
-                    <th>المقياس</th>
-                    <th style="width:20%">البُعد</th>
-                    <th>الخيارات</th>
-                    <th class="text-end" style="width:100px;">العمليات</th>
+                    <th>#</th>
+                    <th>الاسم</th>
+                    <th>البريد الإلكتروني</th>
+                    <th>رقم الجوال</th>
+                    <th>رقم الهوية</th>
+                    <th>نوع الحساب</th>
+                    <th class="text-center">الاختبارات المؤداة</th>
+                    <th class="text-center">الإجراءات</th>
                 </tr>
             </thead>
-            <tbody id="sortable-questions">
-                @forelse($questions as $q)
-                <tr data-id="{{ $q->id }}">
-                    <td class="text-center">
-                        <input type="checkbox" class="form-check-input check-row" data-id="{{ $q->id }}">
-                    </td>
-                    @if(request('assessment_id'))
+            <tbody>
+                @forelse($users as $index => $user)
+                    <tr>
+                        <td>{{ $users->firstItem() + $index }}</td>
                         <td>
-                            <span class="drag-handle text-muted">
-                                <i class="bi bi-grip-vertical fs-5"></i>
+                            <div class="fw-semibold text-dark">{{ $user->name }}</div>
+                        </td>
+                        <td class="text-muted small">{{ $user->email }}</td>
+                        <td class="text-muted small">{{ $user->phone ?? '—' }}</td>
+                        <td class="text-muted small">{{ $user->national_id ?? '—' }}</td>
+                        <td>
+                            @if($user->isAdmin())
+                                <span class="badge bg-danger-subtle text-danger px-2.5 py-1.5 rounded-pill small">مدير النظام</span>
+                            @else
+                                <span class="badge bg-primary-subtle text-primary px-2.5 py-1.5 rounded-pill small">مستخدم</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary rounded-pill px-3 py-1 fw-medium">
+                                {{ $user->completed_exams_count }}
                             </span>
                         </td>
-                    @endif
-                    <td class="question-text-cell small" data-id="{{ $q->id }}">
-                        <span class="question-text-display">{{ $q->text_ar }}</span>
-                    </td>
-                    @php
-                        $currentAssessment = $assessments->firstWhere('id', $q->assessment_id);
-                    @endphp
-                    <td class="small text-muted">{{ $q->assessment_title }}</td>
-                    <td>
-                        @if(!$currentAssessment || $currentAssessment->dimensions->isEmpty())
-                            <span class="text-muted small">لا توجد أبعاد</span>
-                        @else
-                            <select class="form-select form-select-sm select-dimension" data-question-id="{{ $q->id }}">
-                                <option value="">بدون بُعد</option>
-                                @foreach($currentAssessment->dimensions as $d)
-                                    <option value="{{ $d->id }}" {{ $q->dimension_id == $d->id ? 'selected' : '' }}>
-                                        {{ $d->name_ar }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        @endif
-                    </td>
-                    <td><span class="badge bg-light text-dark border">{{ $q->answer_options_count }}</span></td>
-                    <td>
-                        <div class="d-flex gap-1 justify-content-end">
-                            <button class="btn btn-sm btn-outline-primary btn-edit-q" data-id="{{ $q->id }}">
-                                <i class="bi bi-pencil"></i>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-primary px-3 rounded-pill btn-view-results" data-user-id="{{ $user->id }}">
+                                <i class="bi bi-eye me-1"></i> عرض النتائج
                             </button>
-                            <button class="btn btn-sm btn-outline-danger btn-delete-q"
-                                    data-id="{{ $q->id }}"
-                                    data-url="{{ route('admin.questions.destroy', $q->id) }}">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+                        </td>
+                    </tr>
                 @empty
-                <tr>
-                    <td colspan="{{ request('assessment_id') ? 7 : 6 }}" class="text-center text-muted py-4">
-                        لا توجد أسئلة.
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-people fs-1 d-block mb-3 text-secondary"></i>
+                            لا يوجد مستخدمين يطابقون خيارات البحث.
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-    <div class="card-footer bg-transparent border-0">{{ $questions->appends(request()->query())->links() }}</div>
-</div>
-</div>
 
-<!-- Add Question Modal -->
-<div class="modal fade" id="questionModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-semibold">إضافة سؤال جديد</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-medium">المقياس *</label>
-                        <select class="form-select" id="q-assessment_id">
-                            <option value="">اختر المقياس</option>
-                            @foreach($assessments as $a)
-                                <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-medium">البُعد</label>
-                        <select class="form-select" id="q-dimension_id">
-                            <option value="">اختر البُعد</option>
-                        </select>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small fw-medium">نص السؤال *</label>
-                        <textarea class="form-control" id="q-text_ar" rows="3" placeholder="اكتب نص السؤال هنا..."></textarea>
-                    </div>
-                </div>
-                <hr>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="mb-0 fw-semibold">خيارات الإجابة</h6>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-add-option">
-                        <i class="bi bi-plus me-1"></i>إضافة خيار
-                    </button>
-                </div>
-                <div id="options-container"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-primary" id="btn-save-question">
-                    <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ السؤال</span>
-                    <span class="spinner-border spinner-border-sm d-none"></span>
-                </button>
-            </div>
+    <!-- Pagination -->
+    @if($users->hasPages())
+        <div class="card-footer bg-transparent border-0 py-3">
+            {{ $users->appends(['search' => $search])->links() }}
         </div>
-    </div>
+    @endif
 </div>
 
-<!-- Bulk Import Modal -->
-<div class="modal fade" id="bulkModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-semibold">استيراد أسئلة بالجملة</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<!-- User Results Modal -->
+<div class="modal fade" id="resultsModal" tabindex="-1" aria-labelledby="resultsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0 py-3">
+                <h5 class="modal-title fw-bold" id="resultsModalLabel">
+                    <i class="bi bi-mortarboard me-2"></i> سجل اختبارات المستخدم
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-medium">المقياس *</label>
-                        <select class="form-select" id="bulk-assessment_id">
-                            <option value="">اختر المقياس</option>
-                            @foreach($assessments as $a)
-                                <option value="{{ $a->id }}">{{ $a->title_ar }}</option>
-                            @endforeach
-                        </select>
+            <div class="modal-body p-4">
+                <!-- User Details Card -->
+                <div class="bg-light p-3 rounded-3 mb-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-1" id="modal-user-name">...</h6>
+                        <span class="text-muted small" id="modal-user-email">...</span>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-medium">البُعد</label>
-                        <select class="form-select" id="bulk-dimension_id">
-                            <option value="">اختر البُعد (اختياري)</option>
-                        </select>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small fw-medium">الأسئلة (سؤال في كل سطر)</label>
-                        <textarea class="form-control" id="bulk-questions_text" rows="8"
-                            placeholder="السؤال الأول هنا&#10;السؤال الثاني هنا&#10;السؤال الثالث هنا"></textarea>
-                        <div class="form-text">سيتم إنشاء خيارات افتراضية: نعم (2) / إلى حد ما (1) / لا (0)</div>
-                    </div>
+                    <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-3" id="modal-results-count">0 اختبارات مؤداة</span>
+                </div>
+
+                <!-- Results Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="results-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>المقياس / الاختبار</th>
+                                <th class="text-center">الدرجة المحققة</th>
+                                <th class="text-center">المستوى المستحق</th>
+                                <th class="text-center">تاريخ الإكمال</th>
+                                <th class="text-center">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-results-body">
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                    جاري تحميل سجل النتائج...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-primary" id="btn-bulk-import">
-                    <span class="btn-text"><i class="bi bi-upload me-1"></i>استيراد</span>
-                    <span class="spinner-border spinner-border-sm d-none"></span>
-                </button>
+            <div class="modal-footer border-0 bg-light py-3">
+                <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">إغلاق</button>
             </div>
         </div>
     </div>
 </div>
 @endsection
 
-@push('styles')
-<style>
-    .drag-handle {
-        cursor: grab;
-    }
-    .drag-handle:active {
-        cursor: grabbing;
-    }
-    .fs-7 {
-        font-size: 0.8rem;
-    }
-    #bulk-action-bar {
-        transition: all 0.3s ease-in-out;
-    }
-    .question-edit-textarea {
-        min-height: 60px;
-        resize: none;
-    }
-</style>
-@endpush
-
 @push('scripts')
 <script>
-let optIndex = 0;
-
-function addOptionRow(label='', score='') {
-    const idx = optIndex++;
-    $('#options-container').append(`
-        <div class="row g-2 mb-2 opt-row">
-            <div class="col-7">
-                <input type="text" class="form-control form-control-sm opt-label" placeholder="نص الخيار" value="${label}">
-            </div>
-            <div class="col-3">
-                <input type="number" class="form-control form-control-sm opt-score" placeholder="القيمة" value="${score}">
-            </div>
-            <div class="col-2">
-                <button type="button" class="btn btn-sm btn-outline-danger w-100 btn-remove-opt">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        </div>
-    `);
-}
-
-// Default options on modal open
-$('#questionModal').on('show.bs.modal', function() {
-    $('#options-container').html('');
-    optIndex = 0;
-    addOptionRow('نعم', 2);
-    addOptionRow('إلى حد ما', 1);
-    addOptionRow('لا', 0);
-});
-
-$('#btn-add-option').on('click', () => addOptionRow());
-
-$(document).on('click', '.btn-remove-opt', function() {
-    $(this).closest('.opt-row').remove();
-});
-
-// Dynamic dimensions on assessment change
-function loadDimensions(assessmentId, targetSelect, selectedId='') {
-    let defaultText = 'بدون بُعد';
-    if (targetSelect.attr('id') === 'filter-dimension') {
-        defaultText = 'كل الأبعاد';
-    } else if (targetSelect.attr('id') === 'q-dimension_id') {
-        defaultText = 'اختر البُعد';
-    } else if (targetSelect.attr('id') === 'bulk-dimension_id') {
-        defaultText = 'اختر البُعد (اختياري)';
-    } else if (targetSelect.attr('id') === 'bulk-dimension-id') {
-        defaultText = 'تعيين البُعد للمحددة...';
-    }
-
-    if (!assessmentId) {
-        targetSelect.html(`<option value="">${defaultText}</option>`);
-        return;
-    }
-
-    $.get('{{ route('admin.dimensions.byAssessment', ':id') }}'.replace(':id', assessmentId), function(dims) {
-        let opts = `<option value="">${defaultText}</option>`;
-        dims.forEach(d => {
-            let label = d.name_ar;
-            if (targetSelect.attr('id') === 'filter-dimension' && d.questions_count !== undefined) {
-                label += ` (${d.questions_count})`;
-            }
-            opts += `<option value="${d.id}" ${d.id == selectedId ? 'selected' : ''}>${label}</option>`;
-        });
-        targetSelect.html(opts);
-    });
-}
-
-$('#q-assessment_id').on('change', function() {
-    loadDimensions($(this).val(), $('#q-dimension_id'));
-});
-
-$('#bulk-assessment_id').on('change', function() {
-    loadDimensions($(this).val(), $('#bulk-dimension_id'));
-});
-
-$('#filter-assessment').on('change', function() {
-    loadDimensions($(this).val(), $('#filter-dimension'), '');
-});
-
-// Initialize filter dimension if assessment already selected
-@if(request('assessment_id'))
-loadDimensions('{{ request('assessment_id') }}', $('#filter-dimension'), '{{ request('dimension_id') }}');
-@endif
-
-// Reload table container via AJAX
-function reloadTable() {
-    $('#questions-table-wrapper').css('opacity', 0.5);
-    $('#questions-table-wrapper').load(window.location.href + ' #questions-table-wrapper > *', function() {
-        $('#questions-table-wrapper').css('opacity', 1);
-        initSortable();
-        resetBulkActions();
-    });
-}
-
-// Bulk Actions selection logic
-$(document).on('change', '#check-all', function() {
-    const isChecked = $(this).is(':checked');
-    $('.check-row').prop('checked', isChecked);
-    updateBulkBar();
-});
-
-$(document).on('change', '.check-row', function() {
-    const allChecked = $('.check-row').length === $('.check-row:checked').length;
-    $('#check-all').prop('checked', allChecked);
-    updateBulkBar();
-});
-
-function updateBulkBar() {
-    const selectedIds = [];
-    $('.check-row:checked').each(function() {
-        selectedIds.push($(this).data('id'));
-    });
-
-    const count = selectedIds.length;
-    if (count > 0) {
-        $('#selected-count').text(count);
-        $('#bulk-action-bar').removeClass('d-none');
-    } else {
-        $('#bulk-action-bar').addClass('d-none');
-    }
-}
-
-function resetBulkActions() {
-    $('#check-all').prop('checked', false);
-    $('.check-row').prop('checked', false);
-    $('#bulk-action-bar').addClass('d-none');
-}
-
-// Bulk Delete Action
-$(document).on('click', '.btn-bulk-delete', function() {
-    const selectedIds = [];
-    $('.check-row:checked').each(function() {
-        selectedIds.push($(this).data('id'));
-    });
-
-    if (selectedIds.length === 0) return;
-
-    const url = '{{ route('admin.questions.bulkDelete') }}?' + selectedIds.map(id => `ids[]=${id}`).join('&');
-    confirmDelete(`هل تريد حذف ${selectedIds.length} سؤال محدد نهائياً؟`, url, function() {
-        reloadTable();
-    });
-});
-
-// Bulk Assign Dimension Action
-$(document).on('click', '.btn-bulk-assign', function() {
-    const selectedIds = [];
-    $('.check-row:checked').each(function() {
-        selectedIds.push($(this).data('id'));
-    });
-
-    if (selectedIds.length === 0) return;
-
-    const dimensionId = $('#bulk-dimension-id').val();
-    const payload = {
-        ids: selectedIds,
-        dimension_id: dimensionId === 'none' ? null : dimensionId
-    };
-
-    const btn = $(this);
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
-
-    $.ajax({
-        url: '{{ route('admin.questions.bulkAssignDimension') }}',
-        method: 'PATCH',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        contentType: 'application/json',
-        data: JSON.stringify(payload),
-        success: function(res) {
-            btn.prop('disabled', false).html('<i class="bi bi-tag me-1"></i>تعيين');
-            showAlert(res.message || 'تم تعيين البُعد بنجاح.', 'success');
-            reloadTable();
-        },
-        error: function(xhr) {
-            btn.prop('disabled', false).html('<i class="bi bi-tag me-1"></i>تعيين');
-            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
-        }
-    });
-});
-
-// Single inline dimension change
-$(document).on('change', '.select-dimension', function() {
-    const select = $(this);
-    const questionId = select.data('question-id');
-    const dimensionId = select.val();
-
-    select.prop('disabled', true);
-
-    $.ajax({
-        url: '{{ route('admin.questions.assignDimension', ':id') }}'.replace(':id', questionId),
-        method: 'PATCH',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        data: { dimension_id: dimensionId },
-        success: function(res) {
-            select.prop('disabled', false);
-            showAlert(res.message || 'تم تحديد البُعد.', 'success');
-        },
-        error: function(xhr) {
-            select.prop('disabled', false);
-            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
-        }
-    });
-});
-
-// Inline Edit Textarea Auto-resize
-$(document).on('input', '.question-edit-textarea', function() {
-    this.style.height = 'auto';
-    this.style.height = (this.scrollHeight) + 'px';
-});
-
-// Inline Edit Click
-$(document).on('click', '.btn-edit-q', function() {
-    const row = $(this).closest('tr');
-    const qId = $(this).data('id');
-    const textCell = row.find('.question-text-cell');
-
-    if (textCell.find('.edit-mode-container').length > 0) return;
-
-    const displaySpan = textCell.find('.question-text-display');
-    const originalText = displaySpan.text().trim();
-    textCell.data('original-text', originalText);
-
-    textCell.html(`
-        <div class="edit-mode-container">
-            <textarea class="form-control form-control-sm question-edit-textarea">${originalText}</textarea>
-            <div class="d-flex gap-1 mt-1 justify-content-end">
-                <button class="btn btn-sm btn-success btn-save-inline py-0 px-2 fs-7" data-id="${qId}">حفظ</button>
-                <button class="btn btn-sm btn-secondary btn-cancel-inline py-0 px-2 fs-7" data-id="${qId}">إلغاء</button>
-            </div>
-        </div>
-    `);
-
-    row.find('.btn-edit-q, .btn-delete-q').addClass('d-none');
-
-    const textarea = textCell.find('.question-edit-textarea');
-    textarea.focus();
-    textarea.each(function() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight) + 'px';
-    });
-});
-
-// Inline Edit Cancel
-$(document).on('click', '.btn-cancel-inline', function() {
-    const row = $(this).closest('tr');
-    const textCell = row.find('.question-text-cell');
-    const originalText = textCell.data('original-text');
-
-    textCell.html(`<span class="question-text-display">${originalText}</span>`);
-    row.find('.btn-edit-q, .btn-delete-q').removeClass('d-none');
-});
-
-// Inline Edit Save
-$(document).on('click', '.btn-save-inline', function() {
-    const btn = $(this);
-    const row = btn.closest('tr');
-    const qId = btn.data('id');
-    const textCell = row.find('.question-text-cell');
-    const newText = textCell.find('.question-edit-textarea').val().trim();
-
-    if (newText === '') {
-        showAlert('نص السؤال مطلوب.', 'warning');
-        return;
-    }
-
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
-
-    $.ajax({
-        url: `{{ route('admin.questions.index') }}/${qId}`,
-        method: 'PATCH',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        data: { text_ar: newText },
-        success: function(res) {
-            showAlert(res.message || 'تم تحديث السؤال.', 'success');
-            textCell.html(`<span class="question-text-display">${newText}</span>`);
-            row.find('.btn-edit-q, .btn-delete-q').removeClass('d-none');
-        },
-        error: function(xhr) {
-            btn.prop('disabled', false).text('حفظ');
-            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
-        }
-    });
-});
-
-// Page size change
-$(document).on('change', '#per-page-select', function() {
-    $('#filter-per-page').val($(this).val());
-    $('#filter-form').submit();
-});
-
-// Save question modal
-$('#btn-save-question').on('click', function() {
-    const btn = $(this);
-    const options = [];
-    $('.opt-row').each(function(i) {
-        const label = $(this).find('.opt-label').val().trim();
-        const score = $(this).find('.opt-score').val();
-        if (label !== '') {
-            options.push({ label_ar: label, score_value: parseInt(score) || 0, order_index: i });
-        }
-    });
-
-    const payload = {
-        assessment_id: $('#q-assessment_id').val(),
-        dimension_id:  $('#q-dimension_id').val() || null,
-        text_ar:       $('#q-text_ar').val().trim(),
-        options:       options,
-    };
-
-    if (!payload.assessment_id || !payload.text_ar) {
-        showAlert('المقياس ونص السؤال مطلوبان.', 'warning'); return;
-    }
-
-    setLoading(btn, true);
-    $.ajax({
-        url: '{{ route('admin.questions.store') }}',
-        method: 'POST', contentType: 'application/json',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        data: JSON.stringify(payload),
-        success: function(res) {
-            setLoading(btn, false);
-            bootstrap.Modal.getInstance($('#questionModal')).hide();
-            showAlert(res.message, 'success');
-            reloadTable();
-        },
-        error: function(xhr) {
-            setLoading(btn, false);
-            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
-        }
-    });
-});
-
-// Bulk import modal
-$('#btn-bulk-import').on('click', function() {
-    const btn = $(this);
-    const payload = {
-        assessment_id:   $('#bulk-assessment_id').val(),
-        dimension_id:    $('#bulk-dimension_id').val() || null,
-        questions_text:  $('#bulk-questions_text').val().trim(),
-    };
-    if (!payload.assessment_id || !payload.questions_text) {
-        showAlert('اختر المقياس وأدخل الأسئلة.', 'warning'); return;
-    }
-    setLoading(btn, true);
-    $.ajax({
-        url: '{{ route('admin.questions.bulk') }}',
-        method: 'POST', contentType: 'application/json',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        data: JSON.stringify(payload),
-        success: function(res) {
-            setLoading(btn, false);
-            bootstrap.Modal.getInstance($('#bulkModal')).hide();
-            showAlert(res.message, 'success');
-            reloadTable();
-        },
-        error: function(xhr) {
-            setLoading(btn, false);
-            showAlert(xhr.responseJSON?.message || 'حدث خطأ.', 'danger');
-        }
-    });
-});
-
-// Delete question
-$(document).on('click', '.btn-delete-q', function() {
-    const url = $(this).data('url');
-    confirmDelete('هل تريد حذف هذا السؤال نهائياً؟', url, () => reloadTable());
-});
-
-// SortableJS initialization
-function initSortable() {
-    @if(request('assessment_id'))
-    const el = document.getElementById('sortable-questions');
-    if (el) {
-        new Sortable(el, {
-            handle: '.drag-handle',
-            animation: 150,
-            onEnd: function (evt) {
-                const order = [];
-                $('#sortable-questions tr').each(function() {
-                    const id = $(this).data('id');
-                    if (id) {
-                        order.push(id);
-                    }
-                });
-
-                $.ajax({
-                    url: '{{ route('admin.questions.reorder') }}',
-                    method: 'PATCH',
-                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                    data: { order: order },
-                    success: function(res) {
-                        showAlert('تم تحديث ترتيب الأسئلة بنجاح.', 'success');
-                    },
-                    error: function(xhr) {
-                        showAlert('حدث خطأ أثناء إعادة الترتيب.', 'danger');
-                    }
-                });
-            }
-        });
-    }
-    @endif
-}
-
-// Initial calls
 $(document).ready(function() {
-    initSortable();
+    const resultsModal = new bootstrap.Modal(document.getElementById('resultsModal'));
+
+    $('.btn-view-results').on('click', function() {
+        const userId = $(this).data('user-id');
+        
+        // Reset modal to loading state
+        $('#modal-user-name').text('...');
+        $('#modal-user-email').text('...');
+        $('#modal-results-count').text('0 اختبارات مؤداة');
+        $('#modal-results-body').html(`
+            <tr>
+                <td colspan="5" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                    جاري تحميل سجل النتائج...
+                </td>
+            </tr>
+        `);
+
+        // Show modal immediately
+        resultsModal.show();
+
+        // Fetch data
+        $.ajax({
+            url: `{{ url('/admin/users') }}/${userId}/results`,
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    $('#modal-user-name').text(response.user.name);
+                    $('#modal-user-email').text(response.user.email);
+                    $('#modal-results-count').text(`${response.results.length} اختبارات مؤداة`);
+
+                    let rowsHtml = '';
+                    if (response.results.length === 0) {
+                        rowsHtml = `
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-info-circle fs-2 d-block mb-2 text-secondary"></i>
+                                    لا يوجد جلسات اختبار مكتملة لهذا المستخدم حتى الآن.
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        response.results.forEach(res => {
+                            let badgeClass = 'bg-secondary';
+                            if (res.level_raw === 'high') badgeClass = 'bg-success';
+                            else if (res.level_raw === 'medium') badgeClass = 'bg-warning text-dark';
+                            else if (res.level_raw === 'low') badgeClass = 'bg-danger';
+
+                            // Construct view result URL dynamically
+                            const resultUrl = `{{ url('/exam') }}/${res.id}/result`;
+
+                            rowsHtml += `
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-dark">${res.assessment_title}</div>
+                                    </td>
+                                    <td class="text-center fw-bold text-primary">${res.total_score} / ${res.max_possible_score}</td>
+                                    <td class="text-center">
+                                        <span class="badge ${badgeClass} px-2.5 py-1.5 rounded-3 fw-medium">${res.level}</span>
+                                    </td>
+                                    <td class="text-center text-muted small">${res.completed_at}</td>
+                                    <td class="text-center">
+                                        <a href="${resultUrl}" target="_blank" class="btn btn-sm btn-outline-secondary px-3 rounded-pill">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i> التقرير
+                                        </a>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    $('#modal-results-body').html(rowsHtml);
+                } else {
+                    $('#modal-results-body').html(`
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i> حدث خطأ أثناء تحميل البيانات.
+                            </td>
+                        </tr>
+                    `);
+                }
+            },
+            error: function() {
+                $('#modal-results-body').html(`
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i> فشل الاتصال بالخادم.
+                        </td>
+                    </tr>
+                `);
+            }
+        });
+    });
 });
 </script>
 @endpush
 ````
 
-## File: resources/views/admin/statistics/index.blade.php
+## File: resources/views/auth/login.blade.php
 ````php
-@extends('layouts.admin')
-@section('title', 'الإحصائيات')
-@section('page-title', 'الإحصائيات والتقارير')
-
-@push('styles')
-<style>
-canvas { max-height: 320px; }
-</style>
-@endpush
-
-@section('content')
-<!-- Range selector & Export -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="d-flex gap-2">
-        @foreach([7=>'أسبوع', 30=>'شهر', 90=>'3 أشهر'] as $days => $label)
-            <button class="btn btn-sm {{ $days == 30 ? 'btn-primary' : 'btn-outline-secondary' }} btn-range" data-range="{{ $days }}">
-                {{ $label }}
-            </button>
-        @endforeach
-    </div>
-    <a href="{{ route('admin.statistics.exportCsv') }}" class="btn btn-sm btn-success shadow-sm">
-        <i class="bi bi-file-earmark-excel me-1"></i>تصدير جميع النتائج (CSV)
-    </a>
-</div>
-
-<div class="row g-4">
-    <!-- Daily sessions chart -->
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <h6 class="fw-semibold mb-3"><i class="bi bi-bar-chart text-primary me-2"></i>الجلسات اليومية</h6>
-                <canvas id="dailyChart"></canvas>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول — دار الرؤى</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+</head>
+<body class="bg-light d-flex align-items-center min-vh-100">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+            <div class="text-center mb-4">
+                <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 70px; margin-bottom: 10px;">
+                <p class="text-muted">نظام مقاييس التميز الشخصي</p>
             </div>
-        </div>
-    </div>
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4 fw-semibold">تسجيل الدخول</h5>
 
-    <!-- Level distribution -->
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <h6 class="fw-semibold mb-3"><i class="bi bi-pie-chart text-success me-2"></i>توزيع المستويات</h6>
-                <div class="mb-3">
-                    <label class="form-label small fw-medium">المقياس</label>
-                    <select class="form-select form-select-sm" id="level-assessment-filter">
-                        <option value="all">كل المقاييس</option>
-                    </select>
+                    @if($errors->any())
+                        <div class="alert alert-danger alert-sm py-2">
+                            <i class="bi bi-exclamation-circle me-1"></i>{{ $errors->first() }}
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('login.post') }}">
+                        @csrf
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">البريد الإلكتروني</label>
+                            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
+                                value="{{ old('email') }}" placeholder="example@email.com" required autofocus>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">كلمة المرور</label>
+                            <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" name="remember" id="remember">
+                            <label class="form-check-label small" for="remember">تذكرني</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>دخول
+                        </button>
+                    </form>
+                    <hr>
+                    <div class="text-center small">
+                        ليس لديك حساب؟
+                        <a href="{{ route('register') }}" class="text-primary text-decoration-none fw-medium">سجّل الآن</a>
+                    </div>
                 </div>
-                <canvas id="levelChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Avg score per assessment -->
-    <div class="col-lg-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <h6 class="fw-semibold mb-3"><i class="bi bi-graph-up text-warning me-2"></i>متوسط الدرجات</h6>
-                <canvas id="avgChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Top users -->
-    <div class="col-lg-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent border-0 py-3">
-                <h6 class="mb-0 fw-semibold"><i class="bi bi-trophy text-warning me-2"></i>أكثر المستخدمين نشاطاً</h6>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0 small" id="top-users-table">
-                    <thead class="table-light">
-                        <tr><th>#</th><th>الاسم</th><th>البريد</th><th>الجلسات</th></tr>
-                    </thead>
-                    <tbody id="top-users-body">
-                        <tr><td colspan="4" class="text-center text-muted py-3">جاري التحميل...</td></tr>
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
 </div>
-@endsection
-
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-<script>
-Chart.defaults.font.family = 'Noto Kufi Arabic';
-Chart.defaults.plugins.legend.labels.usePointStyle = true;
-
-let dailyChart, levelChart, avgChart;
-let currentRange = 30;
-let statsData = null;
-
-function initCharts() {
-    dailyChart = new Chart(document.getElementById('dailyChart'), {
-        type: 'bar',
-        data: { labels: [], datasets: [{ label: 'الجلسات', data: [], backgroundColor: 'rgba(13,110,253,.7)', borderRadius: 6 }] },
-        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-    });
-
-    levelChart = new Chart(document.getElementById('levelChart'), {
-        type: 'doughnut',
-        data: {
-            labels: ['مرتفع', 'متوسط', 'منخفض'],
-            datasets: [{ data: [0,0,0], backgroundColor: ['#198754','#ffc107','#dc3545'], borderWidth: 2 }]
-        },
-        options: { cutout: '65%', plugins: { legend: { position: 'bottom' } } }
-    });
-
-    avgChart = new Chart(document.getElementById('avgChart'), {
-        type: 'bar',
-        data: { labels: [], datasets: [{ label: 'متوسط الدرجة', data: [], backgroundColor: 'rgba(255,193,7,.8)', borderRadius: 6 }] },
-        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
-    });
-}
-
-function loadStats(range) {
-    $.get('{{ route('admin.statistics.data') }}', { range }, function(data) {
-        statsData = data;
-
-        // Daily chart
-        dailyChart.data.labels = data.dailyData.map(d => d.date);
-        dailyChart.data.datasets[0].data = data.dailyData.map(d => d.count);
-        dailyChart.update();
-
-        // Populate assessment filter
-        const sel = $('#level-assessment-filter');
-        sel.find('option:not([value="all"])').remove();
-        data.assessments.forEach(a => sel.append(`<option value="${a.id}">${a.title}</option>`));
-
-        // Level chart (all)
-        updateLevelChart('all');
-
-        // Avg chart
-        avgChart.data.labels = data.avgScores.map(a => a.title);
-        avgChart.data.datasets[0].data = data.avgScores.map(a => a.avg);
-        avgChart.update();
-
-        // Top users
-        let rows = '';
-        data.topUsers.forEach((u, i) => {
-            rows += `<tr><td>${i+1}</td><td>${u.name}</td><td class="text-muted">${u.email}</td><td><span class="badge bg-primary">${u.exam_sessions_count}</span></td></tr>`;
-        });
-        $('#top-users-body').html(rows || '<tr><td colspan="4" class="text-center text-muted">لا بيانات.</td></tr>');
-    });
-}
-
-function updateLevelChart(assessmentId) {
-    if (!statsData) return;
-    let high = 0, medium = 0, low = 0;
-    statsData.assessments.forEach(a => {
-        if (assessmentId === 'all' || a.id === assessmentId) {
-            high   += a.high;
-            medium += a.medium;
-            low    += a.low;
-        }
-    });
-    levelChart.data.datasets[0].data = [high, medium, low];
-    levelChart.update();
-}
-
-$('#level-assessment-filter').on('change', function() { updateLevelChart($(this).val()); });
-
-$('.btn-range').on('click', function() {
-    currentRange = parseInt($(this).data('range'));
-    $('.btn-range').removeClass('btn-primary').addClass('btn-outline-secondary');
-    $(this).removeClass('btn-outline-secondary').addClass('btn-primary');
-    loadStats(currentRange);
-});
-
-$(document).ready(function() {
-    initCharts();
-    loadStats(currentRange);
-});
-</script>
-@endpush
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
 ````
 
 ## File: resources/views/user/coming-soon.blade.php
@@ -50973,40 +53168,6 @@ $(document).ready(function() {
 @endsection
 ````
 
-## File: routes/console.php
-````php
-<?php
-
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
-
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
-````
-
-## File: vite.config.js
-````javascript
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
-import tailwindcss from '@tailwindcss/vite';
-
-export default defineConfig({
-    plugins: [
-        laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
-            refresh: true,
-        }),
-        tailwindcss(),
-    ],
-    server: {
-        watch: {
-            ignored: ['**/storage/framework/views/**'],
-        },
-    },
-});
-````
-
 ## File: app/Http/Controllers/Admin/AnswerOptionController.php
 ````php
 <?php
@@ -51129,76 +53290,65 @@ class AnswerOptionController extends Controller
 }
 ````
 
-## File: app/Http/Controllers/Admin/DimensionController.php
+## File: app/Http/Controllers/Admin/ExamController.php
 ````php
 <?php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\StoreDimensionRequest;
-use App\Http\Requests\Admin\StoreInterpretationsRequest;
 use App\Models\Assessment;
-use App\Models\Dimension;
-use App\Services\DimensionService;
+use App\Models\Question;
+use App\Services\AssessmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
-class DimensionController extends Controller
+class ExamController extends Controller
 {
     public function __construct(
-        private readonly DimensionService $dimensionService,
+        private readonly AssessmentService $assessmentService,
     ) {}
 
-    public function byAssessment(Assessment $assessment): JsonResponse
+    public function create(): View
     {
-        $dimensions = $this->dimensionService->byAssessment($assessment);
+        $assessments = Assessment::orderBy('title_ar')->get();
 
-        return response()->json($dimensions);
+        return view('admin.exams.create', compact('assessments'));
     }
 
-    public function store(StoreDimensionRequest $request, Assessment $assessment): JsonResponse
-    {
-        $dimension = $this->dimensionService->create($assessment, $request->validated());
-
-        return response()->json([
-            'success' => true,
-            'dimension' => $dimension,
-            'message' => 'تم إضافة البُعد بنجاح.',
-        ]);
-    }
-
-    public function update(StoreDimensionRequest $request, Dimension $dimension): JsonResponse
-    {
-        $this->dimensionService->update($dimension, $request->validated());
-
-        return response()->json(['success' => true, 'message' => 'تم تحديث البُعد.']);
-    }
-
-    public function destroy(Dimension $dimension): JsonResponse
-    {
-        $this->dimensionService->delete($dimension);
-
-        return response()->json(['success' => true, 'message' => 'تم حذف البُعد بنجاح.']);
-    }
-
-    public function reorder(Request $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'order' => 'required|array',
-            'order.*' => 'required|uuid|exists:dimensions,id,deleted_at,NULL',
+            'title_ar' => 'required|string|max:255',
+            'category' => 'required|string|max:255',
+            'description_ar' => 'nullable|string',
+            'time_limit_min' => 'nullable|integer|min:1',
+            'question_ids' => 'required|array|min:1',
+            'question_ids.*' => 'uuid|exists:questions,id,deleted_at,NULL',
         ]);
 
-        $this->dimensionService->reorder($data['order']);
+        $assessment = \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            $assessment = $this->assessmentService->create([
+                'title_ar' => $data['title_ar'],
+                'category' => $data['category'],
+                'description_ar' => $data['description_ar'] ?? null,
+                'time_limit_min' => $data['time_limit_min'] ?? null,
+                'dimensions' => [],
+            ]);
 
-        return response()->json(['success' => true, 'message' => 'تم إعادة ترتيب الأبعاد.']);
-    }
+            // Re-assign chosen questions to this assessment in order
+            foreach ($data['question_ids'] as $idx => $qId) {
+                Question::where('id', $qId)->update([
+                    'assessment_id' => $assessment->id,
+                    'order_index' => $idx,
+                ]);
+            }
+            
+            return $assessment;
+        });
 
-    public function storeInterpretations(StoreInterpretationsRequest $request, Dimension $dimension): JsonResponse
-    {
-        $this->dimensionService->saveInterpretations($dimension, $request->validated());
-
-        return response()->json(['success' => true, 'message' => 'تم حفظ تفسيرات البُعد بنجاح.']);
+        return response()->json(['success' => true, 'message' => 'تم إنشاء الاختبار.', 'id' => $assessment->id]);
     }
 }
 ````
@@ -51260,219 +53410,172 @@ class IconController extends Controller
 }
 ````
 
-## File: app/Http/Controllers/Admin/RecommendationController.php
+## File: app/Http/Controllers/Admin/QuestionController.php
 ````php
 <?php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\StoreRecommendationRequest;
+use App\Http\Requests\Admin\BulkStoreQuestionsRequest;
+use App\Http\Requests\Admin\StoreQuestionRequest;
 use App\Models\Assessment;
-use App\Models\Recommendation;
-use App\Services\RecommendationService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
-
-class RecommendationController extends Controller
-{
-    public function __construct(
-        private readonly RecommendationService $recommendationService,
-    ) {}
-
-    public function index(): View
-    {
-        $recommendations = $this->recommendationService->allGrouped();
-        $assessments = Assessment::orderBy('title_ar')->get();
-        $icons = \App\Models\Icon::all()->groupBy('category');
-
-        return view('admin.recommendations.index', compact('recommendations', 'assessments', 'icons'));
-    }
-
-    public function store(StoreRecommendationRequest $request): JsonResponse
-    {
-        $rec = $this->recommendationService->upsert($request->validated());
-
-        return response()->json(['success' => true, 'message' => 'تم حفظ التوصية.', 'id' => $rec->id]);
-    }
-
-    public function destroy(Recommendation $recommendation): JsonResponse
-    {
-        $this->recommendationService->delete($recommendation);
-
-        return response()->json(['success' => true, 'message' => 'تم حذف التوصية.']);
-    }
-}
-````
-
-## File: app/Http/Controllers/Admin/StatisticsController.php
-````php
-<?php
-
-namespace App\Http\Controllers\Admin;
-
-use App\Http\Controllers\Controller;
-use App\Services\StatisticsService;
+use App\Models\Question;
+use App\Services\AssessmentService;
+use App\Services\QuestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class StatisticsController extends Controller
+class QuestionController extends Controller
 {
     public function __construct(
-        private readonly StatisticsService $statisticsService,
-    ) {}
-
-    public function index(): View
-    {
-        $assessments = $this->statisticsService->getAssessments();
-
-        return view('admin.statistics.index', compact('assessments'));
-    }
-
-    public function data(Request $request): JsonResponse
-    {
-        $range = max(1, min((int) $request->query('range', 30), 365));
-        $data = $this->statisticsService->getData($range);
-
-        return response()->json($data);
-    }
-
-    /**
-     * Export completed exam results to a CSV file.
-     */
-    public function exportCsv(): StreamedResponse
-    {
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="exam_results_export.csv"',
-        ];
-
-        $csvContent = $this->statisticsService->exportResultsCsv();
-
-        return response()->streamDownload(function () use ($csvContent) {
-            echo $csvContent;
-        }, 'exam_results_export.csv', $headers);
-    }
-}
-````
-
-## File: app/Http/Controllers/Admin/UserController.php
-````php
-<?php
-
-namespace App\Http\Controllers\Admin;
-
-use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Services\UserService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-
-class UserController extends Controller
-{
-    public function __construct(
-        private readonly UserService $userService,
+        private readonly QuestionService $questionService,
+        private readonly AssessmentService $assessmentService,
     ) {}
 
     public function index(Request $request): View
     {
-        $search = $request->query('search');
-        $users = $this->userService->searchPaginated($search);
+        $assessments = Assessment::with('dimensions')->orderBy('title_ar')->get();
 
-        return view('admin.users.index', compact('users', 'search'));
+        $questions = $this->questionService->filteredList($request->only([
+            'assessment_id',
+            'dimension_id',
+            'search',
+            'per_page',
+        ]));
+
+        return view('admin.questions.index', compact('questions', 'assessments'));
     }
 
-    public function userResults(User $user): JsonResponse
+    public function store(StoreQuestionRequest $request): JsonResponse
     {
-        $sessions = $this->userService->getUserResults($user->id);
-
-        $levelTranslations = [
-            'high' => 'مرتفع',
-            'medium' => 'متوسط',
-            'low' => 'منخفض',
-        ];
-
-        $formatted = $sessions->map(function ($session) use ($levelTranslations) {
-            return [
-                'id' => $session->id,
-                'assessment_title' => $session->assessment->title_ar,
-                'completed_at' => $session->completed_at ? $session->completed_at->format('Y-m-d H:i') : null,
-                'total_score' => $session->result ? $session->result->total_score : 0,
-                'max_possible_score' => $session->result ? $session->result->max_possible_score : 0,
-                'level' => $session->result ? ($levelTranslations[$session->result->level] ?? $session->result->level) : 'غير متوفر',
-                'level_raw' => $session->result ? $session->result->level : 'unknown',
-            ];
-        });
+        $validated = $request->validated();
+        $question = $this->questionService->create($validated, $validated['options']);
 
         return response()->json([
             'success' => true,
-            'user' => [
-                'name' => $user->name,
-                'email' => $user->email,
-            ],
-            'results' => $formatted,
+            'message' => 'تم إضافة السؤال.',
+            'id' => $question->id,
         ]);
     }
-}
-````
 
-## File: app/Http/Controllers/DashboardController.php
-````php
-<?php
-
-namespace App\Http\Controllers;
-
-use App\Services\UserDashboardService;
-use Illuminate\View\View;
-
-class DashboardController extends Controller
-{
-    public function __construct(
-        private readonly UserDashboardService $dashboardService,
-    ) {}
-
-    public function index(): View
+    public function bulkStore(BulkStoreQuestionsRequest $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
-        $user = auth()->user();
-        $data = $this->dashboardService->getData($user);
+        $count = $this->questionService->bulkImport($request->validated());
 
-        return view('user.dashboard', $data);
-    }
-}
-````
-
-## File: app/Http/Requests/Admin/BulkStoreQuestionsRequest.php
-````php
-<?php
-
-namespace App\Http\Requests\Admin;
-
-use Illuminate\Foundation\Http\FormRequest;
-
-class BulkStoreQuestionsRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return true;
+        return response()->json(['success' => true, 'message' => "تم استيراد $count سؤال بنجاح."]);
     }
 
-    /** @return array<string, mixed> */
-    public function rules(): array
+    public function byAssessment(Assessment $assessment): JsonResponse
     {
-        return [
-            'assessment_id' => 'required|uuid|exists:assessments,id,deleted_at,NULL',
-            'dimension_id' => 'nullable|uuid|exists:dimensions,id,deleted_at,NULL',
-            'questions_text' => 'required|string',
+        $questions = $this->questionService->byAssessment($assessment);
+
+        return response()->json($questions);
+    }
+
+    public function update(Request $request, Question $question): JsonResponse
+    {
+        $request->validate(['text_ar' => 'sometimes|string', 'is_reversed' => 'sometimes|boolean']);
+        $this->questionService->update($question, $request->only(['text_ar', 'is_reversed']));
+
+        return response()->json(['success' => true, 'message' => 'تم تحديث السؤال.']);
+    }
+
+    public function destroy(Question $question): JsonResponse
+    {
+        $this->questionService->delete($question);
+
+        return response()->json(['success' => true, 'message' => 'تم حذف السؤال.']);
+    }
+
+    public function bulkDelete(Request $request): JsonResponse
+    {
+        $request->validate(['ids' => 'required|array', 'ids.*' => 'uuid']);
+        $count = $this->questionService->bulkDelete($request->ids);
+
+        return response()->json(['success' => true, 'message' => "تم حذف $count سؤال."]);
+    }
+
+    public function reorder(Request $request): JsonResponse
+    {
+        $request->validate(['order' => 'required|array', 'order.*' => 'uuid']);
+        $this->questionService->reorder($request->order);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function assignDimension(Request $request, Question $question): JsonResponse
+    {
+        $request->validate(['dimension_id' => 'nullable|uuid|exists:dimensions,id,deleted_at,NULL']);
+        $this->questionService->assignDimension($question, $request->dimension_id ?: null);
+
+        return response()->json(['success' => true, 'message' => 'تم تحديد البُعد.']);
+    }
+
+    public function bulkAssignDimension(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ids' => 'required|array', 
+            'ids.*' => 'uuid',
+            'dimension_id' => 'nullable|uuid|exists:dimensions,id,deleted_at,NULL'
+        ]);
+        $this->questionService->bulkAssignDimension($request->ids, $request->dimension_id ?: null);
+
+        return response()->json(['success' => true, 'message' => 'تم تعيين البُعد للأسئلة المحددة.']);
+    }
+
+    /**
+     * Import questions from CSV for an assessment.
+     */
+    public function importCsv(Request $request, Assessment $assessment): JsonResponse
+    {
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:2048',
+        ]);
+
+        $file = $request->file('csv_file');
+
+        try {
+            $count = $this->questionService->importFromCsv($assessment, $file->getRealPath());
+
+            return response()->json([
+                'success' => true,
+                'message' => "تم استيراد $count سؤال بنجاح وتحديث الأبعاد المعنية.",
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء الاستيراد: '.$e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Download CSV template for question importing.
+     */
+    public function downloadTemplate(): StreamedResponse
+    {
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="questions_import_template.csv"',
         ];
+
+        return response()->streamDownload(function () {
+            $output = fopen('php://output', 'w');
+            fwrite($output, "\xEF\xBB\xBF"); // UTF-8 BOM
+            fputcsv($output, ['اسم البعد', 'نص السؤال', 'معكوس', 'الخيارات']);
+            fputcsv($output, ['الوعي بالذات', 'أعرف نقاط قوتي بوضوح.', '0', 'نعم:2|إلى حد ما:1|لا:0']);
+            fputcsv($output, ['الوعي بالذات', 'أستطيع تحديد نقاط الضعف التي أحتاج إلى تطويرها.', '0', '']);
+            fputcsv($output, ['الوعي الانفعالي', 'أشعر بالقلق أو التوتر بسهولة عند مواجهة المشكلات.', '1', 'نعم:0|إلى حد ما:1|لا:2']);
+            fclose($output);
+        }, 'questions_import_template.csv', $headers);
     }
 }
 ````
 
-## File: app/Http/Requests/Admin/StoreInterpretationsRequest.php
+## File: app/Http/Requests/Admin/StoreAssessmentRequest.php
 ````php
 <?php
 
@@ -51480,117 +53583,36 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreInterpretationsRequest extends FormRequest
+class StoreAssessmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
     }
 
-    /** @return array<string, mixed> */
-    public function rules(): array
-    {
-        return [
-            'high_threshold' => 'nullable|integer|min:0',
-            'low_threshold' => 'nullable|integer|min:0',
-            'interpretations' => 'required|array',
-            'interpretations.*' => 'required|string',
-        ];
-    }
-}
-````
-
-## File: app/Http/Requests/Admin/StoreQuestionRequest.php
-````php
-<?php
-
-namespace App\Http\Requests\Admin;
-
-use Illuminate\Foundation\Http\FormRequest;
-
-class StoreQuestionRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    /** @return array<string, mixed> */
-    public function rules(): array
-    {
-        return [
-            'assessment_id' => 'required|uuid|exists:assessments,id,deleted_at,NULL',
-            'dimension_id' => 'nullable|uuid|exists:dimensions,id,deleted_at,NULL',
-            'text_ar' => 'required|string',
-            'is_reversed' => 'nullable|boolean',
-            'options' => 'required|array|min:2',
-            'options.*.label_ar' => 'required|string',
-            'options.*.score_value' => 'required|integer',
-        ];
-    }
-}
-````
-
-## File: app/Http/Requests/Admin/UpdateAssessmentRequest.php
-````php
-<?php
-
-namespace App\Http\Requests\Admin;
-
-use Illuminate\Foundation\Http\FormRequest;
-
-class UpdateAssessmentRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [
             'title_ar' => 'required|string|max:255',
+            'subtitle_ar' => 'nullable|string|max:255',
             'category' => 'required|string|max:255',
             'description_ar' => 'nullable|string',
             'time_limit_min' => 'nullable|integer|min:1',
-            'is_active' => 'boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'price' => 'nullable|numeric|min:0',
+            'rating' => 'nullable|numeric|min:1|max:5',
             'certificates_ar' => 'nullable|string',
             'programs_ar' => 'nullable|string',
             'plan_30_days_ar' => 'nullable|string',
+            'dimensions' => 'nullable|array',
+            'dimensions.*.name_ar' => 'required_with:dimensions|string',
+            'dimensions.*.max_score' => 'required_with:dimensions|integer|min:1',
         ];
     }
 }
 ````
 
-## File: app/Http/Requests/AnswerQuestionRequest.php
-````php
-<?php
-
-namespace App\Http\Requests;
-
-use Illuminate\Foundation\Http\FormRequest;
-
-class AnswerQuestionRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    /** @return array<string, mixed> */
-    public function rules(): array
-    {
-        return [
-            'question_id' => 'required|uuid|exists:questions,id,deleted_at,NULL',
-            'selected_option_id' => 'required|uuid|exists:answer_options,id,deleted_at,NULL',
-        ];
-    }
-}
-````
-
-## File: app/Models/AnswerOption.php
+## File: app/Models/ExamSession.php
 ````php
 <?php
 
@@ -51600,87 +53622,42 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class AnswerOption extends Model
+class ExamSession extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $fillable = ['question_id', 'label_ar', 'score_value', 'order_index'];
+    protected $fillable = [
+        'user_id', 'assessment_id', 'status', 'started_at', 'completed_at', 'coupon_id', 'discount_applied',
+    ];
 
-    public function question()
+    protected $casts = [
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
+    ];
+
+    public function user()
     {
-        return $this->belongsTo(Question::class);
+        return $this->belongsTo(User::class);
     }
 
-    public function userAnswers()
+    public function coupon()
     {
-        return $this->hasMany(UserAnswer::class, 'selected_option_id');
+        return $this->belongsTo(Coupon::class);
     }
-}
-````
-
-## File: app/Models/Dimension.php
-````php
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-class Dimension extends Model
-{
-    use HasUuids, SoftDeletes;
-
-    protected $fillable = ['assessment_id', 'name_ar', 'max_score', 'order_index'];
 
     public function assessment()
     {
         return $this->belongsTo(Assessment::class);
     }
 
-    public function questions()
+    public function userAnswers()
     {
-        return $this->hasMany(Question::class);
+        return $this->hasMany(UserAnswer::class, 'session_id');
     }
 
-    public function dimensionScores()
+    public function result()
     {
-        return $this->hasMany(DimensionScore::class);
-    }
-
-    public function interpretations()
-    {
-        return $this->hasMany(DimensionInterpretation::class);
-    }
-}
-````
-
-## File: app/Models/DimensionInterpretation.php
-````php
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-class DimensionInterpretation extends Model
-{
-    use HasUuids, SoftDeletes;
-
-    protected $fillable = [
-        'dimension_id',
-        'level',
-        'interpretation_text_ar',
-        'high_threshold',
-        'low_threshold',
-    ];
-
-    public function dimension()
-    {
-        return $this->belongsTo(Dimension::class);
+        return $this->hasOne(Result::class, 'session_id');
     }
 }
 ````
@@ -51816,1665 +53793,383 @@ class GradedExamUserAnswer extends Model
 }
 ````
 
-## File: app/Models/Question.php
-````php
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-class Question extends Model
-{
-    use HasUuids, SoftDeletes;
-
-    protected $fillable = ['assessment_id', 'dimension_id', 'text_ar', 'order_index', 'is_reversed'];
-
-    protected $casts = [
-        'is_reversed' => 'boolean',
-    ];
-
-    public function assessment()
-    {
-        return $this->belongsTo(Assessment::class);
-    }
-
-    public function dimension()
-    {
-        return $this->belongsTo(Dimension::class);
-    }
-
-    public function answerOptions()
-    {
-        return $this->hasMany(AnswerOption::class)->orderBy('order_index');
-    }
-
-    public function userAnswers()
-    {
-        return $this->hasMany(UserAnswer::class);
-    }
-}
-````
-
-## File: app/Models/Result.php
-````php
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-class Result extends Model
-{
-    use HasUuids, SoftDeletes;
-
-    protected $fillable = [
-        'session_id', 'total_score', 'max_possible_score', 'level', 'calculated_at',
-    ];
-
-    protected $casts = [
-        'calculated_at' => 'datetime',
-    ];
-
-    public function examSession()
-    {
-        return $this->belongsTo(ExamSession::class, 'session_id');
-    }
-
-    public function dimensionScores()
-    {
-        return $this->hasMany(DimensionScore::class);
-    }
-}
-````
-
-## File: app/Providers/AppServiceProvider.php
-````php
-<?php
-
-namespace App\Providers;
-
-use App\Repositories\AssessmentRepository;
-use App\Repositories\Contracts\AssessmentRepositoryInterface;
-use App\Repositories\Contracts\DimensionRepositoryInterface;
-use App\Repositories\Contracts\ExamSessionRepositoryInterface;
-use App\Repositories\Contracts\QuestionRepositoryInterface;
-use App\Repositories\Contracts\RecommendationRepositoryInterface;
-use App\Repositories\Contracts\UserRepositoryInterface;
-use App\Repositories\DimensionRepository;
-use App\Repositories\ExamSessionRepository;
-use App\Repositories\QuestionRepository;
-use App\Repositories\RecommendationRepository;
-use App\Repositories\UserRepository;
-use Illuminate\Support\ServiceProvider;
-
-class AppServiceProvider extends ServiceProvider
-{
-    /**
-     * Register repository interface → implementation bindings.
-     * This enables constructor injection throughout the application.
-     */
-    public function register(): void
-    {
-        $this->app->bind(AssessmentRepositoryInterface::class, AssessmentRepository::class);
-        $this->app->bind(DimensionRepositoryInterface::class, DimensionRepository::class);
-        $this->app->bind(QuestionRepositoryInterface::class, QuestionRepository::class);
-        $this->app->bind(RecommendationRepositoryInterface::class, RecommendationRepository::class);
-        $this->app->bind(ExamSessionRepositoryInterface::class, ExamSessionRepository::class);
-        $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
-    }
-
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
-    {
-        if ($this->app->environment('production') || env('FORCE_HTTPS', false)) {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
-        }
-    }
-}
-````
-
-## File: app/Repositories/Contracts/AssessmentRepositoryInterface.php
-````php
-<?php
-
-namespace App\Repositories\Contracts;
-
-use App\Models\Assessment;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-
-interface AssessmentRepositoryInterface
-{
-    /**
-     * Return paginated list of assessments with questions/dimensions counts.
-     */
-    public function paginated(array $filters = [], int $perPage = 15): LengthAwarePaginator;
-
-    /**
-     * Find an assessment and eager-load all nested relations needed for the show page.
-     */
-    public function findWithRelations(string $id): Assessment;
-
-    /**
-     * Create a new assessment and return it.
-     *
-     * @param  array<string, mixed>  $data
-     */
-    public function create(array $data): Assessment;
-
-    /**
-     * Update an assessment with the given attributes.
-     *
-     * @param  array<string, mixed>  $data
-     */
-    public function update(Assessment $assessment, array $data): Assessment;
-
-    /**
-     * Delete an assessment.
-     */
-    public function delete(Assessment $assessment): void;
-
-    /**
-     * Toggle the is_active flag.
-     */
-    public function toggle(Assessment $assessment): Assessment;
-}
-````
-
-## File: app/Repositories/Contracts/UserRepositoryInterface.php
-````php
-<?php
-
-namespace App\Repositories\Contracts;
-
-use App\Models\User;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
-
-interface UserRepositoryInterface
-{
-    /**
-     * Create a new user record.
-     *
-     * @param array $data
-     * @return User
-     */
-    public function create(array $data): User;
-
-    /**
-     * Search and paginate users with their completed exam session count.
-     *
-     * @return LengthAwarePaginator
-     */
-    public function searchPaginated(?string $search, int $perPage = 15);
-
-    /**
-     * Retrieve completed exam sessions for a specific user.
-     *
-     * @return Collection
-     */
-    public function getUserResults(string $userId);
-}
-````
-
-## File: app/Repositories/QuestionRepository.php
+## File: app/Repositories/UserRepository.php
 ````php
 <?php
 
 namespace App\Repositories;
 
-use App\Models\AnswerOption;
-use App\Models\Assessment;
-use App\Models\Question;
-use App\Repositories\Contracts\QuestionRepositoryInterface;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
+use App\Models\ExamSession;
+use App\Models\User;
+use App\Repositories\Contracts\UserRepositoryInterface;
 
-class QuestionRepository implements QuestionRepositoryInterface
+class UserRepository implements UserRepositoryInterface
 {
-    public function filteredPaginated(array $filters): LengthAwarePaginator
+    public function create(array $data): User
     {
-        /*
-         * Use a DB JOIN between questions, assessments and dimensions
-         * to retrieve assessment title and dimension name in a single query,
-         * avoiding the N+1 problem that the previous with() approach caused.
-         */
-        $query = DB::table('questions as q')
-            ->join('assessments as a', 'a.id', '=', 'q.assessment_id')
-            ->leftJoin('dimensions as d', 'd.id', '=', 'q.dimension_id')
-            ->whereNull('a.deleted_at')
-            ->whereNull('q.deleted_at')
-            ->select([
-                'q.id',
-                'q.text_ar',
-                'q.assessment_id',
-                'q.dimension_id',
-                'q.order_index',
-                'q.is_reversed',
-                'q.created_at',
-                'a.title_ar as assessment_title',
-                'd.name_ar  as dimension_name',
-            ])
-            ->selectSub(
-                DB::table('answer_options')->whereNull('deleted_at')->whereColumn('answer_options.question_id', 'q.id')->selectRaw('COUNT(*)'),
-                'answer_options_count'
-            );
+        return User::create($data);
+    }
 
-        if (! empty($filters['assessment_id'])) {
-            $query->where('q.assessment_id', $filters['assessment_id'])
-                ->orderBy('q.order_index');
-        } else {
-            $query->orderByDesc('q.created_at');
-        }
+    public function searchPaginated(?string $search, int $perPage = 15)
+    {
+        $query = User::query()
+            ->withCount(['examSessions as completed_exams_count' => function ($q) {
+                $q->where('status', 'completed');
+            }]);
 
-        if (! empty($filters['dimension_id'])) {
-            $query->where('q.dimension_id', $filters['dimension_id']);
-        }
-
-        if (! empty($filters['search'])) {
-            $query->where('q.text_ar', 'like', '%'.$filters['search'].'%');
-        }
-
-        $perPage = $filters['per_page'] ?? 25;
-
-        if ($perPage === 'all' || $perPage === 'الكل') {
-            $total = $query->count();
-            $perPage = $total > 0 ? $total : 25;
-        } else {
-            $perPage = in_array((int) $perPage, [25, 50, 100]) ? (int) $perPage : 25;
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('national_id', 'like', "%{$search}%");
+            });
         }
 
         return $query->paginate($perPage);
     }
 
-    public function byAssessment(Assessment $assessment): Collection
+    public function getUserResults(string $userId)
     {
-        return $assessment->questions()
-            ->with('answerOptions')
-            ->orderBy('order_index')
+        return ExamSession::where('user_id', $userId)
+            ->where('status', 'completed')
+            ->with(['assessment', 'result'])
+            ->orderBy('completed_at', 'desc')
             ->get();
     }
-
-    public function create(array $data, array $options): Question
-    {
-        $question = Question::create([
-            'assessment_id' => $data['assessment_id'],
-            'dimension_id' => $data['dimension_id'] ?? null,
-            'text_ar' => $data['text_ar'],
-            'order_index' => Question::where('assessment_id', $data['assessment_id'])->count(),
-            'is_reversed' => $data['is_reversed'] ?? false,
-        ]);
-
-        foreach ($options as $index => $opt) {
-            AnswerOption::create([
-                'question_id' => $question->id,
-                'label_ar' => $opt['label_ar'],
-                'score_value' => $opt['score_value'],
-                'order_index' => $opt['order_index'] ?? $index,
-            ]);
-        }
-
-        return $question;
-    }
-
-    public function update(Question $question, array $data): Question
-    {
-        $question->update($data);
-
-        return $question->fresh();
-    }
-
-    public function delete(Question $question): void
-    {
-        DB::transaction(function () use ($question) {
-            $question->answerOptions()->delete();
-            $question->delete();
-        });
-    }
-
-    public function bulkDelete(array $ids): void
-    {
-        DB::transaction(function () use ($ids) {
-            $questions = Question::whereIn('id', $ids)->get();
-            foreach ($questions as $q) {
-                $q->answerOptions()->delete();
-                $q->delete();
-            }
-        });
-    }
-
-    public function reorder(array $orderedIds): void
-    {
-        foreach ($orderedIds as $index => $id) {
-            Question::where('id', $id)->update(['order_index' => $index]);
-        }
-    }
-
-    public function bulkAssignDimension(array $ids, ?string $dimensionId): void
-    {
-        Question::whereIn('id', $ids)->update(['dimension_id' => $dimensionId]);
-    }
-
-    public function assignDimension(Question $question, ?string $dimensionId): Question
-    {
-        $question->update(['dimension_id' => $dimensionId]);
-
-        return $question->fresh();
-    }
-
-    public function bulkImport(array $data): int
-    {
-        $defaultOptions = [
-            ['label_ar' => 'نعم',        'score_value' => 2, 'order_index' => 0],
-            ['label_ar' => 'إلى حد ما', 'score_value' => 1, 'order_index' => 1],
-            ['label_ar' => 'لا',         'score_value' => 0, 'order_index' => 2],
-        ];
-
-        $lines = $data['lines'];
-        $baseIndex = Question::where('assessment_id', $data['assessment_id'])->count();
-        $count = 0;
-
-        foreach ($lines as $offset => $line) {
-            if (empty($line)) {
-                continue;
-            }
-
-            $question = Question::create([
-                'assessment_id' => $data['assessment_id'],
-                'dimension_id' => $data['dimension_id'] ?? null,
-                'text_ar' => $line,
-                'order_index' => $baseIndex + $offset,
-            ]);
-
-            foreach ($defaultOptions as $opt) {
-                AnswerOption::create(array_merge($opt, ['question_id' => $question->id]));
-            }
-
-            $count++;
-        }
-
-        return $count;
-    }
 }
 ````
 
-## File: app/Repositories/RecommendationRepository.php
-````php
-<?php
-
-namespace App\Repositories;
-
-use App\Models\Recommendation;
-use App\Repositories\Contracts\RecommendationRepositoryInterface;
-use Illuminate\Support\Collection;
-
-class RecommendationRepository implements RecommendationRepositoryInterface
-{
-    public function allGrouped(): Collection
-    {
-        /*
-         * JOIN recommendations with assessments to retrieve assessment title
-         * alongside each recommendation in a single query.
-         */
-        return Recommendation::with('assessment')
-            ->orderBy('assessment_id')
-            ->get()
-            ->groupBy('assessment_id');
-    }
-
-    public function upsert(array $data): Recommendation
-    {
-        if (!empty($data['id'])) {
-            /** @var Recommendation $rec */
-            $rec = Recommendation::findOrFail($data['id']);
-            $rec->update($data);
-            return $rec;
-        }
-
-        /** @var Recommendation $rec */
-        $rec = Recommendation::updateOrCreate(
-            [
-                'assessment_id' => $data['assessment_id'],
-                'level' => $data['level'],
-            ],
-            $data
-        );
-
-        return $rec;
-    }
-
-    public function delete(Recommendation $recommendation): void
-    {
-        $recommendation->delete();
-    }
-}
-````
-
-## File: app/Services/AssessmentService.php
+## File: app/Services/ExamService.php
 ````php
 <?php
 
 namespace App\Services;
 
 use App\Models\Assessment;
-use App\Repositories\Contracts\AssessmentRepositoryInterface;
-use App\Repositories\Contracts\DimensionRepositoryInterface;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Models\ExamSession;
+use App\Models\UserAnswer;
+use App\Repositories\Contracts\ExamSessionRepositoryInterface;
+use Carbon\Carbon;
 
-class AssessmentService
+class ExamService
 {
     public function __construct(
-        private readonly AssessmentRepositoryInterface $assessments,
-        private readonly DimensionRepositoryInterface $dimensions,
+        private readonly ExamSessionRepositoryInterface $sessions,
+        private readonly ExamResultService $resultService,
     ) {}
 
-    public function list(array $filters = []): LengthAwarePaginator
-    {
-        return $this->assessments->paginated($filters);
-    }
-
-    public function getForManagement(string $id): Assessment
-    {
-        return $this->assessments->findWithRelations($id);
-    }
-
     /**
-     * Create an assessment along with its initial dimensions.
+     * Start a new exam session (or return an existing in-progress one).
      *
-     * @param  array<string, mixed>  $data
+     * Returns either an ExamSession (if resumed) or a newly created ExamSession.
      */
-    public function create(array $data): Assessment
+    public function startOrResume(Assessment $assessment, string $userId): array
     {
-        $assessment = $this->assessments->create([
-            'title_ar' => $data['title_ar'],
-            'category' => $data['category'],
-            'description_ar' => $data['description_ar'] ?? null,
-            'time_limit_min' => $data['time_limit_min'] ?? null,
-            'created_by' => auth()->id(),
-        ]);
+        $existing = $this->sessions->findInProgress($userId, $assessment->id);
 
-        if (! empty($data['dimensions'])) {
-            foreach ($data['dimensions'] as $index => $dim) {
-                $this->dimensions->create([
-                    'assessment_id' => $assessment->id,
-                    'name_ar' => $dim['name_ar'],
-                    'max_score' => $dim['max_score'],
-                    'order_index' => $index,
-                ]);
-            }
+        if ($existing) {
+            return ['session' => $existing, 'resumed' => true];
         }
 
-        return $assessment;
+        $session = $this->sessions->create([
+            'user_id' => $userId,
+            'assessment_id' => $assessment->id,
+            'status' => 'in_progress',
+            'started_at' => Carbon::now(),
+        ]);
+
+        return ['session' => $session, 'resumed' => false];
     }
 
     /**
-     * Update basic assessment fields.
+     * Load session data for the exam page (assessment + questions + progress).
      *
-     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
      */
-    public function update(Assessment $assessment, array $data): Assessment
+    public function getSessionData(ExamSession $session): array
     {
-        return $this->assessments->update($assessment, $data);
+        $assessment = $session->assessment;
+        $total = $assessment->questions()->count();
+        $answeredIds = $session->userAnswers()->pluck('question_id')->toArray();
+        
+        $nextQuestion = $assessment->questions()
+            ->with('answerOptions')
+            ->whereNotIn('id', $answeredIds)
+            ->orderBy('order_index')
+            ->first();
+            
+        $current = count($answeredIds) + 1;
+
+        return [
+            'assessment' => $assessment,
+            'nextQuestion' => $nextQuestion,
+            'progress' => [
+                'current' => $current,
+                'total' => $total,
+                'percentage' => $total > 0 ? round(($current) / $total * 100) : 0,
+            ],
+        ];
     }
 
     /**
-     * Update assessment settings (includes is_active flag).
+     * Delete the last answer and return the previous question state.
      *
-     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
      */
-    public function updateSettings(Assessment $assessment, array $data): Assessment
+    public function previousQuestion(ExamSession $session): array
     {
-        return $this->assessments->update($assessment, $data);
+        $lastAnswer = $session->userAnswers()->orderBy('id', 'desc')->first();
+        if ($lastAnswer) {
+            $lastAnswer->delete();
+        }
+
+        $answeredIds = $session->userAnswers()->pluck('question_id')->toArray();
+        $total = $session->assessment->questions()->count();
+        $answeredCount = count($answeredIds);
+        
+        $nextQuestion = $session->assessment->questions()
+            ->with('answerOptions', 'dimension')
+            ->whereNotIn('id', $answeredIds)
+            ->orderBy('order_index')
+            ->first();
+            
+        $current = $answeredCount + 1;
+
+        if (! $nextQuestion) {
+            // Unlikely if we just deleted an answer, but fallback
+            $this->resultService->calculate($session);
+
+            return ['is_last' => true, 'redirect' => route('exam.result', $session->id)];
+        }
+
+        return [
+            'is_last' => false,
+            'next_question' => [
+                'id' => $nextQuestion->id,
+                'text_ar' => $nextQuestion->text_ar,
+                'is_reversed' => (bool) $nextQuestion->is_reversed,
+                'dimension_name' => $nextQuestion->dimension?->name_ar,
+                'options' => $nextQuestion->answerOptions->map(fn ($o) => [
+                    'id' => $o->id,
+                    'label_ar' => $o->label_ar,
+                ]),
+            ],
+            'progress' => [
+                'current' => $current,
+                'total' => $total,
+                'percentage' => $total > 0 ? round(($current) / $total * 100) : 0,
+            ],
+        ];
     }
 
-    public function delete(Assessment $assessment): void
+    /**
+     * Submit an answer and return the next question data (or redirect to result).
+     *
+     * @return array<string, mixed>
+     */
+    public function submitAnswer(ExamSession $session, string $questionId, string $optionId): array
     {
-        $this->assessments->delete($assessment);
+        // Verify question belongs to this assessment
+        $question = $session->assessment->questions()->findOrFail($questionId);
+
+        // Verify option belongs to this question
+        $option = $question->answerOptions()->findOrFail($optionId);
+
+        // Upsert answer
+        UserAnswer::updateOrCreate(
+            ['session_id' => $session->id, 'question_id' => $question->id],
+            ['selected_option_id' => $option->id, 'score_earned' => $option->score_value]
+        );
+
+        // Find next unanswered question
+        $answeredIds = $session->userAnswers()->pluck('question_id')->toArray();
+        $total = $session->assessment->questions()->count();
+        $answeredCount = count($answeredIds);
+        
+        $nextQuestion = $session->assessment->questions()
+            ->with('answerOptions', 'dimension')
+            ->whereNotIn('id', $answeredIds)
+            ->orderBy('order_index')
+            ->first();
+
+        if (! $nextQuestion) {
+            $this->resultService->calculate($session);
+
+            return ['is_last' => true, 'redirect' => route('exam.result', $session->id)];
+        }
+
+        $current = $answeredCount + 1;
+
+        return [
+            'is_last' => false,
+            'next_question' => [
+                'id' => $nextQuestion->id,
+                'text_ar' => $nextQuestion->text_ar,
+                'is_reversed' => (bool) $nextQuestion->is_reversed,
+                'dimension_name' => $nextQuestion->dimension?->name_ar,
+                'options' => $nextQuestion->answerOptions->map(fn ($o) => [
+                    'id' => $o->id,
+                    'label_ar' => $o->label_ar,
+                ]),
+            ],
+            'progress' => [
+                'current' => $current,
+                'total' => $total,
+                'percentage' => $total > 0 ? round(($current) / $total * 100) : 0,
+            ],
+        ];
     }
 
-    public function toggle(Assessment $assessment): Assessment
+    /**
+     * Get or calculate the result for a completed session.
+     *
+     * @return array<string, mixed>
+     */
+    public function getResult(ExamSession $session): array
     {
-        return $this->assessments->toggle($assessment);
+        return $this->resultService->getFormattedResult($session);
     }
 }
 ````
 
-## File: app/Services/GradedExamGeneratorService.php
+## File: app/Services/UserDashboardService.php
 ````php
 <?php
 
 namespace App\Services;
 
-use App\Models\GradedExam;
-use App\Models\GradedExamConstraintSetting;
-use App\Models\GradedExamQuestion;
-use App\Models\GradedExamSession;
-use App\Models\GradedExamSessionQuestion;
-use Illuminate\Support\Collection;
+use App\Models\Assessment;
+use App\Models\Coupon;
+use App\Models\Setting;
+use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
-/**
- * المحرك الرئيسي لتوليد امتحان عشوائي يطبّق كل القيود المتفق عليها:
- * توزيع الصعوبة، توازن النوع، تغطية الوحدات، توازن صح/خطأ، توازن مواقع
- * الإجابة الصحيحة، حد أقصى للأسئلة متعددة الإجابات، وتجنب تكرار الأسئلة
- * مع محاولات المستخدم السابقة.
- *
- * كل الأرقام (عدد الأسئلة المتاحة لكل وحدة/مستوى/نوع) تُحسب Live من
- * الداتابيز، مش مخزّنة أو مفترضة، عشان تفضل صحيحة حتى لو الأدمن غيّر
- * بنك الأسئلة بعدين.
- */
-class GradedExamGeneratorService
+class UserDashboardService
 {
-    /** أقصى عدد محاولات لموازنة صح/خطأ أو مواقع الإجابة قبل ما نكتفي بأقرب نتيجة ممكنة */
-    private const MAX_BALANCE_ATTEMPTS = 200;
-
-    public function generate(GradedExam $exam, ?string $userId = null): GradedExamSession
+    /**
+     * Build all data needed for the user dashboard in an optimised way.
+     *
+     * @return array<string, mixed>
+     */
+    public function getData(User $user): array
     {
-        $settings = $exam->constraintSettings ?? $this->defaultSettings($exam);
-
-        $this->validateFeasibility($exam, $settings);
-
-        return DB::transaction(function () use ($exam, $settings, $userId) {
-
-            // === الخطوة 1: تثبيت تخصيص الوحدات (largest remainder method) ===
-            $unitAllocation = $this->allocateUnitCounts($exam->id, $settings->total_questions);
-
-            // === الخطوة 2: توزيع الصعوبة داخل كل وحدة، مع احترام الميزانية العامة ===
-            $cells = $this->allocateDifficultyWithinUnits($exam->id, $unitAllocation, $settings);
-
-            // === الخطوة 3: توزيع النوع (اختيار من متعدد / صح خطأ) داخل كل خلية ===
-            $cells = $this->allocateTypeWithinCells($exam->id, $cells, $settings);
-
-            // === الخطوة 4: اختيار الأسئلة الفعلية (مع فلاتر: متعدد الإجابات، خيارات غير قياسية، تجنب التكرار) ===
-            $questions = $this->selectQuestions($exam->id, $cells, $settings, $userId);
-
-            // === الخطوة 5: موازنة صح/خطأ (best-effort ضمن هامش تفاوت) ===
-            $questions = $this->balanceTrueFalseAnswers($exam->id, $questions, $settings);
-
-            // === الخطوة 6: خلط ترتيب الخيارات لكل سؤال (يحل توازن مواقع الإجابة تلقائيًا) ===
-            $shuffledMap = $this->shuffleOptionsPerQuestion($questions, $settings);
-
-            // === الخطوة 7: خلط ترتيب الأسئلة + تطبيق قاعدة عدم تجميع نفس الوحدة ===
-            $orderedQuestions = $this->sequenceQuestions($questions, $settings);
-
-            // === الخطوة 8: حفظ الجلسة والأسئلة المرتبطة بها ===
-            return $this->persistSession($exam, $userId, $orderedQuestions, $shuffledMap, $settings);
+        // 1. Cache Assessments (Global)
+        $assessmentsMax = Assessment::max('updated_at') ?? 'none';
+        $assessmentsCount = Assessment::count();
+        $assessmentsKey = "active_assessments_{$assessmentsMax}_{$assessmentsCount}";
+        $assessments = Cache::remember($assessmentsKey, 3600, function () {
+            return Assessment::where('is_active', true)
+                ->withCount('questions')
+                ->orderBy('category')
+                ->orderBy('title_ar')
+                ->get();
         });
-    }
 
-    // ============================================================
-    // الخطوة 1: تخصيص عدد الأسئلة لكل وحدة (Largest Remainder Method)
-    // ============================================================
-    private function allocateUnitCounts(string $gradedExamId, int $totalQuestions): array
-    {
-        $unitCounts = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
-            ->selectRaw('unit_id, COUNT(*) as cnt')
-            ->groupBy('unit_id')
-            ->pluck('cnt', 'unit_id')
-            ->toArray();
+        // 2. Cache Active Coupons (Global)
+        $couponsMax = Coupon::max('updated_at') ?? 'none';
+        $couponsCount = Coupon::count();
+        $couponsKey = "active_coupons_{$couponsMax}_{$couponsCount}";
+        $activeCoupons = Cache::remember($couponsKey, 3600, function () {
+            return Coupon::where('is_active', true)
+                ->where(function ($query) {
+                    $query->whereNull('expires_at')
+                        ->orWhere('expires_at', '>=', now()->toDateString());
+                })->get();
+        });
 
-        $bankTotal = array_sum($unitCounts);
-        if ($bankTotal === 0) {
-            throw new \RuntimeException('لا يوجد أي سؤال في بنك هذا الامتحان.');
-        }
+        // 3. Cache User Sessions & Progress Map (User-specific)
+        $sessionsMax = $user->examSessions()->max('updated_at') ?? 'none';
+        $sessionsCount = $user->examSessions()->count();
+        $sessionsKey = "user_sessions_{$user->id}_{$sessionsMax}_{$sessionsCount}";
 
-        $raw = [];
-        foreach ($unitCounts as $unitId => $count) {
-            $raw[$unitId] = ($count / $bankTotal) * $totalQuestions;
-        }
+        $userSessions = Cache::remember($sessionsKey, 3600, function () use ($user) {
+            return $user->examSessions()
+                ->with(['assessment', 'result'])
+                ->orderByDesc('updated_at')
+                ->get();
+        });
 
-        $allocation = array_map('intval', $raw);
-        $remainder = $totalQuestions - array_sum($allocation);
-
-        // وزّع الباقي على أعلى الأجزاء الكسرية (largest remainder)
-        $fractions = [];
-        foreach ($raw as $unitId => $value) {
-            $fractions[$unitId] = $value - intval($value);
-        }
-        arsort($fractions);
-
-        foreach (array_keys($fractions) as $unitId) {
-            if ($remainder <= 0) break;
-            $allocation[$unitId]++;
-            $remainder--;
-        }
-
-        // حد أدنى سؤال واحد لكل وحدة لها أسئلة (min_questions_per_unit = 1)
-        foreach ($allocation as $unitId => $count) {
-            if ($count === 0 && $unitCounts[$unitId] > 0) {
-                $allocation[$unitId] = 1;
-            }
-        }
-
-        return $allocation; // [unit_id => count]
-    }
-
-    // ============================================================
-    // الخطوة 2: توزيع الصعوبة داخل كل وحدة مع احترام الميزانية الكلية
-    // ============================================================
-    private function allocateDifficultyWithinUnits(string $gradedExamId, array $unitAllocation, GradedExamConstraintSetting $settings): array
-    {
-        $levelTargets = $settings->targetCounts(); // ['easy'=>25,'medium'=>20,'hard'=>5]
-        $levels = ['easy', 'medium', 'hard'];
-
-        // مخزون كل وحدة لكل مستوى (Live من الداتابيز)
-        $supply = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
-            ->selectRaw('unit_id, level, COUNT(*) as cnt')
-            ->groupBy('unit_id', 'level')
-            ->get()
-            ->groupBy('unit_id')
-            ->map(fn ($rows) => $rows->pluck('cnt', 'level')->toArray());
-
-        $cells = []; // [[unit_id, level, count], ...]
-        $remainingLevelBudget = $levelTargets;
-
-        // نبدأ بالوحدات الأصغر تخصيصًا أولاً (أقل مرونة) لتقليل التعارضات
-        $unitsSorted = $unitAllocation;
-        asort($unitsSorted);
-
-        foreach ($unitsSorted as $unitId => $slotsNeeded) {
-            if ($slotsNeeded <= 0) continue;
-            $unitSupply = $supply[$unitId] ?? [];
-
-            // وزن كل مستوى = (الميزانية العامة المتبقية له) × (توفره في هذه الوحدة تحديدًا)
-            $weights = [];
-            foreach ($levels as $lvl) {
-                $available = $unitSupply[$lvl] ?? 0;
-                $weights[$lvl] = min($available, max($remainingLevelBudget[$lvl], 0));
-            }
-            $weightSum = array_sum($weights);
-
-            if ($weightSum === 0) {
-                // مفيش أي مستوى ليه ميزانية متاحة أو مخزون في الوحدة دي - وزّع بالتساوي كحل أخير
-                foreach ($levels as $lvl) {
-                    $weights[$lvl] = $unitSupply[$lvl] ?? 0;
-                }
-                $weightSum = array_sum($weights) ?: 1;
-            }
-
-            $picked = [];
-            $assigned = 0;
-            foreach ($levels as $lvl) {
-                $share = $weightSum > 0 ? intval(floor($slotsNeeded * ($weights[$lvl] / $weightSum))) : 0;
-                $share = min($share, $unitSupply[$lvl] ?? 0);
-                $picked[$lvl] = $share;
-                $assigned += $share;
-            }
-
-            // وزّع أي باقي بسبب التقريب على أي مستوى لسه عنده مخزون وميزانية
-            $leftover = $slotsNeeded - $assigned;
-            foreach ($levels as $lvl) {
-                if ($leftover <= 0) break;
-                $room = ($unitSupply[$lvl] ?? 0) - $picked[$lvl];
-                if ($room > 0 && $remainingLevelBudget[$lvl] > 0) {
-                    $add = min($leftover, $room);
-                    $picked[$lvl] += $add;
-                    $leftover -= $add;
-                }
-            }
-
-            foreach ($levels as $lvl) {
-                if ($picked[$lvl] > 0) {
-                    $cells[] = ['unit_id' => $unitId, 'level' => $lvl, 'count' => $picked[$lvl]];
-                    $remainingLevelBudget[$lvl] -= $picked[$lvl];
-                }
-            }
-        }
-
-        return $cells;
-    }
-
-    // ============================================================
-    // الخطوة 3: توزيع النوع (mcq/true_false) داخل كل خلية (وحدة × مستوى)
-    // ============================================================
-    private function allocateTypeWithinCells(string $gradedExamId, array $cells, GradedExamConstraintSetting $settings): array
-    {
-        $mode = $settings->type_distribution_mode; // proportional | balanced
-        $mcqRatio = $mode === 'balanced' ? 0.5 : 0.6139;
-
-        $result = [];
-        foreach ($cells as $cell) {
-            $supply = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
-                ->where('unit_id', $cell['unit_id'])
-                ->where('level', $cell['level'])
-                ->selectRaw('question_type, COUNT(*) as cnt')
-                ->groupBy('question_type')
-                ->pluck('cnt', 'question_type')
-                ->toArray();
-
-            $mcqAvailable = $supply['mcq'] ?? 0;
-            $tfAvailable = $supply['true_false'] ?? 0;
-
-            $mcqWanted = (int) round($cell['count'] * $mcqRatio);
-            $tfWanted = $cell['count'] - $mcqWanted;
-
-            // === معالجة قيد type_within_difficulty الحرج: عنق زجاجة صح/خطأ الصعبة ===
-            // لو المطلوب أكبر من المتاح، حوّل الفرق لـ mcq بدل ما نفشل التوليد
-            if ($tfWanted > $tfAvailable) {
-                $deficit = $tfWanted - $tfAvailable;
-                $tfWanted = $tfAvailable;
-                $mcqWanted += $deficit;
-            }
-            if ($mcqWanted > $mcqAvailable) {
-                $deficit = $mcqWanted - $mcqAvailable;
-                $mcqWanted = $mcqAvailable;
-                $tfWanted = min($tfAvailable, $tfWanted + $deficit);
-            }
-
-            if ($mcqWanted > 0) {
-                $result[] = ['unit_id' => $cell['unit_id'], 'level' => $cell['level'], 'type' => 'mcq', 'count' => $mcqWanted];
-            }
-            if ($tfWanted > 0) {
-                $result[] = ['unit_id' => $cell['unit_id'], 'level' => $cell['level'], 'type' => 'true_false', 'count' => $tfWanted];
-            }
-        }
-
-        return $result;
-    }
-
-    // ============================================================
-    // الخطوة 4: اختيار الأسئلة الفعلية لكل خلية
-    // ============================================================
-    private function selectQuestions(string $gradedExamId, array $cells, GradedExamConstraintSetting $settings, ?string $userId): Collection
-    {
-        $selected = collect();
-        $multiCorrectCount = 0;
-        $maxMultiCorrect = $settings->max_multi_correct_questions;
-
-        $recentlySeenIds = $userId
-            ? $this->getRecentlySeenQuestionIds($userId, $gradedExamId)
-            : collect();
-
-        foreach ($cells as $cell) {
-            $poolAll = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
-                ->where('unit_id', $cell['unit_id'])
-                ->where('level', $cell['level'])
-                ->where('question_type', $cell['type'])
-                ->whereNotIn('id', $selected->pluck('id'))
-                ->with('options') // eager load لتجنب N+1 في خطوات لاحقة (موازنة صح/خطأ + خلط الخيارات)
-                ->withCount('options')
+        $progressKey = "user_progress_{$user->id}_{$sessionsMax}_{$sessionsCount}";
+        $progressMap = Cache::remember($progressKey, 3600, function () use ($user) {
+            $progressRows = DB::table('exam_sessions')
+                ->where('user_id', $user->id)
+                ->select([
+                    'assessment_id',
+                    DB::raw('COUNT(*) as total'),
+                    DB::raw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed"),
+                ])
+                ->groupBy('assessment_id')
                 ->get();
 
-            // فضّل الأسئلة اللي عدد خياراتها قياسي (4 لاختيار من متعدد، 2 لصح/خطأ) أولاً
-            // الفلترة هنا في PHP بدل SQL having() عشان تشتغل بنفس الشكل على أي قاعدة بيانات (MySQL/Postgres/SQLite)
-            $standardCount = $cell['type'] === 'mcq' ? 4 : 2;
-            $standardPool = $poolAll->where('options_count', '=', $standardCount)->values();
-            $fallbackPool = $poolAll->where('options_count', '!=', $standardCount)->values();
-
-            $pool = $standardPool->concat($fallbackPool);
-
-            // استبعاد/تقليل أولوية الأسئلة اللي ظهرت في محاولات المستخدم الأخيرة
-            if ($recentlySeenIds->isNotEmpty()) {
-                $fresh = $pool->whereNotIn('id', $recentlySeenIds)->shuffle();
-                $seen = $pool->whereIn('id', $recentlySeenIds)->shuffle();
-                $pool = $fresh->concat($seen);
-            } else {
-                $pool = $pool->shuffle();
-            }
-
-            $needed = $cell['count'];
-            $chosen = collect();
-
-            foreach ($pool as $question) {
-                if ($chosen->count() >= $needed) break;
-
-                if ($question->is_multi_correct && $multiCorrectCount >= $maxMultiCorrect) {
-                    continue; // تخطّي - وصلنا للحد الأقصى المسموح لأسئلة متعددة الإجابات
-                }
-
-                $chosen->push($question);
-                if ($question->is_multi_correct) {
-                    $multiCorrectCount++;
-                }
-            }
-
-            if ($chosen->count() < $needed) {
-                // FALLBACK 1: Try to find ANY question in the SAME unit and SAME type, 
-                // regardless of difficulty, that we haven't selected yet.
-                $deficit = $needed - $chosen->count();
-                $fallbackPool1 = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
-                    ->where('unit_id', $cell['unit_id'])
-                    ->where('question_type', $cell['type'])
-                    ->whereNotIn('id', $selected->pluck('id')->concat($chosen->pluck('id')))
-                    ->with('options')
-                    ->inRandomOrder()
-                    ->limit($deficit)
-                    ->get();
-                    
-                foreach ($fallbackPool1 as $fq) {
-                    if ($chosen->count() >= $needed) break;
-                    if ($fq->is_multi_correct && $multiCorrectCount >= $maxMultiCorrect) continue;
-                    $chosen->push($fq);
-                    if ($fq->is_multi_correct) $multiCorrectCount++;
-                }
-
-                // FALLBACK 2: If STILL not enough, fallback to ANY type in the same unit.
-                if ($chosen->count() < $needed) {
-                    $deficit = $needed - $chosen->count();
-                    $fallbackPool2 = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
-                        ->where('unit_id', $cell['unit_id'])
-                        ->whereNotIn('id', $selected->pluck('id')->concat($chosen->pluck('id')))
-                        ->with('options')
-                        ->inRandomOrder()
-                        ->limit($deficit)
-                        ->get();
-                        
-                    foreach ($fallbackPool2 as $fq) {
-                        if ($chosen->count() >= $needed) break;
-                        if ($fq->is_multi_correct && $multiCorrectCount >= $maxMultiCorrect) continue;
-                        $chosen->push($fq);
-                        if ($fq->is_multi_correct) $multiCorrectCount++;
-                    }
-                }
-
-                // If it STILL fails (meaning the entire unit is completely exhausted of questions)
-                if ($chosen->count() < $needed) {
-                    throw new \RuntimeException(sprintf(
-                        'تعذّر إيجاد %d سؤال كافٍ (وحدة: %s، نوع: %s) حتى بعد استعارة مستويات أخرى. المتاح فعليًا: %d.',
-                        $needed, $cell['unit_id'], $cell['type'], $chosen->count()
-                    ));
-                }
-            }
-
-            $selected = $selected->concat($chosen);
-        }
-
-        return $selected;
-    }
-
-    private function getRecentlySeenQuestionIds(string $userId, string $gradedExamId): Collection
-    {
-        $lookback = config('graded_exams.repeat_avoidance_lookback', 3);
-
-        $recentSessionIds = GradedExamSession::where('user_id', $userId)
-            ->where('graded_exam_id', $gradedExamId)
-            ->where('status', 'completed')
-            ->orderByDesc('completed_at')
-            ->limit($lookback)
-            ->pluck('id');
-
-        if ($recentSessionIds->isEmpty()) {
-            return collect();
-        }
-
-        return GradedExamSessionQuestion::whereIn('session_id', $recentSessionIds)
-            ->pluck('question_id')
-            ->unique();
-    }
-
-    // ============================================================
-    // الخطوة 5: موازنة صح/خطأ (best-effort)
-    // ============================================================
-    private function balanceTrueFalseAnswers(string $gradedExamId, Collection $questions, GradedExamConstraintSetting $settings): Collection
-    {
-        $tfQuestions = $questions->filter(fn ($q) => $q->question_type === 'true_false');
-        if ($tfQuestions->isEmpty()) {
-            return $questions;
-        }
-
-        $trueCount = $tfQuestions->filter(fn ($q) => $q->options->firstWhere('is_correct', true)?->option_text_ar === 'True')->count();
-        $total = $tfQuestions->count();
-        $truePercentage = $total > 0 ? ($trueCount / $total) * 100 : 50;
-
-        $attempts = 0;
-        while (($truePercentage < 35 || $truePercentage > 65) && $attempts < self::MAX_BALANCE_ATTEMPTS) {
-            $attempts++;
-
-            $needMoreTrue = $truePercentage < 35;
-            $swapOutValue = $needMoreTrue ? false : true;
-
-            // ندور على سؤال صح/خطأ داخل نفس الاختيار الحالي نبدله بسؤال تاني من نفس الوحدة/المستوى بإجابة عكسية
-            $candidate = $tfQuestions->first(function ($q) use ($swapOutValue) {
-                $correctText = $q->options->firstWhere('is_correct', true)?->option_text_ar;
-                return $swapOutValue ? $correctText === 'True' : $correctText === 'False';
-            });
-
-            if (!$candidate) break;
-
-            $replacement = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
-                ->where('unit_id', $candidate->unit_id)
-                ->where('level', $candidate->level)
-                ->where('question_type', 'true_false')
-                ->whereNotIn('id', $questions->pluck('id'))
-                ->with('options')
-                ->get()
-                ->first(function ($q) use ($needMoreTrue) {
-                    $correctText = $q->options->firstWhere('is_correct', true)?->option_text_ar;
-                    return $needMoreTrue ? $correctText === 'True' : $correctText === 'False';
-                });
-
-            if (!$replacement) break; // مفيش بديل متاح - نكتفي بأقرب نسبة ممكنة
-
-            $questions = $questions->reject(fn ($q) => $q->id === $candidate->id)->push($replacement);
-            $tfQuestions = $questions->filter(fn ($q) => $q->question_type === 'true_false');
-            $trueCount = $tfQuestions->filter(fn ($q) => $q->options->firstWhere('is_correct', true)?->option_text_ar === 'True')->count();
-            $truePercentage = $tfQuestions->count() > 0 ? ($trueCount / $tfQuestions->count()) * 100 : 50;
-        }
-
-        return $questions->values();
-    }
-
-    // ============================================================
-    // الخطوة 6: خلط ترتيب الخيارات لكل سؤال (يحل توازن مواقع الإجابة تلقائيًا)
-    // ============================================================
-    private function shuffleOptionsPerQuestion(Collection $questions, GradedExamConstraintSetting $settings): array
-    {
-        $map = [];
-        foreach ($questions as $question) {
-            $optionIds = $question->options->pluck('id')->shuffle()->values()->toArray();
-            $map[$question->id] = $optionIds;
-        }
-        return $map;
-    }
-
-    // ============================================================
-    // الخطوة 7: ترتيب الأسئلة النهائي + منع تجميع نفس الوحدة
-    // ============================================================
-    private function sequenceQuestions(Collection $questions, GradedExamConstraintSetting $settings): Collection
-    {
-        $shuffled = $questions->shuffle()->values();
-        $maxConsecutive = $settings->max_consecutive_same_unit;
-
-        $attempts = 0;
-        while ($attempts < self::MAX_BALANCE_ATTEMPTS) {
-            $violationIndex = null;
-            $consecutive = 1;
-
-            for ($i = 1; $i < $shuffled->count(); $i++) {
-                if ($shuffled[$i]->unit_id === $shuffled[$i - 1]->unit_id) {
-                    $consecutive++;
-                    if ($consecutive > $maxConsecutive) {
-                        $violationIndex = $i;
-                        break;
-                    }
-                } else {
-                    $consecutive = 1;
-                }
-            }
-
-            if ($violationIndex === null) break; // مفيش تجميع زيادة عن المسموح
-
-            // دوّر على أول سؤال بعده بوحدة مختلفة وبدّل مكانه
-            $swapWith = null;
-            for ($j = $violationIndex + 1; $j < $shuffled->count(); $j++) {
-                if ($shuffled[$j]->unit_id !== $shuffled[$violationIndex - 1]->unit_id) {
-                    $swapWith = $j;
-                    break;
-                }
-            }
-
-            if ($swapWith === null) break; // مفيش تبديل ممكن - نكتفي بالترتيب الحالي
-
-            $tmp = $shuffled[$violationIndex];
-            $shuffled[$violationIndex] = $shuffled[$swapWith];
-            $shuffled[$swapWith] = $tmp;
-
-            $attempts++;
-        }
-
-        return $shuffled;
-    }
-
-    // ============================================================
-    // الخطوة 8: حفظ الجلسة وأسئلتها
-    // ============================================================
-    private function persistSession(GradedExam $exam, ?string $userId, Collection $orderedQuestions, array $shuffledMap, GradedExamConstraintSetting $settings): GradedExamSession
-    {
-        $session = GradedExamSession::create([
-            'user_id' => $userId,
-            'graded_exam_id' => $exam->id,
-            'status' => 'in_progress',
-            'total_questions' => $orderedQuestions->count(),
-            'constraints_snapshot' => $settings->only([
-                'total_questions', 'easy_percentage', 'medium_percentage', 'hard_percentage',
-                'type_distribution_mode', 'mc_position_balance_mode',
-                'max_multi_correct_questions', 'max_consecutive_same_answer', 'max_consecutive_same_unit',
-            ]),
-            'random_seed' => null,
-            'started_at' => now(),
-        ]);
-
-        foreach ($orderedQuestions->values() as $position => $question) {
-            GradedExamSessionQuestion::create([
-                'session_id' => $session->id,
-                'question_id' => $question->id,
-                'position_in_exam' => $position + 1,
-                'shuffled_options_order' => $shuffledMap[$question->id] ?? [],
-            ]);
-        }
-
-        return $session->fresh(['sessionQuestions.question.options']);
-    }
-
-    // ============================================================
-    // أدوات مساعدة
-    // ============================================================
-    private function defaultSettings(GradedExam $exam): GradedExamConstraintSetting
-    {
-        return GradedExamConstraintSetting::create([
-            'graded_exam_id' => $exam->id,
-            'total_questions' => 50,
-            'easy_percentage' => 50,
-            'medium_percentage' => 40,
-            'hard_percentage' => 10,
-        ]);
-    }
-
-    /**
-     * تحقق مبدئي سريع قبل الدخول في التوليد الفعلي: هل الإعدادات ممكنة
-     * أصلاً بناءً على المخزون الحالي؟ (يعيد استخدام منطق isFeasible()
-     * الموجود في الـ Model نفسه لتفادي التكرار).
-     */
-    private function validateFeasibility(GradedExam $exam, GradedExamConstraintSetting $settings): void
-    {
-        $check = $settings->isFeasible();
-        if (!$check['feasible']) {
-            throw new \RuntimeException('إعدادات القيود غير قابلة للتحقيق: ' . implode(' | ', $check['errors']));
-        }
-    }
-}
-````
-
-## File: app/Services/QuestionService.php
-````php
-<?php
-
-namespace App\Services;
-
-use App\Models\Assessment;
-use App\Models\Question;
-use App\Repositories\Contracts\QuestionRepositoryInterface;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
-
-class QuestionService
-{
-    public function __construct(
-        private readonly QuestionRepositoryInterface $questions,
-    ) {}
-
-    /**
-     * @param  array<string, mixed>  $filters
-     */
-    public function filteredList(array $filters): LengthAwarePaginator
-    {
-        return $this->questions->filteredPaginated($filters);
-    }
-
-    public function byAssessment(Assessment $assessment): Collection
-    {
-        return $this->questions->byAssessment($assessment);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @param  array<int, array<string, mixed>>  $options
-     */
-    public function create(array $data, array $options): Question
-    {
-        return $this->questions->create($data, $options);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function update(Question $question, array $data): Question
-    {
-        $updateData = array_intersect_key($data, array_flip(['text_ar', 'is_reversed', 'dimension_id']));
-
-        return $this->questions->update($question, $updateData);
-    }
-
-    public function delete(Question $question): void
-    {
-        $this->questions->delete($question);
-    }
-
-    /**
-     * @param  array<int, string>  $ids
-     */
-    public function bulkDelete(array $ids): int
-    {
-        $count = count($ids);
-        $this->questions->bulkDelete($ids);
-
-        return $count;
-    }
-
-    /**
-     * @param  array<int, string>  $orderedIds
-     */
-    public function reorder(array $orderedIds): void
-    {
-        $this->questions->reorder($orderedIds);
-    }
-
-    /**
-     * @param  array<int, string>  $ids
-     */
-    public function bulkAssignDimension(array $ids, ?string $dimensionId): void
-    {
-        $this->questions->bulkAssignDimension($ids, $dimensionId);
-    }
-
-    public function assignDimension(Question $question, ?string $dimensionId): Question
-    {
-        return $this->questions->assignDimension($question, $dimensionId);
-    }
-
-    /**
-     * Bulk-import questions from raw text (one per line).
-     *
-     * @param  array<string, mixed>  $data  Keys: assessment_id, dimension_id, questions_text
-     * @return int Number of questions created
-     */
-    public function bulkImport(array $data): int
-    {
-        $lines = array_filter(
-            array_map('trim', explode("\n", $data['questions_text']))
-        );
-
-        return $this->questions->bulkImport([
-            'assessment_id' => $data['assessment_id'],
-            'dimension_id' => $data['dimension_id'] ?? null,
-            'lines' => array_values($lines),
-        ]);
-    }
-
-    /**
-     * Import questions from a CSV file.
-     */
-    public function importFromCsv(Assessment $assessment, string $filePath): int
-    {
-        if (($handle = fopen($filePath, 'r')) === false) {
-            throw new \RuntimeException('تعذر فتح ملف CSV.');
-        }
-
-        $rowCount = 0;
-        $isFirst = true;
-
-        while (($row = fgetcsv($handle, 1000, ',')) !== false) {
-            if (empty($row) || count($row) < 2) {
-                continue;
-            }
-
-            // Skip header row if present
-            if ($isFirst) {
-                $isFirst = false;
-                $firstCol = trim($row[0]);
-                if (
-                    str_contains($firstCol, 'dimension') ||
-                    str_contains($firstCol, 'البعد') ||
-                    str_contains($firstCol, 'بُعد') ||
-                    str_contains(trim($row[1]), 'question') ||
-                    str_contains(trim($row[1]), 'السؤال')
-                ) {
-                    continue;
-                }
-            }
-
-            $dimName = trim($row[0] ?? '');
-            $qText = trim($row[1] ?? '');
-
-            if (empty($qText)) {
-                continue;
-            }
-
-            $isReversed = filter_var(trim($row[2] ?? '0'), FILTER_VALIDATE_BOOLEAN) || trim($row[2] ?? '0') === '1';
-            $optionsStr = trim($row[3] ?? '');
-
-            // Get or create dimension if dimName is provided
-            $dimensionId = null;
-            if (! empty($dimName)) {
-                $dimension = $assessment->dimensions()->firstOrCreate(
-                    ['name_ar' => $dimName],
-                    [
-                        'max_score' => 0,
-                        'order_index' => $assessment->dimensions()->count(),
-                    ]
-                );
-                $dimensionId = $dimension->id;
-            }
-
-            // Parse options
-            $options = [];
-            if (! empty($optionsStr)) {
-                $optParts = explode('|', $optionsStr);
-                foreach ($optParts as $idx => $part) {
-                    $pair = explode(':', $part);
-                    $label = trim($pair[0] ?? '');
-                    $score = intval(trim($pair[1] ?? '0'));
-                    if ($label !== '') {
-                        $options[] = [
-                            'label_ar' => $label,
-                            'score_value' => $score,
-                            'order_index' => $idx,
-                        ];
-                    }
-                }
-            }
-
-            // Default options
-            if (empty($options)) {
-                $options = [
-                    ['label_ar' => 'نعم',        'score_value' => $isReversed ? 0 : 2, 'order_index' => 0],
-                    ['label_ar' => 'إلى حد ما', 'score_value' => 1,                   'order_index' => 1],
-                    ['label_ar' => 'لا',         'score_value' => $isReversed ? 2 : 0, 'order_index' => 2],
+            $map = [];
+            foreach ($progressRows as $row) {
+                $map[$row->assessment_id] = [
+                    'completed' => (int) $row->completed,
+                    'total' => (int) $row->total,
                 ];
             }
 
-            $this->questions->create([
-                'assessment_id' => $assessment->id,
-                'dimension_id' => $dimensionId,
-                'text_ar' => $qText,
-                'is_reversed' => $isReversed,
-            ], $options);
+            return $map;
+        });
 
-            $rowCount++;
-        }
+        // 4. Load My Coupons (No need to cache as it's a very light query and pivot updates are tricky to track globally)
+        $myCoupons = $user->coupons()->get();
 
-        fclose($handle);
+        // 5. Site Settings (stats)
+        $siteSettings = Cache::remember('site_settings', 3600, function () {
+            $settings = Setting::pluck('value', 'key')->toArray();
+            
+            if (isset($settings['stats_mode']) && $settings['stats_mode'] === 'auto') {
+                $settings['stat_users'] = '+' . \App\Models\User::count();
+                $settings['stat_exams'] = '+' . \App\Models\Result::count();
+                $settings['stat_assessments'] = '+' . \App\Models\Assessment::count();
+                $settings['stat_fields'] = '+' . \App\Models\Dimension::count();
+            }
+            
+            return $settings;
+        });
 
-        // Update dimensions max_scores
-        foreach ($assessment->dimensions as $dim) {
-            $dimQuestions = $dim->questions()->with('answerOptions')->get();
-            $dimMax = $dimQuestions->sum(
-                fn ($q) => $q->answerOptions->max('score_value') ?? 0
-            );
-            $dim->update(['max_score' => $dimMax]);
-        }
-
-        return $rowCount;
+        return compact('assessments', 'userSessions', 'progressMap', 'activeCoupons', 'myCoupons', 'siteSettings');
     }
 }
 ````
 
-## File: app/Services/StatisticsService.php
+## File: config/graded_exams.php
 ````php
 <?php
 
-namespace App\Services;
-
-use App\Models\Assessment;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-
-class StatisticsService
-{
-    /**
-     * Get all assessments for the filter dropdown.
-     *
-     * @return \Illuminate\Database\Eloquent\Collection<int, Assessment>
-     */
-    public function getAssessments()
-    {
-        return Assessment::all();
-    }
-
-    /**
-     * Build the full statistics data payload.
-     * Uses DB JOINs to avoid N+1 queries.
-     *
-     * @param  int  $range  Number of days
-     * @return array<string, mixed>
-     */
-    public function getData(int $range): array
-    {
-        return [
-            'dailyData' => $this->getDailySessionData($range),
-            'assessments' => $this->getLevelDistribution(),
-            'avgScores' => $this->getAverageScores(),
-            'topUsers' => $this->getTopUsers(),
-        ];
-    }
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    private function getDailySessionData(int $range): array
-    {
-        $from = now()->subDays($range - 1)->startOfDay();
-
-        $rows = DB::table('exam_sessions')
-            ->where('status', 'completed')
-            ->where('completed_at', '>=', $from)
-            ->selectRaw('DATE(completed_at) as date, COUNT(*) as count')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get()
-            ->keyBy('date');
-
-        $data = [];
-        for ($i = 0; $i < $range; $i++) {
-            $date = now()->subDays($range - 1 - $i)->format('Y-m-d');
-            $data[] = [
-                'date' => $date,
-                'count' => $rows->get($date)?->count ?? 0,
-            ];
-        }
-
-        return $data;
-    }
-
-    /**
-     * Use a single JOIN query to aggregate level counts per assessment.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function getLevelDistribution(): array
-    {
-        $rows = DB::table('assessments as a')
-            ->join('exam_sessions as es', 'es.assessment_id', '=', 'a.id')
-            ->join('results as r', 'r.session_id', '=', 'es.id')
-            ->whereNull('a.deleted_at')
-            ->select([
-                'a.id',
-                'a.title_ar as title',
-                DB::raw("SUM(CASE WHEN r.level = 'high'   THEN 1 ELSE 0 END) as high"),
-                DB::raw("SUM(CASE WHEN r.level = 'medium' THEN 1 ELSE 0 END) as medium"),
-                DB::raw("SUM(CASE WHEN r.level = 'low'    THEN 1 ELSE 0 END) as low"),
-            ])
-            ->groupBy('a.id', 'a.title_ar')
-            ->get();
-
-        return $rows->map(fn ($r) => [
-            'id' => $r->id,
-            'title' => $r->title,
-            'high' => (int) $r->high,
-            'medium' => (int) $r->medium,
-            'low' => (int) $r->low,
-        ])->values()->toArray();
-    }
-
-    /**
-     * Use a JOIN to compute average score per assessment in a single query.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function getAverageScores(): array
-    {
-        $rows = DB::table('assessments as a')
-            ->leftJoin('exam_sessions as es', 'es.assessment_id', '=', 'a.id')
-            ->leftJoin('results as r', 'r.session_id', '=', 'es.id')
-            ->whereNull('a.deleted_at')
-            ->select([
-                'a.title_ar as title',
-                DB::raw('ROUND(AVG(r.total_score), 1) as avg'),
-            ])
-            ->groupBy('a.id', 'a.title_ar')
-            ->get();
-
-        return $rows->map(fn ($r) => [
-            'title' => $r->title,
-            'avg' => (float) ($r->avg ?? 0),
-        ])->values()->toArray();
-    }
-
-    /**
-     * @return Collection<int, object>
-     */
-    private function getTopUsers()
-    {
-        return DB::table('users as u')
-            ->leftJoin('exam_sessions as es', fn ($j) => $j->on('es.user_id', '=', 'u.id')->where('es.status', 'completed')
-            )
-            ->where('u.role', 'user')
-            ->whereNull('u.deleted_at')
-            ->select([
-                'u.id',
-                'u.name',
-                'u.email',
-                DB::raw('COUNT(es.id) as exam_sessions_count'),
-            ])
-            ->groupBy('u.id', 'u.name', 'u.email')
-            ->orderByDesc('exam_sessions_count')
-            ->limit(10)
-            ->get();
-    }
-
-    /**
-     * Export all completed exam sessions and results to a CSV string.
-     */
-    public function exportResultsCsv(): string
-    {
-        $rows = DB::table('exam_sessions as es')
-            ->join('users as u', 'u.id', '=', 'es.user_id')
-            ->join('assessments as a', 'a.id', '=', 'es.assessment_id')
-            ->join('results as r', 'r.session_id', '=', 'es.id')
-            ->where('es.status', 'completed')
-            ->whereNull('u.deleted_at')
-            ->whereNull('a.deleted_at')
-            ->select([
-                'es.id as session_id',
-                'u.name as user_name',
-                'u.email as user_email',
-                'a.title_ar as assessment_title',
-                'r.total_score',
-                'r.max_possible_score',
-                'r.level',
-                'es.completed_at',
-            ])
-            ->orderByDesc('es.completed_at')
-            ->get();
-
-        $output = fopen('php://temp', 'r+');
-
-        // Prepend UTF-8 BOM so Excel opens Arabic letters correctly
-        fwrite($output, "\xEF\xBB\xBF");
-
-        // Headers
-        fputcsv($output, [
-            'معرف الجلسة',
-            'اسم المستخدم',
-            'البريد الإلكتروني',
-            'اسم المقياس',
-            'الدرجة المحرزة',
-            'الدرجة القصوى',
-            'النسبة المئوية',
-            'المستوى',
-            'تاريخ الإكمال',
-        ]);
-
-        foreach ($rows as $row) {
-            $percentage = $row->max_possible_score > 0
-                ? round(($row->total_score / $row->max_possible_score) * 100).'%'
-                : '0%';
-
-            $levelLabel = match ($row->level) {
-                'high' => 'مرتفع',
-                'medium' => 'متوسط',
-                default => 'منخفض',
-            };
-
-            fputcsv($output, [
-                $row->session_id,
-                $row->user_name,
-                $row->user_email,
-                $row->assessment_title,
-                $row->total_score,
-                $row->max_possible_score,
-                $percentage,
-                $levelLabel,
-                $row->completed_at,
-            ]);
-        }
-
-        rewind($output);
-        $csvContent = stream_get_contents($output);
-        fclose($output);
-
-        return $csvContent;
-    }
-}
+// إعدادات عامة لمحرك توليد الامتحانات العشوائية.
+// دي إعدادات على مستوى النظام كله (مش لكل امتحان لوحده - دي موجودة
+// في جدول graded_exam_constraint_settings بدل كده).
+//
+// ملحوظة: تم استبدال آلية "تجنب التكرار بآخر N محاولات" بآلية أدق
+// اسمها "موازنة الظهور" (Exposure Balancing) — بتحسب عدد مرات ظهور
+// كل سؤال لكل مستخدم عبر كل تاريخه (مش آخر N بس)، وبتفضّل الأسئلة
+// الأقل ظهورًا دايمًا. المنطق ده جوه GradedExamGeneratorService
+// نفسه ومحتاجش أي إعداد هنا.
+return [
+    //
+];
 ````
 
-## File: app/Services/UserService.php
+## File: database/data/graded_exams/marketing_ibta/meta.php
 ````php
 <?php
 
-namespace App\Services;
-
-use App\Models\User;
-use App\Repositories\Contracts\UserRepositoryInterface;
-use Illuminate\Support\Facades\Hash;
-
-class UserService
-{
-    public function __construct(
-        private readonly UserRepositoryInterface $userRepository,
-    ) {}
-
-    public function register(array $data): User
-    {
-        $data['password'] = Hash::make($data['password']);
-        $data['role'] = 'user';
-
-        return $this->userRepository->create($data);
-    }
-
-    public function searchPaginated(?string $search, int $perPage = 15)
-    {
-        return $this->userRepository->searchPaginated($search, $perPage);
-    }
-
-    public function getUserResults(string $userId)
-    {
-        return $this->userRepository->getUserResults($userId);
-    }
-}
+// بيانات الامتحان نفسه: الاختبار التجريبي للشهادة الاحترافية في التسويق (IBTA)
+return [
+    'title_ar' => 'الاختبار التجريبي للشهادة الاحترافية في التسويق (CBB)',
+    'description_ar' => 'بنك أسئلة شامل مكون من 13 وحدة دراسية، لإعداد الطلاب للشهادة الاحترافية في التسويق الصادرة عن IBTA.',
+    'category' => 'marketing_certification',
+    'total_questions' => 404,
+    'time_limit_min' => null,
+    'is_active' => true,
+];
 ````
 
-## File: bootstrap/app.php
-````php
-<?php
-
-use App\Http\Middleware\AdminMiddleware;
-use App\Http\Middleware\UserMiddleware;
-use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Configuration\Exceptions;
-use Illuminate\Foundation\Configuration\Middleware;
-
-return Application::configure(basePath: dirname(__DIR__))
-    ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        commands: __DIR__.'/../routes/console.php',
-        health: '/up',
-    )
-    ->withMiddleware(function (Middleware $middleware) {
-        $middleware->trustProxies(at: '*');
-
-        $middleware->alias([
-            'admin' => AdminMiddleware::class,
-            'user' => UserMiddleware::class,
-        ]);
-    })
-    ->withExceptions(function (Exceptions $exceptions) {
-        //
-    })->create();
-````
-
-## File: composer.json
-````json
-{
-    "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
-    "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
-    "license": "MIT",
-    "require": {
-        "php": "^8.2",
-        "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1"
-    },
-    "require-dev": {
-        "barryvdh/laravel-ide-helper": "*",
-        "fakerphp/faker": "^1.23",
-        "larastan/larastan": "^3.10",
-        "laravel/pail": "^1.2.2",
-        "laravel/pint": "^1.24",
-        "laravel/sail": "^1.41",
-        "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.6",
-        "nunomaduro/larastan": "^3.10",
-        "phpunit/phpunit": "^11.5.50"
-    },
-    "autoload": {
-        "psr-4": {
-            "App\\": "app/",
-            "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tests\\": "tests/"
-        }
-    },
-    "scripts": {
-        "setup": [
-            "composer install",
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
-            "@php artisan key:generate",
-            "@php artisan migrate --force",
-            "npm install",
-            "npm run build"
-        ],
-        "dev": [
-            "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
-        ],
-        "test": [
-            "@php artisan config:clear --ansi",
-            "@php artisan test"
-        ],
-        "post-autoload-dump": [
-            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
-        ],
-        "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
-        ],
-        "post-root-package-install": [
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
-        ],
-        "post-create-project-cmd": [
-            "@php artisan key:generate --ansi",
-            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
-            "@php artisan migrate --graceful --ansi"
-        ],
-        "pre-package-uninstall": [
-            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
-        ]
-    },
-    "extra": {
-        "laravel": {
-            "dont-discover": []
-        }
-    },
-    "config": {
-        "optimize-autoloader": true,
-        "preferred-install": "dist",
-        "sort-packages": true,
-        "allow-plugins": {
-            "pestphp/pest-plugin": true,
-            "php-http/discovery": true
-        }
-    },
-    "minimum-stability": "stable",
-    "prefer-stable": true
-}
-````
-
-## File: database/migrations/0001_01_01_000000_create_users_table.php
+## File: database/migrations/2024_01_01_000003_create_dimensions_table.php
 ````php
 <?php
 
@@ -53486,38 +54181,137 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('dimensions', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->string('role')->default('user');
-            $table->rememberToken();
+            $table->uuid('assessment_id');
+            $table->string('name_ar');
+            $table->integer('max_score');
+            $table->integer('order_index')->default(0);
             $table->timestamps();
-        });
-
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
-        });
-
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->string('user_id', 36)->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('sessions');
+        Schema::dropIfExists('dimensions');
+    }
+};
+````
+
+## File: database/migrations/2024_01_01_000004_create_questions_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('questions', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('assessment_id');
+            $table->uuid('dimension_id')->nullable();
+            $table->text('text_ar');
+            $table->integer('order_index')->default(0);
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('questions');
+    }
+};
+````
+
+## File: database/migrations/2024_01_01_000005_create_answer_options_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('answer_options', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('question_id');
+            $table->string('label_ar');
+            $table->integer('score_value');
+            $table->integer('order_index')->default(0);
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('answer_options');
+    }
+};
+````
+
+## File: database/migrations/2024_01_01_000006_create_exam_sessions_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('exam_sessions', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('user_id');
+            $table->uuid('assessment_id');
+            $table->enum('status', ['in_progress', 'completed', 'abandoned'])->default('in_progress');
+            $table->timestamp('started_at');
+            $table->timestamp('completed_at')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('exam_sessions');
+    }
+};
+````
+
+## File: database/migrations/2024_01_01_000007_create_user_answers_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('user_answers', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('session_id');
+            $table->uuid('question_id');
+            $table->uuid('selected_option_id');
+            $table->integer('score_earned');
+            $table->timestamps();
+            $table->unique(['session_id', 'question_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('user_answers');
     }
 };
 ````
@@ -54010,802 +54804,475 @@ $(document).ready(function() {
 }
 ````
 
-## File: resources/views/admin/dashboard.blade.php
+## File: resources/views/admin/assessments/index.blade.php
 ````php
 @extends('layouts.admin')
-@section('title', 'لوحة الإدارة')
-@section('page-title', 'لوحة الإدارة')
+@section('title', 'إدارة المقاييس')
+@section('page-title', 'إدارة المقاييس')
 
 @section('content')
-<div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3 p-4">
-                <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-                    <i class="bi bi-people text-primary fs-4"></i>
-                </div>
-                <div>
-                    <div class="fs-3 fw-bold">{{ $totalUsers }}</div>
-                    <div class="text-muted small">إجمالي المستخدمين</div>
-                </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="text-muted small">إجمالي: {{ $assessments->total() }} مقياس</div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assessmentModal">
+        <i class="bi bi-plus-circle me-1"></i>إضافة مقياس جديد
+    </button>
+</div>
+
+<!-- Filter Section -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+        <form method="GET" action="{{ route('admin.assessments.index') }}" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">البحث</label>
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="ابحث باسم المقياس..." value="{{ request('search') }}">
             </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3 p-4">
-                <div class="bg-success bg-opacity-10 rounded-circle p-3">
-                    <i class="bi bi-clipboard-check text-success fs-4"></i>
-                </div>
-                <div>
-                    <div class="fs-3 fw-bold">{{ $todaySessions }}</div>
-                    <div class="text-muted small">اختبارات اليوم</div>
-                </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">تصفية حسب المحور</label>
+                <select name="category" class="form-select form-select-sm">
+                    <option value="">جميع المحاور</option>
+                    <option value="مقاييس التوجيه والتوافق المهني" {{ request('category') == 'مقاييس التوجيه والتوافق المهني' ? 'selected' : '' }}>مقاييس التوجيه والتوافق المهني</option>
+                    <option value="الذات والشحصيه" {{ request('category') == 'الذات والشحصيه' ? 'selected' : '' }}>الذات والشخصية</option>
+                    <option value="الكفاءة الشخصية والنجاح المهني" {{ request('category') == 'الكفاءة الشخصية والنجاح المهني' ? 'selected' : '' }}>الكفاءة الشخصية والنجاح المهني</option>
+                    <option value="مقاييس الاتصال والعلاقات المهنية" {{ request('category') == 'مقاييس الاتصال والعلاقات المهنية' ? 'selected' : '' }}>مقاييس الاتصال والعلاقات المهنية</option>
+                    <option value="مقاييس الصحةاملهنية" {{ request('category') == 'مقاييس الصحةاملهنية' ? 'selected' : '' }}>مقاييس الصحة المهنية</option>
+                    <option value="مقاييس القيادة والإدارة" {{ request('category') == 'مقاييس القيادة والإدارة' ? 'selected' : '' }}>مقاييس القيادة والإدارة</option>
+                </select>
             </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3 p-4">
-                <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                    <i class="bi bi-stars text-warning fs-4"></i>
-                </div>
-                <div>
-                    <div class="fs-5 fw-bold text-truncate" style="max-width:130px">
-                        {{ $mostUsedAssessment?->title_ar ?? '—' }}
-                    </div>
-                    <div class="text-muted small">الأكثر استخداماً</div>
-                </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary btn-sm px-4">تصفية</button>
+                @if(request('search') || request('category'))
+                    <a href="{{ route('admin.assessments.index') }}" class="btn btn-outline-secondary btn-sm ms-2">إلغاء</a>
+                @endif
             </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3 p-4">
-                <div class="bg-info bg-opacity-10 rounded-circle p-3">
-                    <i class="bi bi-bar-chart text-info fs-4"></i>
-                </div>
-                <div>
-                    <div class="fs-3 fw-bold">{{ round($avgScore ?? 0, 1) }}</div>
-                    <div class="text-muted small">متوسط الدرجات</div>
-                </div>
-            </div>
-        </div>
+        </form>
     </div>
 </div>
 
 <div class="card border-0 shadow-sm">
-    <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-semibold"><i class="bi bi-clock-history me-2 text-muted"></i>آخر الجلسات المكتملة</h6>
-        <a href="{{ route('admin.statistics.exportCsv') }}" class="btn btn-sm btn-outline-success shadow-sm">
-            <i class="bi bi-file-earmark-excel me-1"></i>تصدير جميع النتائج (CSV)
-        </a>
-    </div>
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>المستخدم</th>
-                    <th>المقياس</th>
-                    <th>وقت الإتمام</th>
-                    <th>الدرجة</th>
-                    <th>المستوى</th>
+                    <th>اسم المقياس</th>
+                    <th>المحور</th>
+                    <th>الأبعاد</th>
+                    <th>الأسئلة</th>
+                    <th>الوقت</th>
+                    <th>الحالة</th>
+                    <th>الإجراءات</th>
                 </tr>
             </thead>
-            <tbody>
-                @forelse($recentSessions as $session)
-                <tr>
+            <tbody id="assessments-tbody">
+                @forelse($assessments as $a)
+                <tr data-id="{{ $a->id }}">
+                    <td class="fw-medium">{{ $a->title_ar }}</td>
+                    <td class="text-muted small">{{ $a->category }}</td>
+                    <td>{{ $a->dimensions_count }}</td>
+                    <td>{{ $a->questions_count }}</td>
+                    <td>{{ $a->time_limit_min ? $a->time_limit_min.' د' : 'بلا حد' }}</td>
                     <td>
-                        <div class="fw-medium">{{ $session->user?->name ?? 'مستخدم محذوف' }}</div>
-                        <div class="text-muted small">{{ $session->user?->email ?? '-' }}</div>
+                        @if($a->is_active)
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">مفعّل</span>
+                        @else
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">موقوف</span>
+                        @endif
                     </td>
-                    <td>{{ $session->assessment?->title_ar ?? 'مقياس محذوف' }}</td>
-                    <td class="text-muted small">{{ $session->completed_at?->format('Y/m/d H:i') }}</td>
                     <td>
-                        @if($session->result)
-                            {{ $session->result->total_score }}/{{ $session->result->max_possible_score }}
-                        @else — @endif
-                    </td>
-                    <td>
-                        @if($session->result)
-                            @php $lc = match($session->result->level) { 'high'=>'success','medium'=>'warning',default=>'danger' }; @endphp
-                            @php $ll = match($session->result->level) { 'high'=>'مرتفع','medium'=>'متوسط',default=>'منخفض' }; @endphp
-                            <span class="badge bg-{{ $lc }}-subtle text-{{ $lc }} border border-{{ $lc }}-subtle">{{ $ll }}</span>
-                        @else — @endif
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-outline-secondary btn-toggle"
+                                    data-id="{{ $a->id }}"
+                                    data-url="{{ route('admin.assessments.toggle', $a->id) }}"
+                                    title="{{ $a->is_active ? 'إيقاف' : 'تفعيل' }}">
+                                <i class="bi {{ $a->is_active ? 'bi-pause-circle' : 'bi-play-circle' }}"></i>
+                            </button>
+                            <a href="{{ route('admin.assessments.show', $a->id) }}"
+                                class="btn btn-sm btn-outline-primary" title="عرض وتعديل المقياس">
+                                <i class="bi bi-list-ul"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger btn-delete"
+                                    data-id="{{ $a->id }}"
+                                    data-url="{{ route('admin.assessments.destroy', $a->id) }}"
+                                    data-name="{{ $a->title_ar }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="5" class="text-center text-muted py-4">لا توجد جلسات بعد.</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-4">لا توجد مقاييس بعد.</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-</div>
-@endsection
-````
-
-## File: resources/views/admin/graded_exams/index.blade.php
-````php
-@extends('layouts.admin')
-@section('title', 'إدارة الشهادات والوحدات')
-@section('page-title', 'إدارة الشهادات والوحدات')
-
-@section('content')
-
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">الشهادات الاحترافية</h5>
-    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExamModal">
-        <i class="bi bi-plus-circle me-1"></i>إضافة شهادة جديدة
-    </button>
-</div>
-
-<div class="row">
-    @foreach($exams as $exam)
-    <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card h-100 shadow-sm border-0">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h5 class="card-title fw-bold text-primary mb-0">{{ $exam->title_ar }}</h5>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-three-dots-vertical"></i>
-                        </button>
-                        <ul class="dropdown-menu shadow-sm text-end">
-                            <li><a class="dropdown-item btn-edit-exam" href="#" data-id="{{ $exam->id }}" data-title="{{ $exam->title_ar }}" data-desc="{{ $exam->description_ar }}" data-time="{{ $exam->time_limit_min }}" data-active="{{ $exam->is_active ? 1 : 0 }}"><i class="bi bi-pencil me-2"></i>تعديل الشهادة</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger btn-delete-exam" href="#" data-url="{{ route('admin.graded_exams.destroy', $exam->id) }}"><i class="bi bi-trash me-2"></i>حذف الشهادة</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <p class="text-muted small mb-3" style="min-height: 40px;">{{ $exam->description_ar ?: 'لا يوجد وصف' }}</p>
-                
-                <div class="d-flex justify-content-between mb-3 small">
-                    <span class="text-muted"><i class="bi bi-journal-text me-1"></i>{{ $exam->units_count }} وحدة</span>
-                    <span class="text-muted"><i class="bi bi-question-circle me-1"></i>{{ $exam->questions_count }} سؤال</span>
-                    <span class="badge {{ $exam->is_active ? 'bg-success' : 'bg-secondary' }}">{{ $exam->is_active ? 'مفعل' : 'معطل' }}</span>
-                </div>
-                
-                <hr>
-                
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="mb-0 fw-semibold text-secondary" style="font-size: 0.85rem;">الوحدات الدراسية</h6>
-                    <div>
-                        <button class="btn btn-sm btn-outline-secondary py-0 px-2 btn-settings me-1" data-id="{{ $exam->id }}" style="font-size: 0.75rem;">
-                            <i class="bi bi-sliders"></i> إعدادات
-                        </button>
-                        <button class="btn btn-sm btn-outline-primary py-0 px-2 btn-add-unit" data-id="{{ $exam->id }}" style="font-size: 0.75rem;">
-                            <i class="bi bi-plus"></i> إضافة وحدة
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="list-group list-group-flush small" style="max-height: 200px; overflow-y: auto;">
-                    @forelse($exam->units as $unit)
-                        <div class="list-group-item px-1 py-2 d-flex justify-content-between align-items-center">
-                            <span class="text-truncate" title="{{ $unit->title_ar }}">{{ $unit->title_ar }}</span>
-                            <div>
-                                <button class="btn btn-sm text-primary p-0 mx-1 btn-edit-unit" data-id="{{ $unit->id }}" data-title="{{ $unit->title_ar }}" data-url="{{ route('admin.graded_exams.units.update', $unit->id) }}">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm text-danger p-0 btn-delete-unit" data-url="{{ route('admin.graded_exams.units.destroy', $unit->id) }}">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="text-center text-muted small py-2">لا توجد وحدات</div>
-                    @endforelse
-                </div>
-                
-            </div>
-            <div class="card-footer bg-white border-top-0 pt-0">
-                <a href="{{ route('admin.graded_exams.questions.index', ['graded_exam_id' => $exam->id]) }}" class="btn btn-light btn-sm w-100">
-                    <i class="bi bi-gear me-1"></i>إدارة بنك أسئلة الشهادة
-                </a>
-            </div>
-        </div>
-    </div>
-    @endforeach
-</div>
-
-<!-- Add/Edit Exam Modal -->
-<div class="modal fade" id="examModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-semibold" id="examModalTitle">إضافة شهادة</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="e-id">
-                <div class="mb-3">
-                    <label class="form-label small fw-medium">اسم الشهادة *</label>
-                    <input type="text" class="form-control" id="e-title">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small fw-medium">الوصف</label>
-                    <textarea class="form-control" id="e-desc" rows="3"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small fw-medium">مدة الاختبار (بالدقائق)</label>
-                    <input type="number" class="form-control" id="e-time-limit" min="1" value="120" placeholder="مثال: 120 لساعتين">
-                </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="e-active" checked>
-                    <label class="form-check-label small" for="e-active">مفعلة وتظهر للمستخدمين</label>
-                </div>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-primary" id="btn-save-exam">حفظ</button>
-            </div>
-        </div>
+    <div class="card-footer bg-transparent border-0">
+        {{ $assessments->links() }}
     </div>
 </div>
 
-<!-- Add/Edit Unit Modal -->
-<div class="modal fade" id="unitModal" tabindex="-1">
-    <div class="modal-dialog modal-sm">
+<!-- Assessment Modal -->
+<div class="modal fade" id="assessmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold" id="unitModalTitle">إضافة وحدة</h5>
+                <h5 class="modal-title fw-semibold">إضافة مقياس جديد</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="u-exam-id">
-                <input type="hidden" id="u-id">
-                <input type="hidden" id="u-url">
-                <div class="mb-3">
-                    <label class="form-label small fw-medium">اسم الوحدة *</label>
-                    <input type="text" class="form-control" id="u-title">
-                </div>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-primary" id="btn-save-unit">حفظ</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Settings Modal -->
-<div class="modal fade" id="settingsModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-semibold">إعدادات وضوابط الامتحان</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="s-exam-id">
+                <div id="assessment-form-errors" class="alert alert-danger d-none"></div>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label small fw-medium">إجمالي الأسئلة في الجلسة</label>
-                        <input type="number" class="form-control form-control-sm" id="s-total" min="1">
+                        <label class="form-label small fw-medium">اسم المقياس *</label>
+                        <input type="text" class="form-control" id="f-title_ar" placeholder="مثال: مقياس معرفة الذات">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-medium">حد أسئلة "متعدد الإجابات"</label>
-                        <input type="number" class="form-control form-control-sm" id="s-max-multi" min="0">
+                        <label class="form-label small fw-medium">العنوان الجذاب (وصف قصير)</label>
+                        <input type="text" class="form-control" id="f-subtitle_ar" placeholder="مثال: افهم ذاتك بعمق واكتشف نقاط قوتك">
                     </div>
-                    
-                    <div class="col-12 mt-4 mb-1">
-                        <h6 class="fw-semibold text-primary" style="font-size:0.85rem">نسبة الصعوبة المطلوبة (%)</h6>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-medium">المحور / الفئة *</label>
+                        <input type="text" class="form-control" id="f-category"
+                               list="category-datalist"
+                               placeholder="اختر من القائمة أو اكتب مجالاً جديداً">
+                        <datalist id="category-datalist">
+                            <option value="مقاييس معرفة الذات والشخصية">
+                            <option value="مقاييس الكفاءة الشخصية والنجاح المهني">
+                            <option value="مقاييس الاتصال والعلاقات المهنية">
+                            <option value="مقاييس القيادة والإدارة">
+                            <option value="مقاييس التوجيه والتوافق المهني">
+                            <option value="مقاييس الصحة المهنية">
+                        </datalist>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            @foreach([
+                                'مقاييس معرفة الذات والشخصية',
+                                'مقاييس الكفاءة الشخصية والنجاح المهني',
+                                'مقاييس الاتصال والعلاقات المهنية',
+                                'مقاييس القيادة والإدارة',
+                                'مقاييس التوجيه والتوافق المهني',
+                                'مقاييس الصحة المهنية',
+                            ] as $cat)
+                            <span class="badge bg-light text-muted border small py-1 px-2"
+                                  style="cursor:pointer"
+                                  onclick="document.getElementById('f-category').value='{{ $cat }}'">
+                                {{ $cat }}
+                            </span>
+                            @endforeach
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-medium">سهل</label>
-                        <input type="number" class="form-control form-control-sm pct-input" id="s-easy" min="0" max="100">
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">الوصف</label>
+                        <textarea class="form-control" id="f-description_ar" rows="2"></textarea>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-medium">متوسط</label>
-                        <input type="number" class="form-control form-control-sm pct-input" id="s-medium" min="0" max="100">
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">صورة المقياس</label>
+                        <input type="file" class="form-control" id="f-image" accept="image/*">
+                        <div class="form-text" style="font-size:0.65rem;">اختياري: سيتم عرض صورة افتراضية إن لم تقم برفع صورة.</div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-medium">صعب</label>
-                        <input type="number" class="form-control form-control-sm pct-input" id="s-hard" min="0" max="100">
-                    </div>
-                    
-                    <div class="col-12 text-center mt-1">
-                        <span id="s-total-pct" class="badge bg-secondary">المجموع: 100%</span>
-                    </div>
-
-                    <div class="col-12 mt-3 mb-1">
-                        <h6 class="fw-semibold text-primary" style="font-size:0.85rem">قيود التكرار (لتجنب الأنماط)</h6>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">وقت الاختبار (دقائق)</label>
+                        <input type="number" class="form-control" id="f-time_limit_min" placeholder="بلا حد" min="1">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-medium">أقصى تكرار لنفس موقع الإجابة</label>
-                        <input type="number" class="form-control form-control-sm" id="s-max-ans" min="0" placeholder="مثال: 3">
-                        <div class="form-text" style="font-size:0.7rem">ضع 0 للتعطيل</div>
+                        <label class="form-label small fw-medium">سعر المقياس (ر.س)</label>
+                        <input type="number" class="form-control" id="f-price" placeholder="مثال: 149" step="0.01" min="0">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-medium">أقصى تكرار من نفس الوحدة</label>
-                        <input type="number" class="form-control form-control-sm" id="s-max-unit" min="0" placeholder="مثال: 4">
-                        <div class="form-text" style="font-size:0.7rem">ضع 0 للتعطيل</div>
+                        <label class="form-label small fw-medium">التقييم الابتدائي (1-5)</label>
+                        <input type="number" class="form-control" id="f-rating" placeholder="مثال: 4.8" step="0.1" min="1" max="5">
+                    </div>
+                    <div class="col-12"><hr class="my-2"></div>
+                    <div class="col-12 text-primary fw-bold mb-0">بيانات التقرير المتقدمة (اختياري)</div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-medium">الشهادات الاحترافية المناسبة</label>
+                        <textarea class="form-control" id="f-certificates_ar" rows="2" placeholder="شهادة 1، شهادة 2..."></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-medium">البرامج التدريبية المقترحة</label>
+                        <textarea class="form-control" id="f-programs_ar" rows="2" placeholder="دورة 1، دورة 2..."></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-medium">خطة تطوير (30 يوماً)</label>
+                        <textarea class="form-control" id="f-plan_30_days_ar" rows="2" placeholder="الأسبوع 1: ..."></textarea>
                     </div>
                 </div>
+
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-semibold mb-0">الأبعاد الفرعية</h6>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="btn-add-dimension">
+                        <i class="bi bi-plus-circle me-1"></i>إضافة بُعد
+                    </button>
+                </div>
+                <div id="dimensions-container"></div>
             </div>
-            <div class="modal-footer border-0">
+            <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-primary" id="btn-save-settings">حفظ الإعدادات</button>
+                <button type="button" class="btn btn-primary" id="btn-save-assessment">
+                    <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ المقياس</span>
+                    <span class="spinner-border spinner-border-sm d-none"></span>
+                </button>
             </div>
         </div>
     </div>
 </div>
-
 @endsection
 
 @push('scripts')
 <script>
-// Exam Logic
-let isExamEdit = false;
+let dimIndex = 0;
 
-$('[data-bs-target="#addExamModal"]').on('click', function() {
-    isExamEdit = false;
-    $('#examModalTitle').text('إضافة شهادة جديدة');
-    $('#e-id').val('');
-    $('#e-title').val('');
-    $('#e-desc').val('');
-    $('#e-time-limit').val('120'); // Default to 2 hours
-    $('#e-active').prop('checked', true);
-    new bootstrap.Modal(document.getElementById('examModal')).show();
-});
-
-$('.btn-edit-exam').on('click', function(e) {
-    e.preventDefault();
-    isExamEdit = true;
-    $('#examModalTitle').text('تعديل الشهادة');
-    $('#e-id').val($(this).data('id'));
-    $('#e-title').val($(this).data('title'));
-    $('#e-desc').val($(this).data('desc'));
-    $('#e-time-limit').val($(this).data('time'));
-    $('#e-active').prop('checked', $(this).data('active') == 1);
-    new bootstrap.Modal(document.getElementById('examModal')).show();
-});
-
-$('#btn-save-exam').on('click', function() {
-    const id = $('#e-id').val();
-    const payload = {
-        title_ar: $('#e-title').val().trim(),
-        description_ar: $('#e-desc').val().trim(),
-        time_limit_min: $('#e-time-limit').val() ? parseInt($('#e-time-limit').val()) : null,
-        is_active: $('#e-active').is(':checked') ? 1 : 0
-    };
-    
-    if(!payload.title_ar) {
-        showAlert('اسم الشهادة مطلوب', 'warning');
-        return;
-    }
-    
-    const url = isExamEdit ? `{{ url('admin/graded-exams') }}/${id}` : `{{ route('admin.graded_exams.store') }}`;
-    const method = isExamEdit ? 'PUT' : 'POST';
-    
-    const btn = $(this);
-    setLoading(btn, true);
-    
-    $.ajax({
-        url: url,
-        method: method,
-        contentType: 'application/json',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        data: JSON.stringify(payload),
-        success: function(res) {
-            showAlert(res.message, 'success');
-            setTimeout(() => location.reload(), 1000);
-        },
-        error: function(xhr) {
-            setLoading(btn, false);
-            showAlert('خطأ أثناء الحفظ', 'danger');
-        }
-    });
-});
-
-$('.btn-delete-exam').on('click', function(e) {
-    e.preventDefault();
-    confirmDelete('سيتم حذف الشهادة. هل أنت متأكد؟', $(this).data('url'), () => location.reload());
-});
-
-
-// Unit Logic
-let isUnitEdit = false;
-
-$('.btn-add-unit').on('click', function() {
-    isUnitEdit = false;
-    $('#unitModalTitle').text('إضافة وحدة جديدة');
-    $('#u-exam-id').val($(this).data('id'));
-    $('#u-id').val('');
-    $('#u-title').val('');
-    new bootstrap.Modal(document.getElementById('unitModal')).show();
-});
-
-$('.btn-edit-unit').on('click', function(e) {
-    e.preventDefault();
-    isUnitEdit = true;
-    $('#unitModalTitle').text('تعديل الوحدة');
-    $('#u-id').val($(this).data('id'));
-    $('#u-title').val($(this).data('title'));
-    $('#u-url').val($(this).data('url'));
-    new bootstrap.Modal(document.getElementById('unitModal')).show();
-});
-
-$('#btn-save-unit').on('click', function() {
-    const title = $('#u-title').val().trim();
-    if(!title) {
-        showAlert('اسم الوحدة مطلوب', 'warning');
-        return;
-    }
-    
-    const examId = $('#u-exam-id').val();
-    const updateUrl = $('#u-url').val();
-    
-    const url = isUnitEdit ? updateUrl : `{{ url('admin/graded-exams') }}/${examId}/units`;
-    const method = isUnitEdit ? 'PUT' : 'POST';
-    
-    const btn = $(this);
-    setLoading(btn, true);
-    
-    $.ajax({
-        url: url,
-        method: method,
-        contentType: 'application/json',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        data: JSON.stringify({ title_ar: title }),
-        success: function(res) {
-            showAlert(res.message, 'success');
-            setTimeout(() => location.reload(), 1000);
-        },
-        error: function(xhr) {
-            setLoading(btn, false);
-            showAlert('خطأ أثناء الحفظ', 'danger');
-        }
-    });
-});
-
-$('.btn-delete-unit').on('click', function(e) {
-    e.preventDefault();
-    confirmDelete('هل أنت متأكد من حذف هذه الوحدة؟', $(this).data('url'), () => location.reload());
-});
-
-// Settings Logic
-$('.btn-settings').on('click', function() {
-    const examId = $(this).data('id');
-    $('#s-exam-id').val(examId);
-    
-    const btn = $(this);
-    setLoading(btn, true);
-    
-    $.get(`{{ url('admin/graded-exams') }}/${examId}/settings`, function(res) {
-        setLoading(btn, false);
-        if(res.success) {
-            $('#s-total').val(res.settings.total_questions);
-            $('#s-max-multi').val(res.settings.max_multi_correct_questions);
-            $('#s-easy').val(parseFloat(res.settings.easy_percentage));
-            $('#s-medium').val(parseFloat(res.settings.medium_percentage));
-            $('#s-hard').val(parseFloat(res.settings.hard_percentage));
-            $('#s-max-ans').val(res.settings.max_consecutive_same_answer || 0);
-            $('#s-max-unit').val(res.settings.max_consecutive_same_unit || 0);
-            updatePctBadge();
-            new bootstrap.Modal(document.getElementById('settingsModal')).show();
-        }
-    }).fail(function() {
-        setLoading(btn, false);
-        showAlert('خطأ في جلب الإعدادات', 'danger');
-    });
-});
-
-$('.pct-input').on('input', updatePctBadge);
-
-function updatePctBadge() {
-    const easy = parseFloat($('#s-easy').val()) || 0;
-    const med = parseFloat($('#s-medium').val()) || 0;
-    const hard = parseFloat($('#s-hard').val()) || 0;
-    const total = easy + med + hard;
-    
-    const badge = $('#s-total-pct');
-    badge.text(`المجموع: ${total}%`);
-    
-    if(Math.abs(total - 100) > 0.01) {
-        badge.removeClass('bg-secondary bg-success').addClass('bg-danger');
-    } else {
-        badge.removeClass('bg-secondary bg-danger').addClass('bg-success');
-    }
+function addDimensionRow(name='', max='') {
+    const idx = dimIndex++;
+    $('#dimensions-container').append(`
+        <div class="row g-2 mb-2 dim-row" data-index="${idx}">
+            <div class="col-7">
+                <input type="text" class="form-control form-control-sm" placeholder="اسم البُعد مثلاً: الوعي بالذات"
+                    name="dim_name_${idx}" value="${name}">
+            </div>
+            <div class="col-3">
+                <input type="number" class="form-control form-control-sm" placeholder="الدرجة القصوى"
+                    name="dim_max_${idx}" value="${max}" min="1">
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-sm btn-outline-danger w-100 btn-remove-dim">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `);
 }
 
-$('#btn-save-settings').on('click', function() {
-    const examId = $('#s-exam-id').val();
-    
-    const payload = {
-        total_questions: parseInt($('#s-total').val()) || 0,
-        max_multi_correct_questions: parseInt($('#s-max-multi').val()) || 0,
-        easy_percentage: parseFloat($('#s-easy').val()) || 0,
-        medium_percentage: parseFloat($('#s-medium').val()) || 0,
-        hard_percentage: parseFloat($('#s-hard').val()) || 0,
-        max_consecutive_same_answer: parseInt($('#s-max-ans').val()) || null,
-        max_consecutive_same_unit: parseInt($('#s-max-unit').val()) || null,
-    };
-    
-    if(Math.abs((payload.easy_percentage + payload.medium_percentage + payload.hard_percentage) - 100) > 0.01) {
-        showAlert('يجب أن يكون مجموع النسب 100% تماماً', 'warning');
+// Init with one empty row
+addDimensionRow();
+
+$('#btn-add-dimension').on('click', () => addDimensionRow());
+
+$(document).on('click', '.btn-remove-dim', function() {
+    $(this).closest('.dim-row').remove();
+});
+
+$('#btn-save-assessment').on('click', function() {
+    const btn = $(this);
+    const dims = [];
+    let valid = true;
+
+    $('.dim-row').each(function() {
+        const idx = $(this).data('index');
+        const name = $(this).find(`[name=dim_name_${idx}]`).val().trim();
+        const max  = parseInt($(this).find(`[name=dim_max_${idx}]`).val());
+        if (name && max > 0) {
+            dims.push({ name_ar: name, max_score: max });
+        } else if (name || !isNaN(max)) {
+            valid = false;
+        }
+    });
+
+    if (!valid) {
+        showAlert('تأكد من ملء جميع بيانات الأبعاد بشكل صحيح.', 'warning');
         return;
     }
+
+    if (!$('#f-title_ar').val().trim() || !$('#f-category').val().trim()) {
+        showAlert('اسم المقياس والمحور مطلوبان.', 'warning');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('title_ar', $('#f-title_ar').val().trim());
+    formData.append('subtitle_ar', $('#f-subtitle_ar').val().trim());
+    formData.append('category', $('#f-category').val().trim());
     
-    const btn = $(this);
+    if ($('#f-description_ar').val().trim()) formData.append('description_ar', $('#f-description_ar').val().trim());
+    if ($('#f-time_limit_min').val()) formData.append('time_limit_min', $('#f-time_limit_min').val());
+    if ($('#f-price').val()) formData.append('price', $('#f-price').val());
+    if ($('#f-rating').val()) formData.append('rating', $('#f-rating').val());
+    if ($('#f-certificates_ar').val().trim()) formData.append('certificates_ar', $('#f-certificates_ar').val().trim());
+    if ($('#f-programs_ar').val().trim()) formData.append('programs_ar', $('#f-programs_ar').val().trim());
+    if ($('#f-plan_30_days_ar').val().trim()) formData.append('plan_30_days_ar', $('#f-plan_30_days_ar').val().trim());
+    
+    if ($('#f-image')[0].files.length > 0) {
+        formData.append('image', $('#f-image')[0].files[0]);
+    }
+
+    dims.forEach((d, i) => {
+        formData.append(`dimensions[${i}][name_ar]`, d.name_ar);
+        formData.append(`dimensions[${i}][max_score]`, d.max_score);
+    });
+
     setLoading(btn, true);
-    
     $.ajax({
-        url: `{{ url('admin/graded-exams') }}/${examId}/settings`,
-        method: 'PUT',
-        contentType: 'application/json',
+        url: '{{ route('admin.assessments.store') }}',
+        method: 'POST',
+        processData: false,
+        contentType: false,
         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        data: JSON.stringify(payload),
+        data: formData,
         success: function(res) {
             setLoading(btn, false);
+            bootstrap.Modal.getInstance($('#assessmentModal')).hide();
             showAlert(res.message, 'success');
-            bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
+            setTimeout(() => location.reload(), 1200);
         },
         error: function(xhr) {
             setLoading(btn, false);
-            const msg = xhr.responseJSON?.message || 'خطأ أثناء الحفظ';
+            const msg = xhr.responseJSON?.message || 'حدث خطأ، حاول مرة أخرى.';
             showAlert(msg, 'danger');
         }
     });
 });
 
-</script>
-@endpush
-````
+// Toggle active
+$(document).on('click', '.btn-toggle', function() {
+    const btn = $(this);
+    const url = btn.data('url');
+    $.ajax({
+        url: url, method: 'POST',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        success: function(res) {
+            showAlert(res.message, 'success');
+            setTimeout(() => location.reload(), 800);
+        }
+    });
+});
 
-## File: resources/views/admin/users/index.blade.php
-````php
-@extends('layouts.admin')
-@section('title', 'المستخدمين والنتائج')
-@section('page-title', 'إدارة المستخدمين وجلسات الاختبار')
-
-@section('content')
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
-        <!-- Search & Info -->
-        <div class="row g-3 justify-content-between align-items-center">
-            <div class="col-md-6">
-                <form method="GET" action="{{ route('admin.users.index') }}" class="d-flex gap-2">
-                    <div class="input-group">
-                        <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="ابحث بالاسم أو البريد أو الجوال أو الهوية..." value="{{ $search }}">
-                        @if($search)
-                            <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary d-flex align-items-center"><i class="bi bi-x-lg"></i></a>
-                        @endif
-                    </div>
-                    <button type="submit" class="btn btn-primary px-4">بحث</button>
-                </form>
-            </div>
-            <div class="col-md-auto">
-                <span class="text-muted small">إجمالي المستخدمين: <strong>{{ $users->total() }}</strong></span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>الاسم</th>
-                    <th>البريد الإلكتروني</th>
-                    <th>رقم الجوال</th>
-                    <th>رقم الهوية</th>
-                    <th>نوع الحساب</th>
-                    <th class="text-center">الاختبارات المؤداة</th>
-                    <th class="text-center">الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($users as $index => $user)
-                    <tr>
-                        <td>{{ $users->firstItem() + $index }}</td>
-                        <td>
-                            <div class="fw-semibold text-dark">{{ $user->name }}</div>
-                        </td>
-                        <td class="text-muted small">{{ $user->email }}</td>
-                        <td class="text-muted small">{{ $user->phone ?? '—' }}</td>
-                        <td class="text-muted small">{{ $user->national_id ?? '—' }}</td>
-                        <td>
-                            @if($user->isAdmin())
-                                <span class="badge bg-danger-subtle text-danger px-2.5 py-1.5 rounded-pill small">مدير النظام</span>
-                            @else
-                                <span class="badge bg-primary-subtle text-primary px-2.5 py-1.5 rounded-pill small">مستخدم</span>
-                            @endif
-                        </td>
-                        <td class="text-center">
-                            <span class="badge bg-secondary rounded-pill px-3 py-1 fw-medium">
-                                {{ $user->completed_exams_count }}
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-sm btn-outline-primary px-3 rounded-pill btn-view-results" data-user-id="{{ $user->id }}">
-                                <i class="bi bi-eye me-1"></i> عرض النتائج
-                            </button>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">
-                            <i class="bi bi-people fs-1 d-block mb-3 text-secondary"></i>
-                            لا يوجد مستخدمين يطابقون خيارات البحث.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination -->
-    @if($users->hasPages())
-        <div class="card-footer bg-transparent border-0 py-3">
-            {{ $users->appends(['search' => $search])->links() }}
-        </div>
-    @endif
-</div>
-
-<!-- User Results Modal -->
-<div class="modal fade" id="resultsModal" tabindex="-1" aria-labelledby="resultsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-primary text-white border-0 py-3">
-                <h5 class="modal-title fw-bold" id="resultsModalLabel">
-                    <i class="bi bi-mortarboard me-2"></i> سجل اختبارات المستخدم
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <!-- User Details Card -->
-                <div class="bg-light p-3 rounded-3 mb-4 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="fw-bold text-dark mb-1" id="modal-user-name">...</h6>
-                        <span class="text-muted small" id="modal-user-email">...</span>
-                    </div>
-                    <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-3" id="modal-results-count">0 اختبارات مؤداة</span>
-                </div>
-
-                <!-- Results Table -->
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="results-table">
-                        <thead class="table-light">
-                            <tr>
-                                <th>المقياس / الاختبار</th>
-                                <th class="text-center">الدرجة المحققة</th>
-                                <th class="text-center">المستوى المستحق</th>
-                                <th class="text-center">تاريخ الإكمال</th>
-                                <th class="text-center">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="modal-results-body">
-                            <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">
-                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                                    جاري تحميل سجل النتائج...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer border-0 bg-light py-3">
-                <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">إغلاق</button>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
-
-@push('scripts')
-<script>
-$(document).ready(function() {
-    const resultsModal = new bootstrap.Modal(document.getElementById('resultsModal'));
-
-    $('.btn-view-results').on('click', function() {
-        const userId = $(this).data('user-id');
-        
-        // Reset modal to loading state
-        $('#modal-user-name').text('...');
-        $('#modal-user-email').text('...');
-        $('#modal-results-count').text('0 اختبارات مؤداة');
-        $('#modal-results-body').html(`
-            <tr>
-                <td colspan="5" class="text-center py-4 text-muted">
-                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                    جاري تحميل سجل النتائج...
-                </td>
-            </tr>
-        `);
-
-        // Show modal immediately
-        resultsModal.show();
-
-        // Fetch data
-        $.ajax({
-            url: `{{ url('/admin/users') }}/${userId}/results`,
-            method: 'GET',
-            success: function(response) {
-                if (response.success) {
-                    $('#modal-user-name').text(response.user.name);
-                    $('#modal-user-email').text(response.user.email);
-                    $('#modal-results-count').text(`${response.results.length} اختبارات مؤداة`);
-
-                    let rowsHtml = '';
-                    if (response.results.length === 0) {
-                        rowsHtml = `
-                            <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">
-                                    <i class="bi bi-info-circle fs-2 d-block mb-2 text-secondary"></i>
-                                    لا يوجد جلسات اختبار مكتملة لهذا المستخدم حتى الآن.
-                                </td>
-                            </tr>
-                        `;
-                    } else {
-                        response.results.forEach(res => {
-                            let badgeClass = 'bg-secondary';
-                            if (res.level_raw === 'high') badgeClass = 'bg-success';
-                            else if (res.level_raw === 'medium') badgeClass = 'bg-warning text-dark';
-                            else if (res.level_raw === 'low') badgeClass = 'bg-danger';
-
-                            // Construct view result URL dynamically
-                            const resultUrl = `{{ url('/exam') }}/${res.id}/result`;
-
-                            rowsHtml += `
-                                <tr>
-                                    <td>
-                                        <div class="fw-semibold text-dark">${res.assessment_title}</div>
-                                    </td>
-                                    <td class="text-center fw-bold text-primary">${res.total_score} / ${res.max_possible_score}</td>
-                                    <td class="text-center">
-                                        <span class="badge ${badgeClass} px-2.5 py-1.5 rounded-3 fw-medium">${res.level}</span>
-                                    </td>
-                                    <td class="text-center text-muted small">${res.completed_at}</td>
-                                    <td class="text-center">
-                                        <a href="${resultUrl}" target="_blank" class="btn btn-sm btn-outline-secondary px-3 rounded-pill">
-                                            <i class="bi bi-box-arrow-up-right me-1"></i> التقرير
-                                        </a>
-                                    </td>
-                                </tr>
-                            `;
-                        });
-                    }
-
-                    $('#modal-results-body').html(rowsHtml);
-                } else {
-                    $('#modal-results-body').html(`
-                        <tr>
-                            <td colspan="5" class="text-center py-4 text-danger">
-                                <i class="bi bi-exclamation-triangle me-2"></i> حدث خطأ أثناء تحميل البيانات.
-                            </td>
-                        </tr>
-                    `);
-                }
-            },
-            error: function() {
-                $('#modal-results-body').html(`
-                    <tr>
-                        <td colspan="5" class="text-center py-4 text-danger">
-                            <i class="bi bi-exclamation-triangle me-2"></i> فشل الاتصال بالخادم.
-                        </td>
-                    </tr>
-                `);
-            }
-        });
+// Delete
+$(document).on('click', '.btn-delete', function() {
+    const url  = $(this).data('url');
+    const name = $(this).data('name');
+    confirmDelete(`هل تريد حذف مقياس "${name}"؟ سيتم حذف كل الأسئلة والجلسات المرتبطة به.`, url, () => {
+        location.reload();
     });
 });
 </script>
 @endpush
 ````
 
-## File: resources/views/auth/login.blade.php
+## File: resources/views/admin/coupons/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'الكوبونات')
+@section('page-title', 'إدارة الكوبونات')
+
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-dark mb-0"><i class="bi bi-ticket-perforated me-2 text-primary"></i>الكوبونات</h2>
+    <a href="{{ route('admin.coupons.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i> إضافة كوبون
+    </a>
+</div>
+
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>اسم الكوبون</th>
+                        <th>رمز الكوبون</th>
+                        <th>الخصم المتدرج</th>
+                        <th class="text-center">الحد الأقصى</th>
+                        <th>النطاق</th>
+                        <th>الصلاحية</th>
+                        <th class="text-center">الحالة</th>
+                        <th class="text-center">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($coupons as $coupon)
+                    <tr>
+                        <td class="fw-bold">{{ $coupon->title }}</td>
+                        <td>
+                            <code class="bg-light border rounded px-2 py-1 text-dark small">{{ $coupon->code ?? '—' }}</code>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1 flex-wrap">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">{{ $coupon->discount_percentage }}%</span>
+                                @if($coupon->discount_percentage_2nd !== null)
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">{{ $coupon->discount_percentage_2nd }}%</span>
+                                @endif
+                                @if($coupon->discount_percentage_3rd !== null)
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill">{{ $coupon->discount_percentage_3rd }}%</span>
+                                @endif
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            @if($coupon->assessments_limit !== null)
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2">{{ $coupon->assessments_limit }}</span>
+                            @else
+                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2" title="غير محدود"><i class="bi bi-infinity"></i> غير محدود</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($coupon->applies_to_all_assessments)
+                                <span class="text-muted small"><i class="bi bi-globe2 me-1"></i>جميع المقاييس</span>
+                            @else
+                                <span class="text-muted small"><i class="bi bi-funnel me-1"></i>مقاييس محددة ({{ $coupon->assessments()->count() }})</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($coupon->expires_at)
+                                <span class="{{ $coupon->expires_at->isPast() ? 'text-danger' : 'text-success' }} small">
+                                    <i class="bi bi-calendar3 me-1"></i>{{ $coupon->expires_at->format('Y-m-d') }}
+                                </span>
+                            @else
+                                <span class="text-muted small"><i class="bi bi-infinity me-1"></i>مفتوح</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            @if($coupon->is_active && (!$coupon->expires_at || !$coupon->expires_at->isPast()))
+                                <span class="badge bg-success rounded-pill">نشط</span>
+                            @elseif($coupon->expires_at && $coupon->expires_at->isPast())
+                                <span class="badge bg-secondary rounded-pill">منتهي الصلاحية</span>
+                            @else
+                                <span class="badge bg-danger rounded-pill">متوقف</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ route('admin.coupons.edit', $coupon) }}" class="btn btn-sm btn-outline-primary me-1" title="تعديل">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form action="{{ route('admin.coupons.destroy', $coupon) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا الكوبون؟');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-5">
+                            <i class="bi bi-ticket display-4 d-block mb-3 text-secondary"></i>
+                            لا توجد كوبونات مضافة بعد.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if($coupons->hasPages())
+            <div class="p-3 border-top">
+                {{ $coupons->links() }}
+            </div>
+        @endif
+    </div>
+</div>
+@endsection
+````
+
+## File: resources/views/auth/register.blade.php
 ````php
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول — دار الرؤى</title>
+    <title>إنشاء حساب — دار الرؤى</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -54821,37 +55288,74 @@ $(document).ready(function() {
             </div>
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
-                    <h5 class="card-title mb-4 fw-semibold">تسجيل الدخول</h5>
+                    <h5 class="card-title mb-4 fw-semibold">تسجيل حساب جديد</h5>
 
                     @if($errors->any())
-                        <div class="alert alert-danger alert-sm py-2">
-                            <i class="bi bi-exclamation-circle me-1"></i>{{ $errors->first() }}
+                        <div class="alert alert-danger py-2">
+                            <ul class="mb-0 small">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('login.post') }}">
+                    <form method="POST" action="{{ route('register.post') }}">
                         @csrf
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">الاسم الكامل</label>
+                            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
+                                value="{{ old('name') }}" placeholder="الاسم الكامل" required autofocus>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label small fw-medium">البريد الإلكتروني</label>
                             <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                                value="{{ old('email') }}" placeholder="example@email.com" required autofocus>
+                                value="{{ old('email') }}" placeholder="example@email.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">رقم الجوال</label>
+                            <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
+                                value="{{ old('phone') }}" placeholder="05xxxxxxxx" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">رقم الهوية الوطنية / الإقامة</label>
+                            <input type="text" name="national_id" class="form-control @error('national_id') is-invalid @enderror"
+                                value="{{ old('national_id') }}" placeholder="1xxxxxxxxx" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">النوع</label>
+                            <select name="gender" class="form-control @error('gender') is-invalid @enderror" required>
+                                <option value="" disabled {{ old('gender') ? '' : 'selected' }}>اختر النوع</option>
+                                <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>ذكر</option>
+                                <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>أنثى</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">المؤهل</label>
+                            <input type="text" name="qualification" class="form-control @error('qualification') is-invalid @enderror"
+                                value="{{ old('qualification') }}" placeholder="مثال: بكالوريوس" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">الجنسية</label>
+                            <input type="text" name="nationality" class="form-control @error('nationality') is-invalid @enderror"
+                                value="{{ old('nationality') }}" placeholder="مثال: سعودي" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-medium">كلمة المرور</label>
-                            <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                            <input type="password" name="password" class="form-control" placeholder="8 أحرف على الأقل" required>
                         </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" name="remember" id="remember">
-                            <label class="form-check-label small" for="remember">تذكرني</label>
+                        <div class="mb-4">
+                            <label class="form-label small fw-medium">تأكيد كلمة المرور</label>
+                            <input type="password" name="password_confirmation" class="form-control" placeholder="أعد كتابة كلمة المرور" required>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-box-arrow-in-right me-1"></i>دخول
+                            <i class="bi bi-person-plus me-1"></i>إنشاء الحساب
                         </button>
                     </form>
                     <hr>
                     <div class="text-center small">
-                        ليس لديك حساب؟
-                        <a href="{{ route('register') }}" class="text-primary text-decoration-none fw-medium">سجّل الآن</a>
+                        لديك حساب بالفعل؟
+                        <a href="{{ route('login') }}" class="text-primary text-decoration-none fw-medium">سجّل دخولك</a>
                     </div>
                 </div>
             </div>
@@ -54861,6 +55365,960 @@ $(document).ready(function() {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+````
+
+## File: resources/views/user/exam.blade.php
+````php
+@extends('layouts.user')
+@section('title', $assessment->title_ar)
+
+@push('styles')
+<style>
+/* ── Layout ── */
+.exam-wrapper {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+}
+
+/* ── Intro Card ── */
+#intro-card {
+    border: 0;
+    border-radius: 24px;
+    background: #ffffff;
+    box-shadow: 0 20px 60px -10px rgba(26, 43, 86, 0.12);
+    overflow: hidden;
+}
+
+.intro-header {
+    background: linear-gradient(135deg, #1a2b56 0%, #2d4a8a 60%, #1e3a7e 100%);
+    padding: 48px 40px 56px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.intro-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+}
+
+.intro-header::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -40px;
+    width: 250px; height: 250px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+}
+
+.intro-icon-wrap {
+    width: 90px; height: 90px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    backdrop-filter: blur(4px);
+    border: 2px solid rgba(255,255,255,0.2);
+    position: relative; z-index: 1;
+}
+
+.intro-title {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.3;
+    position: relative; z-index: 1;
+}
+
+.intro-subtitle {
+    color: rgba(255,255,255,0.75);
+    font-size: 0.95rem;
+    margin: 10px 0 0;
+    position: relative; z-index: 1;
+}
+
+.intro-body {
+    padding: 40px;
+}
+
+/* Chips in header */
+.intro-chips {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    position: relative;
+    z-index: 1;
+}
+
+.intro-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.92);
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+
+.intro-chip i { font-size: 0.8rem; }
+
+/* Guidelines box */
+.intro-guidelines {
+    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+    border: 1px solid #bfdbfe;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 32px;
+}
+
+.intro-guidelines-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a2b56;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.guideline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: #334155;
+    line-height: 1.6;
+}
+
+.guideline-item:last-child { margin-bottom: 0; }
+
+.guideline-dot {
+    width: 28px; height: 28px;
+    background: #1a2b56;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 1px;
+}
+
+/* Start button */
+.btn-start {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px 32px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fff;
+    border: 0;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 8px 24px -4px rgba(245, 158, 11, 0.4);
+    letter-spacing: 0.01em;
+}
+
+.btn-start:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px -4px rgba(245, 158, 11, 0.5);
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #fff;
+}
+
+.btn-start:active {
+    transform: translateY(0);
+}
+
+/* ── Progress ── */
+.progress-container { width: 100%; max-width: 250px; }
+.progress-track { height: 8px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
+.progress-fill {
+    height: 100%; border-radius: 999px;
+    background: #1a2b56;
+    transition: width .4s ease;
+}
+
+/* ── Options ── */
+.option-card {
+    cursor: pointer;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    transition: all .2s ease;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1rem;
+}
+.option-card:hover { border-color: #cbd5e1; background: #f8fafc; }
+.option-card.selected { border-color: #f59e0b; background: #fffbeb; }
+.option-card input[type=radio] { display: none; }
+
+.custom-radio {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    display: flex; align-items: center; justify-content: center;
+    margin-left: 15px;
+    transition: all .2s;
+    flex-shrink: 0;
+}
+.custom-radio::after {
+    content: '';
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #f59e0b;
+    transform: scale(0);
+    transition: transform .2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.option-card.selected .custom-radio { border-color: #f59e0b; }
+.option-card.selected .custom-radio::after { transform: scale(1); }
+
+.option-text {
+    flex-grow: 1;
+    font-size: 1.1rem;
+    color: #334155;
+    font-weight: 500;
+}
+.option-card.selected .option-text { color: #1a2b56; font-weight: 700; }
+
+/* ── Question card ── */
+#question-card {
+    border-radius: 20px; border: 0;
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+    padding: 40px;
+}
+
+/* ── Buttons ── */
+#btn-next {
+    background: #f59e0b;
+    color: #fff;
+    border: 0; border-radius: 8px; padding: .6rem 2.5rem;
+    font-weight: 700; font-size: 1rem;
+    transition: all .2s;
+}
+#btn-next:not(:disabled):hover { background: #d97706; transform: translateY(-1px); }
+#btn-next:disabled { opacity: .5; cursor: not-allowed; }
+
+.btn-prev {
+    color: #1a2b56; font-weight: 700; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+.btn-prev:hover { color: #0d6efd; }
+.btn-prev:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.timer-footer { font-size: 0.85rem; color: #64748b; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .intro-header { padding: 32px 20px 40px; }
+    .intro-body { padding: 24px 20px; }
+    .intro-title { font-size: 1.45rem; }
+    .intro-icon-wrap { width: 70px; height: 70px; }
+}
+
+@media (max-width: 576px) {
+    .exam-wrapper { padding: 0 0 24px; }
+    #intro-card { border-radius: 0 0 20px 20px; }
+    .intro-header { padding: 24px 16px 32px; }
+    .intro-body { padding: 18px 16px 24px; }
+    .intro-title { font-size: 1.2rem; }
+    .intro-icon-wrap { width: 56px; height: 56px; margin-bottom: 12px; }
+    .intro-chip { font-size: 0.72rem; padding: 4px 10px; }
+    .intro-guidelines { padding: 14px; }
+    .guideline-item { font-size: 0.85rem; }
+    .guideline-dot { width: 24px; height: 24px; font-size: 0.7rem; }
+    .btn-start { font-size: 0.95rem; padding: 14px 20px; }
+    #question-card { padding: 16px 12px; border-radius: 0; }
+    .header-desktop { display: none !important; }
+    .header-mobile { display: flex !important; }
+    .option-card { padding: 0.75rem 1rem; margin-bottom: 0.5rem; }
+    .option-text { font-size: 0.9rem; }
+    #question-text { font-size: 1.1rem; }
+    .alert { padding: 0.5rem 0.8rem; font-size: 0.82rem; }
+}
+</style>
+@endpush
+
+@section('content')
+<div class="exam-wrapper">
+
+    @if($progress['current'] == 1)
+    <div id="intro-card">
+
+        {{-- Coloured Header --}}
+        <div class="intro-header">
+            <div class="intro-icon-wrap">
+                <i class="bi bi-journal-text" style="font-size: 2rem; color: #fff;"></i>
+            </div>
+            <h1 class="intro-title">{{ $assessment->title_ar }}</h1>
+            @if($assessment->subtitle_ar)
+                <p class="intro-subtitle">{{ $assessment->subtitle_ar }}</p>
+            @endif
+
+            {{-- Small chips: questions count + time --}}
+            <div class="intro-chips">
+                <span class="intro-chip">
+                    <i class="bi bi-list-check"></i>
+                    {{ $progress['total'] }} سؤال
+                </span>
+                @if($assessment->time_limit_min)
+                <span class="intro-chip">
+                    <i class="bi bi-clock"></i>
+                    {{ $assessment->time_limit_min }} دقيقة
+                </span>
+                @endif
+                @if($assessment->category)
+                <span class="intro-chip">
+                    <i class="bi bi-tag"></i>
+                    {{ $assessment->category }}
+                </span>
+                @endif
+            </div>
+        </div>
+
+        {{-- Body --}}
+        <div class="intro-body">
+
+            {{-- Guidelines --}}
+            <div class="intro-guidelines">
+                <div class="intro-guidelines-title">
+                    <i class="bi bi-shield-check text-primary"></i>
+                    توجيهات هامة قبل البدء
+                </div>
+                <div class="guideline-item">
+                    <div class="guideline-dot">١</div>
+                    <span>كن صادقًا مع نفسك في إجاباتك؛ فكلما كانت إجاباتك أكثر دقة وواقعية، كانت نتائج المقياس أكثر فائدة لك.</span>
+                </div>
+                <div class="guideline-item">
+                    <div class="guideline-dot">٢</div>
+                    <span>لا توجد إجابات صحيحة أو خاطئة؛ صدقك مع نفسك هو مفتاح الحصول على نتائج تعكس واقعك وتفيدك حقًا.</span>
+                </div>
+                <div class="guideline-item">
+                    <div class="guideline-dot">٣</div>
+                    <span>اقرأ كل عبارة بعناية، ثم اختر الإجابة التي تعبر عنك فعلاً دون تفكير مبالغ فيه.</span>
+                </div>
+            </div>
+
+            {{-- Start Button --}}
+            <button type="button" class="btn-start" id="btn-start-exam">
+                <span>فهمت ذلك، ابدأ المقياس</span>
+                <i class="bi bi-arrow-left"></i>
+            </button>
+
+        </div>
+    </div>
+    @endif
+
+    <div class="card" id="question-card" style="{{ $progress['current'] == 1 ? 'display: none;' : '' }}">
+        {{-- Header Desktop --}}
+        <div class="d-none d-sm-flex justify-content-between align-items-start mb-5 header-desktop">
+            <div class="progress-container mt-2">
+                <div class="d-flex justify-content-between small text-muted mb-2">
+                    <span id="q-pct" class="fw-bold text-dark">{{ $progress['percentage'] }}%</span>
+                    <span>السؤال <strong id="q-current">{{ $progress['current'] }}</strong> من <strong>{{ $progress['total'] }}</strong></span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-bar" style="width:{{ $progress['percentage'] }}%"></div>
+                </div>
+            </div>
+
+            <div class="text-end">
+                <h4 class="fw-bold mb-1" style="color: #1a2b56;">{{ $assessment->title_ar }}</h4>
+            </div>
+
+        </div>
+
+        {{-- Header Mobile --}}
+        <div class="d-flex d-sm-none flex-column mb-3 header-mobile">
+            <div class="text-center mb-3">
+                <h6 class="fw-bold mb-1" style="color: #1a2b56;">{{ $assessment->title_ar }}</h6>
+            </div>
+
+            <div class="progress-container w-100 mx-auto" style="max-width: 100%;">
+                <div class="d-flex justify-content-between text-muted mb-1" style="font-size: 0.8rem;">
+                    <span id="q-pct-mobile" class="fw-bold text-dark">{{ $progress['percentage'] }}%</span>
+                    <span>السؤال <strong id="q-current-mobile">{{ $progress['current'] }}</strong> من <strong>{{ $progress['total'] }}</strong></span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-bar-mobile" style="width:{{ $progress['percentage'] }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Question Text --}}
+        <h3 class="text-center fw-bold mb-1 mt-4" id="question-text" style="color: #1a2b56;">{{ $nextQuestion->text_ar }}</h3>
+        <p class="text-center text-muted small mb-4" style="font-size: 0.8rem;">اختر الإجابة التي تعبر عن رأيك بدقة</p>
+
+        {{-- Options --}}
+        <div class="d-flex flex-column" id="options-container">
+            @foreach($nextQuestion->answerOptions as $i => $option)
+            <label class="option-card" data-option-id="{{ $option->id }}">
+                <input type="radio" name="selected_option" value="{{ $option->id }}">
+                <div class="custom-radio"></div>
+                <span class="option-text">{{ $option->label_ar }}</span>
+                @if(str_contains($option->label_ar, 'نعم') || str_contains($option->label_ar, 'أوافق'))
+                    <span class="fs-4 ms-2">👍</span>
+                @elseif(str_contains($option->label_ar, 'لا') || str_contains($option->label_ar, 'أرفض'))
+                    <span class="fs-4 ms-2">👎</span>
+                @elseif(str_contains($option->label_ar, 'حد ما') || str_contains($option->label_ar, 'محايد'))
+                    <span class="fs-4 ms-2">😐</span>
+                @endif
+            </label>
+            @endforeach
+        </div>
+
+        {{-- Error Banner --}}
+        <div id="error-banner" class="alert alert-danger py-2 mt-3 d-none text-center" role="alert">
+            <i class="bi bi-wifi-off me-1"></i>مشكلة في الاتصال.
+            <button class="btn btn-sm btn-danger ms-2" id="btn-retry">إعادة المحاولة</button>
+        </div>
+
+        {{-- Bottom Actions --}}
+        <div class="mt-4 d-flex justify-content-between align-items-center">
+            <button type="button" class="btn-prev" id="btn-prev" style="{{ $progress['current'] > 1 ? '' : 'visibility: hidden;' }}">
+                <i class="bi bi-arrow-right"></i> السابق
+            </button>
+            
+            <button type="button" class="btn ms-auto" id="btn-next" disabled>
+                <span id="btn-text">التالي <i class="bi bi-chevron-left ms-1" style="font-size: 0.8em;"></i></span>
+                <span id="btn-spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+            </button>
+        </div>
+
+        {{-- Footer Info --}}
+        <div class="text-center mt-5 timer-footer d-flex justify-content-center align-items-center gap-2">
+            @if($assessment->time_limit_min)
+                <span><i class="bi bi-stopwatch"></i> الوقت المتبقي: <span id="timer-text">{{ sprintf('%02d:%02d', $assessment->time_limit_min, 0) }}</span></span>
+                <span class="text-muted">|</span>
+            @endif
+            <span>تبقى <span id="q-remaining">{{ $progress['total'] - $progress['current'] }}</span> سؤال</span>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+const SESSION_ID  = '{{ $session->id }}';
+const ANSWER_URL  = '{{ route('exam.answer', $session->id) }}';
+const PREV_URL    = '{{ route('exam.previous', $session->id) }}';
+const CSRF        = $('meta[name="csrf-token"]').attr('content');
+const TIME_LIMIT  = {{ $assessment->time_limit_min ?? 'null' }};
+const TOTAL_Q     = {{ $progress['total'] }};
+const OPTION_LETTERS = ['أ','ب','ج','د','هـ','و','ز','ح'];
+
+let currentQuestion = {
+    id:             '{{ $nextQuestion->id }}',
+    text_ar:        {!! Js::from($nextQuestion->text_ar) !!},
+    is_reversed:    {{ $nextQuestion->is_reversed ? 'true' : 'false' }},
+    dimension_name: {!! Js::from($nextQuestion->dimension?->name_ar) !!},
+    options:        {!! json_encode($nextQuestion->answerOptions->map(fn($o) => ['id' => $o->id, 'label_ar' => $o->label_ar])) !!}
+};
+
+let selectedOptionId = null;
+let pendingAnswer    = null;
+let timerInterval    = null;
+let timeLeft         = TIME_LIMIT ? TIME_LIMIT * 60 : 0;
+const LS_KEY         = `exam_${SESSION_ID}`;
+
+/* ── Timer ── */
+let timerStarted = false;
+function startTimer() {
+    if (TIME_LIMIT && !timerStarted) {
+        timerStarted = true;
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            const m = String(Math.floor(timeLeft / 60)).padStart(2,'0');
+            const s = String(timeLeft % 60).padStart(2,'0');
+            $('#timer-text').text(`${m}:${s}`);
+            if (timeLeft <= 0) { clearInterval(timerInterval); submitCurrent(true); }
+        }, 1000);
+    }
+}
+
+if ($('#intro-card').length === 0) {
+    startTimer();
+}
+
+$('#btn-start-exam').on('click', function() {
+    $('#intro-card').fadeOut(250, function() {
+        $('#question-card').fadeIn(250);
+        startTimer();
+    });
+});
+
+/* ── Option selection ── */
+$(document).on('click', '.option-card', function () {
+    $('.option-card').removeClass('selected');
+    $('.option-card').find('input[type=radio]').prop('checked', false);
+    
+    $(this).addClass('selected');
+    $(this).find('input[type=radio]').prop('checked', true);
+    
+    selectedOptionId = $(this).data('option-id');
+    $('#btn-next').prop('disabled', false);
+});
+
+/* ── Next / Prev ── */
+$('#btn-next').on('click', function () { if (selectedOptionId) submitCurrent(false); });
+$('#btn-retry').on('click', function () {
+    if (pendingAnswer) { $('#error-banner').addClass('d-none'); doSubmit(pendingAnswer.qId, pendingAnswer.optId); }
+});
+
+$('#btn-prev').on('click', function () {
+    $(this).prop('disabled', true);
+    $.ajax({
+        url: PREV_URL, method: 'POST',
+        headers: { 'X-CSRF-TOKEN': CSRF },
+        success(res) {
+            updateProgressAndLoadQuestion(res);
+            $('#btn-prev').prop('disabled', false);
+        },
+        error() {
+            $('#btn-prev').prop('disabled', false);
+            alert('حدث خطأ أثناء العودة للسؤال السابق.');
+        }
+    });
+});
+
+function submitCurrent(isTimeout) {
+    const qId  = currentQuestion.id;
+    const optId = isTimeout ? (selectedOptionId || currentQuestion.options[0].id) : selectedOptionId;
+    pendingAnswer = { qId, optId };
+    try { const d = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); d[qId]=optId; localStorage.setItem(LS_KEY,JSON.stringify(d)); } catch(e){}
+    doSubmit(qId, optId);
+}
+
+function doSubmit(qId, optId) {
+    $('#btn-next').prop('disabled', true);
+    $('#btn-text').addClass('d-none');
+    $('#btn-spinner').removeClass('d-none');
+    $.ajax({
+        url: ANSWER_URL, method: 'POST', contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': CSRF },
+        data: JSON.stringify({ question_id: qId, selected_option_id: optId }),
+        success(res) {
+            $('#btn-spinner').addClass('d-none'); $('#btn-text').removeClass('d-none');
+            updateProgressAndLoadQuestion(res);
+        },
+        error() {
+            $('#btn-spinner').addClass('d-none'); $('#btn-text').removeClass('d-none');
+            $('#btn-next').prop('disabled', false);
+            $('#error-banner').removeClass('d-none');
+        }
+    });
+}
+
+function updateProgressAndLoadQuestion(res) {
+    if (res.is_last) {
+        clearInterval(timerInterval);
+        localStorage.removeItem(LS_KEY);
+        window.location.href = res.redirect;
+        return;
+    }
+    // Update progress
+    const p = res.progress;
+    $('#progress-bar, #progress-bar-mobile').css('width', p.percentage + '%');
+    $('#q-current, #q-current-mobile').text(p.current);
+    $('#q-pct, #q-pct-mobile').text(p.percentage + '%');
+    $('#q-remaining').text(p.total - p.current);
+    
+    // Toggle Prev Button
+    if (p.current > 1) {
+        $('#btn-prev').css('visibility', 'visible');
+    } else {
+        $('#btn-prev').css('visibility', 'hidden');
+    }
+    
+    // Load next
+    currentQuestion = res.next_question;
+    selectedOptionId = null;
+    loadQuestion(res.next_question);
+}
+
+function loadQuestion(q) {
+    // Dimension badge (if any)
+    if (q.dimension_name) {
+        $('#dim-name').text(q.dimension_name);
+        $('#dim-badge, #dim-badge-wrapper').removeClass('d-none');
+    } else {
+        $('#dim-badge, #dim-badge-wrapper').addClass('d-none');
+    }
+    // Reversed notice
+    q.is_reversed ? $('#reversed-notice').removeClass('d-none') : $('#reversed-notice').addClass('d-none');
+    // Question text
+    $('#question-text').text(q.text_ar);
+    // Options
+    let html = '';
+    q.options.forEach((opt) => {
+        let emoji = '';
+        if(opt.label_ar.includes('نعم') || opt.label_ar.includes('أوافق')) emoji = '👍';
+        else if(opt.label_ar.includes('لا') || opt.label_ar.includes('أرفض')) emoji = '👎';
+        else if(opt.label_ar.includes('حد ما') || opt.label_ar.includes('محايد')) emoji = '😐';
+        
+        let emojiHtml = emoji ? `<span class="fs-4 ms-2">${emoji}</span>` : '';
+        
+        html += `<label class="option-card" data-option-id="${opt.id}">
+            <input type="radio" name="selected_option" value="${opt.id}">
+            <div class="custom-radio"></div>
+            <span class="option-text">${opt.label_ar}</span>
+            ${emojiHtml}
+        </label>`;
+    });
+    $('#options-container').html(html);
+    $('#btn-next').prop('disabled', true);
+    $('#error-banner').addClass('d-none');
+    pendingAnswer = null;
+    // Animate
+    $('#question-card').css('opacity', 0).animate({ opacity: 1 }, 280);
+}
+</script>
+@endpush
+````
+
+## File: resources/views/user/graded_exams/progress.blade.php
+````php
+@extends('layouts.user')
+
+@section('title', 'تتبع التقدم في الاختبارات')
+
+@push('styles')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+    --navy: #14213d;
+    --navy-soft: #1e3a5f;
+    --accent: #0ea472;
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --border: #e6e9f0;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --radius-lg: 18px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 2px 10px rgba(15, 23, 42, .05);
+}
+
+.progress-page{
+    background: var(--bg);
+    direction: rtl;
+    text-align: right;
+    padding: 20px 14px 48px;
+}
+@media (min-width: 768px){
+    .progress-page{ padding: 32px 20px 56px; }
+}
+.progress-container{ max-width: 1100px; margin: 0 auto; }
+
+.progress-topbar{
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+@media (min-width: 768px){
+    .progress-topbar{
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+}
+.progress-topbar h2{
+    font-weight: 800;
+    margin: 0;
+    color: var(--navy);
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+@media (min-width: 768px){
+    .progress-topbar h2{ font-size: 1.6rem; }
+}
+.progress-topbar h2 i{ color: var(--accent); }
+
+.btn-back{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-weight: 600;
+    font-size: .9rem;
+    text-decoration: none;
+    align-self: flex-start;
+    transition: background .15s ease;
+}
+@media (min-width: 768px){ .btn-back{ align-self: auto; } }
+.btn-back:hover{ background: var(--bg); color: var(--text); }
+
+.progress-empty{
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    padding: 56px 20px;
+}
+.progress-empty i{ font-size: 2.2rem; color: var(--accent); margin-bottom: 12px; display: block; }
+.progress-empty h5{ color: var(--navy); font-weight: 700; margin: 0 0 6px; }
+.progress-empty p{ color: var(--text-muted); margin: 0; font-size: .9rem; }
+
+.exam-section{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    margin-bottom: 22px;
+    box-shadow: var(--shadow-sm);
+}
+@media (min-width: 768px){
+    .exam-section{ padding: 26px; margin-bottom: 28px; }
+}
+.exam-section h4{
+    color: var(--navy);
+    font-weight: 800;
+    font-size: 1.05rem;
+    margin-bottom: 18px;
+}
+@media (min-width: 768px){ .exam-section h4{ font-size: 1.25rem; } }
+
+.section-label{
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: .85rem;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.section-label i{ color: var(--accent); }
+
+.chart-container{
+    position: relative;
+    height: 220px;
+    width: 100%;
+    margin-bottom: 24px;
+}
+@media (min-width: 992px){
+    .chart-container{ height: 280px; margin-bottom: 0; }
+}
+
+/* Attempts: card list on mobile, table on larger screens */
+.attempts-list{ display: flex; flex-direction: column; gap: 10px; }
+.attempt-card{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+}
+.attempt-card .attempt-main{ display: flex; flex-direction: column; gap: 4px; }
+.attempt-card .attempt-badge{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    width: fit-content;
+}
+.attempt-card .attempt-date{
+    font-size: .78rem;
+    color: var(--text-muted);
+    direction: ltr;
+    text-align: right;
+}
+.attempt-card .attempt-score{
+    font-weight: 800;
+    font-size: .95rem;
+    padding: 5px 12px;
+    border-radius: 999px;
+    color: #fff;
+}
+.score-success{ background: #10b981; }
+.score-warning{ background: #f59e0b; color: #1e293b; }
+.score-danger{ background: #ef4444; }
+.attempt-card .attempt-view{
+    width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    color: var(--navy);
+    background: var(--surface);
+    flex-shrink: 0;
+    text-decoration: none;
+    transition: background .15s ease;
+}
+.attempt-card .attempt-view:hover{ background: var(--bg); color: var(--navy); }
+
+@media (min-width: 992px){
+    .attempts-list{ max-height: 280px; overflow-y: auto; padding-inline-end: 4px; }
+    .attempts-list::-webkit-scrollbar{ width: 4px; }
+    .attempts-list::-webkit-scrollbar-thumb{ background: var(--border); border-radius: 10px; }
+}
+</style>
+@endpush
+
+@section('content')
+<div class="progress-page">
+<div class="progress-container">
+    <div class="progress-topbar">
+        <h2><i class="bi bi-graph-up-arrow"></i> تتبع التقدم وسجل الاختبارات</h2>
+        <a href="{{ route('user.graded_exams.index') }}" class="btn-back">
+            <i class="bi bi-arrow-right"></i> العودة للاختبارات
+        </a>
+    </div>
+
+    @if(empty($progressByExam))
+        <div class="progress-empty">
+            <i class="bi bi-info-circle"></i>
+            <h5>لا يوجد سجل اختبارات مكتملة حتى الآن.</h5>
+            <p>ابدأ باجتياز الاختبارات لتتمكن من تتبع مستواك وتقدمك هنا.</p>
+        </div>
+    @else
+        @foreach($progressByExam as $examId => $examData)
+            <div class="exam-section">
+                <h4>{{ $examData['exam_title'] }}</h4>
+
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <div class="section-label"><i class="bi bi-bar-chart-fill"></i> الرسم البياني للتقدم</div>
+                        <div class="chart-container">
+                            <canvas id="chart-{{ $examId }}"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="section-label"><i class="bi bi-journal-text"></i> سجل المحاولات السابقة</div>
+                        @php $totalAttempts = count($examData['sessions']); @endphp
+                        <div class="attempts-list">
+                            @foreach($examData['sessions'] as $index => $session)
+                                @php
+                                    $scoreClass = 'score-danger';
+                                    if($session->result){
+                                        $scoreClass = $session->result->percentage >= 70 ? 'score-success' : ($session->result->percentage >= 50 ? 'score-warning' : 'score-danger');
+                                    }
+                                @endphp
+                                <div class="attempt-card">
+                                    <div class="attempt-main">
+                                        <span class="attempt-badge">محاولة {{ $totalAttempts - $index }}</span>
+                                        <span class="attempt-date">{{ $session->completed_at ? $session->completed_at->format('Y-m-d') : '' }}</span>
+                                    </div>
+                                    @if($session->result)
+                                        <span class="attempt-score {{ $scoreClass }}">{{ $session->result->percentage }}%</span>
+                                    @else
+                                        <span class="attempt-score score-danger">-</span>
+                                    @endif
+                                    <a href="{{ route('user.graded_exams.result', $session->id) }}" class="attempt-view" aria-label="عرض النتيجة">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    @endif
+</div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        @foreach($progressByExam as $examId => $examData)
+            @php $safeId = str_replace('-', '', $examId); @endphp
+            var ctx{{ $safeId }} = document.getElementById('chart-{{ $examId }}').getContext('2d');
+            var gradient{{ $safeId }} = ctx{{ $safeId }}.createLinearGradient(0, 0, 0, 280);
+            gradient{{ $safeId }}.addColorStop(0, 'rgba(14, 164, 114, 0.35)');
+            gradient{{ $safeId }}.addColorStop(1, 'rgba(14, 164, 114, 0.0)');
+
+            new Chart(ctx{{ $safeId }}, {
+                type: 'line',
+                data: {
+                    labels: {!! json_encode($examData['labels']) !!},
+                    datasets: [{
+                        label: 'نسبة النجاح %',
+                        data: {!! json_encode($examData['data']) !!},
+                        borderColor: '#0ea472',
+                        backgroundColor: gradient{{ $safeId }},
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#0ea472',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#14213d',
+                            padding: 10,
+                            titleFont: { family: 'Tajawal', size: 13 },
+                            bodyFont: { family: 'Tajawal', size: 13 },
+                            callbacks: {
+                                label: function(context) { return 'النتيجة: ' + context.parsed.y + '%'; }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { stepSize: 20, font: { size: 11 }, callback: function(value) { return value + '%'; } },
+                            grid: { borderDash: [5, 5], color: '#e6e9f0' }
+                        },
+                        x: {
+                            ticks: { font: { size: 11 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        @endforeach
+    });
+</script>
+@endpush
 ````
 
 ## File: tests/Feature/Architecture/NoDirectBuilderDeleteTest.php
@@ -54914,234 +56372,6 @@ class NoDirectBuilderDeleteTest extends TestCase
             $violatingFiles,
             'Direct Builder delete found on User/Coupon models in: ' . implode(', ', $violatingFiles) . '. Use Model::bulkSoftDelete() or $collection->each->delete() instead.'
         );
-    }
-}
-````
-
-## File: app/Http/Controllers/Admin/ExamController.php
-````php
-<?php
-
-namespace App\Http\Controllers\Admin;
-
-use App\Http\Controllers\Controller;
-use App\Models\Assessment;
-use App\Models\Question;
-use App\Services\AssessmentService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-
-class ExamController extends Controller
-{
-    public function __construct(
-        private readonly AssessmentService $assessmentService,
-    ) {}
-
-    public function create(): View
-    {
-        $assessments = Assessment::orderBy('title_ar')->get();
-
-        return view('admin.exams.create', compact('assessments'));
-    }
-
-    public function store(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'title_ar' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
-            'description_ar' => 'nullable|string',
-            'time_limit_min' => 'nullable|integer|min:1',
-            'question_ids' => 'required|array|min:1',
-            'question_ids.*' => 'uuid|exists:questions,id,deleted_at,NULL',
-        ]);
-
-        $assessment = \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
-            $assessment = $this->assessmentService->create([
-                'title_ar' => $data['title_ar'],
-                'category' => $data['category'],
-                'description_ar' => $data['description_ar'] ?? null,
-                'time_limit_min' => $data['time_limit_min'] ?? null,
-                'dimensions' => [],
-            ]);
-
-            // Re-assign chosen questions to this assessment in order
-            foreach ($data['question_ids'] as $idx => $qId) {
-                Question::where('id', $qId)->update([
-                    'assessment_id' => $assessment->id,
-                    'order_index' => $idx,
-                ]);
-            }
-            
-            return $assessment;
-        });
-
-        return response()->json(['success' => true, 'message' => 'تم إنشاء الاختبار.', 'id' => $assessment->id]);
-    }
-}
-````
-
-## File: app/Http/Controllers/Admin/QuestionController.php
-````php
-<?php
-
-namespace App\Http\Controllers\Admin;
-
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\BulkStoreQuestionsRequest;
-use App\Http\Requests\Admin\StoreQuestionRequest;
-use App\Models\Assessment;
-use App\Models\Question;
-use App\Services\AssessmentService;
-use App\Services\QuestionService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
-
-class QuestionController extends Controller
-{
-    public function __construct(
-        private readonly QuestionService $questionService,
-        private readonly AssessmentService $assessmentService,
-    ) {}
-
-    public function index(Request $request): View
-    {
-        $assessments = Assessment::with('dimensions')->orderBy('title_ar')->get();
-
-        $questions = $this->questionService->filteredList($request->only([
-            'assessment_id',
-            'dimension_id',
-            'search',
-            'per_page',
-        ]));
-
-        return view('admin.questions.index', compact('questions', 'assessments'));
-    }
-
-    public function store(StoreQuestionRequest $request): JsonResponse
-    {
-        $validated = $request->validated();
-        $question = $this->questionService->create($validated, $validated['options']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم إضافة السؤال.',
-            'id' => $question->id,
-        ]);
-    }
-
-    public function bulkStore(BulkStoreQuestionsRequest $request): JsonResponse
-    {
-        $count = $this->questionService->bulkImport($request->validated());
-
-        return response()->json(['success' => true, 'message' => "تم استيراد $count سؤال بنجاح."]);
-    }
-
-    public function byAssessment(Assessment $assessment): JsonResponse
-    {
-        $questions = $this->questionService->byAssessment($assessment);
-
-        return response()->json($questions);
-    }
-
-    public function update(Request $request, Question $question): JsonResponse
-    {
-        $request->validate(['text_ar' => 'sometimes|string', 'is_reversed' => 'sometimes|boolean']);
-        $this->questionService->update($question, $request->only(['text_ar', 'is_reversed']));
-
-        return response()->json(['success' => true, 'message' => 'تم تحديث السؤال.']);
-    }
-
-    public function destroy(Question $question): JsonResponse
-    {
-        $this->questionService->delete($question);
-
-        return response()->json(['success' => true, 'message' => 'تم حذف السؤال.']);
-    }
-
-    public function bulkDelete(Request $request): JsonResponse
-    {
-        $request->validate(['ids' => 'required|array', 'ids.*' => 'uuid']);
-        $count = $this->questionService->bulkDelete($request->ids);
-
-        return response()->json(['success' => true, 'message' => "تم حذف $count سؤال."]);
-    }
-
-    public function reorder(Request $request): JsonResponse
-    {
-        $request->validate(['order' => 'required|array', 'order.*' => 'uuid']);
-        $this->questionService->reorder($request->order);
-
-        return response()->json(['success' => true]);
-    }
-
-    public function assignDimension(Request $request, Question $question): JsonResponse
-    {
-        $request->validate(['dimension_id' => 'nullable|uuid|exists:dimensions,id,deleted_at,NULL']);
-        $this->questionService->assignDimension($question, $request->dimension_id ?: null);
-
-        return response()->json(['success' => true, 'message' => 'تم تحديد البُعد.']);
-    }
-
-    public function bulkAssignDimension(Request $request): JsonResponse
-    {
-        $request->validate([
-            'ids' => 'required|array', 
-            'ids.*' => 'uuid',
-            'dimension_id' => 'nullable|uuid|exists:dimensions,id,deleted_at,NULL'
-        ]);
-        $this->questionService->bulkAssignDimension($request->ids, $request->dimension_id ?: null);
-
-        return response()->json(['success' => true, 'message' => 'تم تعيين البُعد للأسئلة المحددة.']);
-    }
-
-    /**
-     * Import questions from CSV for an assessment.
-     */
-    public function importCsv(Request $request, Assessment $assessment): JsonResponse
-    {
-        $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt|max:2048',
-        ]);
-
-        $file = $request->file('csv_file');
-
-        try {
-            $count = $this->questionService->importFromCsv($assessment, $file->getRealPath());
-
-            return response()->json([
-                'success' => true,
-                'message' => "تم استيراد $count سؤال بنجاح وتحديث الأبعاد المعنية.",
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'حدث خطأ أثناء الاستيراد: '.$e->getMessage(),
-            ], 422);
-        }
-    }
-
-    /**
-     * Download CSV template for question importing.
-     */
-    public function downloadTemplate(): StreamedResponse
-    {
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="questions_import_template.csv"',
-        ];
-
-        return response()->streamDownload(function () {
-            $output = fopen('php://output', 'w');
-            fwrite($output, "\xEF\xBB\xBF"); // UTF-8 BOM
-            fputcsv($output, ['اسم البعد', 'نص السؤال', 'معكوس', 'الخيارات']);
-            fputcsv($output, ['الوعي بالذات', 'أعرف نقاط قوتي بوضوح.', '0', 'نعم:2|إلى حد ما:1|لا:0']);
-            fputcsv($output, ['الوعي بالذات', 'أستطيع تحديد نقاط الضعف التي أحتاج إلى تطويرها.', '0', '']);
-            fputcsv($output, ['الوعي الانفعالي', 'أشعر بالقلق أو التوتر بسهولة عند مواجهة المشكلات.', '1', 'نعم:0|إلى حد ما:1|لا:2']);
-            fclose($output);
-        }, 'questions_import_template.csv', $headers);
     }
 }
 ````
@@ -55202,7 +56432,7 @@ class SaveCouponRequest extends FormRequest
 }
 ````
 
-## File: app/Http/Requests/Admin/StoreAssessmentRequest.php
+## File: app/Http/Requests/Admin/StoreRecommendationRequest.php
 ````php
 <?php
 
@@ -55210,36 +56440,44 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreAssessmentRequest extends FormRequest
+class StoreRecommendationRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [
-            'title_ar' => 'required|string|max:255',
-            'subtitle_ar' => 'nullable|string|max:255',
-            'category' => 'required|string|max:255',
-            'description_ar' => 'nullable|string',
-            'time_limit_min' => 'nullable|integer|min:1',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'price' => 'nullable|numeric|min:0',
-            'rating' => 'nullable|numeric|min:1|max:5',
-            'certificates_ar' => 'nullable|string',
-            'programs_ar' => 'nullable|string',
-            'plan_30_days_ar' => 'nullable|string',
-            'dimensions' => 'nullable|array',
-            'dimensions.*.name_ar' => 'required_with:dimensions|string',
-            'dimensions.*.max_score' => 'required_with:dimensions|integer|min:1',
+            'id' => 'nullable|uuid',
+            'assessment_id' => 'required|uuid|exists:assessments,id,deleted_at,NULL',
+            'level' => 'required|string',
+            'description_ar' => 'required|string',
+            'certificates_ar' => 'nullable|array',
+            'certificates_ar.*.title' => 'nullable|string',
+            'certificates_ar.*.subtitle' => 'nullable|string',
+            'certificates_ar.*.icon' => 'nullable|string',
+            'certificates_intro_ar' => 'nullable|string',
+            'programs_ar' => 'nullable|array',
+            'programs_ar.*.title' => 'nullable|string',
+            'programs_ar.*.icon' => 'nullable|string',
+            'programs_intro_ar' => 'nullable|string',
+            'programs_outro_ar' => 'nullable|string',
+            'plan_30_days_ar' => 'nullable|array',
+            'plan_30_days_ar.*.period' => 'nullable|string',
+            'plan_30_days_ar.*.title' => 'nullable|string',
+            'plan_30_days_ar.*.icon' => 'nullable|string',
+            'plan_30_days_intro_ar' => 'nullable|string',
+            'high_threshold' => 'nullable|integer|min:0',
+            'low_threshold' => 'nullable|integer|min:0',
         ];
     }
 }
 ````
 
-## File: app/Models/ExamSession.php
+## File: app/Models/Recommendation.php
 ````php
 <?php
 
@@ -55249,282 +56487,721 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ExamSession extends Model
+class Recommendation extends Model
 {
     use HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'assessment_id', 'status', 'started_at', 'completed_at', 'coupon_id', 'discount_applied',
+        'assessment_id', 'level', 'title_ar', 'description_ar',
+        'strengths_ar', 'development_areas_ar', 'how_to_learn_ar', 'practical_tips_ar',
+        'certificates_ar', 'certificates_intro_ar',
+        'programs_ar', 'programs_intro_ar', 'programs_outro_ar',
+        'plan_30_days_ar', 'plan_30_days_intro_ar',
+        'high_threshold', 'low_threshold',
     ];
-
-    protected $casts = [
-        'started_at' => 'datetime',
-        'completed_at' => 'datetime',
-    ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function coupon()
-    {
-        return $this->belongsTo(Coupon::class);
-    }
 
     public function assessment()
     {
         return $this->belongsTo(Assessment::class);
     }
 
-    public function userAnswers()
-    {
-        return $this->hasMany(UserAnswer::class, 'session_id');
-    }
-
-    public function result()
-    {
-        return $this->hasOne(Result::class, 'session_id');
-    }
+    protected $casts = [
+        'strengths_ar' => 'array',
+        'development_areas_ar' => 'array',
+        'how_to_learn_ar' => 'array',
+        'practical_tips_ar' => 'array',
+        'certificates_ar' => 'array',
+        'programs_ar' => 'array',
+        'plan_30_days_ar' => 'array',
+    ];
 }
 ````
 
-## File: app/Repositories/UserRepository.php
+## File: app/Models/User.php
 ````php
 <?php
 
-namespace App\Repositories;
+namespace App\Models;
 
-use App\Models\ExamSession;
-use App\Models\User;
-use App\Repositories\Contracts\UserRepositoryInterface;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
-class UserRepository implements UserRepositoryInterface
+class User extends Authenticatable
 {
-    public function create(array $data): User
+    use HasUuids, Notifiable, SoftDeletes;
+
+    protected $fillable = ['name', 'email', 'password', 'role', 'national_id', 'phone', 'gender', 'qualification', 'nationality'];
+
+    protected $hidden = ['password', 'remember_token'];
+
+    protected $casts = [
+        'role' => 'string',
+        'password' => 'hashed',
+    ];
+
+    public function delete()
     {
-        return User::create($data);
+        return DB::transaction(fn () => parent::delete());
     }
 
-    public function searchPaginated(?string $search, int $perPage = 15)
+    public function restore()
     {
-        $query = User::query()
-            ->withCount(['examSessions as completed_exams_count' => function ($q) {
-                $q->where('status', 'completed');
-            }]);
+        $pattern = '/_deleted_\d+$/';
+        $originalEmail = preg_replace($pattern, '', $this->email);
 
-        if (! empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('national_id', 'like', "%{$search}%");
-            });
+        if (static::where('email', $originalEmail)->whereNull('deleted_at')->where('id', '!=', $this->id)->exists()) {
+            throw new \Exception('لا يمكن استرجاع الحساب لوجود حساب نشط آخر بنفس البريد الإلكتروني.');
         }
 
-        return $query->paginate($perPage);
+        return DB::transaction(fn () => parent::restore());
     }
 
-    public function getUserResults(string $userId)
+    public static function bulkSoftDelete(array $ids): void
     {
-        return ExamSession::where('user_id', $userId)
-            ->where('status', 'completed')
-            ->with(['assessment', 'result'])
-            ->orderBy('completed_at', 'desc')
-            ->get();
+        DB::transaction(function () use ($ids) {
+            static::whereIn('id', $ids)->get()->each->delete();
+        });
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user) {
+            if (!$user->isForceDeleting()) {
+                $timestamp = now()->timestamp;
+                $user->email = $user->email . '_deleted_' . $timestamp;
+                if ($user->national_id) {
+                    $user->national_id = $user->national_id . '_deleted_' . $timestamp;
+                }
+                if ($user->phone) {
+                    $user->phone = $user->phone . '_deleted_' . $timestamp;
+                }
+                $user->saveQuietly();
+            }
+        });
+
+        static::restoring(function (User $user) {
+            $pattern = '/_deleted_\d+$/';
+            $user->email = preg_replace($pattern, '', $user->email);
+            if ($user->national_id) {
+                $user->national_id = preg_replace($pattern, '', $user->national_id);
+            }
+            if ($user->phone) {
+                $user->phone = preg_replace($pattern, '', $user->phone);
+            }
+            $user->saveQuietly();
+        });
+    }
+
+    public function getDisplayEmailAttribute(): string
+    {
+        return preg_replace('/_deleted_\d+$/', '', $this->email);
+    }
+
+    public function getDisplayPhoneAttribute(): ?string
+    {
+        return $this->phone ? preg_replace('/_deleted_\d+$/', '', $this->phone) : null;
+    }
+
+    public function getDisplayNationalIdAttribute(): ?string
+    {
+        return $this->national_id ? preg_replace('/_deleted_\d+$/', '', $this->national_id) : null;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function examSessions()
+    {
+        return $this->hasMany(ExamSession::class);
+    }
+
+    public function createdAssessments()
+    {
+        return $this->hasMany(Assessment::class, 'created_by');
+    }
+
+    public function coupons()
+    {
+        return $this->belongsToMany(Coupon::class)->withPivot('used_count')->withTimestamps();
+    }
+
+    public function permittedCoupons()
+    {
+        return $this->belongsToMany(Coupon::class, 'coupon_permitted_user');
     }
 }
 ````
 
-## File: app/Services/ExamService.php
+## File: app/Services/GradedExamGeneratorService.php
 ````php
 <?php
 
 namespace App\Services;
 
-use App\Models\Assessment;
-use App\Models\ExamSession;
-use App\Models\UserAnswer;
-use App\Repositories\Contracts\ExamSessionRepositoryInterface;
-use Carbon\Carbon;
+use App\Models\GradedExam;
+use App\Models\GradedExamConstraintSetting;
+use App\Models\GradedExamQuestion;
+use App\Models\GradedExamSession;
+use App\Models\GradedExamSessionQuestion;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
-class ExamService
+/**
+ * المحرك الرئيسي لتوليد امتحان عشوائي يطبّق كل القيود المتفق عليها:
+ * توزيع الصعوبة، توازن النوع، تغطية الوحدات، توازن صح/خطأ، توازن مواقع
+ * الإجابة الصحيحة، حد أقصى للأسئلة متعددة الإجابات، وتجنب تكرار الأسئلة
+ * مع محاولات المستخدم السابقة.
+ *
+ * كل الأرقام (عدد الأسئلة المتاحة لكل وحدة/مستوى/نوع) تُحسب Live من
+ * الداتابيز، مش مخزّنة أو مفترضة، عشان تفضل صحيحة حتى لو الأدمن غيّر
+ * بنك الأسئلة بعدين.
+ */
+class GradedExamGeneratorService
 {
-    public function __construct(
-        private readonly ExamSessionRepositoryInterface $sessions,
-        private readonly ExamResultService $resultService,
-    ) {}
+    /** أقصى عدد محاولات لموازنة صح/خطأ أو مواقع الإجابة قبل ما نكتفي بأقرب نتيجة ممكنة */
+    private const MAX_BALANCE_ATTEMPTS = 200;
 
-    /**
-     * Start a new exam session (or return an existing in-progress one).
-     *
-     * Returns either an ExamSession (if resumed) or a newly created ExamSession.
-     */
-    public function startOrResume(Assessment $assessment, string $userId): array
+    /** كام مرة نحاول نولّد الامتحان من الصفر لو المحاولة فشلت لسبب متعلق بالعشوائية */
+    private const MAX_GENERATION_ATTEMPTS = 5;
+
+    public function generate(GradedExam $exam, ?string $userId = null): GradedExamSession
     {
-        $existing = $this->sessions->findInProgress($userId, $assessment->id);
+        $settings = $exam->constraintSettings ?? $this->defaultSettings($exam);
 
-        if ($existing) {
-            return ['session' => $existing, 'resumed' => true];
+        // تحقق سريع أول (مجموع النسب = 100%، إلخ) - رخيص وما يحتاجش نحاول توليد كامل عشانه
+        $this->validateFeasibility($exam, $settings);
+
+        $lastException = null;
+
+        for ($attempt = 1; $attempt <= self::MAX_GENERATION_ATTEMPTS; $attempt++) {
+            try {
+                return $this->attemptGeneration($exam, $settings, $userId);
+            } catch (\RuntimeException $e) {
+                $lastException = $e;
+
+                \Log::warning('GradedExamGeneratorService: فشلت محاولة توليد امتحان', [
+                    'graded_exam_id' => $exam->id,
+                    'user_id' => $userId,
+                    'attempt' => $attempt,
+                    'max_attempts' => self::MAX_GENERATION_ATTEMPTS,
+                    'error' => $e->getMessage(),
+                ]);
+                // نكمل للمحاولة الجاية - كل محاولة بترتيب/خلط عشوائي مختلف
+                // (شكل شجرة الاحتمالات بيتغير، فممكن مشكلة عابرة تتحل من نفسها)
+            }
         }
 
-        $session = $this->sessions->create([
+        // كل المحاولات الـ5 فشلت بنفس السبب تقريبًا - ده مش عيب عشوائية، ده على
+        // الأرجح نقص حقيقي في بنك الأسئلة يحتاج تدخّل الأدمن. نسجّله كـ error
+        // واضح (مش warning) عشان يبان في مراقبة اللوجات، ونطلع رسالة نظيفة
+        // للمستخدم النهائي من غير تفاصيل داخلية (UUIDs إلخ).
+        \Log::error('GradedExamGeneratorService: فشل توليد الامتحان بعد كل المحاولات - على الأرجح نقص بيانات حقيقي في بنك الأسئلة، يحتاج مراجعة الأدمن', [
+            'graded_exam_id' => $exam->id,
             'user_id' => $userId,
-            'assessment_id' => $assessment->id,
-            'status' => 'in_progress',
-            'started_at' => Carbon::now(),
+            'attempts_tried' => self::MAX_GENERATION_ATTEMPTS,
+            'last_error' => $lastException?->getMessage(),
         ]);
 
-        return ['session' => $session, 'resumed' => false];
-    }
-
-    /**
-     * Load session data for the exam page (assessment + questions + progress).
-     *
-     * @return array<string, mixed>
-     */
-    public function getSessionData(ExamSession $session): array
-    {
-        $assessment = $session->assessment;
-        $total = $assessment->questions()->count();
-        $answeredIds = $session->userAnswers()->pluck('question_id')->toArray();
-        
-        $nextQuestion = $assessment->questions()
-            ->with('answerOptions')
-            ->whereNotIn('id', $answeredIds)
-            ->orderBy('order_index')
-            ->first();
-            
-        $current = count($answeredIds) + 1;
-
-        return [
-            'assessment' => $assessment,
-            'nextQuestion' => $nextQuestion,
-            'progress' => [
-                'current' => $current,
-                'total' => $total,
-                'percentage' => $total > 0 ? round(($current) / $total * 100) : 0,
-            ],
-        ];
-    }
-
-    /**
-     * Delete the last answer and return the previous question state.
-     *
-     * @return array<string, mixed>
-     */
-    public function previousQuestion(ExamSession $session): array
-    {
-        $lastAnswer = $session->userAnswers()->orderBy('id', 'desc')->first();
-        if ($lastAnswer) {
-            $lastAnswer->delete();
-        }
-
-        $answeredIds = $session->userAnswers()->pluck('question_id')->toArray();
-        $total = $session->assessment->questions()->count();
-        $answeredCount = count($answeredIds);
-        
-        $nextQuestion = $session->assessment->questions()
-            ->with('answerOptions', 'dimension')
-            ->whereNotIn('id', $answeredIds)
-            ->orderBy('order_index')
-            ->first();
-            
-        $current = $answeredCount + 1;
-
-        if (! $nextQuestion) {
-            // Unlikely if we just deleted an answer, but fallback
-            $this->resultService->calculate($session);
-
-            return ['is_last' => true, 'redirect' => route('exam.result', $session->id)];
-        }
-
-        return [
-            'is_last' => false,
-            'next_question' => [
-                'id' => $nextQuestion->id,
-                'text_ar' => $nextQuestion->text_ar,
-                'is_reversed' => (bool) $nextQuestion->is_reversed,
-                'dimension_name' => $nextQuestion->dimension?->name_ar,
-                'options' => $nextQuestion->answerOptions->map(fn ($o) => [
-                    'id' => $o->id,
-                    'label_ar' => $o->label_ar,
-                ]),
-            ],
-            'progress' => [
-                'current' => $current,
-                'total' => $total,
-                'percentage' => $total > 0 ? round(($current) / $total * 100) : 0,
-            ],
-        ];
-    }
-
-    /**
-     * Submit an answer and return the next question data (or redirect to result).
-     *
-     * @return array<string, mixed>
-     */
-    public function submitAnswer(ExamSession $session, string $questionId, string $optionId): array
-    {
-        // Verify question belongs to this assessment
-        $question = $session->assessment->questions()->findOrFail($questionId);
-
-        // Verify option belongs to this question
-        $option = $question->answerOptions()->findOrFail($optionId);
-
-        // Upsert answer
-        UserAnswer::updateOrCreate(
-            ['session_id' => $session->id, 'question_id' => $question->id],
-            ['selected_option_id' => $option->id, 'score_earned' => $option->score_value]
+        throw new \RuntimeException(
+            'تعذّر إعداد الاختبار حاليًا بسبب نقص في بعض الأسئلة ضمن معايير التوزيع الحالية. تم إبلاغ فريق الدعم، برجاء المحاولة لاحقًا.',
+            0,
+            $lastException
         );
-
-        // Find next unanswered question
-        $answeredIds = $session->userAnswers()->pluck('question_id')->toArray();
-        $total = $session->assessment->questions()->count();
-        $answeredCount = count($answeredIds);
-        
-        $nextQuestion = $session->assessment->questions()
-            ->with('answerOptions', 'dimension')
-            ->whereNotIn('id', $answeredIds)
-            ->orderBy('order_index')
-            ->first();
-
-        if (! $nextQuestion) {
-            $this->resultService->calculate($session);
-
-            return ['is_last' => true, 'redirect' => route('exam.result', $session->id)];
-        }
-
-        $current = $answeredCount + 1;
-
-        return [
-            'is_last' => false,
-            'next_question' => [
-                'id' => $nextQuestion->id,
-                'text_ar' => $nextQuestion->text_ar,
-                'is_reversed' => (bool) $nextQuestion->is_reversed,
-                'dimension_name' => $nextQuestion->dimension?->name_ar,
-                'options' => $nextQuestion->answerOptions->map(fn ($o) => [
-                    'id' => $o->id,
-                    'label_ar' => $o->label_ar,
-                ]),
-            ],
-            'progress' => [
-                'current' => $current,
-                'total' => $total,
-                'percentage' => $total > 0 ? round(($current) / $total * 100) : 0,
-            ],
-        ];
     }
 
     /**
-     * Get or calculate the result for a completed session.
-     *
-     * @return array<string, mixed>
+     * محاولة توليد واحدة كاملة (كل الخطوات 1-8). مفصولة في دالة لوحدها
+     * عشان generate() يقدر يعيد استدعاءها براحة في حلقة الـ retry.
      */
-    public function getResult(ExamSession $session): array
+    private function attemptGeneration(GradedExam $exam, GradedExamConstraintSetting $settings, ?string $userId): GradedExamSession
     {
-        return $this->resultService->getFormattedResult($session);
+        return DB::transaction(function () use ($exam, $settings, $userId) {
+
+            // === الخطوة 1: تثبيت تخصيص الوحدات (largest remainder method) ===
+            $unitAllocation = $this->allocateUnitCounts($exam->id, $settings->total_questions);
+
+            // === الخطوة 2: توزيع الصعوبة داخل كل وحدة، مع احترام الميزانية العامة ===
+            $cells = $this->allocateDifficultyWithinUnits($exam->id, $unitAllocation, $settings);
+
+            // === الخطوة 3: توزيع النوع (اختيار من متعدد / صح خطأ) داخل كل خلية ===
+            $cells = $this->allocateTypeWithinCells($exam->id, $cells, $settings);
+
+            // === الخطوة 4: اختيار الأسئلة الفعلية (مع فلاتر: متعدد الإجابات، خيارات غير قياسية، تجنب التكرار) ===
+            $questions = $this->selectQuestions($exam->id, $cells, $settings, $userId);
+
+            // === الخطوة 5: موازنة صح/خطأ (best-effort ضمن هامش تفاوت) ===
+            $questions = $this->balanceTrueFalseAnswers($exam->id, $questions, $settings);
+
+            // === الخطوة 6: خلط ترتيب الخيارات لكل سؤال (يحل توازن مواقع الإجابة تلقائيًا) ===
+            $shuffledMap = $this->shuffleOptionsPerQuestion($questions, $settings);
+
+            // === الخطوة 7: خلط ترتيب الأسئلة + تطبيق قاعدة عدم تجميع نفس الوحدة ===
+            $orderedQuestions = $this->sequenceQuestions($questions, $settings);
+
+            // === الخطوة 8: حفظ الجلسة والأسئلة المرتبطة بها ===
+            return $this->persistSession($exam, $userId, $orderedQuestions, $shuffledMap, $settings);
+        });
+    }
+
+    // ============================================================
+    // الخطوة 1: تخصيص عدد الأسئلة لكل وحدة (Largest Remainder Method)
+    // ============================================================
+    private function allocateUnitCounts(string $gradedExamId, int $totalQuestions): array
+    {
+        $unitCounts = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
+            ->selectRaw('unit_id, COUNT(*) as cnt')
+            ->groupBy('unit_id')
+            ->pluck('cnt', 'unit_id')
+            ->toArray();
+
+        $bankTotal = array_sum($unitCounts);
+        if ($bankTotal === 0) {
+            throw new \RuntimeException('لا يوجد أي سؤال في بنك هذا الامتحان.');
+        }
+
+        $raw = [];
+        foreach ($unitCounts as $unitId => $count) {
+            $raw[$unitId] = ($count / $bankTotal) * $totalQuestions;
+        }
+
+        $allocation = array_map('intval', $raw);
+        $remainder = $totalQuestions - array_sum($allocation);
+
+        // وزّع الباقي على أعلى الأجزاء الكسرية (largest remainder)
+        $fractions = [];
+        foreach ($raw as $unitId => $value) {
+            $fractions[$unitId] = $value - intval($value);
+        }
+        arsort($fractions);
+
+        foreach (array_keys($fractions) as $unitId) {
+            if ($remainder <= 0) break;
+            $allocation[$unitId]++;
+            $remainder--;
+        }
+
+        // حد أدنى سؤال واحد لكل وحدة لها أسئلة (min_questions_per_unit = 1)
+        foreach ($allocation as $unitId => $count) {
+            if ($count === 0 && $unitCounts[$unitId] > 0) {
+                $allocation[$unitId] = 1;
+            }
+        }
+
+        return $allocation; // [unit_id => count]
+    }
+
+    // ============================================================
+    // الخطوة 2: توزيع الصعوبة داخل كل وحدة مع احترام الميزانية الكلية
+    // ============================================================
+    private function allocateDifficultyWithinUnits(string $gradedExamId, array $unitAllocation, GradedExamConstraintSetting $settings): array
+    {
+        $levelTargets = $settings->targetCounts(); // ['easy'=>25,'medium'=>20,'hard'=>5]
+        $levels = ['easy', 'medium', 'hard'];
+
+        // مخزون كل وحدة لكل مستوى (Live من الداتابيز)
+        $supply = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
+            ->selectRaw('unit_id, level, COUNT(*) as cnt')
+            ->groupBy('unit_id', 'level')
+            ->get()
+            ->groupBy('unit_id')
+            ->map(fn ($rows) => $rows->pluck('cnt', 'level')->toArray());
+
+        $cells = []; // [[unit_id, level, count], ...]
+        $remainingLevelBudget = $levelTargets;
+
+        // نبدأ بالوحدات الأصغر تخصيصًا أولاً (أقل مرونة) لتقليل التعارضات
+        $unitsSorted = $unitAllocation;
+        asort($unitsSorted);
+
+        foreach ($unitsSorted as $unitId => $slotsNeeded) {
+            if ($slotsNeeded <= 0) continue;
+            $unitSupply = $supply[$unitId] ?? [];
+
+            // وزن كل مستوى = (الميزانية العامة المتبقية له) × (توفره في هذه الوحدة تحديدًا)
+            $weights = [];
+            foreach ($levels as $lvl) {
+                $available = $unitSupply[$lvl] ?? 0;
+                $weights[$lvl] = min($available, max($remainingLevelBudget[$lvl], 0));
+            }
+            $weightSum = array_sum($weights);
+
+            if ($weightSum === 0) {
+                // مفيش أي مستوى ليه ميزانية متاحة أو مخزون في الوحدة دي - وزّع بالتساوي كحل أخير
+                foreach ($levels as $lvl) {
+                    $weights[$lvl] = $unitSupply[$lvl] ?? 0;
+                }
+                $weightSum = array_sum($weights) ?: 1;
+            }
+
+            $picked = [];
+            $assigned = 0;
+            foreach ($levels as $lvl) {
+                $share = $weightSum > 0 ? intval(floor($slotsNeeded * ($weights[$lvl] / $weightSum))) : 0;
+                $share = min($share, $unitSupply[$lvl] ?? 0);
+                $picked[$lvl] = $share;
+                $assigned += $share;
+            }
+
+            // وزّع أي باقي بسبب التقريب على أي مستوى لسه عنده مخزون وميزانية
+            $leftover = $slotsNeeded - $assigned;
+            foreach ($levels as $lvl) {
+                if ($leftover <= 0) break;
+                $room = ($unitSupply[$lvl] ?? 0) - $picked[$lvl];
+                if ($room > 0 && $remainingLevelBudget[$lvl] > 0) {
+                    $add = min($leftover, $room);
+                    $picked[$lvl] += $add;
+                    $leftover -= $add;
+                }
+            }
+
+            foreach ($levels as $lvl) {
+                if ($picked[$lvl] > 0) {
+                    $cells[] = ['unit_id' => $unitId, 'level' => $lvl, 'count' => $picked[$lvl]];
+                    $remainingLevelBudget[$lvl] -= $picked[$lvl];
+                }
+            }
+        }
+
+        return $cells;
+    }
+
+    // ============================================================
+    // الخطوة 3: توزيع النوع (mcq/true_false) داخل كل خلية (وحدة × مستوى)
+    // ============================================================
+    private function allocateTypeWithinCells(string $gradedExamId, array $cells, GradedExamConstraintSetting $settings): array
+    {
+        $mode = $settings->type_distribution_mode; // proportional | balanced
+        $mcqRatio = $mode === 'balanced' ? 0.5 : 0.6139;
+
+        $result = [];
+        foreach ($cells as $cell) {
+            $supply = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
+                ->where('unit_id', $cell['unit_id'])
+                ->where('level', $cell['level'])
+                ->selectRaw('question_type, COUNT(*) as cnt')
+                ->groupBy('question_type')
+                ->pluck('cnt', 'question_type')
+                ->toArray();
+
+            $mcqAvailable = $supply['mcq'] ?? 0;
+            $tfAvailable = $supply['true_false'] ?? 0;
+
+            $mcqWanted = (int) round($cell['count'] * $mcqRatio);
+            $tfWanted = $cell['count'] - $mcqWanted;
+
+            // === معالجة قيد type_within_difficulty الحرج: عنق زجاجة صح/خطأ الصعبة ===
+            // لو المطلوب أكبر من المتاح، حوّل الفرق لـ mcq بدل ما نفشل التوليد
+            if ($tfWanted > $tfAvailable) {
+                $deficit = $tfWanted - $tfAvailable;
+                $tfWanted = $tfAvailable;
+                $mcqWanted += $deficit;
+            }
+            if ($mcqWanted > $mcqAvailable) {
+                $deficit = $mcqWanted - $mcqAvailable;
+                $mcqWanted = $mcqAvailable;
+                $tfWanted = min($tfAvailable, $tfWanted + $deficit);
+            }
+
+            if ($mcqWanted > 0) {
+                $result[] = ['unit_id' => $cell['unit_id'], 'level' => $cell['level'], 'type' => 'mcq', 'count' => $mcqWanted];
+            }
+            if ($tfWanted > 0) {
+                $result[] = ['unit_id' => $cell['unit_id'], 'level' => $cell['level'], 'type' => 'true_false', 'count' => $tfWanted];
+            }
+        }
+
+        return $result;
+    }
+
+    // ============================================================
+    // الخطوة 4: اختيار الأسئلة الفعلية لكل خلية
+    // ============================================================
+    private function selectQuestions(string $gradedExamId, array $cells, GradedExamConstraintSetting $settings, ?string $userId): Collection
+    {
+        $selected = collect();
+        $multiCorrectCount = 0;
+        $maxMultiCorrect = $settings->max_multi_correct_questions;
+
+        // موازنة الظهور: خريطة [question_id => عدد مرات الظهور] لهذا المستخدم عبر كل محاولاته
+        $viewCounts = $userId ? $this->getQuestionViewCounts($userId, $gradedExamId) : [];
+
+        foreach ($cells as $cell) {
+            $poolAll = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
+                ->where('unit_id', $cell['unit_id'])
+                ->where('level', $cell['level'])
+                ->where('question_type', $cell['type'])
+                ->whereNotIn('id', $selected->pluck('id'))
+                ->with('options') // eager load لتجنب N+1 في خطوات لاحقة (موازنة صح/خطأ + خلط الخيارات)
+                ->withCount('options')
+                ->get();
+
+            // فضّل الأسئلة اللي عدد خياراتها قياسي (4 لاختيار من متعدد، 2 لصح/خطأ) أولاً
+            // الفلترة هنا في PHP بدل SQL having() عشان تشتغل بنفس الشكل على أي قاعدة بيانات (MySQL/Postgres/SQLite)
+            $standardCount = $cell['type'] === 'mcq' ? 4 : 2;
+            $standardPool = $poolAll->where('options_count', '=', $standardCount)->values();
+            $fallbackPool = $poolAll->where('options_count', '!=', $standardCount)->values();
+
+            $pool = $standardPool->concat($fallbackPool);
+
+            // === موازنة الظهور (Exposure Balancing) ===
+            // خلط عشوائي الأول (لكسر أي ترتيب من الداتابيز)، وبعدين ترتيب حسب
+            // "الأقل ظهورًا أولاً" (زي ORDER BY user_views ASC, RANDOM()).
+            // النتيجة: الأسئلة اللي الطالب ماشافهاش خالص (عدد = 0) دايمًا في الأول،
+            // ولا يتكرر سؤال شافه قبل كده إلا لو الأسئلة الجديدة خلصت ومحتاجين
+            // نكمّل نسبة الوحدة/المستوى/النوع المطلوبة (Fetch then Backtrack).
+            $pool = $pool->shuffle()->sortBy(
+                fn ($q) => $viewCounts[$q->id] ?? 0
+            )->values();
+
+            $needed = $cell['count'];
+            $chosen = collect();
+
+            // === تمريرة أولى: نحترم حد max_multi_correct_questions (قيد soft) ===
+            foreach ($pool as $question) {
+                if ($chosen->count() >= $needed) break;
+
+                if ($question->is_multi_correct && $multiCorrectCount >= $maxMultiCorrect) {
+                    continue; // تخطّي - وصلنا للحد الأقصى المسموح لأسئلة متعددة الإجابات
+                }
+
+                $chosen->push($question);
+                if ($question->is_multi_correct) {
+                    $multiCorrectCount++;
+                }
+            }
+
+            // === تمريرة ثانية (fallback): لو لسه ناقص، اكسر حد الأسئلة المتعددة ===
+            // تغطية الوحدة/المستوى/النوع قيد "hard" (لازم يتحقق دايمًا)، بينما حد
+            // الأسئلة المتعددة قيد "soft" (أفضل جهد). لو الاحترام الصارم للقيد الـ
+            // soft هيمنع تحقيق القيد الـ hard، نكسر الـ soft بدل ما نفشل التوليد كله.
+            if ($chosen->count() < $needed) {
+                foreach ($pool as $question) {
+                    if ($chosen->count() >= $needed) break;
+                    if ($chosen->contains('id', $question->id)) continue;
+
+                    $chosen->push($question);
+                    if ($question->is_multi_correct) {
+                        $multiCorrectCount++;
+                    }
+                }
+            }
+
+            if ($chosen->count() < $needed) {
+                throw new \RuntimeException(sprintf(
+                    'تعذّر إيجاد %d سؤال كافٍ (وحدة: %s، مستوى: %s، نوع: %s). المتاح فعليًا في البنك: %d.',
+                    $needed, $cell['unit_id'], $cell['level'], $cell['type'], $pool->count()
+                ));
+            }
+
+            $selected = $selected->concat($chosen);
+        }
+
+        return $selected;
+    }
+
+    /**
+     * "موازنة الظهور" (Exposure Balancing): بيرجع Map كامل [question_id => عدد مرات الظهور]
+     * لهذا المستخدم عبر كل محاولاته السابقة (مش آخر N بس زي القديم) — عشان نضمن
+     * تغطية كامل بنك الـ404 سؤال أسرع، بدل الاعتماد على عشوائية بحتة
+     * (Coupon Collector's Problem بيقول العشوائية البحتة محتاجة ~49 محاولة
+     * لتغطية البنك، والأولوية دي بتقلّلها لـ9-12 محاولة تقريبًا).
+     *
+     * بنحسبها Live من الداتابيز مش من عمود counter مخزّن، عشان تفضل دقيقة
+     * 100% حتى لو session اتلغت أو فشلت في المنتصف.
+     */
+    private function getQuestionViewCounts(string $userId, string $gradedExamId): array
+    {
+        $sessionIds = GradedExamSession::where('user_id', $userId)
+            ->where('graded_exam_id', $gradedExamId)
+            ->pluck('id');
+
+        if ($sessionIds->isEmpty()) {
+            return [];
+        }
+
+        return GradedExamSessionQuestion::whereIn('session_id', $sessionIds)
+            ->selectRaw('question_id, COUNT(*) as views')
+            ->groupBy('question_id')
+            ->pluck('views', 'question_id')
+            ->map(fn ($v) => (int) $v)
+            ->toArray();
+    }
+
+    // ============================================================
+    // الخطوة 5: موازنة صح/خطأ (best-effort)
+    // ============================================================
+    private function balanceTrueFalseAnswers(string $gradedExamId, Collection $questions, GradedExamConstraintSetting $settings): Collection
+    {
+        $tfQuestions = $questions->filter(fn ($q) => $q->question_type === 'true_false');
+        if ($tfQuestions->isEmpty()) {
+            return $questions;
+        }
+
+        $trueCount = $tfQuestions->filter(fn ($q) => $q->options->firstWhere('is_correct', true)?->option_text_ar === 'True')->count();
+        $total = $tfQuestions->count();
+        $truePercentage = $total > 0 ? ($trueCount / $total) * 100 : 50;
+
+        $attempts = 0;
+        while (($truePercentage < 35 || $truePercentage > 65) && $attempts < self::MAX_BALANCE_ATTEMPTS) {
+            $attempts++;
+
+            $needMoreTrue = $truePercentage < 35;
+            $swapOutValue = $needMoreTrue ? false : true;
+
+            // ندور على سؤال صح/خطأ داخل نفس الاختيار الحالي نبدله بسؤال تاني من نفس الوحدة/المستوى بإجابة عكسية
+            $candidate = $tfQuestions->first(function ($q) use ($swapOutValue) {
+                $correctText = $q->options->firstWhere('is_correct', true)?->option_text_ar;
+                return $swapOutValue ? $correctText === 'True' : $correctText === 'False';
+            });
+
+            if (!$candidate) break;
+
+            $replacement = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
+                ->where('unit_id', $candidate->unit_id)
+                ->where('level', $candidate->level)
+                ->where('question_type', 'true_false')
+                ->whereNotIn('id', $questions->pluck('id'))
+                ->with('options')
+                ->get()
+                ->first(function ($q) use ($needMoreTrue) {
+                    $correctText = $q->options->firstWhere('is_correct', true)?->option_text_ar;
+                    return $needMoreTrue ? $correctText === 'True' : $correctText === 'False';
+                });
+
+            if (!$replacement) break; // مفيش بديل متاح - نكتفي بأقرب نسبة ممكنة
+
+            $questions = $questions->reject(fn ($q) => $q->id === $candidate->id)->push($replacement);
+            $tfQuestions = $questions->filter(fn ($q) => $q->question_type === 'true_false');
+            $trueCount = $tfQuestions->filter(fn ($q) => $q->options->firstWhere('is_correct', true)?->option_text_ar === 'True')->count();
+            $truePercentage = $tfQuestions->count() > 0 ? ($trueCount / $tfQuestions->count()) * 100 : 50;
+        }
+
+        return $questions->values();
+    }
+
+    // ============================================================
+    // الخطوة 6: خلط ترتيب الخيارات لكل سؤال (يحل توازن مواقع الإجابة تلقائيًا)
+    // ============================================================
+    private function shuffleOptionsPerQuestion(Collection $questions, GradedExamConstraintSetting $settings): array
+    {
+        $map = [];
+        foreach ($questions as $question) {
+            $optionIds = $question->options->pluck('id')->shuffle()->values()->toArray();
+            $map[$question->id] = $optionIds;
+        }
+        return $map;
+    }
+
+    // ============================================================
+    // الخطوة 7: ترتيب الأسئلة النهائي + منع تجميع نفس الوحدة
+    // ============================================================
+    private function sequenceQuestions(Collection $questions, GradedExamConstraintSetting $settings): Collection
+    {
+        $shuffled = $questions->shuffle()->values();
+        $maxConsecutive = $settings->max_consecutive_same_unit;
+
+        $attempts = 0;
+        while ($attempts < self::MAX_BALANCE_ATTEMPTS) {
+            $violationIndex = null;
+            $consecutive = 1;
+
+            for ($i = 1; $i < $shuffled->count(); $i++) {
+                if ($shuffled[$i]->unit_id === $shuffled[$i - 1]->unit_id) {
+                    $consecutive++;
+                    if ($consecutive > $maxConsecutive) {
+                        $violationIndex = $i;
+                        break;
+                    }
+                } else {
+                    $consecutive = 1;
+                }
+            }
+
+            if ($violationIndex === null) break; // مفيش تجميع زيادة عن المسموح
+
+            // دوّر على أول سؤال بعده بوحدة مختلفة وبدّل مكانه
+            $swapWith = null;
+            for ($j = $violationIndex + 1; $j < $shuffled->count(); $j++) {
+                if ($shuffled[$j]->unit_id !== $shuffled[$violationIndex - 1]->unit_id) {
+                    $swapWith = $j;
+                    break;
+                }
+            }
+
+            if ($swapWith === null) break; // مفيش تبديل ممكن - نكتفي بالترتيب الحالي
+
+            $tmp = $shuffled[$violationIndex];
+            $shuffled[$violationIndex] = $shuffled[$swapWith];
+            $shuffled[$swapWith] = $tmp;
+
+            $attempts++;
+        }
+
+        return $shuffled;
+    }
+
+    // ============================================================
+    // الخطوة 8: حفظ الجلسة وأسئلتها
+    // ============================================================
+    private function persistSession(GradedExam $exam, ?string $userId, Collection $orderedQuestions, array $shuffledMap, GradedExamConstraintSetting $settings): GradedExamSession
+    {
+        $session = GradedExamSession::create([
+            'user_id' => $userId,
+            'graded_exam_id' => $exam->id,
+            'status' => 'in_progress',
+            'total_questions' => $orderedQuestions->count(),
+            'constraints_snapshot' => $settings->only([
+                'total_questions', 'easy_percentage', 'medium_percentage', 'hard_percentage',
+                'type_distribution_mode', 'mc_position_balance_mode',
+                'max_multi_correct_questions', 'max_consecutive_same_answer', 'max_consecutive_same_unit',
+            ]),
+            'random_seed' => null,
+            'started_at' => now(),
+        ]);
+
+        foreach ($orderedQuestions->values() as $position => $question) {
+            GradedExamSessionQuestion::create([
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'position_in_exam' => $position + 1,
+                'shuffled_options_order' => $shuffledMap[$question->id] ?? [],
+            ]);
+        }
+
+        return $session->fresh(['sessionQuestions.question.options']);
+    }
+
+    // ============================================================
+    // أدوات مساعدة
+    // ============================================================
+    private function defaultSettings(GradedExam $exam): GradedExamConstraintSetting
+    {
+        return GradedExamConstraintSetting::create([
+            'graded_exam_id' => $exam->id,
+            'total_questions' => 50,
+            'easy_percentage' => 50,
+            'medium_percentage' => 40,
+            'hard_percentage' => 10,
+        ]);
+    }
+
+    /**
+     * تحقق مبدئي سريع قبل الدخول في التوليد الفعلي: هل الإعدادات ممكنة
+     * أصلاً بناءً على المخزون الحالي؟ (يعيد استخدام منطق isFeasible()
+     * الموجود في الـ Model نفسه لتفادي التكرار).
+     */
+    private function validateFeasibility(GradedExam $exam, GradedExamConstraintSetting $settings): void
+    {
+        $check = $settings->isFeasible();
+        if (!$check['feasible']) {
+            throw new \RuntimeException('إعدادات القيود غير قابلة للتحقيق: ' . implode(' | ', $check['errors']));
+        }
     }
 }
 ````
@@ -55708,110 +57385,7 @@ class ResultFormatter
 }
 ````
 
-## File: app/Services/UserDashboardService.php
-````php
-<?php
-
-namespace App\Services;
-
-use App\Models\Assessment;
-use App\Models\Coupon;
-use App\Models\Setting;
-use App\Models\User;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-
-class UserDashboardService
-{
-    /**
-     * Build all data needed for the user dashboard in an optimised way.
-     *
-     * @return array<string, mixed>
-     */
-    public function getData(User $user): array
-    {
-        // 1. Cache Assessments (Global)
-        $assessmentsMax = Assessment::max('updated_at') ?? 'none';
-        $assessmentsCount = Assessment::count();
-        $assessmentsKey = "active_assessments_{$assessmentsMax}_{$assessmentsCount}";
-        $assessments = Cache::remember($assessmentsKey, 3600, function () {
-            return Assessment::where('is_active', true)
-                ->withCount('questions')
-                ->orderBy('category')
-                ->orderBy('title_ar')
-                ->get();
-        });
-
-        // 2. Cache Active Coupons (Global)
-        $couponsMax = Coupon::max('updated_at') ?? 'none';
-        $couponsCount = Coupon::count();
-        $couponsKey = "active_coupons_{$couponsMax}_{$couponsCount}";
-        $activeCoupons = Cache::remember($couponsKey, 3600, function () {
-            return Coupon::where('is_active', true)
-                ->where(function ($query) {
-                    $query->whereNull('expires_at')
-                        ->orWhere('expires_at', '>=', now()->toDateString());
-                })->get();
-        });
-
-        // 3. Cache User Sessions & Progress Map (User-specific)
-        $sessionsMax = $user->examSessions()->max('updated_at') ?? 'none';
-        $sessionsCount = $user->examSessions()->count();
-        $sessionsKey = "user_sessions_{$user->id}_{$sessionsMax}_{$sessionsCount}";
-
-        $userSessions = Cache::remember($sessionsKey, 3600, function () use ($user) {
-            return $user->examSessions()
-                ->with(['assessment', 'result'])
-                ->orderByDesc('updated_at')
-                ->get();
-        });
-
-        $progressKey = "user_progress_{$user->id}_{$sessionsMax}_{$sessionsCount}";
-        $progressMap = Cache::remember($progressKey, 3600, function () use ($user) {
-            $progressRows = DB::table('exam_sessions')
-                ->where('user_id', $user->id)
-                ->select([
-                    'assessment_id',
-                    DB::raw('COUNT(*) as total'),
-                    DB::raw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed"),
-                ])
-                ->groupBy('assessment_id')
-                ->get();
-
-            $map = [];
-            foreach ($progressRows as $row) {
-                $map[$row->assessment_id] = [
-                    'completed' => (int) $row->completed,
-                    'total' => (int) $row->total,
-                ];
-            }
-
-            return $map;
-        });
-
-        // 4. Load My Coupons (No need to cache as it's a very light query and pivot updates are tricky to track globally)
-        $myCoupons = $user->coupons()->get();
-
-        // 5. Site Settings (stats)
-        $siteSettings = Cache::remember('site_settings', 3600, function () {
-            $settings = Setting::pluck('value', 'key')->toArray();
-            
-            if (isset($settings['stats_mode']) && $settings['stats_mode'] === 'auto') {
-                $settings['stat_users'] = '+' . \App\Models\User::count();
-                $settings['stat_exams'] = '+' . \App\Models\Result::count();
-                $settings['stat_assessments'] = '+' . \App\Models\Assessment::count();
-                $settings['stat_fields'] = '+' . \App\Models\Dimension::count();
-            }
-            
-            return $settings;
-        });
-
-        return compact('assessments', 'userSessions', 'progressMap', 'activeCoupons', 'myCoupons', 'siteSettings');
-    }
-}
-````
-
-## File: database/migrations/2024_01_01_000003_create_dimensions_table.php
+## File: database/migrations/2024_01_01_000002_create_assessments_table.php
 ````php
 <?php
 
@@ -55823,24 +57397,27 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('dimensions', function (Blueprint $table) {
+        Schema::create('assessments', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('assessment_id');
-            $table->string('name_ar');
-            $table->integer('max_score');
-            $table->integer('order_index')->default(0);
+            $table->string('title_ar');
+            $table->string('category');
+            $table->text('description_ar')->nullable();
+            $table->string('scoring_type')->default('overall_score');
+            $table->integer('time_limit_min')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->uuid('created_by');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('dimensions');
+        Schema::dropIfExists('assessments');
     }
 };
 ````
 
-## File: database/migrations/2024_01_01_000004_create_questions_table.php
+## File: database/migrations/2024_01_01_000008_create_results_table.php
 ````php
 <?php
 
@@ -55852,108 +57429,128 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('questions', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('assessment_id');
-            $table->uuid('dimension_id')->nullable();
-            $table->text('text_ar');
-            $table->integer('order_index')->default(0);
-            $table->timestamps();
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('questions');
-    }
-};
-````
-
-## File: database/migrations/2024_01_01_000005_create_answer_options_table.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('answer_options', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('question_id');
-            $table->string('label_ar');
-            $table->integer('score_value');
-            $table->integer('order_index')->default(0);
-            $table->timestamps();
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('answer_options');
-    }
-};
-````
-
-## File: database/migrations/2024_01_01_000006_create_exam_sessions_table.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('exam_sessions', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('user_id');
-            $table->uuid('assessment_id');
-            $table->enum('status', ['in_progress', 'completed', 'abandoned'])->default('in_progress');
-            $table->timestamp('started_at');
-            $table->timestamp('completed_at')->nullable();
-            $table->timestamps();
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('exam_sessions');
-    }
-};
-````
-
-## File: database/migrations/2024_01_01_000007_create_user_answers_table.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('user_answers', function (Blueprint $table) {
+        Schema::create('results', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('session_id');
-            $table->uuid('question_id');
-            $table->uuid('selected_option_id');
-            $table->integer('score_earned');
+            $table->integer('total_score');
+            $table->integer('max_possible_score');
+            $table->string('level')->nullable();
+            $table->timestamp('calculated_at');
             $table->timestamps();
-            $table->unique(['session_id', 'question_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('user_answers');
+        Schema::dropIfExists('results');
+    }
+};
+````
+
+## File: database/migrations/2024_01_01_000009_create_dimension_scores_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('dimension_scores', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('result_id');
+            $table->uuid('dimension_id');
+            $table->integer('score');
+            $table->integer('max_score');
+            $table->string('level')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('dimension_scores');
+    }
+};
+````
+
+## File: database/migrations/2026_06_24_091932_create_dimension_interpretations_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('dimension_interpretations', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('dimension_id');
+            $table->string('level');
+            $table->text('interpretation_text_ar');
+            $table->integer('high_threshold')->nullable();
+            $table->integer('low_threshold')->nullable();
+            $table->timestamps();
+
+            $table->unique(['dimension_id', 'level'], 'dim_interpretations_dim_level_unique');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('dimension_interpretations');
+    }
+};
+````
+
+## File: database/migrations/2026_07_01_154805_create_coupons_table.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('coupons', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->integer('assessments_limit')->default(1)->comment('Number of assessments allowed per user');
+            $table->date('expires_at')->nullable()->comment('When the coupon expires and can no longer be used');
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('coupon_user', function (Blueprint $table) {
+            $table->id();
+            $table->uuid('user_id');
+            $table->unsignedBigInteger('coupon_id');
+            $table->integer('used_count')->default(0);
+            $table->timestamps();
+
+            $table->unique(['user_id', 'coupon_id']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('coupon_user');
+        Schema::dropIfExists('coupons');
     }
 };
 ````
@@ -58952,2556 +60549,6 @@ class Assessment9Seeder extends Seeder
 }
 ````
 
-## File: README.md
-````markdown
-<div align="center">
-  <h1 align="center">نظام المقاييس والاختبارات المهنية</h1>
-  <p align="center">
-    <strong>نظام متكامل واحترافي لإدارة المقاييس والاختبارات النفسية والمهنية</strong>
-    <br />
-    <br />
-    <a href="#المميزات-الرئيسية">المميزات</a>
-    ·
-    <a href="#التقنيات-المستخدمة">التقنيات</a>
-    ·
-    <a href="#التثبيت-والتشغيل">التشغيل</a>
-  </p>
-</div>
-
-<hr />
-
-## 🌟 نبذة عن المشروع
-**نظام المقاييس والاختبارات المهنية** هو منصة ويب متطورة مبنية باستخدام إطار عمل Laravel. تهدف المنصة إلى توفير بيئة متكاملة للمؤسسات والأفراد لإدارة وإجراء المقاييس والاختبارات (النفسية، المهنية، وغيرها) بمرونة عالية، مع تقديم تقارير تفصيلية ورسومات بيانية تحليلية دقيقة للمستخدمين.
-
-## ✨ المميزات الرئيسية
-### 👨‍💼 لوحة تحكم الإدارة (Admin Dashboard)
-- **إدارة ديناميكية للمقاييس:** إضافة، تعديل، وحذف المقاييس بكل سهولة (اسم، وصف، صورة، مدة زمنية، سعر).
-- **بناء المقاييس بمرونة:** تقسيم المقياس إلى عدة أبعاد (Dimensions) وإضافة أسئلة لكل بعد مع تحديد خيارات الإجابات وأوزانها.
-- **التفسير الذكي للنتائج:** إضافة تفسيرات مخصصة لكل بعد بناءً على المستوى (مرتفع، متوسط، منخفض) وتحديد نقاط القوة وجوانب التطوير.
-- **نظام الكوبونات والتخفيضات:** إنشاء كوبونات خصم أو وصول مجاني للمقاييس وتحديد عدد الاستخدامات المسموحة وتواريخ الانتهاء.
-- **إحصائيات متقدمة:** واجهة رسومية توضح المبيعات، أعداد المستخدمين، المقاييس الأكثر استخداماً، وتحليلات تفصيلية للأداء.
-
-### 👤 بوابة المستخدم (User Portal)
-- **تصميم عصري (UI/UX):** واجهة مستخدم احترافية وسريعة الاستجابة على جميع الأجهزة (Mobile Friendly).
-- **التخزين المؤقت الذكي (Smart Caching):** أداء فائق السرعة عبر نظام Caching يعتمد على التحديث اللحظي للبيانات.
-- **إجراء المقاييس والتوقف المؤقت:** إمكانية بدء المقياس، التوقف في أي وقت، واستئناف الحل لاحقاً دون فقدان البيانات.
-- **نظام الدفع والكوبونات:** شاشة منبثقة (Modal) احترافية تتيح للمستخدم إدخال كوبون مجاني أو التوجه للدفع الإلكتروني للحصول على المقياس.
-- **تقارير نتائج احترافية:**
-  - عرض النتيجة النهائية كنسبة مئوية مع تقييم المستوى.
-  - رسم بياني شبكي (Radar Chart) ديناميكي يوضح درجات جميع الأبعاد بحلقات متدرجة.
-  - تحليل مفصل لنقاط القوة والضعف (Areas of Improvement) بناءً على درجات المستخدم.
-
-## 🛠️ التقنيات المستخدمة
-- **الواجهة الخلفية (Backend):** PHP 8.x, Laravel 11.x
-- **قواعد البيانات:** MySQL
-- **الواجهة الأمامية (Frontend):** Blade Templates, HTML5, CSS3, Vanilla JavaScript, Bootstrap 5
-- **الرسوم البيانية (Charts):** Chart.js
-- **الأيقونات (Icons):** Bootstrap Icons
-- **معايير الكود:** PSR-12, Laravel Pint (لضمان نظافة الكود Clean Code)
-
-## 🚀 التثبيت والتشغيل
-اتبع الخطوات التالية لتشغيل المشروع على بيئتك المحلية:
-
-1. **استنساخ المستودع (Clone):**
-   ```bash
-   git clone https://github.com/Ahmedsayed732004444/Examinations-Department.git
-   cd Examinations-Department
-   ```
-
-2. **تثبيت الحزم (Dependencies):**
-   ```bash
-   composer install
-   npm install
-   npm run build
-   ```
-
-3. **إعداد البيئة:**
-   قم بنسخ ملف `.env.example` إلى `.env` وقم بإعداد اتصال قاعدة البيانات الخاصة بك.
-   ```bash
-   cp .env.example .env
-   php artisan key:generate
-   ```
-
-4. **تجهيز قاعدة البيانات (Migrations & Seeding):**
-   ```bash
-   php artisan migrate --seed
-   ```
-   *(ملاحظة: يقوم الـ Seeder بإضافة بيانات تجريبية وحسابات مدير لتتمكن من تجربة النظام فوراً)*
-
-5. **ربط مجلد الصور:**
-   ```bash
-   php artisan storage:link
-   ```
-
-6. **تشغيل الخادم المحلي:**
-   ```bash
-   php artisan serve
-   ```
-   يمكنك الآن زيارة الموقع عبر الرابط `http://localhost:8000`
-
-## 🔒 الصلاحيات والوصول
-- للوصول إلى لوحة الإدارة، يتم استخدام مسارات `admin/` المحمية بـ `AdminMiddleware`.
-- بوابة المستخدمين تعمل عبر المسارات الأساسية محمية بـ `UserMiddleware`.
-
-<hr />
-
-<div align="center">
-  <sub>تم تطوير هذا النظام باحترافية عالية لتقديم تجربة تقييم مميزة وسلسة.</sub>
-</div>
-````
-
-## File: resources/views/admin/assessments/index.blade.php
-````php
-@extends('layouts.admin')
-@section('title', 'إدارة المقاييس')
-@section('page-title', 'إدارة المقاييس')
-
-@section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="text-muted small">إجمالي: {{ $assessments->total() }} مقياس</div>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assessmentModal">
-        <i class="bi bi-plus-circle me-1"></i>إضافة مقياس جديد
-    </button>
-</div>
-
-<!-- Filter Section -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body py-3">
-        <form method="GET" action="{{ route('admin.assessments.index') }}" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label small fw-semibold text-muted">البحث</label>
-                <input type="text" name="search" class="form-control form-control-sm" placeholder="ابحث باسم المقياس..." value="{{ request('search') }}">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label small fw-semibold text-muted">تصفية حسب المحور</label>
-                <select name="category" class="form-select form-select-sm">
-                    <option value="">جميع المحاور</option>
-                    <option value="مقاييس التوجيه والتوافق المهني" {{ request('category') == 'مقاييس التوجيه والتوافق المهني' ? 'selected' : '' }}>مقاييس التوجيه والتوافق المهني</option>
-                    <option value="الذات والشحصيه" {{ request('category') == 'الذات والشحصيه' ? 'selected' : '' }}>الذات والشخصية</option>
-                    <option value="الكفاءة الشخصية والنجاح المهني" {{ request('category') == 'الكفاءة الشخصية والنجاح المهني' ? 'selected' : '' }}>الكفاءة الشخصية والنجاح المهني</option>
-                    <option value="مقاييس الاتصال والعلاقات المهنية" {{ request('category') == 'مقاييس الاتصال والعلاقات المهنية' ? 'selected' : '' }}>مقاييس الاتصال والعلاقات المهنية</option>
-                    <option value="مقاييس الصحةاملهنية" {{ request('category') == 'مقاييس الصحةاملهنية' ? 'selected' : '' }}>مقاييس الصحة المهنية</option>
-                    <option value="مقاييس القيادة والإدارة" {{ request('category') == 'مقاييس القيادة والإدارة' ? 'selected' : '' }}>مقاييس القيادة والإدارة</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary btn-sm px-4">تصفية</button>
-                @if(request('search') || request('category'))
-                    <a href="{{ route('admin.assessments.index') }}" class="btn btn-outline-secondary btn-sm ms-2">إلغاء</a>
-                @endif
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>اسم المقياس</th>
-                    <th>المحور</th>
-                    <th>الأبعاد</th>
-                    <th>الأسئلة</th>
-                    <th>الوقت</th>
-                    <th>الحالة</th>
-                    <th>الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody id="assessments-tbody">
-                @forelse($assessments as $a)
-                <tr data-id="{{ $a->id }}">
-                    <td class="fw-medium">{{ $a->title_ar }}</td>
-                    <td class="text-muted small">{{ $a->category }}</td>
-                    <td>{{ $a->dimensions_count }}</td>
-                    <td>{{ $a->questions_count }}</td>
-                    <td>{{ $a->time_limit_min ? $a->time_limit_min.' د' : 'بلا حد' }}</td>
-                    <td>
-                        @if($a->is_active)
-                            <span class="badge bg-success-subtle text-success border border-success-subtle">مفعّل</span>
-                        @else
-                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">موقوف</span>
-                        @endif
-                    </td>
-                    <td>
-                        <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-outline-secondary btn-toggle"
-                                    data-id="{{ $a->id }}"
-                                    data-url="{{ route('admin.assessments.toggle', $a->id) }}"
-                                    title="{{ $a->is_active ? 'إيقاف' : 'تفعيل' }}">
-                                <i class="bi {{ $a->is_active ? 'bi-pause-circle' : 'bi-play-circle' }}"></i>
-                            </button>
-                            <a href="{{ route('admin.assessments.show', $a->id) }}"
-                                class="btn btn-sm btn-outline-primary" title="عرض وتعديل المقياس">
-                                <i class="bi bi-list-ul"></i>
-                            </a>
-                            <button class="btn btn-sm btn-outline-danger btn-delete"
-                                    data-id="{{ $a->id }}"
-                                    data-url="{{ route('admin.assessments.destroy', $a->id) }}"
-                                    data-name="{{ $a->title_ar }}">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr><td colspan="7" class="text-center text-muted py-4">لا توجد مقاييس بعد.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-    <div class="card-footer bg-transparent border-0">
-        {{ $assessments->links() }}
-    </div>
-</div>
-
-<!-- Assessment Modal -->
-<div class="modal fade" id="assessmentModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-semibold">إضافة مقياس جديد</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="assessment-form-errors" class="alert alert-danger d-none"></div>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-medium">اسم المقياس *</label>
-                        <input type="text" class="form-control" id="f-title_ar" placeholder="مثال: مقياس معرفة الذات">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-medium">العنوان الجذاب (وصف قصير)</label>
-                        <input type="text" class="form-control" id="f-subtitle_ar" placeholder="مثال: افهم ذاتك بعمق واكتشف نقاط قوتك">
-                    </div>
-                    <div class="col-md-12">
-                        <label class="form-label small fw-medium">المحور / الفئة *</label>
-                        <input type="text" class="form-control" id="f-category"
-                               list="category-datalist"
-                               placeholder="اختر من القائمة أو اكتب مجالاً جديداً">
-                        <datalist id="category-datalist">
-                            <option value="مقاييس معرفة الذات والشخصية">
-                            <option value="مقاييس الكفاءة الشخصية والنجاح المهني">
-                            <option value="مقاييس الاتصال والعلاقات المهنية">
-                            <option value="مقاييس القيادة والإدارة">
-                            <option value="مقاييس التوجيه والتوافق المهني">
-                            <option value="مقاييس الصحة المهنية">
-                        </datalist>
-                        <div class="d-flex flex-wrap gap-1 mt-2">
-                            @foreach([
-                                'مقاييس معرفة الذات والشخصية',
-                                'مقاييس الكفاءة الشخصية والنجاح المهني',
-                                'مقاييس الاتصال والعلاقات المهنية',
-                                'مقاييس القيادة والإدارة',
-                                'مقاييس التوجيه والتوافق المهني',
-                                'مقاييس الصحة المهنية',
-                            ] as $cat)
-                            <span class="badge bg-light text-muted border small py-1 px-2"
-                                  style="cursor:pointer"
-                                  onclick="document.getElementById('f-category').value='{{ $cat }}'">
-                                {{ $cat }}
-                            </span>
-                            @endforeach
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small fw-medium">الوصف</label>
-                        <textarea class="form-control" id="f-description_ar" rows="2"></textarea>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small fw-medium">صورة المقياس</label>
-                        <input type="file" class="form-control" id="f-image" accept="image/*">
-                        <div class="form-text" style="font-size:0.65rem;">اختياري: سيتم عرض صورة افتراضية إن لم تقم برفع صورة.</div>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small fw-medium">وقت الاختبار (دقائق)</label>
-                        <input type="number" class="form-control" id="f-time_limit_min" placeholder="بلا حد" min="1">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-medium">سعر المقياس (ر.س)</label>
-                        <input type="number" class="form-control" id="f-price" placeholder="مثال: 149" step="0.01" min="0">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-medium">التقييم الابتدائي (1-5)</label>
-                        <input type="number" class="form-control" id="f-rating" placeholder="مثال: 4.8" step="0.1" min="1" max="5">
-                    </div>
-                    <div class="col-12"><hr class="my-2"></div>
-                    <div class="col-12 text-primary fw-bold mb-0">بيانات التقرير المتقدمة (اختياري)</div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-medium">الشهادات الاحترافية المناسبة</label>
-                        <textarea class="form-control" id="f-certificates_ar" rows="2" placeholder="شهادة 1، شهادة 2..."></textarea>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-medium">البرامج التدريبية المقترحة</label>
-                        <textarea class="form-control" id="f-programs_ar" rows="2" placeholder="دورة 1، دورة 2..."></textarea>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-medium">خطة تطوير (30 يوماً)</label>
-                        <textarea class="form-control" id="f-plan_30_days_ar" rows="2" placeholder="الأسبوع 1: ..."></textarea>
-                    </div>
-                </div>
-
-                <hr>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-semibold mb-0">الأبعاد الفرعية</h6>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="btn-add-dimension">
-                        <i class="bi bi-plus-circle me-1"></i>إضافة بُعد
-                    </button>
-                </div>
-                <div id="dimensions-container"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-primary" id="btn-save-assessment">
-                    <span class="btn-text"><i class="bi bi-save me-1"></i>حفظ المقياس</span>
-                    <span class="spinner-border spinner-border-sm d-none"></span>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
-
-@push('scripts')
-<script>
-let dimIndex = 0;
-
-function addDimensionRow(name='', max='') {
-    const idx = dimIndex++;
-    $('#dimensions-container').append(`
-        <div class="row g-2 mb-2 dim-row" data-index="${idx}">
-            <div class="col-7">
-                <input type="text" class="form-control form-control-sm" placeholder="اسم البُعد مثلاً: الوعي بالذات"
-                    name="dim_name_${idx}" value="${name}">
-            </div>
-            <div class="col-3">
-                <input type="number" class="form-control form-control-sm" placeholder="الدرجة القصوى"
-                    name="dim_max_${idx}" value="${max}" min="1">
-            </div>
-            <div class="col-2">
-                <button type="button" class="btn btn-sm btn-outline-danger w-100 btn-remove-dim">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        </div>
-    `);
-}
-
-// Init with one empty row
-addDimensionRow();
-
-$('#btn-add-dimension').on('click', () => addDimensionRow());
-
-$(document).on('click', '.btn-remove-dim', function() {
-    $(this).closest('.dim-row').remove();
-});
-
-$('#btn-save-assessment').on('click', function() {
-    const btn = $(this);
-    const dims = [];
-    let valid = true;
-
-    $('.dim-row').each(function() {
-        const idx = $(this).data('index');
-        const name = $(this).find(`[name=dim_name_${idx}]`).val().trim();
-        const max  = parseInt($(this).find(`[name=dim_max_${idx}]`).val());
-        if (name && max > 0) {
-            dims.push({ name_ar: name, max_score: max });
-        } else if (name || !isNaN(max)) {
-            valid = false;
-        }
-    });
-
-    if (!valid) {
-        showAlert('تأكد من ملء جميع بيانات الأبعاد بشكل صحيح.', 'warning');
-        return;
-    }
-
-    if (!$('#f-title_ar').val().trim() || !$('#f-category').val().trim()) {
-        showAlert('اسم المقياس والمحور مطلوبان.', 'warning');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('title_ar', $('#f-title_ar').val().trim());
-    formData.append('subtitle_ar', $('#f-subtitle_ar').val().trim());
-    formData.append('category', $('#f-category').val().trim());
-    
-    if ($('#f-description_ar').val().trim()) formData.append('description_ar', $('#f-description_ar').val().trim());
-    if ($('#f-time_limit_min').val()) formData.append('time_limit_min', $('#f-time_limit_min').val());
-    if ($('#f-price').val()) formData.append('price', $('#f-price').val());
-    if ($('#f-rating').val()) formData.append('rating', $('#f-rating').val());
-    if ($('#f-certificates_ar').val().trim()) formData.append('certificates_ar', $('#f-certificates_ar').val().trim());
-    if ($('#f-programs_ar').val().trim()) formData.append('programs_ar', $('#f-programs_ar').val().trim());
-    if ($('#f-plan_30_days_ar').val().trim()) formData.append('plan_30_days_ar', $('#f-plan_30_days_ar').val().trim());
-    
-    if ($('#f-image')[0].files.length > 0) {
-        formData.append('image', $('#f-image')[0].files[0]);
-    }
-
-    dims.forEach((d, i) => {
-        formData.append(`dimensions[${i}][name_ar]`, d.name_ar);
-        formData.append(`dimensions[${i}][max_score]`, d.max_score);
-    });
-
-    setLoading(btn, true);
-    $.ajax({
-        url: '{{ route('admin.assessments.store') }}',
-        method: 'POST',
-        processData: false,
-        contentType: false,
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        data: formData,
-        success: function(res) {
-            setLoading(btn, false);
-            bootstrap.Modal.getInstance($('#assessmentModal')).hide();
-            showAlert(res.message, 'success');
-            setTimeout(() => location.reload(), 1200);
-        },
-        error: function(xhr) {
-            setLoading(btn, false);
-            const msg = xhr.responseJSON?.message || 'حدث خطأ، حاول مرة أخرى.';
-            showAlert(msg, 'danger');
-        }
-    });
-});
-
-// Toggle active
-$(document).on('click', '.btn-toggle', function() {
-    const btn = $(this);
-    const url = btn.data('url');
-    $.ajax({
-        url: url, method: 'POST',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        success: function(res) {
-            showAlert(res.message, 'success');
-            setTimeout(() => location.reload(), 800);
-        }
-    });
-});
-
-// Delete
-$(document).on('click', '.btn-delete', function() {
-    const url  = $(this).data('url');
-    const name = $(this).data('name');
-    confirmDelete(`هل تريد حذف مقياس "${name}"؟ سيتم حذف كل الأسئلة والجلسات المرتبطة به.`, url, () => {
-        location.reload();
-    });
-});
-</script>
-@endpush
-````
-
-## File: resources/views/admin/coupons/index.blade.php
-````php
-@extends('layouts.admin')
-@section('title', 'الكوبونات')
-@section('page-title', 'إدارة الكوبونات')
-
-@section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold text-dark mb-0"><i class="bi bi-ticket-perforated me-2 text-primary"></i>الكوبونات</h2>
-    <a href="{{ route('admin.coupons.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i> إضافة كوبون
-    </a>
-</div>
-
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-@endif
-
-<div class="card shadow-sm border-0">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>اسم الكوبون</th>
-                        <th>رمز الكوبون</th>
-                        <th>الخصم المتدرج</th>
-                        <th class="text-center">الحد الأقصى</th>
-                        <th>النطاق</th>
-                        <th>الصلاحية</th>
-                        <th class="text-center">الحالة</th>
-                        <th class="text-center">الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($coupons as $coupon)
-                    <tr>
-                        <td class="fw-bold">{{ $coupon->title }}</td>
-                        <td>
-                            <code class="bg-light border rounded px-2 py-1 text-dark small">{{ $coupon->code ?? '—' }}</code>
-                        </td>
-                        <td>
-                            <div class="d-flex gap-1 flex-wrap">
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">{{ $coupon->discount_percentage }}%</span>
-                                @if($coupon->discount_percentage_2nd !== null)
-                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">{{ $coupon->discount_percentage_2nd }}%</span>
-                                @endif
-                                @if($coupon->discount_percentage_3rd !== null)
-                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill">{{ $coupon->discount_percentage_3rd }}%</span>
-                                @endif
-                            </div>
-                        </td>
-                        <td class="text-center">
-                            @if($coupon->assessments_limit !== null)
-                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2">{{ $coupon->assessments_limit }}</span>
-                            @else
-                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2" title="غير محدود"><i class="bi bi-infinity"></i> غير محدود</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($coupon->applies_to_all_assessments)
-                                <span class="text-muted small"><i class="bi bi-globe2 me-1"></i>جميع المقاييس</span>
-                            @else
-                                <span class="text-muted small"><i class="bi bi-funnel me-1"></i>مقاييس محددة ({{ $coupon->assessments()->count() }})</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($coupon->expires_at)
-                                <span class="{{ $coupon->expires_at->isPast() ? 'text-danger' : 'text-success' }} small">
-                                    <i class="bi bi-calendar3 me-1"></i>{{ $coupon->expires_at->format('Y-m-d') }}
-                                </span>
-                            @else
-                                <span class="text-muted small"><i class="bi bi-infinity me-1"></i>مفتوح</span>
-                            @endif
-                        </td>
-                        <td class="text-center">
-                            @if($coupon->is_active && (!$coupon->expires_at || !$coupon->expires_at->isPast()))
-                                <span class="badge bg-success rounded-pill">نشط</span>
-                            @elseif($coupon->expires_at && $coupon->expires_at->isPast())
-                                <span class="badge bg-secondary rounded-pill">منتهي الصلاحية</span>
-                            @else
-                                <span class="badge bg-danger rounded-pill">متوقف</span>
-                            @endif
-                        </td>
-                        <td class="text-center">
-                            <a href="{{ route('admin.coupons.edit', $coupon) }}" class="btn btn-sm btn-outline-primary me-1" title="تعديل">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <form action="{{ route('admin.coupons.destroy', $coupon) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا الكوبون؟');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف"><i class="bi bi-trash"></i></button>
-                            </form>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-5">
-                            <i class="bi bi-ticket display-4 d-block mb-3 text-secondary"></i>
-                            لا توجد كوبونات مضافة بعد.
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        @if($coupons->hasPages())
-            <div class="p-3 border-top">
-                {{ $coupons->links() }}
-            </div>
-        @endif
-    </div>
-</div>
-@endsection
-````
-
-## File: resources/views/admin/settings/index.blade.php
-````php
-@extends('layouts.admin')
-@section('title', 'إعدادات الإحصائيات')
-
-@section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="h3 text-gray-800 fw-bold">إعدادات الإحصائيات</h2>
-</div>
-
-<div class="card shadow border-0 rounded-4 mb-4">
-    <div class="card-body p-4">
-        <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
-
-            <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-graph-up me-2"></i> إحصائيات لوحة تحكم المستخدم</h5>
-            
-            <div class="mb-4 bg-light p-3 rounded border">
-                <label class="form-label fw-bold mb-3">طريقة عرض الإحصائيات (في الرئيسية)</label>
-                <div class="d-flex gap-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="stats_mode" id="modeManual" value="manual" {{ ($settings['stats_mode'] ?? 'manual') == 'manual' ? 'checked' : '' }}>
-                        <label class="form-check-label fw-medium" for="modeManual">
-                            أرقام يدوية (تسويقية)
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="stats_mode" id="modeAuto" value="auto" {{ ($settings['stats_mode'] ?? 'manual') == 'auto' ? 'checked' : '' }}>
-                        <label class="form-check-label fw-medium text-primary" for="modeAuto">
-                            أرقام تلقائية (حقيقية من قاعدة البيانات)
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">مستخدم من الأفراد والجهات</label>
-                    <input type="text" name="stat_users" class="form-control mb-2" value="{{ old('stat_users', $settings['stat_users'] ?? '25,000+') }}" required>
-                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
-                    @if(isset($settings['stat_users_icon']) && $settings['stat_users_icon'])
-                        <img src="{{ asset($settings['stat_users_icon']) }}" class="mb-1 d-block" height="30">
-                    @endif
-                    <input type="file" name="stat_users_icon" class="form-control form-control-sm" accept="image/*">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">اختبار ومقياس تم إنجازه</label>
-                    <input type="text" name="stat_exams" class="form-control mb-2" value="{{ old('stat_exams', $settings['stat_exams'] ?? '10,000+') }}" required>
-                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
-                    @if(isset($settings['stat_exams_icon']) && $settings['stat_exams_icon'])
-                        <img src="{{ asset($settings['stat_exams_icon']) }}" class="mb-1 d-block" height="30">
-                    @endif
-                    <input type="file" name="stat_exams_icon" class="form-control form-control-sm" accept="image/*">
-                </div>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">مقياس مهني وشخصي معتمد</label>
-                    <input type="text" name="stat_assessments" class="form-control mb-2" value="{{ old('stat_assessments', $settings['stat_assessments'] ?? '150+') }}" required>
-                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
-                    @if(isset($settings['stat_assessments_icon']) && $settings['stat_assessments_icon'])
-                        <img src="{{ asset($settings['stat_assessments_icon']) }}" class="mb-1 d-block" height="30">
-                    @endif
-                    <input type="file" name="stat_assessments_icon" class="form-control form-control-sm" accept="image/*">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">مجال ومهارة مختلفة</label>
-                    <input type="text" name="stat_fields" class="form-control mb-2" value="{{ old('stat_fields', $settings['stat_fields'] ?? '50+') }}" required>
-                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
-                    @if(isset($settings['stat_fields_icon']) && $settings['stat_fields_icon'])
-                        <img src="{{ asset($settings['stat_fields_icon']) }}" class="mb-1 d-block" height="30">
-                    @endif
-                    <input type="file" name="stat_fields_icon" class="form-control form-control-sm" accept="image/*">
-                </div>
-            </div>
-
-            <hr class="my-4">
-
-            <div class="text-end">
-                <button type="submit" class="btn btn-primary px-4 py-2 fw-bold">
-                    <i class="bi bi-save me-1"></i> حفظ التعديلات
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-@endsection
-````
-
-## File: resources/views/auth/register.blade.php
-````php
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إنشاء حساب — دار الرؤى</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-</head>
-<body class="bg-light d-flex align-items-center min-vh-100">
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-5 col-lg-4">
-            <div class="text-center mb-4">
-                <img src="{{ asset('images/logo.png') }}" alt="دار الرؤى" style="height: 70px; margin-bottom: 10px;">
-                <p class="text-muted">نظام مقاييس التميز الشخصي</p>
-            </div>
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4">
-                    <h5 class="card-title mb-4 fw-semibold">تسجيل حساب جديد</h5>
-
-                    @if($errors->any())
-                        <div class="alert alert-danger py-2">
-                            <ul class="mb-0 small">
-                                @foreach($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('register.post') }}">
-                        @csrf
-                        <div class="mb-3">
-                            <label class="form-label small fw-medium">الاسم الكامل</label>
-                            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                                value="{{ old('name') }}" placeholder="الاسم الكامل" required autofocus>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-medium">البريد الإلكتروني</label>
-                            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                                value="{{ old('email') }}" placeholder="example@email.com" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-medium">رقم الجوال</label>
-                            <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
-                                value="{{ old('phone') }}" placeholder="05xxxxxxxx" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-medium">رقم الهوية الوطنية / الإقامة</label>
-                            <input type="text" name="national_id" class="form-control @error('national_id') is-invalid @enderror"
-                                value="{{ old('national_id') }}" placeholder="1xxxxxxxxx" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-medium">النوع</label>
-                            <select name="gender" class="form-control @error('gender') is-invalid @enderror" required>
-                                <option value="" disabled {{ old('gender') ? '' : 'selected' }}>اختر النوع</option>
-                                <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>ذكر</option>
-                                <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>أنثى</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-medium">المؤهل</label>
-                            <input type="text" name="qualification" class="form-control @error('qualification') is-invalid @enderror"
-                                value="{{ old('qualification') }}" placeholder="مثال: بكالوريوس" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-medium">الجنسية</label>
-                            <input type="text" name="nationality" class="form-control @error('nationality') is-invalid @enderror"
-                                value="{{ old('nationality') }}" placeholder="مثال: سعودي" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-medium">كلمة المرور</label>
-                            <input type="password" name="password" class="form-control" placeholder="8 أحرف على الأقل" required>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label small fw-medium">تأكيد كلمة المرور</label>
-                            <input type="password" name="password_confirmation" class="form-control" placeholder="أعد كتابة كلمة المرور" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-person-plus me-1"></i>إنشاء الحساب
-                        </button>
-                    </form>
-                    <hr>
-                    <div class="text-center small">
-                        لديك حساب بالفعل؟
-                        <a href="{{ route('login') }}" class="text-primary text-decoration-none fw-medium">سجّل دخولك</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
-````
-
-## File: resources/views/user/exam.blade.php
-````php
-@extends('layouts.user')
-@section('title', $assessment->title_ar)
-
-@push('styles')
-<style>
-/* ── Layout ── */
-.exam-wrapper {
-    max-width: 820px;
-    margin: 0 auto;
-    padding: 24px 16px 60px;
-}
-
-/* ── Intro Card ── */
-#intro-card {
-    border: 0;
-    border-radius: 24px;
-    background: #ffffff;
-    box-shadow: 0 20px 60px -10px rgba(26, 43, 86, 0.12);
-    overflow: hidden;
-}
-
-.intro-header {
-    background: linear-gradient(135deg, #1a2b56 0%, #2d4a8a 60%, #1e3a7e 100%);
-    padding: 48px 40px 56px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.intro-header::before {
-    content: '';
-    position: absolute;
-    top: -60px; right: -60px;
-    width: 200px; height: 200px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.05);
-}
-
-.intro-header::after {
-    content: '';
-    position: absolute;
-    bottom: -80px; left: -40px;
-    width: 250px; height: 250px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.04);
-}
-
-.intro-icon-wrap {
-    width: 90px; height: 90px;
-    background: rgba(255,255,255,0.15);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 20px;
-    backdrop-filter: blur(4px);
-    border: 2px solid rgba(255,255,255,0.2);
-    position: relative; z-index: 1;
-}
-
-.intro-title {
-    font-size: 1.85rem;
-    font-weight: 800;
-    color: #ffffff;
-    margin: 0;
-    line-height: 1.3;
-    position: relative; z-index: 1;
-}
-
-.intro-subtitle {
-    color: rgba(255,255,255,0.75);
-    font-size: 0.95rem;
-    margin: 10px 0 0;
-    position: relative; z-index: 1;
-}
-
-.intro-body {
-    padding: 40px;
-}
-
-/* Chips in header */
-.intro-chips {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 14px;
-    position: relative;
-    z-index: 1;
-}
-
-.intro-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 999px;
-    padding: 5px 12px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: rgba(255,255,255,0.92);
-    backdrop-filter: blur(4px);
-    white-space: nowrap;
-}
-
-.intro-chip i { font-size: 0.8rem; }
-
-/* Guidelines box */
-.intro-guidelines {
-    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
-    border: 1px solid #bfdbfe;
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 32px;
-}
-
-.intro-guidelines-title {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #1a2b56;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.guideline-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 12px;
-    font-size: 0.9rem;
-    color: #334155;
-    line-height: 1.6;
-}
-
-.guideline-item:last-child { margin-bottom: 0; }
-
-.guideline-dot {
-    width: 28px; height: 28px;
-    background: #1a2b56;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 700;
-    margin-top: 1px;
-}
-
-/* Start button */
-.btn-start {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    padding: 16px 32px;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: #fff;
-    border: 0;
-    border-radius: 14px;
-    font-size: 1.1rem;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    box-shadow: 0 8px 24px -4px rgba(245, 158, 11, 0.4);
-    letter-spacing: 0.01em;
-}
-
-.btn-start:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px -4px rgba(245, 158, 11, 0.5);
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    color: #fff;
-}
-
-.btn-start:active {
-    transform: translateY(0);
-}
-
-/* ── Progress ── */
-.progress-container { width: 100%; max-width: 250px; }
-.progress-track { height: 8px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
-.progress-fill {
-    height: 100%; border-radius: 999px;
-    background: #1a2b56;
-    transition: width .4s ease;
-}
-
-/* ── Options ── */
-.option-card {
-    cursor: pointer;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    transition: all .2s ease;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    padding: 1.2rem 1.5rem;
-    margin-bottom: 1rem;
-}
-.option-card:hover { border-color: #cbd5e1; background: #f8fafc; }
-.option-card.selected { border-color: #f59e0b; background: #fffbeb; }
-.option-card input[type=radio] { display: none; }
-
-.custom-radio {
-    width: 24px; height: 24px; border-radius: 50%;
-    border: 2px solid #cbd5e1;
-    display: flex; align-items: center; justify-content: center;
-    margin-left: 15px;
-    transition: all .2s;
-    flex-shrink: 0;
-}
-.custom-radio::after {
-    content: '';
-    width: 12px; height: 12px; border-radius: 50%;
-    background: #f59e0b;
-    transform: scale(0);
-    transition: transform .2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.option-card.selected .custom-radio { border-color: #f59e0b; }
-.option-card.selected .custom-radio::after { transform: scale(1); }
-
-.option-text {
-    flex-grow: 1;
-    font-size: 1.1rem;
-    color: #334155;
-    font-weight: 500;
-}
-.option-card.selected .option-text { color: #1a2b56; font-weight: 700; }
-
-/* ── Question card ── */
-#question-card {
-    border-radius: 20px; border: 0;
-    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
-    background: #ffffff;
-    padding: 40px;
-}
-
-/* ── Buttons ── */
-#btn-next {
-    background: #f59e0b;
-    color: #fff;
-    border: 0; border-radius: 8px; padding: .6rem 2.5rem;
-    font-weight: 700; font-size: 1rem;
-    transition: all .2s;
-}
-#btn-next:not(:disabled):hover { background: #d97706; transform: translateY(-1px); }
-#btn-next:disabled { opacity: .5; cursor: not-allowed; }
-
-.btn-prev {
-    color: #1a2b56; font-weight: 700; text-decoration: none;
-    display: inline-flex; align-items: center; gap: 0.5rem;
-    cursor: pointer;
-    background: transparent;
-    border: none;
-    padding: 0;
-}
-.btn-prev:hover { color: #0d6efd; }
-.btn-prev:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.timer-footer { font-size: 0.85rem; color: #64748b; }
-
-/* ── Responsive ── */
-@media (max-width: 768px) {
-    .intro-header { padding: 32px 20px 40px; }
-    .intro-body { padding: 24px 20px; }
-    .intro-title { font-size: 1.45rem; }
-    .intro-icon-wrap { width: 70px; height: 70px; }
-}
-
-@media (max-width: 576px) {
-    .exam-wrapper { padding: 0 0 24px; }
-    #intro-card { border-radius: 0 0 20px 20px; }
-    .intro-header { padding: 24px 16px 32px; }
-    .intro-body { padding: 18px 16px 24px; }
-    .intro-title { font-size: 1.2rem; }
-    .intro-icon-wrap { width: 56px; height: 56px; margin-bottom: 12px; }
-    .intro-chip { font-size: 0.72rem; padding: 4px 10px; }
-    .intro-guidelines { padding: 14px; }
-    .guideline-item { font-size: 0.85rem; }
-    .guideline-dot { width: 24px; height: 24px; font-size: 0.7rem; }
-    .btn-start { font-size: 0.95rem; padding: 14px 20px; }
-    #question-card { padding: 16px 12px; border-radius: 0; }
-    .header-desktop { display: none !important; }
-    .header-mobile { display: flex !important; }
-    .option-card { padding: 0.75rem 1rem; margin-bottom: 0.5rem; }
-    .option-text { font-size: 0.9rem; }
-    #question-text { font-size: 1.1rem; }
-    .alert { padding: 0.5rem 0.8rem; font-size: 0.82rem; }
-}
-</style>
-@endpush
-
-@section('content')
-<div class="exam-wrapper">
-
-    @if($progress['current'] == 1)
-    <div id="intro-card">
-
-        {{-- Coloured Header --}}
-        <div class="intro-header">
-            <div class="intro-icon-wrap">
-                <i class="bi bi-journal-text" style="font-size: 2rem; color: #fff;"></i>
-            </div>
-            <h1 class="intro-title">{{ $assessment->title_ar }}</h1>
-            @if($assessment->subtitle_ar)
-                <p class="intro-subtitle">{{ $assessment->subtitle_ar }}</p>
-            @endif
-
-            {{-- Small chips: questions count + time --}}
-            <div class="intro-chips">
-                <span class="intro-chip">
-                    <i class="bi bi-list-check"></i>
-                    {{ $progress['total'] }} سؤال
-                </span>
-                @if($assessment->time_limit_min)
-                <span class="intro-chip">
-                    <i class="bi bi-clock"></i>
-                    {{ $assessment->time_limit_min }} دقيقة
-                </span>
-                @endif
-                @if($assessment->category)
-                <span class="intro-chip">
-                    <i class="bi bi-tag"></i>
-                    {{ $assessment->category }}
-                </span>
-                @endif
-            </div>
-        </div>
-
-        {{-- Body --}}
-        <div class="intro-body">
-
-            {{-- Guidelines --}}
-            <div class="intro-guidelines">
-                <div class="intro-guidelines-title">
-                    <i class="bi bi-shield-check text-primary"></i>
-                    توجيهات هامة قبل البدء
-                </div>
-                <div class="guideline-item">
-                    <div class="guideline-dot">١</div>
-                    <span>كن صادقًا مع نفسك في إجاباتك؛ فكلما كانت إجاباتك أكثر دقة وواقعية، كانت نتائج المقياس أكثر فائدة لك.</span>
-                </div>
-                <div class="guideline-item">
-                    <div class="guideline-dot">٢</div>
-                    <span>لا توجد إجابات صحيحة أو خاطئة؛ صدقك مع نفسك هو مفتاح الحصول على نتائج تعكس واقعك وتفيدك حقًا.</span>
-                </div>
-                <div class="guideline-item">
-                    <div class="guideline-dot">٣</div>
-                    <span>اقرأ كل عبارة بعناية، ثم اختر الإجابة التي تعبر عنك فعلاً دون تفكير مبالغ فيه.</span>
-                </div>
-            </div>
-
-            {{-- Start Button --}}
-            <button type="button" class="btn-start" id="btn-start-exam">
-                <span>فهمت ذلك، ابدأ المقياس</span>
-                <i class="bi bi-arrow-left"></i>
-            </button>
-
-        </div>
-    </div>
-    @endif
-
-    <div class="card" id="question-card" style="{{ $progress['current'] == 1 ? 'display: none;' : '' }}">
-        {{-- Header Desktop --}}
-        <div class="d-none d-sm-flex justify-content-between align-items-start mb-5 header-desktop">
-            <div class="progress-container mt-2">
-                <div class="d-flex justify-content-between small text-muted mb-2">
-                    <span id="q-pct" class="fw-bold text-dark">{{ $progress['percentage'] }}%</span>
-                    <span>السؤال <strong id="q-current">{{ $progress['current'] }}</strong> من <strong>{{ $progress['total'] }}</strong></span>
-                </div>
-                <div class="progress-track">
-                    <div class="progress-fill" id="progress-bar" style="width:{{ $progress['percentage'] }}%"></div>
-                </div>
-            </div>
-
-            <div class="text-end">
-                <h4 class="fw-bold mb-1" style="color: #1a2b56;">{{ $assessment->title_ar }}</h4>
-            </div>
-
-        </div>
-
-        {{-- Header Mobile --}}
-        <div class="d-flex d-sm-none flex-column mb-3 header-mobile">
-            <div class="text-center mb-3">
-                <h6 class="fw-bold mb-1" style="color: #1a2b56;">{{ $assessment->title_ar }}</h6>
-            </div>
-
-            <div class="progress-container w-100 mx-auto" style="max-width: 100%;">
-                <div class="d-flex justify-content-between text-muted mb-1" style="font-size: 0.8rem;">
-                    <span id="q-pct-mobile" class="fw-bold text-dark">{{ $progress['percentage'] }}%</span>
-                    <span>السؤال <strong id="q-current-mobile">{{ $progress['current'] }}</strong> من <strong>{{ $progress['total'] }}</strong></span>
-                </div>
-                <div class="progress-track">
-                    <div class="progress-fill" id="progress-bar-mobile" style="width:{{ $progress['percentage'] }}%"></div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Question Text --}}
-        <h3 class="text-center fw-bold mb-1 mt-4" id="question-text" style="color: #1a2b56;">{{ $nextQuestion->text_ar }}</h3>
-        <p class="text-center text-muted small mb-4" style="font-size: 0.8rem;">اختر الإجابة التي تعبر عن رأيك بدقة</p>
-
-        {{-- Options --}}
-        <div class="d-flex flex-column" id="options-container">
-            @foreach($nextQuestion->answerOptions as $i => $option)
-            <label class="option-card" data-option-id="{{ $option->id }}">
-                <input type="radio" name="selected_option" value="{{ $option->id }}">
-                <div class="custom-radio"></div>
-                <span class="option-text">{{ $option->label_ar }}</span>
-                @if(str_contains($option->label_ar, 'نعم') || str_contains($option->label_ar, 'أوافق'))
-                    <span class="fs-4 ms-2">👍</span>
-                @elseif(str_contains($option->label_ar, 'لا') || str_contains($option->label_ar, 'أرفض'))
-                    <span class="fs-4 ms-2">👎</span>
-                @elseif(str_contains($option->label_ar, 'حد ما') || str_contains($option->label_ar, 'محايد'))
-                    <span class="fs-4 ms-2">😐</span>
-                @endif
-            </label>
-            @endforeach
-        </div>
-
-        {{-- Error Banner --}}
-        <div id="error-banner" class="alert alert-danger py-2 mt-3 d-none text-center" role="alert">
-            <i class="bi bi-wifi-off me-1"></i>مشكلة في الاتصال.
-            <button class="btn btn-sm btn-danger ms-2" id="btn-retry">إعادة المحاولة</button>
-        </div>
-
-        {{-- Bottom Actions --}}
-        <div class="mt-4 d-flex justify-content-between align-items-center">
-            <button type="button" class="btn-prev" id="btn-prev" style="{{ $progress['current'] > 1 ? '' : 'visibility: hidden;' }}">
-                <i class="bi bi-arrow-right"></i> السابق
-            </button>
-            
-            <button type="button" class="btn ms-auto" id="btn-next" disabled>
-                <span id="btn-text">التالي <i class="bi bi-chevron-left ms-1" style="font-size: 0.8em;"></i></span>
-                <span id="btn-spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
-            </button>
-        </div>
-
-        {{-- Footer Info --}}
-        <div class="text-center mt-5 timer-footer d-flex justify-content-center align-items-center gap-2">
-            @if($assessment->time_limit_min)
-                <span><i class="bi bi-stopwatch"></i> الوقت المتبقي: <span id="timer-text">{{ sprintf('%02d:%02d', $assessment->time_limit_min, 0) }}</span></span>
-                <span class="text-muted">|</span>
-            @endif
-            <span>تبقى <span id="q-remaining">{{ $progress['total'] - $progress['current'] }}</span> سؤال</span>
-        </div>
-    </div>
-</div>
-@endsection
-
-@push('scripts')
-<script>
-const SESSION_ID  = '{{ $session->id }}';
-const ANSWER_URL  = '{{ route('exam.answer', $session->id) }}';
-const PREV_URL    = '{{ route('exam.previous', $session->id) }}';
-const CSRF        = $('meta[name="csrf-token"]').attr('content');
-const TIME_LIMIT  = {{ $assessment->time_limit_min ?? 'null' }};
-const TOTAL_Q     = {{ $progress['total'] }};
-const OPTION_LETTERS = ['أ','ب','ج','د','هـ','و','ز','ح'];
-
-let currentQuestion = {
-    id:             '{{ $nextQuestion->id }}',
-    text_ar:        {!! Js::from($nextQuestion->text_ar) !!},
-    is_reversed:    {{ $nextQuestion->is_reversed ? 'true' : 'false' }},
-    dimension_name: {!! Js::from($nextQuestion->dimension?->name_ar) !!},
-    options:        {!! json_encode($nextQuestion->answerOptions->map(fn($o) => ['id' => $o->id, 'label_ar' => $o->label_ar])) !!}
-};
-
-let selectedOptionId = null;
-let pendingAnswer    = null;
-let timerInterval    = null;
-let timeLeft         = TIME_LIMIT ? TIME_LIMIT * 60 : 0;
-const LS_KEY         = `exam_${SESSION_ID}`;
-
-/* ── Timer ── */
-let timerStarted = false;
-function startTimer() {
-    if (TIME_LIMIT && !timerStarted) {
-        timerStarted = true;
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            const m = String(Math.floor(timeLeft / 60)).padStart(2,'0');
-            const s = String(timeLeft % 60).padStart(2,'0');
-            $('#timer-text').text(`${m}:${s}`);
-            if (timeLeft <= 0) { clearInterval(timerInterval); submitCurrent(true); }
-        }, 1000);
-    }
-}
-
-if ($('#intro-card').length === 0) {
-    startTimer();
-}
-
-$('#btn-start-exam').on('click', function() {
-    $('#intro-card').fadeOut(250, function() {
-        $('#question-card').fadeIn(250);
-        startTimer();
-    });
-});
-
-/* ── Option selection ── */
-$(document).on('click', '.option-card', function () {
-    $('.option-card').removeClass('selected');
-    $('.option-card').find('input[type=radio]').prop('checked', false);
-    
-    $(this).addClass('selected');
-    $(this).find('input[type=radio]').prop('checked', true);
-    
-    selectedOptionId = $(this).data('option-id');
-    $('#btn-next').prop('disabled', false);
-});
-
-/* ── Next / Prev ── */
-$('#btn-next').on('click', function () { if (selectedOptionId) submitCurrent(false); });
-$('#btn-retry').on('click', function () {
-    if (pendingAnswer) { $('#error-banner').addClass('d-none'); doSubmit(pendingAnswer.qId, pendingAnswer.optId); }
-});
-
-$('#btn-prev').on('click', function () {
-    $(this).prop('disabled', true);
-    $.ajax({
-        url: PREV_URL, method: 'POST',
-        headers: { 'X-CSRF-TOKEN': CSRF },
-        success(res) {
-            updateProgressAndLoadQuestion(res);
-            $('#btn-prev').prop('disabled', false);
-        },
-        error() {
-            $('#btn-prev').prop('disabled', false);
-            alert('حدث خطأ أثناء العودة للسؤال السابق.');
-        }
-    });
-});
-
-function submitCurrent(isTimeout) {
-    const qId  = currentQuestion.id;
-    const optId = isTimeout ? (selectedOptionId || currentQuestion.options[0].id) : selectedOptionId;
-    pendingAnswer = { qId, optId };
-    try { const d = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); d[qId]=optId; localStorage.setItem(LS_KEY,JSON.stringify(d)); } catch(e){}
-    doSubmit(qId, optId);
-}
-
-function doSubmit(qId, optId) {
-    $('#btn-next').prop('disabled', true);
-    $('#btn-text').addClass('d-none');
-    $('#btn-spinner').removeClass('d-none');
-    $.ajax({
-        url: ANSWER_URL, method: 'POST', contentType: 'application/json',
-        headers: { 'X-CSRF-TOKEN': CSRF },
-        data: JSON.stringify({ question_id: qId, selected_option_id: optId }),
-        success(res) {
-            $('#btn-spinner').addClass('d-none'); $('#btn-text').removeClass('d-none');
-            updateProgressAndLoadQuestion(res);
-        },
-        error() {
-            $('#btn-spinner').addClass('d-none'); $('#btn-text').removeClass('d-none');
-            $('#btn-next').prop('disabled', false);
-            $('#error-banner').removeClass('d-none');
-        }
-    });
-}
-
-function updateProgressAndLoadQuestion(res) {
-    if (res.is_last) {
-        clearInterval(timerInterval);
-        localStorage.removeItem(LS_KEY);
-        window.location.href = res.redirect;
-        return;
-    }
-    // Update progress
-    const p = res.progress;
-    $('#progress-bar, #progress-bar-mobile').css('width', p.percentage + '%');
-    $('#q-current, #q-current-mobile').text(p.current);
-    $('#q-pct, #q-pct-mobile').text(p.percentage + '%');
-    $('#q-remaining').text(p.total - p.current);
-    
-    // Toggle Prev Button
-    if (p.current > 1) {
-        $('#btn-prev').css('visibility', 'visible');
-    } else {
-        $('#btn-prev').css('visibility', 'hidden');
-    }
-    
-    // Load next
-    currentQuestion = res.next_question;
-    selectedOptionId = null;
-    loadQuestion(res.next_question);
-}
-
-function loadQuestion(q) {
-    // Dimension badge (if any)
-    if (q.dimension_name) {
-        $('#dim-name').text(q.dimension_name);
-        $('#dim-badge, #dim-badge-wrapper').removeClass('d-none');
-    } else {
-        $('#dim-badge, #dim-badge-wrapper').addClass('d-none');
-    }
-    // Reversed notice
-    q.is_reversed ? $('#reversed-notice').removeClass('d-none') : $('#reversed-notice').addClass('d-none');
-    // Question text
-    $('#question-text').text(q.text_ar);
-    // Options
-    let html = '';
-    q.options.forEach((opt) => {
-        let emoji = '';
-        if(opt.label_ar.includes('نعم') || opt.label_ar.includes('أوافق')) emoji = '👍';
-        else if(opt.label_ar.includes('لا') || opt.label_ar.includes('أرفض')) emoji = '👎';
-        else if(opt.label_ar.includes('حد ما') || opt.label_ar.includes('محايد')) emoji = '😐';
-        
-        let emojiHtml = emoji ? `<span class="fs-4 ms-2">${emoji}</span>` : '';
-        
-        html += `<label class="option-card" data-option-id="${opt.id}">
-            <input type="radio" name="selected_option" value="${opt.id}">
-            <div class="custom-radio"></div>
-            <span class="option-text">${opt.label_ar}</span>
-            ${emojiHtml}
-        </label>`;
-    });
-    $('#options-container').html(html);
-    $('#btn-next').prop('disabled', true);
-    $('#error-banner').addClass('d-none');
-    pendingAnswer = null;
-    // Animate
-    $('#question-card').css('opacity', 0).animate({ opacity: 1 }, 280);
-}
-</script>
-@endpush
-````
-
-## File: resources/views/user/graded_exams/result.blade.php
-````php
-@extends('layouts.user')
-@section('title', 'نتيجة الاختبار')
-
-@section('content')
-<div class="container py-5">
-    @if($result)
-        <div class="text-center mb-5">
-            <h1 class="fw-bold text-darkblue mb-3">أداؤك حسب وحدات الاختبار</h1>
-            <p class="text-muted fs-5">ترتيب الوحدات من أعلى درجة إلى أقل درجة</p>
-        </div>
-
-        <!-- Top Summary -->
-        <div class="row justify-content-center mb-5">
-            <div class="col-md-8">
-                <div class="card shadow-sm border-0 rounded-4">
-                    <div class="card-body p-0">
-                        <div class="row g-0 text-center align-items-center">
-                            <div class="col-md-6 p-4 border-end">
-                                <h5 class="text-muted mb-2">مستوى الجاهزية:</h5>
-                                @php
-                                    $readinessColor = 'text-warning';
-                                    if ($result->percentage >= 75) $readinessColor = 'text-success';
-                                    elseif ($result->percentage < 60) $readinessColor = 'text-danger';
-                                @endphp
-                                <h2 class="fw-bold {{ $readinessColor }} mb-0">{{ $readinessLevel }}</h2>
-                            </div>
-                            <div class="col-md-6 p-4">
-                                <h5 class="text-muted mb-2">النتيجة الإجمالية</h5>
-                                <h1 class="display-3 fw-bold text-darkblue mb-0">{{ floatval($result->percentage) }}%</h1>
-                                <h5 class="mt-2 fw-bold {{ $overallPerformance['class'] }}">{{ $overallPerformance['name'] }}</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Units Table -->
-        <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden">
-            <div class="table-responsive">
-                <table class="table table-borderless table-hover mb-0 align-middle">
-                    <thead class="bg-darkblue text-white text-center">
-                        <tr>
-                            <th class="py-3 px-4 text-end" style="width: 30%">الوحدة</th>
-                            <th class="py-3" style="width: 20%">الدرجة</th>
-                            <th class="py-3" style="width: 25%">شريط التقدم</th>
-                            <th class="py-3" style="width: 10%">النسبة</th>
-                            <th class="py-3" style="width: 15%">مستوى الأداء</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-center">
-                        @foreach($unitsStats as $stat)
-                            <tr class="border-bottom">
-                                <td class="py-3 px-4 text-end fw-bold">{{ $stat['name'] }}</td>
-                                <td class="py-3">{{ floatval($stat['score']) }} من {{ $stat['total'] }}</td>
-                                <td class="py-3">
-                                    <div class="progress rounded-pill" style="height: 10px;">
-                                        <div class="progress-bar {{ $stat['bar_color'] }}" role="progressbar" style="width: {{ $stat['percentage'] }}%" aria-valuenow="{{ $stat['percentage'] }}" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                </td>
-                                <td class="py-3 fw-bold fs-5">{{ $stat['percentage'] }}%</td>
-                                <td class="py-3 fw-bold {{ $stat['level_class'] }}">{{ $stat['level_name'] }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Summary Boxes -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-6">
-                <div class="card border-danger bg-light-danger h-100 rounded-4">
-                    <div class="card-body text-center p-4 d-flex align-items-center justify-content-center gap-3">
-                        <div class="rounded-circle border border-danger border-2 text-danger d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem;">
-                            <i class="bi bi-graph-down-arrow"></i>
-                        </div>
-                        <div>
-                            <h5 class="text-danger mb-1">أولوية المراجعة:</h5>
-                            <h6 class="fw-bold mb-1">{{ $lowestUnit ? $lowestUnit['name'] : '-' }}</h6>
-                            <h3 class="fw-bold text-danger mb-0">{{ $lowestUnit ? $lowestUnit['percentage'].'%' : '-' }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6">
-                <div class="card border-success bg-light-success h-100 rounded-4">
-                    <div class="card-body text-center p-4 d-flex align-items-center justify-content-center gap-3">
-                        <div class="rounded-circle border border-success border-2 text-success d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem;">
-                            <i class="bi bi-graph-up-arrow"></i>
-                        </div>
-                        <div>
-                            <h5 class="text-success mb-1">أعلى أداء:</h5>
-                            <h6 class="fw-bold mb-1">{{ $highestUnit ? $highestUnit['name'] : '-' }}</h6>
-                            <h3 class="fw-bold text-success mb-0">{{ $highestUnit ? $highestUnit['percentage'].'%' : '-' }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Legend -->
-        <div class="card shadow-sm border-0 rounded-4 mb-5">
-            <div class="card-body p-4 d-flex flex-wrap justify-content-around align-items-center text-center gap-3">
-                <div>
-                    <div class="d-flex align-items-center gap-2 mb-1 justify-content-center">
-                        <span class="badge bg-success rounded-circle p-2"></span>
-                        <span class="fw-bold text-success">80% فأكثر:</span>
-                    </div>
-                    <small class="text-muted fw-bold">متميز / جيد جداً</small>
-                </div>
-                <div>
-                    <div class="d-flex align-items-center gap-2 mb-1 justify-content-center">
-                        <span class="badge bg-warning rounded-circle p-2"></span>
-                        <span class="fw-bold text-warning">70%-79%:</span>
-                    </div>
-                    <small class="text-muted fw-bold">جيد</small>
-                </div>
-                <div>
-                    <div class="d-flex align-items-center gap-2 mb-1 justify-content-center">
-                        <span class="badge rounded-circle p-2" style="background-color: #fd7e14;"></span>
-                        <span class="fw-bold" style="color: #fd7e14;">60%-69%:</span>
-                    </div>
-                    <small class="text-muted fw-bold">مراجعة</small>
-                </div>
-                <div>
-                    <div class="d-flex align-items-center gap-2 mb-1 justify-content-center">
-                        <span class="badge bg-danger rounded-circle p-2"></span>
-                        <span class="fw-bold text-danger">أقل من 60%:</span>
-                    </div>
-                    <small class="text-muted fw-bold">تطوير</small>
-                </div>
-            </div>
-        </div>
-
-        <!-- Review Answers Button -->
-        <div class="text-center mb-4">
-            <button class="btn btn-outline-darkblue btn-lg px-5 rounded-pill shadow-sm" type="button" data-bs-toggle="collapse" data-bs-toggle="collapse" data-bs-target="#reviewAnswers" aria-expanded="false" aria-controls="reviewAnswers">
-                <i class="bi bi-journal-text me-2"></i> مراجعة الإجابات التفصيلية
-            </button>
-        </div>
-
-        <!-- Review Answers Section -->
-        <div class="collapse" id="reviewAnswers">
-            <div class="card shadow-sm border-0 rounded-4 mb-5">
-                <div class="card-body p-0">
-                    <div class="accordion accordion-flush" id="answersAccordion">
-                        @foreach($reviewData as $review)
-                            <div class="accordion-item">
-                                <h2 class="accordion-header" id="heading{{ $review['index'] }}">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $review['index'] }}" aria-expanded="false" aria-controls="collapse{{ $review['index'] }}">
-                                        <div class="d-flex w-100 justify-content-between align-items-center pe-3">
-                                            <div class="fw-bold">
-                                                <span class="badge bg-secondary me-2">{{ $review['index'] }}</span>
-                                                {{ $review['text'] }}
-                                                @if($review['unit_name'])
-                                                    <span class="badge bg-light text-secondary border ms-2 fw-normal" style="font-size: 0.8rem;"><i class="bi bi-book me-1"></i> {{ $review['unit_name'] }}</span>
-                                                @endif
-                                            </div>
-                                            <div>
-                                                @if($review['points'] == 1)
-                                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> صحيح</span>
-                                                @elseif($review['points'] > 0)
-                                                    <span class="badge bg-warning"><i class="bi bi-dash-circle me-1"></i> صحيح جزئياً ({{ floatval($review['points']) }})</span>
-                                                @else
-                                                    <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> خاطئ</span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </button>
-                                </h2>
-                                <div id="collapse{{ $review['index'] }}" class="accordion-collapse collapse" aria-labelledby="heading{{ $review['index'] }}" data-bs-parent="#answersAccordion">
-                                    <div class="accordion-body bg-light">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <h6 class="fw-bold text-muted">إجابتك:</h6>
-                                                <ul class="list-unstyled mb-0">
-                                                    @forelse($review['options'] as $option)
-                                                        @if(in_array($option->id, $review['selected_ids']))
-                                                            <li class="mb-1"><i class="bi bi-check2-square text-primary me-2"></i> {{ $option->option_text_ar }}</li>
-                                                        @endif
-                                                    @empty
-                                                        <li class="text-muted">لم تقم باختيار إجابة</li>
-                                                    @endforelse
-                                                    @if(empty($review['selected_ids']))
-                                                        <li class="text-muted">لم تقم باختيار إجابة</li>
-                                                    @endif
-                                                </ul>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <h6 class="fw-bold text-muted">الإجابة الصحيحة:</h6>
-                                                <p class="mb-0 text-success fw-bold"><i class="bi bi-check-circle-fill me-2"></i> {{ $review['correct_options_text'] }}</p>
-                                            </div>
-                                        </div>
-                                        <hr>
-                                        <div>
-                                            <h6 class="fw-bold text-muted"><i class="bi bi-info-circle me-2"></i> التفسير:</h6>
-                                            <p class="mb-0">{{ $review['explanation'] }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    @else
-        <div class="text-center">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">جاري التحميل...</span>
-            </div>
-            <p class="text-muted mt-3">جاري حساب النتيجة...</p>
-        </div>
-    @endif
-
-    <div class="text-center mt-5">
-        <a href="{{ route('user.graded_exams.index') }}" class="btn btn-secondary px-4 rounded-pill">
-            العودة للقائمة
-        </a>
-    </div>
-</div>
-
-<style>
-    .bg-darkblue { background-color: #1e3a8a; }
-    .text-darkblue { color: #1e3a8a; }
-    .btn-outline-darkblue {
-        color: #1e3a8a;
-        border-color: #1e3a8a;
-    }
-    .btn-outline-darkblue:hover {
-        background-color: #1e3a8a;
-        color: white;
-    }
-    .bg-light-danger { background-color: #f8d7da; }
-    .bg-light-success { background-color: #d1e7dd; }
-</style>
-@endsection
-````
-
-## File: start-container.sh
-````bash
-#!/bin/bash
-
-set -e
-
-if [ "$IS_LARAVEL" = "true" ]; then
-  # Clear any cached configurations, routes, and views created during build-time
-  # so that migrations and runtime queries read the correct environment variables.
-  # We avoid 'optimize:clear' because it triggers 'cache:clear', which fails if the
-  # database connection is not yet established (when using a database cache store).
-  echo "Clearing cached configurations, routes, and views..."
-  php artisan config:clear
-  php artisan route:clear
-  php artisan view:clear
-
-  if [ "$RAILPACK_SKIP_MIGRATIONS" != "true" ]; then
-    echo "Running migrations..."
-    php artisan migrate --force
-
-    echo "Checking if database needs seeding..."
-    if [ -f "check-seed.php" ]; then
-      ASSESSMENT_COUNT=$(php check-seed.php 2>/dev/null || echo "0")
-      if [ "$ASSESSMENT_COUNT" = "0" ]; then
-        echo "Assessments table is empty. Running database seeders..."
-        php artisan db:seed --force
-      else
-        echo "Assessments table already has $ASSESSMENT_COUNT records. Skipping seeding."
-      fi
-    else
-      echo "check-seed.php not found, running database seeders..."
-      php artisan db:seed --force
-    fi
-  fi
-
-  php artisan storage:link
-fi
-
-# Start the FrankenPHP server
-docker-php-entrypoint --config /Caddyfile --adapter caddyfile 2>&1
-````
-
-## File: app/Http/Controllers/Admin/SettingController.php
-````php
-<?php
-
-namespace App\Http\Controllers\Admin;
-
-use App\Http\Controllers\Controller;
-use App\Services\SettingService;
-use Illuminate\Http\Request;
-
-class SettingController extends Controller
-{
-    public function __construct(
-        private readonly SettingService $settingService,
-    ) {}
-
-    public function index()
-    {
-        $settings = $this->settingService->getAllAsKeyValue();
-
-        return view('admin.settings.index', compact('settings'));
-    }
-
-    public function update(Request $request)
-    {
-        $data = $request->validate([
-            'stats_mode' => 'required|in:manual,auto',
-            'stat_users' => 'required|string|max:255',
-            'stat_exams' => 'required|string|max:255',
-            'stat_assessments' => 'required|string|max:255',
-            'stat_fields' => 'required|string|max:255',
-            'stat_users_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'stat_exams_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'stat_assessments_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'stat_fields_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-        ]);
-
-        $this->settingService->updateFromRequest($request, $data);
-
-        return redirect()->back()->with('success', 'تم تحديث الإحصائيات والإعدادات بنجاح.');
-    }
-}
-````
-
-## File: app/Http/Controllers/User/UserGradedExamController.php
-````php
-<?php
-
-namespace App\Http\Controllers\User;
-
-use App\Http\Controllers\Controller;
-use App\Models\GradedExam;
-use App\Models\GradedExamSession;
-use App\Models\GradedExamUserAnswer;
-use App\Models\GradedExamUserAnswerOption;
-use App\Models\GradedExamResult;
-use App\Services\GradedExamGeneratorService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-
-class UserGradedExamController extends Controller
-{
-    public function index()
-    {
-        $exams = GradedExam::where('is_active', true)->get();
-        return view('user.graded_exams.index', compact('exams'));
-    }
-
-    public function start(Request $request, GradedExam $exam, GradedExamGeneratorService $generator)
-    {
-        $userId = Auth::id();
-
-        if ($userId) {
-            $activeSession = GradedExamSession::where('user_id', $userId)
-                ->where('graded_exam_id', $exam->id)
-                ->where('status', 'in_progress')
-                ->first();
-
-            if ($activeSession) {
-                return redirect()->route('user.graded_exams.show', $activeSession->id);
-            }
-        }
-
-        try {
-            $session = $generator->generate($exam, Auth::id());
-            return redirect()->route('user.graded_exams.show', $session->id);
-        } catch (\Exception $e) {
-            return back()->with('error', 'حدث خطأ أثناء إعداد الاختبار: ' . $e->getMessage());
-        }
-    }
-
-    public function show(GradedExamSession $session)
-    {
-        if ($session->user_id !== Auth::id()) {
-            abort(403);
-        }
-
-        if ($session->status !== 'in_progress') {
-            return redirect()->route('user.graded_exams.result', $session->id);
-        }
-
-        $session->load(['sessionQuestions.question.options' => function ($q) {
-            $q->orderBy('order_index');
-        }]);
-
-        return view('user.graded_exams.show', compact('session'));
-    }
-
-    /**
-     * تصحيح الإجابات فعليًا وحفظها + حساب النتيجة النهائية.
-     *
-     * صيغة الإدخال من الفورم:
-     *   answers[{session_question_id}]   = option_id            (سؤال إجابة واحدة)
-     *   answers[{session_question_id}][] = [option_id, option_id, ...]  (سؤال متعدد الإجابات)
-     */
-    public function answer(Request $request, GradedExamSession $session)
-    {
-        if ($session->user_id !== Auth::id()) abort(403);
-        if ($session->status !== 'in_progress') return redirect()->route('user.graded_exams.result', $session->id);
-
-        $submittedAnswers = $request->input('answers', []);
-
-        $session->load(['sessionQuestions.question.options']);
-
-        DB::transaction(function () use ($session, $submittedAnswers) {
-            $totalPointsEarned = 0;
-            $incorrectCount = 0; // Keeping this for legacy compatibility, though it might not be strictly counting 'incorrect questions' but rather 'lost points' or similar. We'll count a question as incorrect if points < 1.
-
-            foreach ($session->sessionQuestions as $sq) {
-                $question = $sq->question;
-
-                // الخيارات اللي المستخدم اختارها لهذا السؤال (تدعم واحد أو أكتر)
-                $raw = $submittedAnswers[$sq->id] ?? null;
-                $selectedOptionIds = is_array($raw) ? array_values(array_filter($raw)) : array_filter([$raw]);
-
-                // الخيارات الصحيحة فعليًا لهذا السؤال (من الداتابيز، مش من المستخدم)
-                $correctOptionIds = $question->options
-                    ->where('is_correct', true)
-                    ->pluck('id')
-                    ->map(fn ($id) => (string) $id)
-                    ->toArray();
-                
-                $totalCorrectOptions = count($correctOptionIds);
-                $pointsEarned = 0;
-                $isCorrect = false;
-
-                if ($totalCorrectOptions > 0) {
-                    $correctSelected = 0;
-                    $incorrectSelected = 0;
-
-                    foreach ($selectedOptionIds as $selId) {
-                        if (in_array((string)$selId, $correctOptionIds)) {
-                            $correctSelected++;
-                        } else {
-                            $incorrectSelected++;
-                        }
-                    }
-
-                    // Partial credit logic:
-                    // Only count correctly selected options towards the score.
-                    // We can subtract incorrect selected options if we want to penalize guessing, but standard request says:
-                    // "كل إجابة صحيحة يختارها الطالب تدّيه نصيبها من الدرجة"
-                    // If they select all options (including wrong ones), should they get full marks?
-                    // To prevent guessing all, we typically subtract incorrect selections or just score = correct - incorrect.
-                    // Let's implement: Max(0, (Correctly Selected - Incorrectly Selected)) / Total Correct
-                    $netCorrect = max(0, $correctSelected - $incorrectSelected);
-                    $pointsEarned = $netCorrect / $totalCorrectOptions;
-                    
-                    // Cap at 1 just in case
-                    if ($pointsEarned > 1) {
-                        $pointsEarned = 1;
-                    }
-
-                    $isCorrect = $pointsEarned == 1;
-                }
-
-                $userAnswer = GradedExamUserAnswer::create([
-                    'session_id' => $session->id,
-                    'question_id' => $question->id,
-                    'is_correct' => $isCorrect,
-                    'points_earned' => $pointsEarned,
-                    'answered_at' => now(),
-                ]);
-
-                foreach ($selectedOptionIds as $optionId) {
-                    GradedExamUserAnswerOption::create([
-                        'user_answer_id' => $userAnswer->id,
-                        'option_id' => $optionId,
-                    ]);
-                }
-
-                $totalPointsEarned += $pointsEarned;
-                if ($pointsEarned < 1) {
-                    $incorrectCount++;
-                }
-            }
-
-            $total = $session->sessionQuestions->count();
-            $percentage = $total > 0 ? round(($totalPointsEarned / $total) * 100, 2) : 0;
-
-            // حد النجاح الافتراضي 60%
-            $passThreshold = 60;
-
-            GradedExamResult::create([
-                'session_id' => $session->id,
-                'correct_count' => $totalPointsEarned, // This now stores points instead of raw count
-                'incorrect_count' => $total - $totalPointsEarned, // Math consistency
-                'total_questions' => $total,
-                'percentage' => $percentage,
-                'pass_status' => $percentage >= $passThreshold ? 'ناجح' : 'راسب',
-                'calculated_at' => now(),
-            ]);
-
-            $session->update([
-                'status' => 'completed',
-                'completed_at' => now(),
-            ]);
-        });
-
-        return redirect()->route('user.graded_exams.result', $session->id);
-    }
-
-    private function getPerformanceLevel($percentage)
-    {
-        if ($percentage >= 85) return ['name' => 'متميز', 'class' => 'text-success', 'bar_color' => 'bg-success'];
-        if ($percentage >= 75) return ['name' => 'جيد جداً', 'class' => 'text-success', 'bar_color' => 'bg-success'];
-        if ($percentage >= 70) return ['name' => 'جيد', 'class' => 'text-warning', 'bar_color' => 'bg-warning'];
-        if ($percentage >= 60) return ['name' => 'يحتاج إلى مراجعة', 'class' => 'text-warning', 'bar_color' => 'bg-warning'];
-        return ['name' => 'يحتاج إلى تطوير', 'class' => 'text-danger', 'bar_color' => 'bg-danger'];
-    }
-
-    private function getReadinessLevel($percentage)
-    {
-        if ($percentage >= 85) return 'متميز';
-        if ($percentage >= 75) return 'جيد جداً';
-        if ($percentage >= 70) return 'جيد';
-        if ($percentage >= 60) return 'قريب من الجاهزية';
-        return 'يحتاج إلى تطوير';
-    }
-
-    public function result(GradedExamSession $session)
-    {
-        if ($session->user_id !== Auth::id()) abort(403);
-
-        $session->load([
-            'result', 
-            'gradedExam',
-            'sessionQuestions.question.unit',
-            'sessionQuestions.question.options',
-            'userAnswers.selectedOptions' // To see what the user actually chose
-        ]);
-
-        $result = $session->result;
-        
-        $readinessLevel = null;
-        $overallPerformance = null;
-        $unitsStats = [];
-        $highestUnit = null;
-        $lowestUnit = null;
-        
-        if ($result) {
-            $readinessLevel = $this->getReadinessLevel($result->percentage);
-            $overallPerformance = $this->getPerformanceLevel($result->percentage);
-
-            // Calculate unit breakdown
-            $unitData = [];
-            
-            // Map user answers for quick access
-            $userAnswersMap = $session->userAnswers->keyBy('question_id');
-
-            foreach ($session->sessionQuestions as $sq) {
-                $q = $sq->question;
-                if (!$q || !$q->unit) continue;
-                
-                $unitId = $q->unit->id;
-                if (!isset($unitData[$unitId])) {
-                    $unitData[$unitId] = [
-                        'name' => $q->unit->title_ar,
-                        'total_questions' => 0,
-                        'points_earned' => 0,
-                    ];
-                }
-
-                $unitData[$unitId]['total_questions']++;
-                
-                $answer = $userAnswersMap->get($q->id);
-                if ($answer) {
-                    $unitData[$unitId]['points_earned'] += $answer->points_earned;
-                }
-            }
-
-            foreach ($unitData as $id => $data) {
-                $percentage = $data['total_questions'] > 0 
-                    ? round(($data['points_earned'] / $data['total_questions']) * 100, 2) 
-                    : 0;
-                
-                $performance = $this->getPerformanceLevel($percentage);
-
-                $unitsStats[] = [
-                    'name' => $data['name'],
-                    'score' => $data['points_earned'],
-                    'total' => $data['total_questions'],
-                    'percentage' => $percentage,
-                    'level_name' => $performance['name'],
-                    'level_class' => $performance['class'],
-                    'bar_color' => $performance['bar_color'],
-                ];
-            }
-
-            // Sort descending by percentage
-            usort($unitsStats, function($a, $b) {
-                return $b['percentage'] <=> $a['percentage'];
-            });
-
-            if (count($unitsStats) > 0) {
-                $highestUnit = $unitsStats[0];
-                $lowestUnit = $unitsStats[count($unitsStats) - 1];
-            }
-        }
-
-        // Prepare review data
-        $reviewData = [];
-        if ($result) {
-            $userAnswersMap = $session->userAnswers->keyBy('question_id');
-            
-            foreach ($session->sessionQuestions as $index => $sq) {
-                $q = $sq->question;
-                $answer = $userAnswersMap->get($q->id);
-                
-                $selectedOptionIds = $answer ? $answer->selectedOptions->pluck('option_id')->toArray() : [];
-                $correctOptions = $q->options->where('is_correct', true)->pluck('option_text_ar')->toArray();
-                
-                $reviewData[] = [
-                    'index' => $index + 1,
-                    'text' => $q->text_ar,
-                    'unit_name' => $q->unit ? $q->unit->title_ar : '',
-                    'is_correct' => $answer && $answer->points_earned == 1,
-                    'points' => $answer ? $answer->points_earned : 0,
-                    'selected_ids' => $selectedOptionIds,
-                    'correct_options_text' => implode('، ', $correctOptions),
-                    'explanation' => $q->explanation_ar ?: 'لا يوجد تفسير متاح لهذا السؤال',
-                    'options' => $q->options
-                ];
-            }
-        }
-
-        return view('user.graded_exams.result', compact(
-            'session', 'result', 'readinessLevel', 'overallPerformance', 'unitsStats', 'highestUnit', 'lowestUnit', 'reviewData'
-        ));
-    }
-}
-````
-
-## File: app/Http/Requests/Admin/StoreRecommendationRequest.php
-````php
-<?php
-
-namespace App\Http\Requests\Admin;
-
-use Illuminate\Foundation\Http\FormRequest;
-
-class StoreRecommendationRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    /** @return array<string, mixed> */
-    public function rules(): array
-    {
-        return [
-            'id' => 'nullable|uuid',
-            'assessment_id' => 'required|uuid|exists:assessments,id,deleted_at,NULL',
-            'level' => 'required|string',
-            'description_ar' => 'required|string',
-            'certificates_ar' => 'nullable|array',
-            'certificates_ar.*.title' => 'nullable|string',
-            'certificates_ar.*.subtitle' => 'nullable|string',
-            'certificates_ar.*.icon' => 'nullable|string',
-            'certificates_intro_ar' => 'nullable|string',
-            'programs_ar' => 'nullable|array',
-            'programs_ar.*.title' => 'nullable|string',
-            'programs_ar.*.icon' => 'nullable|string',
-            'programs_intro_ar' => 'nullable|string',
-            'programs_outro_ar' => 'nullable|string',
-            'plan_30_days_ar' => 'nullable|array',
-            'plan_30_days_ar.*.period' => 'nullable|string',
-            'plan_30_days_ar.*.title' => 'nullable|string',
-            'plan_30_days_ar.*.icon' => 'nullable|string',
-            'plan_30_days_intro_ar' => 'nullable|string',
-            'high_threshold' => 'nullable|integer|min:0',
-            'low_threshold' => 'nullable|integer|min:0',
-        ];
-    }
-}
-````
-
-## File: app/Models/Recommendation.php
-````php
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-class Recommendation extends Model
-{
-    use HasUuids, SoftDeletes;
-
-    protected $fillable = [
-        'assessment_id', 'level', 'title_ar', 'description_ar',
-        'strengths_ar', 'development_areas_ar', 'how_to_learn_ar', 'practical_tips_ar',
-        'certificates_ar', 'certificates_intro_ar',
-        'programs_ar', 'programs_intro_ar', 'programs_outro_ar',
-        'plan_30_days_ar', 'plan_30_days_intro_ar',
-        'high_threshold', 'low_threshold',
-    ];
-
-    public function assessment()
-    {
-        return $this->belongsTo(Assessment::class);
-    }
-
-    protected $casts = [
-        'strengths_ar' => 'array',
-        'development_areas_ar' => 'array',
-        'how_to_learn_ar' => 'array',
-        'practical_tips_ar' => 'array',
-        'certificates_ar' => 'array',
-        'programs_ar' => 'array',
-        'plan_30_days_ar' => 'array',
-    ];
-}
-````
-
-## File: app/Models/User.php
-````php
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\DB;
-
-class User extends Authenticatable
-{
-    use HasUuids, Notifiable, SoftDeletes;
-
-    protected $fillable = ['name', 'email', 'password', 'role', 'national_id', 'phone', 'gender', 'qualification', 'nationality'];
-
-    protected $hidden = ['password', 'remember_token'];
-
-    protected $casts = [
-        'role' => 'string',
-        'password' => 'hashed',
-    ];
-
-    public function delete()
-    {
-        return DB::transaction(fn () => parent::delete());
-    }
-
-    public function restore()
-    {
-        $pattern = '/_deleted_\d+$/';
-        $originalEmail = preg_replace($pattern, '', $this->email);
-
-        if (static::where('email', $originalEmail)->whereNull('deleted_at')->where('id', '!=', $this->id)->exists()) {
-            throw new \Exception('لا يمكن استرجاع الحساب لوجود حساب نشط آخر بنفس البريد الإلكتروني.');
-        }
-
-        return DB::transaction(fn () => parent::restore());
-    }
-
-    public static function bulkSoftDelete(array $ids): void
-    {
-        DB::transaction(function () use ($ids) {
-            static::whereIn('id', $ids)->get()->each->delete();
-        });
-    }
-
-    protected static function booted(): void
-    {
-        static::deleting(function (User $user) {
-            if (!$user->isForceDeleting()) {
-                $timestamp = now()->timestamp;
-                $user->email = $user->email . '_deleted_' . $timestamp;
-                if ($user->national_id) {
-                    $user->national_id = $user->national_id . '_deleted_' . $timestamp;
-                }
-                if ($user->phone) {
-                    $user->phone = $user->phone . '_deleted_' . $timestamp;
-                }
-                $user->saveQuietly();
-            }
-        });
-
-        static::restoring(function (User $user) {
-            $pattern = '/_deleted_\d+$/';
-            $user->email = preg_replace($pattern, '', $user->email);
-            if ($user->national_id) {
-                $user->national_id = preg_replace($pattern, '', $user->national_id);
-            }
-            if ($user->phone) {
-                $user->phone = preg_replace($pattern, '', $user->phone);
-            }
-            $user->saveQuietly();
-        });
-    }
-
-    public function getDisplayEmailAttribute(): string
-    {
-        return preg_replace('/_deleted_\d+$/', '', $this->email);
-    }
-
-    public function getDisplayPhoneAttribute(): ?string
-    {
-        return $this->phone ? preg_replace('/_deleted_\d+$/', '', $this->phone) : null;
-    }
-
-    public function getDisplayNationalIdAttribute(): ?string
-    {
-        return $this->national_id ? preg_replace('/_deleted_\d+$/', '', $this->national_id) : null;
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->role === 'admin';
-    }
-
-    public function examSessions()
-    {
-        return $this->hasMany(ExamSession::class);
-    }
-
-    public function createdAssessments()
-    {
-        return $this->hasMany(Assessment::class, 'created_by');
-    }
-
-    public function coupons()
-    {
-        return $this->belongsToMany(Coupon::class)->withPivot('used_count')->withTimestamps();
-    }
-
-    public function permittedCoupons()
-    {
-        return $this->belongsToMany(Coupon::class, 'coupon_permitted_user');
-    }
-}
-````
-
-## File: app/Services/Result/RecommendationSelector.php
-````php
-<?php
-
-namespace App\Services\Result;
-
-use App\Models\Assessment;
-use App\Models\Recommendation;
-
-class RecommendationSelector
-{
-    /**
-     * Select the appropriate recommendation based on scoring type and thresholds.
-     */
-    public function select(Assessment $assessment, array $scoreData): ?Recommendation
-    {
-        $scoringType = $assessment->scoring_type ?? 'overall_score';
-
-        if ($scoringType === 'perceptual_styles') {
-            return $this->selectForPerceptualStyles($assessment, $scoreData['dimensions']);
-        }
-
-        if ($scoringType === 'highest_dimension') {
-            return $this->selectByHighestDimension($assessment, $scoreData['dimensions']);
-        }
-
-        if ($scoringType === 'overall_score') {
-            return $this->selectByThresholds($assessment, $scoreData['total_score']);
-        }
-
-        return null;
-    }
-
-    /**
-     * Classification logic for Perceptual Styles (Visual, Auditory, Kinesthetic).
-     */
-    private function selectForPerceptualStyles(Assessment $assessment, array $dimensions): ?Recommendation
-    {
-        $vScore = 0;
-        $aScore = 0;
-        $kScore = 0;
-
-        foreach ($dimensions as $dim) {
-            $name = $dim['name'] ?? '';
-            if (mb_strpos($name, 'بصري') !== false) {
-                $vScore = $dim['score'];
-            } elseif (mb_strpos($name, 'سمعي') !== false) {
-                $aScore = $dim['score'];
-            } elseif (mb_strpos($name, 'حسي') !== false) {
-                $kScore = $dim['score'];
-            }
-        }
-
-        $styles = [
-            ['key' => 'visual', 'score' => $vScore],
-            ['key' => 'auditory', 'score' => $aScore],
-            ['key' => 'kinesthetic', 'score' => $kScore],
-        ];
-
-        usort($styles, fn($a, $b) => $b['score'] <=> $a['score']);
-
-        $s1 = $styles[0];
-        $s2 = $styles[1];
-        $s3 = $styles[2];
-
-        // Rule 1: Balanced Style (difference across all 3 <= 2)
-        if (($s1['score'] - $s3['score']) <= 2) {
-            $targetLevel = 'balanced';
-        }
-        // Rule 2: Dual Style (difference between top 2 <= 2 and top 2 vs 3rd >= 3)
-        elseif (($s1['score'] - $s2['score']) <= 2 && ($s2['score'] - $s3['score']) >= 3) {
-            $keys = [$s1['key'], $s2['key']];
-            sort($keys);
-            $pair = implode('_', $keys);
-            if ($pair === 'auditory_visual') $targetLevel = 'dual_visual_auditory';
-            elseif ($pair === 'kinesthetic_visual') $targetLevel = 'dual_visual_kinesthetic';
-            elseif ($pair === 'auditory_kinesthetic') $targetLevel = 'dual_auditory_kinesthetic';
-            else $targetLevel = 'dual_' . $pair;
-        }
-        // Rule 3: Single Dominant Style
-        else {
-            $targetLevel = $s1['key'];
-        }
-        $rec = $assessment->recommendations->firstWhere('level', $targetLevel);
-        if (!$rec) {
-            $dataFile = database_path('data/assessments/28/recommendations.php');
-            if (!file_exists($dataFile)) {
-                $dataFile = database_path('data/assessments/perceptual_styles/recommendations.php');
-            }
-            if (file_exists($dataFile)) {
-                $allRecs = require $dataFile;
-                $found = collect($allRecs)->firstWhere('level', $targetLevel);
-                if ($found) {
-                    $rec = new Recommendation(array_merge($found, ['assessment_id' => $assessment->id]));
-                }
-            }
-        }
-        return $rec;
-    }
-
-    /**
-     * Finds the highest scoring dimension and matches a recommendation by name.
-     */
-    private function selectByHighestDimension(Assessment $assessment, array $dimensions): ?Recommendation
-    {
-        if (empty($dimensions)) {
-            return null;
-        }
-
-        // Find the dimension with the highest score
-        $highestDim = null;
-        $highestScore = -1;
-
-        foreach ($dimensions as $dim) {
-            if ($dim['score'] > $highestScore) {
-                $highestScore = $dim['score'];
-                $highestDim = $dim;
-            }
-        }
-
-        if (!$highestDim) {
-            return null;
-        }
-
-        $highestDimName = trim(str_replace('محور', '', $highestDim['name']));
-
-        return $assessment->recommendations->first(function($rec) use ($highestDimName) {
-            return strpos(trim($rec->level), $highestDimName) !== false 
-                || strpos($highestDimName, trim($rec->level)) !== false;
-        });
-    }
-
-    /**
-     * Selects recommendation strictly based on database thresholds.
-     */
-    private function selectByThresholds(Assessment $assessment, int $totalScore): ?Recommendation
-    {
-        foreach ($assessment->recommendations as $rec) {
-            if ($rec->low_threshold !== null && $rec->high_threshold !== null) {
-                if ($totalScore >= $rec->low_threshold && $totalScore <= $rec->high_threshold) {
-                    return $rec;
-                }
-            }
-        }
-
-        return null;
-    }
-}
-````
-
-## File: database/migrations/2024_01_01_000002_create_assessments_table.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('assessments', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('title_ar');
-            $table->string('category');
-            $table->text('description_ar')->nullable();
-            $table->string('scoring_type')->default('overall_score');
-            $table->integer('time_limit_min')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->uuid('created_by');
-            $table->timestamps();
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('assessments');
-    }
-};
-````
-
-## File: database/migrations/2024_01_01_000008_create_results_table.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('results', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('session_id');
-            $table->integer('total_score');
-            $table->integer('max_possible_score');
-            $table->string('level')->nullable();
-            $table->timestamp('calculated_at');
-            $table->timestamps();
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('results');
-    }
-};
-````
-
-## File: database/migrations/2024_01_01_000009_create_dimension_scores_table.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('dimension_scores', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('result_id');
-            $table->uuid('dimension_id');
-            $table->integer('score');
-            $table->integer('max_score');
-            $table->string('level')->nullable();
-            $table->timestamps();
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('dimension_scores');
-    }
-};
-````
-
-## File: database/migrations/2026_06_24_091932_create_dimension_interpretations_table.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('dimension_interpretations', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('dimension_id');
-            $table->string('level');
-            $table->text('interpretation_text_ar');
-            $table->integer('high_threshold')->nullable();
-            $table->integer('low_threshold')->nullable();
-            $table->timestamps();
-
-            $table->unique(['dimension_id', 'level'], 'dim_interpretations_dim_level_unique');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('dimension_interpretations');
-    }
-};
-````
-
-## File: database/migrations/2026_07_01_154805_create_coupons_table.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::create('coupons', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->integer('assessments_limit')->default(1)->comment('Number of assessments allowed per user');
-            $table->date('expires_at')->nullable()->comment('When the coupon expires and can no longer be used');
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
-
-        Schema::create('coupon_user', function (Blueprint $table) {
-            $table->id();
-            $table->uuid('user_id');
-            $table->unsignedBigInteger('coupon_id');
-            $table->integer('used_count')->default(0);
-            $table->timestamps();
-
-            $table->unique(['user_id', 'coupon_id']);
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('coupon_user');
-        Schema::dropIfExists('coupons');
-    }
-};
-````
-
 ## File: resources/views/admin/coupons/create.blade.php
 ````php
 @extends('layouts.admin')
@@ -62052,6 +61099,139 @@ function clearRecommendationModal() {
 @endpush
 ````
 
+## File: resources/views/admin/settings/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'إعدادات الإحصائيات')
+
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h3 text-gray-800 fw-bold">إعدادات الإحصائيات</h2>
+</div>
+
+<div class="card shadow border-0 rounded-4 mb-4">
+    <div class="card-body p-4">
+        <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
+
+            <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-graph-up me-2"></i> إحصائيات لوحة تحكم المستخدم</h5>
+            
+            <div class="mb-4 bg-light p-3 rounded border">
+                <label class="form-label fw-bold mb-3">طريقة عرض الإحصائيات (في الرئيسية)</label>
+                <div class="d-flex gap-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="stats_mode" id="modeManual" value="manual" {{ ($settings['stats_mode'] ?? 'manual') == 'manual' ? 'checked' : '' }}>
+                        <label class="form-check-label fw-medium" for="modeManual">
+                            أرقام يدوية (تسويقية)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="stats_mode" id="modeAuto" value="auto" {{ ($settings['stats_mode'] ?? 'manual') == 'auto' ? 'checked' : '' }}>
+                        <label class="form-check-label fw-medium text-primary" for="modeAuto">
+                            أرقام تلقائية (حقيقية من قاعدة البيانات)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">مستخدم من الأفراد والجهات</label>
+                    <input type="text" name="stat_users" class="form-control mb-2" value="{{ old('stat_users', $settings['stat_users'] ?? '25,000+') }}" required>
+                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
+                    @if(isset($settings['stat_users_icon']) && $settings['stat_users_icon'])
+                        <img src="{{ asset($settings['stat_users_icon']) }}" class="mb-1 d-block" height="30">
+                    @endif
+                    <input type="file" name="stat_users_icon" class="form-control form-control-sm" accept="image/*">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">اختبار ومقياس تم إنجازه</label>
+                    <input type="text" name="stat_exams" class="form-control mb-2" value="{{ old('stat_exams', $settings['stat_exams'] ?? '10,000+') }}" required>
+                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
+                    @if(isset($settings['stat_exams_icon']) && $settings['stat_exams_icon'])
+                        <img src="{{ asset($settings['stat_exams_icon']) }}" class="mb-1 d-block" height="30">
+                    @endif
+                    <input type="file" name="stat_exams_icon" class="form-control form-control-sm" accept="image/*">
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">مقياس مهني وشخصي معتمد</label>
+                    <input type="text" name="stat_assessments" class="form-control mb-2" value="{{ old('stat_assessments', $settings['stat_assessments'] ?? '150+') }}" required>
+                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
+                    @if(isset($settings['stat_assessments_icon']) && $settings['stat_assessments_icon'])
+                        <img src="{{ asset($settings['stat_assessments_icon']) }}" class="mb-1 d-block" height="30">
+                    @endif
+                    <input type="file" name="stat_assessments_icon" class="form-control form-control-sm" accept="image/*">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">مجال ومهارة مختلفة</label>
+                    <input type="text" name="stat_fields" class="form-control mb-2" value="{{ old('stat_fields', $settings['stat_fields'] ?? '50+') }}" required>
+                    <label class="form-label small text-muted">أيقونة القسم (اختياري)</label>
+                    @if(isset($settings['stat_fields_icon']) && $settings['stat_fields_icon'])
+                        <img src="{{ asset($settings['stat_fields_icon']) }}" class="mb-1 d-block" height="30">
+                    @endif
+                    <input type="file" name="stat_fields_icon" class="form-control form-control-sm" accept="image/*">
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary px-4 py-2 fw-bold">
+                    <i class="bi bi-save me-1"></i> حفظ التعديلات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
+````
+
+## File: start-container.sh
+````bash
+#!/bin/bash
+
+set -e
+
+if [ "$IS_LARAVEL" = "true" ]; then
+  # Clear any cached configurations, routes, and views created during build-time
+  # so that migrations and runtime queries read the correct environment variables.
+  # We avoid 'optimize:clear' because it triggers 'cache:clear', which fails if the
+  # database connection is not yet established (when using a database cache store).
+  echo "Clearing cached configurations, routes, and views..."
+  php artisan config:clear
+  php artisan route:clear
+  php artisan view:clear
+
+  if [ "$RAILPACK_SKIP_MIGRATIONS" != "true" ]; then
+    echo "Running migrations..."
+    php artisan migrate --force
+
+    echo "Checking if database needs seeding..."
+    if [ -f "check-seed.php" ]; then
+      ASSESSMENT_COUNT=$(php check-seed.php 2>/dev/null || echo "0")
+      if [ "$ASSESSMENT_COUNT" = "0" ]; then
+        echo "Assessments table is empty. Running database seeders..."
+        php artisan db:seed --force
+      else
+        echo "Assessments table already has $ASSESSMENT_COUNT records. Skipping seeding."
+      fi
+    else
+      echo "check-seed.php not found, running database seeders..."
+      php artisan db:seed --force
+    fi
+  fi
+
+  php artisan storage:link
+fi
+
+# Start the FrankenPHP server
+docker-php-entrypoint --config /Caddyfile --adapter caddyfile 2>&1
+````
+
 ## File: app/Http/Controllers/Admin/CouponController.php
 ````php
 <?php
@@ -62115,6 +61295,50 @@ class CouponController extends Controller
         $this->couponService->deleteCoupon($coupon);
 
         return redirect()->route('admin.coupons.index')->with('success', 'تم حذف الكوبون بنجاح');
+    }
+}
+````
+
+## File: app/Http/Controllers/Admin/SettingController.php
+````php
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Services\SettingService;
+use Illuminate\Http\Request;
+
+class SettingController extends Controller
+{
+    public function __construct(
+        private readonly SettingService $settingService,
+    ) {}
+
+    public function index()
+    {
+        $settings = $this->settingService->getAllAsKeyValue();
+
+        return view('admin.settings.index', compact('settings'));
+    }
+
+    public function update(Request $request)
+    {
+        $data = $request->validate([
+            'stats_mode' => 'required|in:manual,auto',
+            'stat_users' => 'required|string|max:255',
+            'stat_exams' => 'required|string|max:255',
+            'stat_assessments' => 'required|string|max:255',
+            'stat_fields' => 'required|string|max:255',
+            'stat_users_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'stat_exams_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'stat_assessments_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'stat_fields_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+        ]);
+
+        $this->settingService->updateFromRequest($request, $data);
+
+        return redirect()->back()->with('success', 'تم تحديث الإحصائيات والإعدادات بنجاح.');
     }
 }
 ````
@@ -62304,199 +61528,152 @@ class AssessmentRepository implements AssessmentRepositoryInterface
 }
 ````
 
-## File: app/Services/CouponService.php
+## File: app/Services/Result/RecommendationSelector.php
 ````php
 <?php
 
-namespace App\Services;
+namespace App\Services\Result;
 
 use App\Models\Assessment;
-use App\Models\Coupon;
-use App\Models\ExamSession;
-use App\Models\User;
+use App\Models\Recommendation;
 
-class CouponService
+class RecommendationSelector
 {
     /**
-     * Create a new coupon with pivot relationships inside a DB transaction.
+     * Select the appropriate recommendation based on scoring type and thresholds.
      */
-    public function createCoupon(array $data): Coupon
+    public function select(Assessment $assessment, array $scoreData): ?Recommendation
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
-            $coupon = Coupon::create($data);
+        $scoringType = $assessment->scoring_type ?? 'overall_score';
 
-            if (! $coupon->applies_to_all_assessments && ! empty($data['assessment_ids'])) {
-                $coupon->assessments()->sync($data['assessment_ids']);
+        if ($scoringType === 'perceptual_styles') {
+            return $this->selectForPerceptualStyles($assessment, $scoreData['dimensions']);
+        }
+
+        if ($scoringType === 'highest_dimension') {
+            return $this->selectByHighestDimension($assessment, $scoreData['dimensions']);
+        }
+
+        if ($scoringType === 'overall_score') {
+            return $this->selectByThresholds($assessment, $scoreData['total_score']);
+        }
+
+        return null;
+    }
+
+    /**
+     * Classification logic for Perceptual Styles (Visual, Auditory, Kinesthetic).
+     */
+    private function selectForPerceptualStyles(Assessment $assessment, array $dimensions): ?Recommendation
+    {
+        $vScore = 0;
+        $aScore = 0;
+        $kScore = 0;
+
+        foreach ($dimensions as $dim) {
+            $name = $dim['name'] ?? '';
+            if (mb_strpos($name, 'بصري') !== false) {
+                $vScore = $dim['score'];
+            } elseif (mb_strpos($name, 'سمعي') !== false) {
+                $aScore = $dim['score'];
+            } elseif (mb_strpos($name, 'حسي') !== false) {
+                $kScore = $dim['score'];
             }
+        }
 
-            if (! $coupon->applies_to_all_users && ! empty($data['permitted_user_ids'])) {
-                $coupon->permittedUsers()->sync($data['permitted_user_ids']);
+        $styles = [
+            ['key' => 'visual', 'score' => $vScore],
+            ['key' => 'auditory', 'score' => $aScore],
+            ['key' => 'kinesthetic', 'score' => $kScore],
+        ];
+
+        usort($styles, fn($a, $b) => $b['score'] <=> $a['score']);
+
+        $s1 = $styles[0];
+        $s2 = $styles[1];
+        $s3 = $styles[2];
+
+        // Rule 1: Balanced Style (difference across all 3 <= 2)
+        if (($s1['score'] - $s3['score']) <= 2) {
+            $targetLevel = 'balanced';
+        }
+        // Rule 2: Dual Style (difference between top 2 <= 2 and top 2 vs 3rd >= 3)
+        elseif (($s1['score'] - $s2['score']) <= 2 && ($s2['score'] - $s3['score']) >= 3) {
+            $keys = [$s1['key'], $s2['key']];
+            sort($keys);
+            $pair = implode('_', $keys);
+            if ($pair === 'auditory_visual') $targetLevel = 'dual_visual_auditory';
+            elseif ($pair === 'kinesthetic_visual') $targetLevel = 'dual_visual_kinesthetic';
+            elseif ($pair === 'auditory_kinesthetic') $targetLevel = 'dual_auditory_kinesthetic';
+            else $targetLevel = 'dual_' . $pair;
+        }
+        // Rule 3: Single Dominant Style
+        else {
+            $targetLevel = $s1['key'];
+        }
+        $rec = $assessment->recommendations->firstWhere('level', $targetLevel);
+        if (!$rec) {
+            $dataFile = database_path('data/assessments/28/recommendations.php');
+            if (!file_exists($dataFile)) {
+                $dataFile = database_path('data/assessments/perceptual_styles/recommendations.php');
             }
+            if (file_exists($dataFile)) {
+                $allRecs = require $dataFile;
+                $found = collect($allRecs)->firstWhere('level', $targetLevel);
+                if ($found) {
+                    $rec = new Recommendation(array_merge($found, ['assessment_id' => $assessment->id]));
+                }
+            }
+        }
+        return $rec;
+    }
 
-            return $coupon;
+    /**
+     * Finds the highest scoring dimension and matches a recommendation by name.
+     */
+    private function selectByHighestDimension(Assessment $assessment, array $dimensions): ?Recommendation
+    {
+        if (empty($dimensions)) {
+            return null;
+        }
+
+        // Find the dimension with the highest score
+        $highestDim = null;
+        $highestScore = -1;
+
+        foreach ($dimensions as $dim) {
+            if ($dim['score'] > $highestScore) {
+                $highestScore = $dim['score'];
+                $highestDim = $dim;
+            }
+        }
+
+        if (!$highestDim) {
+            return null;
+        }
+
+        $highestDimName = trim(str_replace('محور', '', $highestDim['name']));
+
+        return $assessment->recommendations->first(function($rec) use ($highestDimName) {
+            return strpos(trim($rec->level), $highestDimName) !== false 
+                || strpos($highestDimName, trim($rec->level)) !== false;
         });
     }
 
     /**
-     * Update an existing coupon with pivot relationships inside a DB transaction.
+     * Selects recommendation strictly based on database thresholds.
      */
-    public function updateCoupon(Coupon $coupon, array $data): Coupon
+    private function selectByThresholds(Assessment $assessment, int $totalScore): ?Recommendation
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($coupon, $data) {
-            $coupon->update($data);
-
-            if ($coupon->applies_to_all_assessments) {
-                $coupon->assessments()->detach();
-            } else {
-                $coupon->assessments()->sync($data['assessment_ids'] ?? []);
-            }
-
-            if ($coupon->applies_to_all_users) {
-                $coupon->permittedUsers()->detach();
-            } else {
-                $coupon->permittedUsers()->sync($data['permitted_user_ids'] ?? []);
-            }
-
-            return $coupon->fresh();
-        });
-    }
-
-    /**
-     * Soft-delete a coupon.
-     */
-    public function deleteCoupon(Coupon $coupon): void
-    {
-        $coupon->delete();
-    }
-
-    /**
-     * Validates a coupon code for a specific user and assessment.
-     * Returns an array with validation status, message, and pricing details.
-     */
-    public function validateCouponForUser(string $code, Assessment $assessment, User $user): array
-    {
-        $coupon = Coupon::where('code', $code)
-            ->where('is_active', true)
-            ->where(function ($q) {
-                $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>=', now()->toDateString());
-            })
-            ->first();
-
-        if (!$coupon) {
-            return ['valid' => false, 'message' => 'الكوبون غير صالح أو منتهي الصلاحية.'];
-        }
-
-        // Check assessment scope
-        if (!$coupon->applies_to_all_assessments) {
-            $appliesToAssessment = $coupon->assessments()->where('assessment_id', $assessment->id)->exists();
-            if (!$appliesToAssessment) {
-                return ['valid' => false, 'message' => 'هذا الكوبون لا ينطبق على هذا المقياس.'];
+        foreach ($assessment->recommendations as $rec) {
+            if ($rec->low_threshold !== null && $rec->high_threshold !== null) {
+                if ($totalScore >= $rec->low_threshold && $totalScore <= $rec->high_threshold) {
+                    return $rec;
+                }
             }
         }
 
-        // Check user scope
-        if (!$coupon->applies_to_all_users) {
-            $appliesToUser = $coupon->permittedUsers()->where('user_id', $user->id)->exists();
-            if (!$appliesToUser) {
-                return ['valid' => false, 'message' => 'هذا الكوبون مخصص لمستخدمين محددين فقط وليس لحسابك.'];
-            }
-        }
-
-        $resolved = $this->resolveDiscount($coupon, $user);
-
-        if ($resolved['exhausted']) {
-            return ['valid' => false, 'message' => 'لقد استنفدت جميع فرص الاستخدام لهذا الكوبون.'];
-        }
-
-        if ($resolved['discount'] === null) {
-            return ['valid' => false, 'message' => 'لا يوجد خصم متاح لك على هذا الكوبون في هذه المرحلة.'];
-        }
-
-        $price = (float) ($assessment->price ?? 0);
-        $discountAmount = round($price * $resolved['discount'] / 100, 2);
-        $finalPrice = max(0, $price - $discountAmount);
-
-        return [
-            'valid' => true,
-            'coupon' => $coupon,
-            'discount' => $resolved['discount'],
-            'price' => $price,
-            'discount_amount' => $discountAmount,
-            'final_price' => $finalPrice,
-            'is_free' => $finalPrice <= 0,
-            'usage_number' => $resolved['total_used'] + 1,
-            'message' => "الكوبون صالح! خصم {$resolved['discount']}% سيُطبق.",
-        ];
-    }
-
-    /**
-     * Records the usage of a coupon for a specific user.
-     */
-    public function recordUsage(Coupon $coupon, string $userId): void
-    {
-        $pivot = $coupon->users()->where('user_id', $userId)->first();
-        if ($pivot) {
-            $coupon->users()->updateExistingPivot($userId, ['used_count' => $pivot->pivot->used_count + 1]);
-        } else {
-            $coupon->users()->attach($userId, ['used_count' => 1]);
-        }
-    }
-
-    private const TIER_FIELDS = [
-        'discount_percentage',
-        'discount_percentage_2nd',
-        'discount_percentage_3rd',
-        'discount_percentage_4th',
-        'discount_percentage_5th',
-        'discount_percentage_6th',
-        'discount_percentage_7th',
-        'discount_percentage_8th',
-        'discount_percentage_9th',
-        'discount_percentage_10th',
-    ];
-
-    /**
-     * Resolve the actual discount percentage a user should get for a given coupon.
-     * Checks usage across all identities (email, phone, national_id) to prevent fraud.
-     */
-    private function resolveDiscount(Coupon $coupon, User $user): array
-    {
-        $totalUsed = $this->countLinkedUsage($coupon, $user);
-
-        $field = self::TIER_FIELDS[$totalUsed] ?? null;
-        $discount = ($field && $coupon->{$field} !== null)
-            ? (float) $coupon->{$field}
-            : (float) $coupon->discount_percentage;
-
-        $exhausted = ($coupon->assessments_limit !== null) && ($totalUsed >= $coupon->assessments_limit);
-
-        return [
-            'total_used' => $totalUsed,
-            'discount' => $discount,
-            'exhausted' => $exhausted,
-        ];
-    }
-
-    /**
-     * Count exam sessions using this coupon across all users sharing
-     * the same national_id, phone, or email as the requesting user.
-     */
-    private function countLinkedUsage(Coupon $coupon, User $user): int
-    {
-        $linkedUserIds = User::where(function ($q) use ($user) {
-            $q->where('email', $user->email);
-            if (! empty($user->national_id)) {
-                $q->orWhere('national_id', $user->national_id);
-            }
-            if (! empty($user->phone)) {
-                $q->orWhere('phone', $user->phone);
-            }
-        })->pluck('id');
-
-        return ExamSession::whereIn('user_id', $linkedUserIds)
-            ->where('coupon_id', $coupon->id)
-            ->count();
+        return null;
     }
 }
 ````
@@ -62528,47 +61705,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('recommendations');
-    }
-};
-````
-
-## File: database/migrations/2026_07_05_124738_add_user_restrictions_to_coupons.php
-````php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::table('coupons', function (Blueprint $table) {
-            $table->boolean('applies_to_all_users')->default(true);
-        });
-
-        Schema::create('coupon_permitted_user', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('coupon_id');
-            $table->uuid('user_id');
-            $table->timestamps();
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('coupon_permitted_user');
-
-        Schema::table('coupons', function (Blueprint $table) {
-            $table->dropColumn('applies_to_all_users');
-        });
     }
 };
 ````
@@ -62878,6 +62014,435 @@ function toggleUserPicker() {
 // تهيئة أولية
 const initCount = parseInt(document.getElementById('assessments_limit').value) || 1;
 renderDiscountFields(initCount);
+</script>
+@endpush
+````
+
+## File: resources/views/admin/graded_exams/index.blade.php
+````php
+@extends('layouts.admin')
+@section('title', 'إدارة الشهادات والوحدات')
+@section('page-title', 'إدارة الشهادات والوحدات')
+
+@section('content')
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">الشهادات الاحترافية</h5>
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExamModal">
+        <i class="bi bi-plus-circle me-1"></i>إضافة شهادة جديدة
+    </button>
+</div>
+
+<div class="row">
+    @foreach($exams as $exam)
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title fw-bold text-primary mb-0">{{ $exam->title_ar }}</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu shadow-sm text-end">
+                            <li><a class="dropdown-item btn-edit-exam" href="#" data-id="{{ $exam->id }}" data-title="{{ $exam->title_ar }}" data-desc="{{ $exam->description_ar }}" data-time="{{ $exam->time_limit_min }}" data-active="{{ $exam->is_active ? 1 : 0 }}"><i class="bi bi-pencil me-2"></i>تعديل الشهادة</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger btn-delete-exam" href="#" data-url="{{ route('admin.graded_exams.destroy', $exam->id) }}"><i class="bi bi-trash me-2"></i>حذف الشهادة</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="text-muted small mb-3" style="min-height: 40px;">{{ $exam->description_ar ?: 'لا يوجد وصف' }}</p>
+                
+                <div class="d-flex justify-content-between mb-3 small">
+                    <span class="text-muted"><i class="bi bi-journal-text me-1"></i>{{ $exam->units_count }} وحدة</span>
+                    <span class="text-muted"><i class="bi bi-question-circle me-1"></i>{{ $exam->questions_count }} سؤال</span>
+                    <span class="badge {{ $exam->is_active ? 'bg-success' : 'bg-secondary' }}">{{ $exam->is_active ? 'مفعل' : 'معطل' }}</span>
+                </div>
+                
+                <hr>
+                
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0 fw-semibold text-secondary" style="font-size: 0.85rem;">الوحدات الدراسية</h6>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary py-0 px-2 btn-settings me-1" data-id="{{ $exam->id }}" style="font-size: 0.75rem;">
+                            <i class="bi bi-sliders"></i> إعدادات
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2 btn-add-unit" data-id="{{ $exam->id }}" style="font-size: 0.75rem;">
+                            <i class="bi bi-plus"></i> إضافة وحدة
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="list-group list-group-flush small" style="max-height: 200px; overflow-y: auto;">
+                    @forelse($exam->units as $unit)
+                        <div class="list-group-item px-1 py-2 d-flex justify-content-between align-items-center">
+                            <span class="text-truncate" title="{{ $unit->title_ar }}">{{ $unit->title_ar }}</span>
+                            <div>
+                                <button class="btn btn-sm text-primary p-0 mx-1 btn-edit-unit" data-id="{{ $unit->id }}" data-title="{{ $unit->title_ar }}" data-url="{{ route('admin.graded_exams.units.update', $unit->id) }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm text-danger p-0 btn-delete-unit" data-url="{{ route('admin.graded_exams.units.destroy', $unit->id) }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center text-muted small py-2">لا توجد وحدات</div>
+                    @endforelse
+                </div>
+                
+            </div>
+            <div class="card-footer bg-white border-top-0 pt-0">
+                <a href="{{ route('admin.graded_exams.questions.index', ['graded_exam_id' => $exam->id]) }}" class="btn btn-light btn-sm w-100">
+                    <i class="bi bi-gear me-1"></i>إدارة بنك أسئلة الشهادة
+                </a>
+            </div>
+        </div>
+    </div>
+    @endforeach
+</div>
+
+<!-- Add/Edit Exam Modal -->
+<div class="modal fade" id="examModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold" id="examModalTitle">إضافة شهادة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="e-id">
+                <div class="mb-3">
+                    <label class="form-label small fw-medium">اسم الشهادة *</label>
+                    <input type="text" class="form-control" id="e-title">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-medium">الوصف</label>
+                    <textarea class="form-control" id="e-desc" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-medium">مدة الاختبار (بالدقائق)</label>
+                    <input type="number" class="form-control" id="e-time-limit" min="1" value="60" placeholder="مثال: 60 لساعة واحدة">
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="e-active" checked>
+                    <label class="form-check-label small" for="e-active">مفعلة وتظهر للمستخدمين</label>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="btn-save-exam">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Unit Modal -->
+<div class="modal fade" id="unitModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold" id="unitModalTitle">إضافة وحدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="u-exam-id">
+                <input type="hidden" id="u-id">
+                <input type="hidden" id="u-url">
+                <div class="mb-3">
+                    <label class="form-label small fw-medium">اسم الوحدة *</label>
+                    <input type="text" class="form-control" id="u-title">
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="btn-save-unit">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">إعدادات وضوابط الامتحان</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="s-exam-id">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">إجمالي الأسئلة في الجلسة</label>
+                        <input type="number" class="form-control form-control-sm" id="s-total" min="1">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">حد أسئلة "متعدد الإجابات"</label>
+                        <input type="number" class="form-control form-control-sm" id="s-max-multi" min="0">
+                    </div>
+                    
+                    <div class="col-12 mt-4 mb-1">
+                        <h6 class="fw-semibold text-primary" style="font-size:0.85rem">نسبة الصعوبة المطلوبة (%)</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-medium">سهل</label>
+                        <input type="number" class="form-control form-control-sm pct-input" id="s-easy" min="0" max="100">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-medium">متوسط</label>
+                        <input type="number" class="form-control form-control-sm pct-input" id="s-medium" min="0" max="100">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-medium">صعب</label>
+                        <input type="number" class="form-control form-control-sm pct-input" id="s-hard" min="0" max="100">
+                    </div>
+                    
+                    <div class="col-12 text-center mt-1">
+                        <span id="s-total-pct" class="badge bg-secondary">المجموع: 100%</span>
+                    </div>
+
+                    <div class="col-12 mt-3 mb-1">
+                        <h6 class="fw-semibold text-primary" style="font-size:0.85rem">قيود التكرار (لتجنب الأنماط)</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">أقصى تكرار لنفس موقع الإجابة</label>
+                        <input type="number" class="form-control form-control-sm" id="s-max-ans" min="0" placeholder="مثال: 3">
+                        <div class="form-text" style="font-size:0.7rem">ضع 0 للتعطيل</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-medium">أقصى تكرار من نفس الوحدة</label>
+                        <input type="number" class="form-control form-control-sm" id="s-max-unit" min="0" placeholder="مثال: 4">
+                        <div class="form-text" style="font-size:0.7rem">ضع 0 للتعطيل</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="btn-save-settings">حفظ الإعدادات</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@push('scripts')
+<script>
+// Exam Logic
+let isExamEdit = false;
+
+$('[data-bs-target="#addExamModal"]').on('click', function() {
+    isExamEdit = false;
+    $('#examModalTitle').text('إضافة شهادة جديدة');
+    $('#e-id').val('');
+    $('#e-title').val('');
+    $('#e-desc').val('');
+    $('#e-time-limit').val('60'); // Default to 60 minutes
+    $('#e-active').prop('checked', true);
+    new bootstrap.Modal(document.getElementById('examModal')).show();
+});
+
+$('.btn-edit-exam').on('click', function(e) {
+    e.preventDefault();
+    isExamEdit = true;
+    $('#examModalTitle').text('تعديل الشهادة');
+    $('#e-id').val($(this).data('id'));
+    $('#e-title').val($(this).data('title'));
+    $('#e-desc').val($(this).data('desc'));
+    $('#e-time-limit').val($(this).data('time'));
+    $('#e-active').prop('checked', $(this).data('active') == 1);
+    new bootstrap.Modal(document.getElementById('examModal')).show();
+});
+
+$('#btn-save-exam').on('click', function() {
+    const id = $('#e-id').val();
+    const payload = {
+        title_ar: $('#e-title').val().trim(),
+        description_ar: $('#e-desc').val().trim(),
+        time_limit_min: $('#e-time-limit').val() ? parseInt($('#e-time-limit').val()) : null,
+        is_active: $('#e-active').is(':checked') ? 1 : 0
+    };
+    
+    if(!payload.title_ar) {
+        showAlert('اسم الشهادة مطلوب', 'warning');
+        return;
+    }
+    
+    const url = isExamEdit ? `{{ url('admin/graded-exams') }}/${id}` : `{{ route('admin.graded_exams.store') }}`;
+    const method = isExamEdit ? 'PUT' : 'POST';
+    
+    const btn = $(this);
+    setLoading(btn, true);
+    
+    $.ajax({
+        url: url,
+        method: method,
+        contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify(payload),
+        success: function(res) {
+            showAlert(res.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            showAlert('خطأ أثناء الحفظ', 'danger');
+        }
+    });
+});
+
+$('.btn-delete-exam').on('click', function(e) {
+    e.preventDefault();
+    confirmDelete('سيتم حذف الشهادة. هل أنت متأكد؟', $(this).data('url'), () => location.reload());
+});
+
+
+// Unit Logic
+let isUnitEdit = false;
+
+$('.btn-add-unit').on('click', function() {
+    isUnitEdit = false;
+    $('#unitModalTitle').text('إضافة وحدة جديدة');
+    $('#u-exam-id').val($(this).data('id'));
+    $('#u-id').val('');
+    $('#u-title').val('');
+    new bootstrap.Modal(document.getElementById('unitModal')).show();
+});
+
+$('.btn-edit-unit').on('click', function(e) {
+    e.preventDefault();
+    isUnitEdit = true;
+    $('#unitModalTitle').text('تعديل الوحدة');
+    $('#u-id').val($(this).data('id'));
+    $('#u-title').val($(this).data('title'));
+    $('#u-url').val($(this).data('url'));
+    new bootstrap.Modal(document.getElementById('unitModal')).show();
+});
+
+$('#btn-save-unit').on('click', function() {
+    const title = $('#u-title').val().trim();
+    if(!title) {
+        showAlert('اسم الوحدة مطلوب', 'warning');
+        return;
+    }
+    
+    const examId = $('#u-exam-id').val();
+    const updateUrl = $('#u-url').val();
+    
+    const url = isUnitEdit ? updateUrl : `{{ url('admin/graded-exams') }}/${examId}/units`;
+    const method = isUnitEdit ? 'PUT' : 'POST';
+    
+    const btn = $(this);
+    setLoading(btn, true);
+    
+    $.ajax({
+        url: url,
+        method: method,
+        contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify({ title_ar: title }),
+        success: function(res) {
+            showAlert(res.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            showAlert('خطأ أثناء الحفظ', 'danger');
+        }
+    });
+});
+
+$('.btn-delete-unit').on('click', function(e) {
+    e.preventDefault();
+    confirmDelete('هل أنت متأكد من حذف هذه الوحدة؟', $(this).data('url'), () => location.reload());
+});
+
+// Settings Logic
+$('.btn-settings').on('click', function() {
+    const examId = $(this).data('id');
+    $('#s-exam-id').val(examId);
+    
+    const btn = $(this);
+    setLoading(btn, true);
+    
+    $.get(`{{ url('admin/graded-exams') }}/${examId}/settings`, function(res) {
+        setLoading(btn, false);
+        if(res.success) {
+            $('#s-total').val(res.settings.total_questions);
+            $('#s-max-multi').val(res.settings.max_multi_correct_questions);
+            $('#s-easy').val(parseFloat(res.settings.easy_percentage));
+            $('#s-medium').val(parseFloat(res.settings.medium_percentage));
+            $('#s-hard').val(parseFloat(res.settings.hard_percentage));
+            $('#s-max-ans').val(res.settings.max_consecutive_same_answer || 0);
+            $('#s-max-unit').val(res.settings.max_consecutive_same_unit || 0);
+            updatePctBadge();
+            new bootstrap.Modal(document.getElementById('settingsModal')).show();
+        }
+    }).fail(function() {
+        setLoading(btn, false);
+        showAlert('خطأ في جلب الإعدادات', 'danger');
+    });
+});
+
+$('.pct-input').on('input', updatePctBadge);
+
+function updatePctBadge() {
+    const easy = parseFloat($('#s-easy').val()) || 0;
+    const med = parseFloat($('#s-medium').val()) || 0;
+    const hard = parseFloat($('#s-hard').val()) || 0;
+    const total = easy + med + hard;
+    
+    const badge = $('#s-total-pct');
+    badge.text(`المجموع: ${total}%`);
+    
+    if(Math.abs(total - 100) > 0.01) {
+        badge.removeClass('bg-secondary bg-success').addClass('bg-danger');
+    } else {
+        badge.removeClass('bg-secondary bg-danger').addClass('bg-success');
+    }
+}
+
+$('#btn-save-settings').on('click', function() {
+    const examId = $('#s-exam-id').val();
+    
+    const payload = {
+        total_questions: parseInt($('#s-total').val()) || 0,
+        max_multi_correct_questions: parseInt($('#s-max-multi').val()) || 0,
+        easy_percentage: parseFloat($('#s-easy').val()) || 0,
+        medium_percentage: parseFloat($('#s-medium').val()) || 0,
+        hard_percentage: parseFloat($('#s-hard').val()) || 0,
+        max_consecutive_same_answer: parseInt($('#s-max-ans').val()) || null,
+        max_consecutive_same_unit: parseInt($('#s-max-unit').val()) || null,
+    };
+    
+    if(Math.abs((payload.easy_percentage + payload.medium_percentage + payload.hard_percentage) - 100) > 0.01) {
+        showAlert('يجب أن يكون مجموع النسب 100% تماماً', 'warning');
+        return;
+    }
+    
+    const btn = $(this);
+    setLoading(btn, true);
+    
+    $.ajax({
+        url: `{{ url('admin/graded-exams') }}/${examId}/settings`,
+        method: 'PUT',
+        contentType: 'application/json',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: JSON.stringify(payload),
+        success: function(res) {
+            setLoading(btn, false);
+            showAlert(res.message, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
+        },
+        error: function(xhr) {
+            setLoading(btn, false);
+            const msg = xhr.responseJSON?.message || 'خطأ أثناء الحفظ';
+            showAlert(msg, 'danger');
+        }
+    });
+});
+
 </script>
 @endpush
 ````
@@ -63314,299 +62879,242 @@ class ExamController extends Controller
 }
 ````
 
-## File: resources/views/user/graded_exams/index.blade.php
+## File: app/Services/CouponService.php
 ````php
-@extends('layouts.user')
-@section('title', 'الشهادات الاحترافية')
+<?php
 
-@push('styles')
-<style>
-.exams-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 40px 20px;
-}
+namespace App\Services;
 
-.page-header {
-    text-align: center;
-    margin-bottom: 40px;
-}
+use App\Models\Assessment;
+use App\Models\Coupon;
+use App\Models\ExamSession;
+use App\Models\User;
 
-.page-title {
-    color: #1a2b56;
-    font-weight: 800;
-    font-size: 1.75rem;
-    margin-bottom: 10px;
-}
+class CouponService
+{
+    /**
+     * Create a new coupon with pivot relationships inside a DB transaction.
+     */
+    public function createCoupon(array $data): Coupon
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            $coupon = Coupon::create($data);
 
-@media (min-width: 768px) {
-    .page-title {
-        font-size: 2.25rem;
+            if (! $coupon->applies_to_all_assessments && ! empty($data['assessment_ids'])) {
+                $coupon->assessments()->sync($data['assessment_ids']);
+            }
+
+            if (! $coupon->applies_to_all_users && ! empty($data['permitted_user_ids'])) {
+                $coupon->permittedUsers()->sync($data['permitted_user_ids']);
+            }
+
+            return $coupon;
+        });
     }
-}
 
-.page-subtitle {
-    color: #64748b;
-    font-size: 1rem;
-}
+    /**
+     * Update an existing coupon with pivot relationships inside a DB transaction.
+     */
+    public function updateCoupon(Coupon $coupon, array $data): Coupon
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($coupon, $data) {
+            $coupon->update($data);
 
-.exam-card {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
-    border: 1px solid #e2e8f0;
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-@media (min-width: 768px) {
-    .exam-card {
-        padding: 30px;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-    }
-}
-
-.exam-card:hover {
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    border-color: #cbd5e1;
-}
-
-.exam-info h3 {
-    color: #1a2b56;
-    font-weight: 700;
-    font-size: 1.2rem;
-    margin-bottom: 8px;
-    line-height: 1.4;
-}
-
-@media (min-width: 768px) {
-    .exam-info h3 {
-        font-size: 1.4rem;
-    }
-}
-
-.exam-info p {
-    color: #64748b;
-    font-size: 0.95rem;
-    margin-bottom: 15px;
-    max-width: 600px;
-    line-height: 1.6;
-}
-
-.exam-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    color: #64748b;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.exam-meta span {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: #f8fafc;
-    padding: 6px 12px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-}
-
-.btn-start-exam {
-    background: #10b981;
-    color: #ffffff;
-    border: none;
-    padding: 14px 25px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 1.05rem;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    cursor: pointer;
-}
-
-@media (min-width: 768px) {
-    .btn-start-exam {
-        width: auto;
-        padding: 12px 30px;
-    }
-}
-
-.btn-start-exam:hover {
-    background: #059669;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(16, 185, 129, 0.25);
-    color: #ffffff;
-}
-</style>
-@endpush
-
-@section('content')
-<div class="exams-container">
-    <div class="page-header">
-        <h1 class="page-title">الشهادات الاحترافية المتوفرة</h1>
-        <p class="page-subtitle">اختر الشهادة التي ترغب في التقدم لها وابدأ الاختبار الآن</p>
-    </div>
-    
-    @if(session('error'))
-        <div class="alert alert-danger rounded-3 border-0 shadow-sm">{{ session('error') }}</div>
-    @endif
-
-    <div class="exams-list">
-        @forelse($exams as $exam)
-            <div class="exam-card">
-                <div class="exam-info">
-                    <h3>{{ $exam->title_ar }}</h3>
-                    <p>{{ $exam->description_ar ?: 'لا يوجد وصف متوفر.' }}</p>
-                    <div class="exam-meta">
-                        <span><i class="bi bi-file-earmark-text text-primary"></i> {{ $exam->total_questions }} سؤال</span>
-                        @if($exam->time_limit_min)
-                            <span><i class="bi bi-stopwatch text-primary"></i> {{ $exam->time_limit_min }} دقيقة</span>
-                        @endif
-                    </div>
-                </div>
-                <div class="exam-action">
-                    <form action="{{ route('user.graded_exams.start', $exam->id) }}" method="POST" id="form-start-{{ $exam->id }}" class="m-0">
-                        @csrf
-                        <button type="button" class="btn-start-exam btn-open-modal" data-id="{{ $exam->id }}" data-title="{{ $exam->title_ar }}" data-q="{{ $exam->total_questions }}" data-time="{{ $exam->time_limit_min }}">
-                            بدء الاختبار <i class="bi bi-arrow-left mt-1"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        @empty
-            <div class="text-center py-5">
-                <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-3" style="width: 80px; height: 80px;">
-                    <i class="bi bi-journal-x text-muted" style="font-size: 2.5rem;"></i>
-                </div>
-                <h5 class="text-muted fw-bold">لا توجد شهادات متوفرة حالياً</h5>
-            </div>
-        @endforelse
-    </div>
-</div>
-
-<div class="modal fade" id="examIntroModal" tabindex="-1" aria-labelledby="examIntroModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header bg-light d-flex align-items-center py-2 px-3">
-        <h6 class="modal-title fw-bold text-primary m-0" id="examIntroModalLabel">تأكيد بدء الاختبار</h6>
-        <button type="button" class="btn-close m-0 ms-auto" data-bs-dismiss="modal" aria-label="Close" style="font-size: 0.8rem;"></button>
-      </div>
-      <div class="modal-body p-3 p-md-4 text-end" style="text-align: right !important; direction: rtl;">
-          
-          <div class="mb-3 text-center text-md-end">
-              <h5 class="text-primary fw-bold" id="modal-exam-title" style="line-height: 1.4;"></h5>
-          </div>
-          
-          <div class="mb-3">
-              <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.9rem;">وصف الاختبار:</h6>
-              <p class="text-muted mb-0" style="font-size: 0.85rem; line-height: 1.5;">اختبار تجريبي لقياس مدى استيعابك للمفاهيم وتقييم جاهزيتك قبل التقدم للاختبار النهائي.</p>
-          </div>
-          
-          <div class="mb-3">
-              <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.9rem;">بيانات الاختبار:</h6>
-              <div class="d-flex flex-wrap gap-2 text-muted" style="font-size: 0.85rem;">
-                  <span class="badge bg-light text-dark border"><i class="bi bi-patch-question text-primary me-1"></i> <span id="modal-exam-questions"></span> سؤال</span>
-                  <span class="badge bg-light text-dark border"><i class="bi bi-stopwatch text-primary me-1"></i> <span id="modal-exam-time"></span></span>
-                  <span class="badge bg-light text-dark border"><i class="bi bi-check-circle text-primary me-1"></i> نجاح 70%</span>
-                  <span class="badge bg-light text-dark border"><i class="bi bi-arrow-repeat text-primary me-1"></i> محاولات مفتوحة</span>
-                  <span class="badge bg-light text-dark border"><i class="bi bi-ui-checks-grid text-primary me-1"></i> صح/خطأ واختياري</span>
-              </div>
-          </div>
-
-          <div class="mb-3">
-              <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.9rem;">تعليمات هامة:</h6>
-              <ol class="mb-0 ps-0 pe-3 text-muted" style="line-height: 1.6; font-size: 0.85rem;">
-                  <li>اقرأ السؤال والبدائل بعناية.</li>
-                  <li>قد يحتوي الاختياري على <strong class="text-dark">إجابة صحيحة واحدة أو أكثر</strong> (سيتم التوضيح).</li>
-                  <li>يمكنك مراجعة وتعديل إجاباتك قبل التسليم.</li>
-              </ol>
-          </div>
-          
-          <div class="alert alert-warning py-2 px-3 mb-3 rounded-2 border-warning border-opacity-50 text-end">
-              <strong class="d-flex align-items-center mb-1 text-dark" style="font-size: 0.85rem;"><i class="bi bi-exclamation-triangle-fill text-warning fs-6 ms-2"></i> تنبيه:</strong>
-              <span class="text-dark" style="font-size: 0.8rem; line-height: 1.4;">حدد الإجابة أو الإجابات الصحيحة بناءً على المطلوب في كل سؤال، حيث قد يتطلب سؤال واحد اختيار أكثر من خيار.</span>
-          </div>
-
-          <div class="p-2 bg-light rounded-2 border">
-              <div class="form-check d-flex align-items-center mb-0">
-                  <input class="form-check-input border-secondary shadow-sm" type="checkbox" id="agreeCheckbox" style="width: 18px; height: 18px; margin-left: 10px; cursor: pointer;">
-                  <label class="form-check-label fw-bold text-dark w-100" for="agreeCheckbox" style="cursor: pointer; font-size: 0.85rem; line-height: 1.4;">
-                      قرأت التعليمات وأوافق على البدء.
-                  </label>
-              </div>
-          </div>
-      </div>
-      <div class="modal-footer bg-light d-flex justify-content-between py-2 px-3 w-100">
-        <button type="button" class="btn btn-sm btn-outline-secondary px-3 fw-bold" data-bs-dismiss="modal">إلغاء</button>
-        <button type="button" class="btn btn-sm btn-success px-3 fw-bold" id="btn-confirm-start" disabled>ابدأ الاختبار <i class="bi bi-play-circle-fill ms-1"></i></button>
-      </div>
-    </div>
-  </div>
-</div>
-@endsection
-
-@push('scripts')
-<script>
-    let currentExamId = null;
-
-    $('.btn-open-modal').on('click', function() {
-        currentExamId = $(this).data('id');
-        let title = $(this).data('title');
-        let qCount = $(this).data('q');
-        let timeMin = $(this).data('time');
-        
-        // Default to 120 minutes if not set in DB
-        if (!timeMin || timeMin === '') {
-            timeMin = 120;
-        }
-        
-        $('#modal-exam-title').text(title);
-        $('#modal-exam-questions').text(qCount || 50);
-        
-        let timeText = 'غير محدد';
-        if (timeMin) {
-            let hours = Math.floor(timeMin / 60);
-            let mins = timeMin % 60;
-            if (hours > 0 && mins === 0) {
-                timeText = (hours == 1 ? 'ساعة واحدة' : (hours == 2 ? 'ساعتان' : hours + ' ساعات'));
-            } else if (hours > 0) {
-                timeText = hours + ' ساعة و ' + mins + ' دقيقة';
+            if ($coupon->applies_to_all_assessments) {
+                $coupon->assessments()->detach();
             } else {
-                timeText = mins + ' دقيقة';
+                $coupon->assessments()->sync($data['assessment_ids'] ?? []);
+            }
+
+            if ($coupon->applies_to_all_users) {
+                $coupon->permittedUsers()->detach();
+            } else {
+                $coupon->permittedUsers()->sync($data['permitted_user_ids'] ?? []);
+            }
+
+            return $coupon->fresh();
+        });
+    }
+
+    /**
+     * Soft-delete a coupon.
+     */
+    public function deleteCoupon(Coupon $coupon): void
+    {
+        $coupon->delete();
+    }
+
+    /**
+     * Validates a coupon code for a specific user and assessment.
+     * Returns an array with validation status, message, and pricing details.
+     */
+    public function validateCouponForUser(string $code, Assessment $assessment, User $user): array
+    {
+        $coupon = Coupon::where('code', $code)
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>=', now()->toDateString());
+            })
+            ->first();
+
+        if (!$coupon) {
+            return ['valid' => false, 'message' => 'الكوبون غير صالح أو منتهي الصلاحية.'];
+        }
+
+        // Check assessment scope
+        if (!$coupon->applies_to_all_assessments) {
+            $appliesToAssessment = $coupon->assessments()->where('assessment_id', $assessment->id)->exists();
+            if (!$appliesToAssessment) {
+                return ['valid' => false, 'message' => 'هذا الكوبون لا ينطبق على هذا المقياس.'];
             }
         }
-        $('#modal-exam-time').text(timeText);
-        
-        $('#agreeCheckbox').prop('checked', false);
-        $('#btn-confirm-start').prop('disabled', true);
-        
-        new bootstrap.Modal(document.getElementById('examIntroModal')).show();
-    });
 
-    $('#agreeCheckbox').on('change', function() {
-        $('#btn-confirm-start').prop('disabled', !$(this).is(':checked'));
-    });
-
-    $('#btn-confirm-start').on('click', function() {
-        if(currentExamId) {
-            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري البدء...');
-            $('#form-start-' + currentExamId).submit();
+        // Check user scope
+        if (!$coupon->applies_to_all_users) {
+            $appliesToUser = $coupon->permittedUsers()->where('user_id', $user->id)->exists();
+            if (!$appliesToUser) {
+                return ['valid' => false, 'message' => 'هذا الكوبون مخصص لمستخدمين محددين فقط وليس لحسابك.'];
+            }
         }
-    });
-</script>
-@endpush
+
+        $resolved = $this->resolveDiscount($coupon, $user);
+
+        if ($resolved['exhausted']) {
+            return ['valid' => false, 'message' => 'لقد استنفدت جميع فرص الاستخدام لهذا الكوبون.'];
+        }
+
+        if ($resolved['discount'] === null) {
+            return ['valid' => false, 'message' => 'لا يوجد خصم متاح لك على هذا الكوبون في هذه المرحلة.'];
+        }
+
+        $price = (float) ($assessment->price ?? 0);
+        $discountAmount = round($price * $resolved['discount'] / 100, 2);
+        $finalPrice = max(0, $price - $discountAmount);
+
+        return [
+            'valid' => true,
+            'coupon' => $coupon,
+            'discount' => $resolved['discount'],
+            'price' => $price,
+            'discount_amount' => $discountAmount,
+            'final_price' => $finalPrice,
+            'is_free' => $finalPrice <= 0,
+            'usage_number' => $resolved['total_used'] + 1,
+            'message' => "الكوبون صالح! خصم {$resolved['discount']}% سيُطبق.",
+        ];
+    }
+
+    /**
+     * Records the usage of a coupon for a specific user.
+     */
+    public function recordUsage(Coupon $coupon, string $userId): void
+    {
+        $pivot = $coupon->users()->where('user_id', $userId)->first();
+        if ($pivot) {
+            $coupon->users()->updateExistingPivot($userId, ['used_count' => $pivot->pivot->used_count + 1]);
+        } else {
+            $coupon->users()->attach($userId, ['used_count' => 1]);
+        }
+    }
+
+    private const TIER_FIELDS = [
+        'discount_percentage',
+        'discount_percentage_2nd',
+        'discount_percentage_3rd',
+        'discount_percentage_4th',
+        'discount_percentage_5th',
+        'discount_percentage_6th',
+        'discount_percentage_7th',
+        'discount_percentage_8th',
+        'discount_percentage_9th',
+        'discount_percentage_10th',
+    ];
+
+    /**
+     * Resolve the actual discount percentage a user should get for a given coupon.
+     * Checks usage across all identities (email, phone, national_id) to prevent fraud.
+     */
+    private function resolveDiscount(Coupon $coupon, User $user): array
+    {
+        $totalUsed = $this->countLinkedUsage($coupon, $user);
+
+        $field = self::TIER_FIELDS[$totalUsed] ?? null;
+        $discount = ($field && $coupon->{$field} !== null)
+            ? (float) $coupon->{$field}
+            : (float) $coupon->discount_percentage;
+
+        $exhausted = ($coupon->assessments_limit !== null) && ($totalUsed >= $coupon->assessments_limit);
+
+        return [
+            'total_used' => $totalUsed,
+            'discount' => $discount,
+            'exhausted' => $exhausted,
+        ];
+    }
+
+    /**
+     * Count exam sessions using this coupon across all users sharing
+     * the same national_id, phone, or email as the requesting user.
+     */
+    private function countLinkedUsage(Coupon $coupon, User $user): int
+    {
+        $linkedUserIds = User::where(function ($q) use ($user) {
+            $q->where('email', $user->email);
+            if (! empty($user->national_id)) {
+                $q->orWhere('national_id', $user->national_id);
+            }
+            if (! empty($user->phone)) {
+                $q->orWhere('phone', $user->phone);
+            }
+        })->pluck('id');
+
+        return ExamSession::whereIn('user_id', $linkedUserIds)
+            ->where('coupon_id', $coupon->id)
+            ->count();
+    }
+}
+````
+
+## File: database/migrations/2026_07_05_124738_add_user_restrictions_to_coupons.php
+````php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('coupons', function (Blueprint $table) {
+            $table->boolean('applies_to_all_users')->default(true);
+        });
+
+        Schema::create('coupon_permitted_user', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('coupon_id');
+            $table->uuid('user_id');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('coupon_permitted_user');
+
+        Schema::table('coupons', function (Blueprint $table) {
+            $table->dropColumn('applies_to_all_users');
+        });
+    }
+};
 ````
 
 ## File: app/Http/Controllers/Admin/AssessmentController.php
@@ -63844,6 +63352,377 @@ class AssessmentController extends Controller
 }
 ````
 
+## File: app/Http/Controllers/User/UserGradedExamController.php
+````php
+<?php
+
+namespace App\Http\Controllers\User;
+
+use App\Http\Controllers\Controller;
+use App\Models\GradedExam;
+use App\Models\GradedExamSession;
+use App\Models\GradedExamUserAnswer;
+use App\Models\GradedExamUserAnswerOption;
+use App\Models\GradedExamResult;
+use App\Services\GradedExamGeneratorService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+
+class UserGradedExamController extends Controller
+{
+    public function index()
+    {
+        $exams = GradedExam::where('is_active', true)->get();
+        return view('user.graded_exams.index', compact('exams'));
+    }
+
+    public function progress()
+    {
+        $userId = Auth::id();
+        if (!$userId) {
+            return redirect()->route('login');
+        }
+
+        $sessions = GradedExamSession::where('user_id', $userId)
+            ->where('status', 'completed')
+            ->with(['result', 'gradedExam'])
+            ->orderBy('completed_at', 'asc')
+            ->get();
+
+        $progressByExam = [];
+        foreach ($sessions as $session) {
+            $examId = $session->graded_exam_id;
+            if (!isset($progressByExam[$examId])) {
+                $progressByExam[$examId] = [
+                    'exam_title' => $session->gradedExam->title_ar ?? 'اختبار غير معروف',
+                    'labels' => [],
+                    'data' => [],
+                    'sessions' => []
+                ];
+            }
+            
+            $attemptNum = count($progressByExam[$examId]['labels']) + 1;
+            $progressByExam[$examId]['labels'][] = "محاولة $attemptNum";
+            $progressByExam[$examId]['data'][] = $session->result ? $session->result->percentage : 0;
+            
+            // Add session to history (prepend so newest is first in the table)
+            array_unshift($progressByExam[$examId]['sessions'], $session);
+        }
+
+        return view('user.graded_exams.progress', compact('progressByExam'));
+    }
+
+    public function start(Request $request, GradedExam $exam, GradedExamGeneratorService $generator)
+    {
+        $userId = Auth::id();
+
+        if ($userId) {
+            $activeSession = GradedExamSession::where('user_id', $userId)
+                ->where('graded_exam_id', $exam->id)
+                ->where('status', 'in_progress')
+                ->first();
+
+            if ($activeSession) {
+                return redirect()->route('user.graded_exams.show', $activeSession->id);
+            }
+        }
+
+        try {
+            $session = $generator->generate($exam, Auth::id());
+            return redirect()->route('user.graded_exams.show', $session->id);
+        } catch (\Exception $e) {
+            // الرسالة الكاملة (بتفاصيل داخلية) اتسجلت بالفعل جوه GradedExamGeneratorService
+            // نفسه بعد آخر محاولة فاشلة. هنا بنوري المستخدم رسالة نظيفة بس، من غير أي
+            // تفاصيل تقنية داخلية زي UUID الوحدة.
+            \Log::error('فشل بدء اختبار للمستخدم', [
+                'graded_exam_id' => $exam->id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'تعذّر إعداد الاختبار حاليًا، برجاء المحاولة مرة أخرى بعد قليل.');
+        }
+    }
+
+    public function show(GradedExamSession $session)
+    {
+        if ($session->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if ($session->status !== 'in_progress') {
+            return redirect()->route('user.graded_exams.result', $session->id);
+        }
+
+        $session->load(['sessionQuestions.question.options' => function ($q) {
+            $q->orderBy('order_index');
+        }]);
+
+        return view('user.graded_exams.show', compact('session'));
+    }
+
+    /**
+     * تصحيح الإجابات فعليًا وحفظها + حساب النتيجة النهائية.
+     *
+     * صيغة الإدخال من الفورم:
+     *   answers[{session_question_id}]   = option_id            (سؤال إجابة واحدة)
+     *   answers[{session_question_id}][] = [option_id, option_id, ...]  (سؤال متعدد الإجابات)
+     */
+    public function answer(Request $request, GradedExamSession $session)
+    {
+        if ($session->user_id !== Auth::id()) abort(403);
+        if ($session->status !== 'in_progress') return redirect()->route('user.graded_exams.result', $session->id);
+
+        $submittedAnswers = $request->input('answers', []);
+
+        $session->load(['sessionQuestions.question.options']);
+
+        DB::transaction(function () use ($session, $submittedAnswers) {
+            $totalPointsEarned = 0;
+            $incorrectCount = 0; // Keeping this for legacy compatibility, though it might not be strictly counting 'incorrect questions' but rather 'lost points' or similar. We'll count a question as incorrect if points < 1.
+
+            foreach ($session->sessionQuestions as $sq) {
+                $question = $sq->question;
+
+                // الخيارات اللي المستخدم اختارها لهذا السؤال (تدعم واحد أو أكتر)
+                $raw = $submittedAnswers[$sq->id] ?? null;
+                $selectedOptionIds = is_array($raw) ? array_values(array_filter($raw)) : array_filter([$raw]);
+
+                // الخيارات الصحيحة فعليًا لهذا السؤال (من الداتابيز، مش من المستخدم)
+                $correctOptionIds = $question->options
+                    ->where('is_correct', true)
+                    ->pluck('id')
+                    ->map(fn ($id) => (string) $id)
+                    ->toArray();
+                
+                $totalCorrectOptions = count($correctOptionIds);
+                $pointsEarned = 0;
+                $isCorrect = false;
+
+                if ($totalCorrectOptions > 0) {
+                    $correctSelected = 0;
+                    $incorrectSelected = 0;
+
+                    foreach ($selectedOptionIds as $selId) {
+                        if (in_array((string)$selId, $correctOptionIds)) {
+                            $correctSelected++;
+                        } else {
+                            $incorrectSelected++;
+                        }
+                    }
+
+                    // Partial credit logic:
+                    // Only count correctly selected options towards the score.
+                    // We can subtract incorrect selected options if we want to penalize guessing, but standard request says:
+                    // "كل إجابة صحيحة يختارها الطالب تدّيه نصيبها من الدرجة"
+                    // If they select all options (including wrong ones), should they get full marks?
+                    // To prevent guessing all, we typically subtract incorrect selections or just score = correct - incorrect.
+                    // Let's implement: Max(0, (Correctly Selected - Incorrectly Selected)) / Total Correct
+                    $netCorrect = max(0, $correctSelected - $incorrectSelected);
+                    $pointsEarned = $netCorrect / $totalCorrectOptions;
+                    
+                    // Cap at 1 just in case
+                    if ($pointsEarned > 1) {
+                        $pointsEarned = 1;
+                    }
+
+                    $isCorrect = $pointsEarned == 1;
+                }
+
+                $userAnswer = GradedExamUserAnswer::create([
+                    'session_id' => $session->id,
+                    'question_id' => $question->id,
+                    'is_correct' => $isCorrect,
+                    'points_earned' => $pointsEarned,
+                    'answered_at' => now(),
+                ]);
+
+                foreach ($selectedOptionIds as $optionId) {
+                    GradedExamUserAnswerOption::create([
+                        'user_answer_id' => $userAnswer->id,
+                        'option_id' => $optionId,
+                    ]);
+                }
+
+                $totalPointsEarned += $pointsEarned;
+                if ($pointsEarned < 1) {
+                    $incorrectCount++;
+                }
+            }
+
+            $total = $session->sessionQuestions->count();
+            $percentage = $total > 0 ? round(($totalPointsEarned / $total) * 100, 2) : 0;
+
+            // حد النجاح الافتراضي 60%
+            $passThreshold = 60;
+
+            GradedExamResult::create([
+                'session_id' => $session->id,
+                'correct_count' => $totalPointsEarned, // This now stores points instead of raw count
+                'incorrect_count' => $total - $totalPointsEarned, // Math consistency
+                'total_questions' => $total,
+                'percentage' => $percentage,
+                'pass_status' => $percentage >= $passThreshold ? 'ناجح' : 'راسب',
+                'calculated_at' => now(),
+            ]);
+
+            $session->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+        });
+
+        return redirect()->route('user.graded_exams.result', $session->id);
+    }
+
+    private function getPerformanceLevel($percentage)
+    {
+        if ($percentage >= 85) return ['name' => 'متميز', 'class' => 'text-success', 'bar_color' => 'bg-success'];
+        if ($percentage >= 75) return ['name' => 'جيد جداً', 'class' => 'text-success', 'bar_color' => 'bg-success'];
+        if ($percentage >= 70) return ['name' => 'جيد', 'class' => 'text-warning', 'bar_color' => 'bg-warning'];
+        if ($percentage >= 60) return ['name' => 'يحتاج إلى مراجعة', 'class' => 'text-warning', 'bar_color' => 'bg-warning'];
+        return ['name' => 'يحتاج إلى تطوير', 'class' => 'text-danger', 'bar_color' => 'bg-danger'];
+    }
+
+    private function getReadinessLevel($percentage)
+    {
+        if ($percentage >= 85) return 'متميز';
+        if ($percentage >= 75) return 'جيد جداً';
+        if ($percentage >= 70) return 'جيد';
+        if ($percentage >= 60) return 'قريب من الجاهزية';
+        return 'يحتاج إلى تطوير';
+    }
+
+    public function result(GradedExamSession $session)
+    {
+        if ($session->user_id !== Auth::id()) abort(403);
+
+        $session->load([
+            'result', 
+            'gradedExam',
+            'sessionQuestions.question.unit',
+            'sessionQuestions.question.options',
+            'userAnswers.selectedOptions' // To see what the user actually chose
+        ]);
+
+        $result = $session->result;
+        
+        $readinessLevel = null;
+        $overallPerformance = null;
+        $unitsStats = [];
+        $highestUnit = null;
+        $lowestUnit = null;
+        
+        if ($result) {
+            $readinessLevel = $this->getReadinessLevel($result->percentage);
+            $overallPerformance = $this->getPerformanceLevel($result->percentage);
+
+            // Calculate unit breakdown
+            $unitData = [];
+            
+            // Map user answers for quick access
+            $userAnswersMap = $session->userAnswers->keyBy('question_id');
+
+            foreach ($session->sessionQuestions as $sq) {
+                $q = $sq->question;
+                if (!$q || !$q->unit) continue;
+                
+                $unitId = $q->unit->id;
+                if (!isset($unitData[$unitId])) {
+                    $unitData[$unitId] = [
+                        'name' => $q->unit->title_ar,
+                        'total_questions' => 0,
+                        'points_earned' => 0,
+                    ];
+                }
+
+                $unitData[$unitId]['total_questions']++;
+                
+                $answer = $userAnswersMap->get($q->id);
+                if ($answer) {
+                    $unitData[$unitId]['points_earned'] += $answer->points_earned;
+                }
+            }
+
+            foreach ($unitData as $id => $data) {
+                $percentage = $data['total_questions'] > 0 
+                    ? round(($data['points_earned'] / $data['total_questions']) * 100, 2) 
+                    : 0;
+                
+                $performance = $this->getPerformanceLevel($percentage);
+
+                $unitsStats[] = [
+                    'name' => $data['name'],
+                    'score' => $data['points_earned'],
+                    'total' => $data['total_questions'],
+                    'percentage' => $percentage,
+                    'level_name' => $performance['name'],
+                    'level_class' => $performance['class'],
+                    'bar_color' => $performance['bar_color'],
+                ];
+            }
+
+            // Sort descending by percentage
+            usort($unitsStats, function($a, $b) {
+                return $b['percentage'] <=> $a['percentage'];
+            });
+
+            if (count($unitsStats) > 0) {
+                $maxPercentage = $unitsStats[0]['percentage'];
+                $minPercentage = $unitsStats[count($unitsStats) - 1]['percentage'];
+
+                $highestUnits = array_filter($unitsStats, fn($u) => $u['percentage'] == $maxPercentage);
+                $lowestUnits = array_filter($unitsStats, fn($u) => $u['percentage'] == $minPercentage);
+
+                $highestNames = array_column($highestUnits, 'name');
+                $lowestNames = array_column($lowestUnits, 'name');
+
+                $highestUnit = $unitsStats[0];
+                $lowestUnit = $unitsStats[count($unitsStats) - 1];
+
+                if (count($highestNames) > 1) {
+                    $highestUnit['name'] = count($highestNames) <= 2 ? implode(' و ', $highestNames) : 'عدة وحدات (' . count($highestNames) . ')';
+                }
+                if (count($lowestNames) > 1) {
+                    $lowestUnit['name'] = count($lowestNames) <= 2 ? implode(' و ', $lowestNames) : 'عدة وحدات (' . count($lowestNames) . ')';
+                }
+            }
+        }
+
+        // Prepare review data
+        $reviewData = [];
+        if ($result) {
+            $userAnswersMap = $session->userAnswers->keyBy('question_id');
+            
+            foreach ($session->sessionQuestions as $index => $sq) {
+                $q = $sq->question;
+                $answer = $userAnswersMap->get($q->id);
+                
+                $selectedOptionIds = $answer ? $answer->selectedOptions->pluck('option_id')->toArray() : [];
+                $correctOptions = $q->options->where('is_correct', true)->pluck('option_text_ar')->toArray();
+                
+                $reviewData[] = [
+                    'index' => $index + 1,
+                    'text' => $q->text_ar,
+                    'unit_name' => $q->unit ? $q->unit->title_ar : '',
+                    'is_correct' => $answer && $answer->points_earned == 1,
+                    'points' => $answer ? $answer->points_earned : 0,
+                    'selected_ids' => $selectedOptionIds,
+                    'correct_options_text' => implode('، ', $correctOptions),
+                    'explanation' => $q->explanation_ar ?: 'لا يوجد تفسير متاح لهذا السؤال',
+                    'options' => $q->options
+                ];
+            }
+        }
+
+        return view('user.graded_exams.result', compact(
+            'session', 'result', 'readinessLevel', 'overallPerformance', 'unitsStats', 'highestUnit', 'lowestUnit', 'reviewData'
+        ));
+    }
+}
+````
+
 ## File: app/Http/Requests/Admin/UpdateSettingsRequest.php
 ````php
 <?php
@@ -63888,119 +63767,6 @@ class UpdateSettingsRequest extends FormRequest
             'is_active' => $this->boolean('is_active'),
             'hide_coupon_field' => $this->boolean('hide_coupon_field'),
         ]);
-    }
-}
-````
-
-## File: database/seeders/PerceptualStylesSeeder.php
-````php
-<?php
-
-namespace Database\Seeders;
-
-use Illuminate\Database\Seeder;
-use App\Models\Assessment;
-use App\Models\Dimension;
-use App\Models\Question;
-use App\Models\AnswerOption;
-use App\Models\Recommendation;
-use App\Models\User;
-
-class PerceptualStylesSeeder extends Seeder
-{
-    public function run(): void
-    {
-        $dir = database_path('data/assessments/perceptual_styles');
-        $meta = require $dir . '/meta.php';
-        
-        $adminUser = User::where('role', 'admin')->first() ?? User::first();
-        $meta['created_by'] = $adminUser?->id;
-
-        // Delete old version if exists to ensure clean idempotent seed
-        $existingList = Assessment::where('report_code', 'REP-PERCEPTUAL')
-            ->orWhere('report_code', 'REP-28')
-            ->orWhere('title_ar', 'LIKE', '%الأنماط الإدراكية%')
-            ->orWhere('scoring_type', 'perceptual_styles')
-            ->get();
-
-        foreach ($existingList as $oldAss) {
-            $sessions = \App\Models\ExamSession::where('assessment_id', $oldAss->id)->get();
-            foreach ($sessions as $s) {
-                \App\Models\UserAnswer::where('session_id', $s->id)->forceDelete();
-                $res = \App\Models\Result::where('exam_session_id', $s->id)->first();
-                if ($res) {
-                    \App\Models\DimensionScore::where('result_id', $res->id)->forceDelete();
-                    $res->forceDelete();
-                }
-                $s->forceDelete();
-            }
-            Recommendation::where('assessment_id', $oldAss->id)->forceDelete();
-
-            $dimIds = Dimension::where('assessment_id', $oldAss->id)->pluck('id');
-            \App\Models\DimensionInterpretation::whereIn('dimension_id', $dimIds)->forceDelete();
-            Dimension::where('assessment_id', $oldAss->id)->forceDelete();
-
-            $qIds = Question::where('assessment_id', $oldAss->id)->pluck('id');
-            AnswerOption::whereIn('question_id', $qIds)->forceDelete();
-            Question::where('assessment_id', $oldAss->id)->forceDelete();
-
-            $oldAss->forceDelete();
-        }
-
-        $assessment = Assessment::create($meta);
-
-        $dimensions = require $dir . '/dimensions.php';
-        foreach ($dimensions as $dimData) {
-            $dimension = Dimension::create([
-                'assessment_id' => $assessment->id,
-                'name_ar' => $dimData['name_ar'],
-                'max_score' => $dimData['max_score'],
-                'order_index' => $dimData['order_index'],
-            ]);
-
-            if (isset($dimData['questions'])) {
-                foreach ($dimData['questions'] as $qData) {
-                    $question = Question::create([
-                        'assessment_id' => $assessment->id,
-                        'dimension_id' => $dimension->id,
-                        'text_ar' => $qData['text_ar'],
-                        'order_index' => $qData['order_index'],
-                    ]);
-
-                    if (isset($qData['options'])) {
-                        foreach ($qData['options'] as $optData) {
-                            AnswerOption::create([
-                                'question_id' => $question->id,
-                                'label_ar' => $optData['label_ar'],
-                                'score_value' => $optData['score_value'],
-                                'order_index' => $optData['order_index'],
-                            ]);
-                        }
-                    }
-                }
-            }
-        }
-
-        $recommendations = require $dir . '/recommendations.php';
-        foreach ($recommendations as $recData) {
-            Recommendation::create([
-                'assessment_id' => $assessment->id,
-                'level' => $recData['level'],
-                'title_ar' => $recData['title_ar'] ?? null,
-                'description_ar' => $recData['description_ar'],
-                'strengths_ar' => $recData['strengths_ar'] ?? null,
-                'development_areas_ar' => $recData['development_areas_ar'] ?? null,
-                'how_to_learn_ar' => $recData['how_to_learn_ar'] ?? null,
-                'practical_tips_ar' => $recData['practical_tips_ar'] ?? null,
-                'certificates_intro_ar' => $recData['certificates_intro_ar'] ?? null,
-                'certificates_ar' => $recData['certificates_ar'] ?? null,
-                'programs_intro_ar' => $recData['programs_intro_ar'] ?? null,
-                'programs_ar' => $recData['programs_ar'] ?? null,
-                'programs_outro_ar' => $recData['programs_outro_ar'] ?? null,
-                'plan_30_days_intro_ar' => $recData['plan_30_days_intro_ar'] ?? null,
-                'plan_30_days_ar' => $recData['plan_30_days_ar'] ?? null,
-            ]);
-        }
     }
 }
 ````
@@ -64162,572 +63928,6 @@ window.addEventListener('pageshow', function (event) {
 @stack('scripts')
 </body>
 </html>
-````
-
-## File: resources/views/user/graded_exams/show.blade.php
-````php
-@extends('layouts.user')
-@section('title', 'إجراء الاختبار')
-
-@push('styles')
-<style>
-.exam-container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 10px 5px;
-}
-.question-card {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 20px 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-    border: 1px solid #f1f5f9;
-    display: none;
-}
-@media (min-width: 768px) {
-    .exam-container {
-        padding: 30px 15px;
-    }
-    .question-card {
-        padding: 35px;
-        margin-bottom: 25px;
-    }
-}
-.question-card.active {
-    display: block;
-    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.question-text {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 25px;
-    line-height: 1.7;
-}
-@media (min-width: 768px) {
-    .question-text {
-        font-size: 1.3rem;
-    }
-}
-.option-label {
-    display: flex;
-    align-items: center;
-    padding: 12px 15px;
-    border: 2px solid #f1f5f9;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.95rem;
-    color: #475569;
-    background: #ffffff;
-    position: relative;
-    overflow: hidden;
-}
-@media (min-width: 768px) {
-    .option-label {
-        padding: 16px 20px;
-        font-size: 1rem;
-    }
-}
-.option-label:hover {
-    background: #f8fafc;
-    border-color: #e2e8f0;
-}
-.option-input:checked + .option-label {
-    border-color: #3b82f6;
-    background: #eff6ff;
-    color: #1e3a8a;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
-}
-.option-input:checked + .option-label::before {
-    content: '\F26A'; /* bootstrap icon check-circle-fill */
-    font-family: 'bootstrap-icons';
-    position: absolute;
-    left: 20px;
-    font-size: 1.25rem;
-    color: #3b82f6;
-}
-
-/* Sidebar Styles */
-.sidebar-map {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-    border: 1px solid #f1f5f9;
-    position: sticky;
-    top: 90px;
-}
-.q-grid-container {
-    max-height: 50vh;
-    overflow-y: auto;
-    padding-right: 5px;
-}
-.q-grid-container::-webkit-scrollbar { width: 4px; }
-.q-grid-container::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
-.q-grid-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-.q-grid-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-.q-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-    gap: 10px;
-    margin-top: 15px;
-}
-@media (max-width: 576px) {
-    .q-grid { grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 8px; }
-}
-.q-btn {
-    width: 100%;
-    aspect-ratio: 1;
-    border-radius: 10px;
-    border: 1.5px solid #e2e8f0;
-    background: #f8fafc;
-    color: #64748b;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.95rem;
-}
-.q-btn:hover {
-    background: #e2e8f0;
-    color: #334155;
-}
-.q-btn.active {
-    border-color: #3b82f6;
-    background: #ffffff;
-    color: #3b82f6;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
-}
-.q-btn.answered {
-    background: #10b981;
-    border-color: #10b981;
-    color: #ffffff;
-}
-.q-btn.skipped {
-    background: #ef4444;
-    border-color: #ef4444;
-    color: #ffffff;
-}
-
-/* Navigation Buttons */
-.nav-buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 25px;
-}
-.nav-buttons .btn {
-    flex: 1;
-    border-radius: 12px;
-    padding: 14px;
-    font-weight: 700;
-    font-size: 1.05rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-@media (min-width: 768px) {
-    .nav-buttons {
-        justify-content: space-between;
-        gap: 0;
-    }
-    .nav-buttons .btn {
-        flex: none;
-        min-width: 160px;
-    }
-}
-@keyframes pulse {
-    0% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.85; transform: scale(0.98); }
-    100% { opacity: 1; transform: scale(1); }
-}
-</style>
-@endpush
-
-@section('content')
-@php
-    // Default to 120 minutes if not set
-    $timeLimitMinutes = $session->gradedExam->time_limit_min ?? 120;
-    $timeLeftSeconds = 0;
-    $hasTimer = false;
-    
-    if ($timeLimitMinutes) {
-        $hasTimer = true;
-        $startedAt = $session->started_at ?? $session->created_at;
-        $endTime = $startedAt->timestamp + ($timeLimitMinutes * 60);
-        $timeLeftSeconds = max(0, $endTime - now()->timestamp);
-    }
-@endphp
-
-<div class="exam-container">
-    <!-- Top Sticky/Visible Header with Timer (Compact for Mobile) -->
-    <div class="d-flex flex-column mb-3 bg-white p-2 p-md-3 rounded-3 shadow-sm border" style="position: sticky; top: 5px; z-index: 1000;">
-        <h1 class="fw-bold text-dark m-0 pb-2 mb-2 border-bottom" style="font-size: 0.95rem; line-height: 1.4;">
-            {{ $session->gradedExam->title_ar }}
-        </h1>
-        <div class="d-flex justify-content-between align-items-center">
-            <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill" style="font-size: 0.85rem;">
-                <i class="bi bi-list-ol me-1"></i> {{ $session->total_questions }} سؤال
-            </span>
-            
-            @if($hasTimer)
-            <div class="d-flex align-items-center px-2 py-1 rounded-2" id="timer-container" style="background-color: #fef2f2; border: 1px solid #fecaca;">
-                <i class="bi bi-stopwatch text-danger me-2" style="font-size: 0.9rem;"></i>
-                <div class="fw-bold text-danger font-monospace" id="exam-timer" dir="ltr" style="font-size: 1rem; line-height: 1; padding-top: 2px;">00:00:00</div>
-            </div>
-            @endif
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- Sidebar / Question Map -->
-        <div class="col-lg-4 col-md-12 mb-4 order-1 order-lg-2">
-            <!-- Mobile Toggle Button -->
-            <button class="btn btn-outline-primary d-lg-none w-100 mb-2 py-2 fw-bold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMapCollapse" aria-expanded="false" aria-controls="sidebarMapCollapse" style="border: 2px solid #e2e8f0; color: #475569; background: #f8fafc; font-size: 0.95rem;">
-                <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> عرض خريطة الأسئلة
-            </button>
-
-            <div class="sidebar-map collapse d-lg-block mt-2 mt-lg-0" id="sidebarMapCollapse">
-                <h6 class="fw-bold mb-3 text-center d-none d-lg-block">خريطة الأسئلة</h6>
-
-                <div class="d-flex justify-content-center gap-4 mb-3 small">
-                    <div class="d-flex align-items-center gap-1"><span style="width: 14px; height: 14px; background: #22c55e; border-radius: 3px;"></span> مجاب</div>
-                    <div class="d-flex align-items-center gap-1"><span style="width: 14px; height: 14px; background: #ef4444; border-radius: 3px;"></span> متروك</div>
-                </div>
-                <hr>
-                <div class="q-grid-container">
-                    <div class="q-grid" id="q-grid">
-                        <!-- Buttons will be generated by JS -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Form Area -->
-        <div class="col-lg-8 col-md-12 mb-4 order-2 order-lg-1">
-            <form id="exam-form" action="{{ route('user.graded_exams.answer', $session->id) }}" method="POST">
-                @csrf
-                
-                @foreach($session->sessionQuestions as $index => $sq)
-                    @php
-                        $isMulti = $sq->question->is_multi_correct;
-                        $correctCount = $isMulti ? $sq->question->options->filter(fn($opt) => $opt->is_correct)->count() : 1;
-                    @endphp
-                    <div class="question-card" data-index="{{ $index }}" data-is-multi="{{ $isMulti ? 'true' : 'false' }}" data-required-count="{{ $correctCount }}">
-                        <div class="question-text">
-                            <span class="text-muted me-1">{{ $index + 1 }}.</span> {{ $sq->question->text_ar }}
-                            @if($isMulti && $correctCount > 1)
-                                <span class="badge bg-warning text-dark ms-2" style="font-size: 0.85rem;">
-                                    <i class="bi bi-info-circle me-1"></i> اختر {{ $correctCount }} إجابات
-                                </span>
-                            @endif
-                        </div>
-                        
-                        <div class="options-list">
-                            @foreach($sq->question->options as $opt)
-                                @if($isMulti)
-                                    <input type="checkbox" class="btn-check option-input" 
-                                        name="answers[{{ $sq->id }}][]" value="{{ $opt->id }}" id="opt_{{ $sq->id }}_{{ $opt->id }}">
-                                @else
-                                    <input type="radio" class="btn-check option-input" 
-                                        name="answers[{{ $sq->id }}]" value="{{ $opt->id }}" id="opt_{{ $sq->id }}_{{ $opt->id }}">
-                                @endif
-                                <label class="option-label" for="opt_{{ $sq->id }}_{{ $opt->id }}">
-                                    {{ $opt->option_text_ar }}
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-                @endforeach
-                
-                <div class="nav-buttons">
-                    <button type="button" id="btn-prev" class="btn btn-outline-secondary px-4 py-2" style="visibility: hidden;">
-                        <i class="bi bi-arrow-right me-1"></i> السابق
-                    </button>
-                    
-                    <button type="button" id="btn-next" class="btn btn-primary px-5 py-2">
-                        التالي <i class="bi bi-arrow-left ms-1"></i>
-                    </button>
-
-                    <button type="button" id="btn-submit" class="btn btn-success px-5 py-2" style="display: none;">
-                        إنهاء الاختبار <i class="bi bi-check-circle ms-1"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endsection
-
-@push('scripts')
-<script>
-$(document).ready(function() {
-    const totalQuestions = {{ $session->total_questions }};
-    let currentIndex = 0;
-
-    // 1. Generate Sidebar Grid
-    for(let i = 0; i < totalQuestions; i++) {
-        $('#q-grid').append(`<div class="q-btn" data-target="${i}">${i + 1}</div>`);
-    }
-
-    // 2. Navigation Function
-    function showQuestion(index) {
-        // Mark current as skipped if leaving without answer
-        checkAndMarkStatus(currentIndex, true);
-
-        // Update active index
-        currentIndex = index;
-
-        // Hide all, show target
-        $('.question-card').removeClass('active');
-        $(`.question-card[data-index="${currentIndex}"]`).addClass('active');
-
-        // Update grid active state
-        $('.q-btn').removeClass('active');
-        $(`.q-btn[data-target="${currentIndex}"]`).addClass('active');
-
-        // Toggle Prev button
-        if(currentIndex === 0) {
-            $('#btn-prev').css('visibility', 'hidden');
-        } else {
-            $('#btn-prev').css('visibility', 'visible');
-        }
-
-        // Toggle Next / Submit buttons
-        if(currentIndex === totalQuestions - 1) {
-            $('#btn-next').hide();
-            $('#btn-submit').show();
-        } else {
-            $('#btn-next').show();
-            $('#btn-submit').hide();
-        }
-    }
-
-    // 3. Status Checking (Answered vs Skipped)
-    function checkAndMarkStatus(index, isNavigatingAway = false) {
-        let card = $(`.question-card[data-index="${index}"]`);
-        let isMulti = card.data('is-multi');
-        let requiredCount = parseInt(card.data('required-count'), 10);
-        let checkedCount = card.find('.option-input:checked').length;
-        
-        let hasAnswer = false;
-        if (isMulti === true) {
-            hasAnswer = (checkedCount === requiredCount); // MUST select exactly required
-        } else {
-            hasAnswer = (checkedCount > 0);
-        }
-
-        let btn = $(`.q-btn[data-target="${index}"]`);
-
-        if (hasAnswer) {
-            btn.addClass('answered').removeClass('skipped');
-        } else {
-            btn.removeClass('answered');
-            // Only mark as skipped (red) if we explicitly navigated away or hit next/prev
-            if(isNavigatingAway) {
-                btn.addClass('skipped');
-            }
-        }
-    }
-
-    // Listen for option changes to immediately mark green and enforce limits
-    $('.option-input').on('change', function() {
-        let card = $(this).closest('.question-card');
-        let isMulti = card.data('is-multi');
-        let requiredCount = parseInt(card.data('required-count'), 10);
-        
-        if (isMulti === true) {
-            let checkedInputs = card.find('.option-input:checked');
-            if (checkedInputs.length > requiredCount) {
-                $(this).prop('checked', false); // Revert the check
-                alert(`هذا السؤال يتطلب اختيار ${requiredCount} إجابات فقط.`);
-                return; // Stop execution
-            }
-        }
-        
-        let cardIndex = card.data('index');
-        checkAndMarkStatus(cardIndex);
-    });
-
-    // 4. Bind Events
-    $('#btn-next').on('click', function() {
-        if(currentIndex < totalQuestions - 1) {
-            showQuestion(currentIndex + 1);
-        }
-    });
-
-    $('#btn-prev').on('click', function() {
-        if(currentIndex > 0) {
-            showQuestion(currentIndex - 1);
-        }
-    });
-
-    $('.q-btn').on('click', function() {
-        let target = $(this).data('target');
-        showQuestion(target);
-        
-        // Auto-close sidebar on mobile after selection
-        if (window.innerWidth < 992) {
-            let collapseEl = document.getElementById('sidebarMapCollapse');
-            if (collapseEl && collapseEl.classList.contains('show')) {
-                let bsCollapse = bootstrap.Collapse.getInstance(collapseEl);
-                if (bsCollapse) {
-                    bsCollapse.hide();
-                } else {
-                    new bootstrap.Collapse(collapseEl).hide();
-                }
-            }
-        }
-    });
-
-    $('#btn-submit').on('click', function(e) {
-        e.preventDefault();
-        // Mark final question status
-        checkAndMarkStatus(currentIndex, true);
-        
-        let unanswered = $('.q-btn.skipped:not(.answered)').length;
-        if(unanswered > 0) {
-            if(!confirm(`يوجد لديك ${unanswered} سؤال بدون إجابة (باللون الأحمر). هل أنت متأكد من تسليم الاختبار؟`)) {
-                return;
-            }
-        }
-        $('#exam-form').submit();
-    });
-
-    // 5. Initialize First Question
-    showQuestion(0);
-    // 6. Timer Logic
-    const hasTimer = {{ $hasTimer ? 'true' : 'false' }};
-    let timeLeft = {{ $timeLeftSeconds }};
-    
-    if (hasTimer) {
-        function updateTimerDisplay() {
-            let h = Math.floor(timeLeft / 3600);
-            let m = Math.floor((timeLeft % 3600) / 60);
-            let s = timeLeft % 60;
-            
-            let display = '';
-            if (h > 0) display += String(h).padStart(2, '0') + ':';
-            display += String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-            
-            $('#exam-timer').text(display);
-            
-            if (timeLeft <= 300) {
-                // last 5 minutes, blink or make it more prominent
-                $('#timer-container').removeClass('alert-danger border-opacity-25').addClass('alert-danger fw-bold').css('animation', 'pulse 1s infinite');
-            }
-        }
-        
-        updateTimerDisplay();
-        
-        let timerInterval = setInterval(function() {
-            timeLeft--;
-            if (timeLeft <= 0) {
-                timeLeft = 0;
-                clearInterval(timerInterval);
-                updateTimerDisplay();
-                alert('انتهى الوقت المخصص للاختبار! سيتم تسليم إجاباتك الآن تلقائياً.');
-                
-                // Disable all inputs so user can't change while submitting
-                $('.option-input').prop('disabled', true);
-                $('#btn-submit, #btn-next, #btn-prev').prop('disabled', true);
-                
-                $('#exam-form').submit();
-            } else {
-                updateTimerDisplay();
-            }
-        }, 1000);
-    }
-});
-</script>
-@endpush
-````
-
-## File: app/Http/Controllers/AuthController.php
-````php
-<?php
-
-namespace App\Http\Controllers;
-
-use App\Http\Requests\RegisterRequest;
-use App\Services\UserService;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-
-class AuthController extends Controller
-{
-    public function __construct(
-        private readonly UserService $userService,
-    ) {}
-
-    public function showLogin()
-    {
-        return response()
-            ->view('auth.login')
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
-    }
-
-    public function login(\App\Http\Requests\LoginRequest $request): RedirectResponse
-    {
-        $credentials = $request->validated();
-
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-
-            /** @var \App\Models\User $user */
-            $user = Auth::user();
-            if ($user->isAdmin()) {
-                return redirect()->route('admin.dashboard');
-            }
-
-            return redirect()->route('selection');
-        }
-
-        return back()->withErrors(['email' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.']);
-    }
-
-    public function showRegister()
-    {
-        return response()
-            ->view('auth.register')
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
-    }
-
-    public function register(RegisterRequest $request): RedirectResponse
-    {
-        $user = $this->userService->register($request->validated());
-
-        Auth::login($user);
-
-        return redirect()->route('selection');
-    }
-
-    public function logout(Request $request): RedirectResponse
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('login');
-    }
-}
 ````
 
 ## File: app/Models/Assessment.php
@@ -64906,144 +64106,192 @@ class ExamResultService
 }
 ````
 
-## File: routes/web.php
+## File: database/seeders/PerceptualStylesSeeder.php
 ````php
 <?php
 
-use App\Http\Controllers\Admin;
-use App\Http\Controllers\User;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ExamController;
-use Illuminate\Support\Facades\Route;
+namespace Database\Seeders;
 
-// Auth
-Route::get('/', fn () => redirect()->route('login'));
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1')->name('register.post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+use Illuminate\Database\Seeder;
+use App\Models\Assessment;
+use App\Models\Dimension;
+use App\Models\Question;
+use App\Models\AnswerOption;
+use App\Models\Recommendation;
+use App\Models\User;
 
-// User routes
-Route::middleware(['auth', 'user'])->group(function () {
-    Route::get('/selection', function () {
-        return view('user.selection');
-    })->name('selection');
-    
-    // Keep old dashboard route for backward compatibility, redirect to selection
-    Route::get('/dashboard', function () {
-        return redirect()->route('selection');
-    })->name('dashboard');
-    
-    Route::get('/assessments', [DashboardController::class, 'index'])->name('dashboard.assessments');
-    Route::post('/coupon/validate', [ExamController::class, 'validateCoupon'])->name('coupon.validate');
-    Route::get('/coupon/for-assessment/{assessment}', [ExamController::class, 'getCouponForAssessment'])->name('coupon.for-assessment');
-    Route::post('/exam/{assessment}/start', [ExamController::class, 'start'])->name('exam.start');
-    Route::get('/exam/{session}', [ExamController::class, 'show'])->name('exam.show');
-    Route::post('/exam/{session}/answer', [ExamController::class, 'answer'])->name('exam.answer');
-    Route::post('/exam/{session}/previous', [ExamController::class, 'previous'])->name('exam.previous');
-    Route::get('/exam/{session}/result', [ExamController::class, 'result'])->name('exam.result');
-    
-});
-
-// Professional certificates (Graded Exams) - Publicly accessible for guest testing
-Route::prefix('certificates')->name('user.graded_exams.')->group(function () {
-    Route::get('/', [User\UserGradedExamController::class, 'index'])->name('index');
-    Route::post('/{exam}/start', [User\UserGradedExamController::class, 'start'])->name('start');
-    Route::get('/session/{session}', [User\UserGradedExamController::class, 'show'])->name('show');
-    Route::post('/session/{session}/answer', [User\UserGradedExamController::class, 'answer'])->name('answer');
-    Route::get('/session/{session}/result', [User\UserGradedExamController::class, 'result'])->name('result');
-});
-
-// Admin routes
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/settings', [Admin\SettingController::class, 'index'])->name('settings.index');
-    Route::put('/settings', [Admin\SettingController::class, 'update'])->name('settings.update');
-
-    Route::get('/assessments', [Admin\AssessmentController::class, 'index'])->name('assessments.index');
-    Route::post('/assessments', [Admin\AssessmentController::class, 'store'])->name('assessments.store');
-    Route::put('/assessments/{assessment}', [Admin\AssessmentController::class, 'update'])->name('assessments.update');
-    Route::delete('/assessments/{assessment}', [Admin\AssessmentController::class, 'destroy'])->name('assessments.destroy');
-    Route::post('/assessments/{assessment}/toggle', [Admin\AssessmentController::class, 'toggle'])->name('assessments.toggle');
-    Route::get('/assessments/{assessment}', [Admin\AssessmentController::class, 'show'])->name('assessments.show');
-    Route::get('/assessments/{assessment}/preview/{level}', [Admin\AssessmentController::class, 'previewResult'])->name('assessments.preview');
-    Route::patch('/assessments/{assessment}/settings', [Admin\AssessmentController::class, 'updateSettings'])->name('assessments.settings');
-
-    Route::get('/questions', [Admin\QuestionController::class, 'index'])->name('questions.index');
-    Route::post('/questions', [Admin\QuestionController::class, 'store'])->name('questions.store');
-    Route::post('/questions/bulk', [Admin\QuestionController::class, 'bulkStore'])->name('questions.bulk');
-    Route::get('/questions/by-assessment/{assessment}', [Admin\QuestionController::class, 'byAssessment'])->name('questions.byAssessment');
-    Route::post('/assessments/{assessment}/questions/import-csv', [Admin\QuestionController::class, 'importCsv'])->name('questions.importCsv');
-    Route::get('/questions/template', [Admin\QuestionController::class, 'downloadTemplate'])->name('questions.template');
-
-    // Admin UX Improvements Routes
-    Route::patch('/questions/reorder', [Admin\QuestionController::class, 'reorder'])->name('questions.reorder');
-    Route::patch('/questions/bulk-dimension', [Admin\QuestionController::class, 'bulkAssignDimension'])->name('questions.bulkAssignDimension');
-    Route::delete('/questions/bulk-delete', [Admin\QuestionController::class, 'bulkDelete'])->name('questions.bulkDelete');
-    Route::patch('/questions/{question}/dimension', [Admin\QuestionController::class, 'assignDimension'])->name('questions.assignDimension');
-    Route::patch('/questions/{question}', [Admin\QuestionController::class, 'update'])->name('questions.update');
-    Route::delete('/questions/{question}', [Admin\QuestionController::class, 'destroy'])->name('questions.destroy');
-
-    // Answer Options Routes
-    Route::get('/questions/{question}/options', [Admin\AnswerOptionController::class, 'index'])->name('options.index');
-    Route::post('/questions/{question}/options', [Admin\AnswerOptionController::class, 'store'])->name('options.store');
-    Route::put('/options/{option}', [Admin\AnswerOptionController::class, 'update'])->name('options.update');
-    Route::delete('/options/{option}', [Admin\AnswerOptionController::class, 'destroy'])->name('options.destroy');
-    Route::post('/questions/{question}/sync-options', [Admin\AnswerOptionController::class, 'syncToAssessment'])->name('options.sync');
-
-    Route::get('/exams/create', [Admin\ExamController::class, 'create'])->name('exams.create');
-    Route::post('/exams', [Admin\ExamController::class, 'store'])->name('exams.store');
-
-    Route::get('/dimensions/by-assessment/{assessment}', [Admin\DimensionController::class, 'byAssessment'])->name('dimensions.byAssessment');
-    Route::patch('/dimensions/reorder', [Admin\DimensionController::class, 'reorder'])->name('dimensions.reorder');
-    Route::post('/assessments/{assessment}/dimensions', [Admin\DimensionController::class, 'store'])->name('dimensions.store');
-    Route::patch('/dimensions/{dimension}', [Admin\DimensionController::class, 'update'])->name('dimensions.update');
-    Route::delete('/dimensions/{dimension}', [Admin\DimensionController::class, 'destroy'])->name('dimensions.destroy');
-    Route::post('/dimensions/{dimension}/interpretations', [Admin\DimensionController::class, 'storeInterpretations'])->name('dimensions.interpretations.store');
-
-    Route::get('/recommendations', [Admin\RecommendationController::class, 'index'])->name('recommendations.index');
-    Route::post('/recommendations', [Admin\RecommendationController::class, 'store'])->name('recommendations.store');
-    Route::delete('/recommendations/{recommendation}', [Admin\RecommendationController::class, 'destroy'])->name('recommendations.destroy');
-
-    Route::get('/statistics', [Admin\StatisticsController::class, 'index'])->name('statistics.index');
-    Route::get('/statistics/data', [Admin\StatisticsController::class, 'data'])->name('statistics.data');
-    Route::get('/statistics/export-csv', [Admin\StatisticsController::class, 'exportCsv'])->name('statistics.exportCsv');
-
-    Route::resource('coupons', Admin\CouponController::class)->except(['show']);
-    Route::resource('icons', Admin\IconController::class)->only(['index', 'store', 'destroy']);
-
-    Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');
-    Route::get('/users/{user}/results', [Admin\UserController::class, 'userResults'])->name('users.results');
-
-    // Graded Exams Admin Routes
-    Route::prefix('graded-exams')->name('graded_exams.')->group(function () {
-        // Certificates and Units
-        Route::get('/', [Admin\GradedExamController::class, 'index'])->name('index');
-        Route::post('/', [Admin\GradedExamController::class, 'store'])->name('store');
-        Route::put('/{exam}', [Admin\GradedExamController::class, 'update'])->name('update');
-        Route::delete('/{exam}', [Admin\GradedExamController::class, 'destroy'])->name('destroy');
+class PerceptualStylesSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $dir = database_path('data/assessments/perceptual_styles');
+        $meta = require $dir . '/meta.php';
         
-        // Settings
-        Route::get('/{exam}/settings', [Admin\GradedExamController::class, 'settings'])->name('settings');
-        Route::put('/{exam}/settings', [Admin\GradedExamController::class, 'updateSettings'])->name('settings.update');
-        
-        Route::get('/{exam}/units', [Admin\GradedExamController::class, 'showUnits'])->name('units.show');
-        Route::post('/{exam}/units', [Admin\GradedExamController::class, 'storeUnit'])->name('units.store');
-        Route::put('/units/{unit}', [Admin\GradedExamController::class, 'updateUnit'])->name('units.update');
-        Route::delete('/units/{unit}', [Admin\GradedExamController::class, 'destroyUnit'])->name('units.destroy');
+        $adminUser = User::where('role', 'admin')->first() ?? User::first();
+        $meta['created_by'] = $adminUser?->id;
 
-        // Questions
-        Route::get('/questions', [Admin\GradedExamQuestionController::class, 'index'])->name('questions.index');
-        Route::post('/questions', [Admin\GradedExamQuestionController::class, 'store'])->name('questions.store');
-        Route::patch('/questions/{question}', [Admin\GradedExamQuestionController::class, 'update'])->name('questions.update');
-        Route::delete('/questions/{question}', [Admin\GradedExamQuestionController::class, 'destroy'])->name('questions.destroy');
-        Route::get('/questions/{question}/options', [Admin\GradedExamQuestionController::class, 'options'])->name('questions.options');
-        
-        Route::get('/api-units', [Admin\GradedExamQuestionController::class, 'getUnits'])->name('units.byExam');
-    });
-});
+        // Delete old version if exists to ensure clean idempotent seed
+        $existingList = Assessment::where('report_code', 'REP-PERCEPTUAL')
+            ->orWhere('report_code', 'REP-28')
+            ->orWhere('title_ar', 'LIKE', '%الأنماط الإدراكية%')
+            ->orWhere('scoring_type', 'perceptual_styles')
+            ->get();
+
+        foreach ($existingList as $oldAss) {
+            $sessions = \App\Models\ExamSession::where('assessment_id', $oldAss->id)->get();
+            foreach ($sessions as $s) {
+                \App\Models\UserAnswer::where('session_id', $s->id)->forceDelete();
+                $res = \App\Models\Result::where('exam_session_id', $s->id)->first();
+                if ($res) {
+                    \App\Models\DimensionScore::where('result_id', $res->id)->forceDelete();
+                    $res->forceDelete();
+                }
+                $s->forceDelete();
+            }
+            Recommendation::where('assessment_id', $oldAss->id)->forceDelete();
+
+            $dimIds = Dimension::where('assessment_id', $oldAss->id)->pluck('id');
+            \App\Models\DimensionInterpretation::whereIn('dimension_id', $dimIds)->forceDelete();
+            Dimension::where('assessment_id', $oldAss->id)->forceDelete();
+
+            $qIds = Question::where('assessment_id', $oldAss->id)->pluck('id');
+            AnswerOption::whereIn('question_id', $qIds)->forceDelete();
+            Question::where('assessment_id', $oldAss->id)->forceDelete();
+
+            $oldAss->forceDelete();
+        }
+
+        $assessment = Assessment::create($meta);
+
+        $dimensions = require $dir . '/dimensions.php';
+        foreach ($dimensions as $dimData) {
+            $dimension = Dimension::create([
+                'assessment_id' => $assessment->id,
+                'name_ar' => $dimData['name_ar'],
+                'max_score' => $dimData['max_score'],
+                'order_index' => $dimData['order_index'],
+            ]);
+
+            if (isset($dimData['questions'])) {
+                foreach ($dimData['questions'] as $qData) {
+                    $question = Question::create([
+                        'assessment_id' => $assessment->id,
+                        'dimension_id' => $dimension->id,
+                        'text_ar' => $qData['text_ar'],
+                        'order_index' => $qData['order_index'],
+                    ]);
+
+                    if (isset($qData['options'])) {
+                        foreach ($qData['options'] as $optData) {
+                            AnswerOption::create([
+                                'question_id' => $question->id,
+                                'label_ar' => $optData['label_ar'],
+                                'score_value' => $optData['score_value'],
+                                'order_index' => $optData['order_index'],
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+
+        $recommendations = require $dir . '/recommendations.php';
+        foreach ($recommendations as $recData) {
+            Recommendation::create([
+                'assessment_id' => $assessment->id,
+                'level' => $recData['level'],
+                'title_ar' => $recData['title_ar'] ?? null,
+                'description_ar' => $recData['description_ar'],
+                'strengths_ar' => $recData['strengths_ar'] ?? null,
+                'development_areas_ar' => $recData['development_areas_ar'] ?? null,
+                'how_to_learn_ar' => $recData['how_to_learn_ar'] ?? null,
+                'practical_tips_ar' => $recData['practical_tips_ar'] ?? null,
+                'certificates_intro_ar' => $recData['certificates_intro_ar'] ?? null,
+                'certificates_ar' => $recData['certificates_ar'] ?? null,
+                'programs_intro_ar' => $recData['programs_intro_ar'] ?? null,
+                'programs_ar' => $recData['programs_ar'] ?? null,
+                'programs_outro_ar' => $recData['programs_outro_ar'] ?? null,
+                'plan_30_days_intro_ar' => $recData['plan_30_days_intro_ar'] ?? null,
+                'plan_30_days_ar' => $recData['plan_30_days_ar'] ?? null,
+            ]);
+        }
+    }
+}
+````
+
+## File: app/Http/Controllers/AuthController.php
+````php
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\RegisterRequest;
+use App\Services\UserService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class AuthController extends Controller
+{
+    public function __construct(
+        private readonly UserService $userService,
+    ) {}
+
+    public function showLogin()
+    {
+        return response()
+            ->view('auth.login')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+    }
+
+    public function login(\App\Http\Requests\LoginRequest $request): RedirectResponse
+    {
+        $credentials = $request->validated();
+
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+            if ($user->isAdmin()) {
+                return redirect()->route('admin.dashboard');
+            }
+
+            return redirect()->route('user.graded_exams.index');
+        }
+
+        return back()->withErrors(['email' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.']);
+    }
+
+    public function showRegister()
+    {
+        return response()
+            ->view('auth.register')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+    }
+
+    public function register(RegisterRequest $request): RedirectResponse
+    {
+        $user = $this->userService->register($request->validated());
+
+        Auth::login($user);
+
+        return redirect()->route('user.graded_exams.index');
+    }
+
+    public function logout(Request $request): RedirectResponse
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login');
+    }
+}
 ````
 
 ## File: resources/views/user/dashboard.blade.php
@@ -66290,6 +65538,147 @@ document.addEventListener('DOMContentLoaded', function() {
 @endsection
 ````
 
+## File: routes/web.php
+````php
+<?php
+
+use App\Http\Controllers\Admin;
+use App\Http\Controllers\User;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExamController;
+use Illuminate\Support\Facades\Route;
+
+// Auth
+Route::get('/', fn () => redirect()->route('login'));
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1')->name('register.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// User routes
+Route::middleware(['auth', 'user'])->group(function () {
+    Route::get('/selection', function () {
+        return redirect()->route('user.graded_exams.index');
+    })->name('selection');
+    
+    // Keep old dashboard route for backward compatibility, redirect to selection
+    Route::get('/dashboard', function () {
+        return redirect()->route('selection');
+    })->name('dashboard');
+    
+    Route::get('/assessments', [DashboardController::class, 'index'])->name('dashboard.assessments');
+    Route::post('/coupon/validate', [ExamController::class, 'validateCoupon'])->name('coupon.validate');
+    Route::get('/coupon/for-assessment/{assessment}', [ExamController::class, 'getCouponForAssessment'])->name('coupon.for-assessment');
+    Route::post('/exam/{assessment}/start', [ExamController::class, 'start'])->name('exam.start');
+    Route::get('/exam/{session}', [ExamController::class, 'show'])->name('exam.show');
+    Route::post('/exam/{session}/answer', [ExamController::class, 'answer'])->name('exam.answer');
+    Route::post('/exam/{session}/previous', [ExamController::class, 'previous'])->name('exam.previous');
+    Route::get('/exam/{session}/result', [ExamController::class, 'result'])->name('exam.result');
+    
+});
+
+// User Graded Exams
+Route::middleware(['auth'])->prefix('certificates')->name('user.graded_exams.')->group(function () {
+    Route::get('/', [User\UserGradedExamController::class, 'index'])->name('index');
+    Route::get('/progress', [User\UserGradedExamController::class, 'progress'])->name('progress');
+    Route::post('/{exam}/start', [User\UserGradedExamController::class, 'start'])->name('start');
+    Route::get('/session/{session}', [User\UserGradedExamController::class, 'show'])->name('show');
+    Route::post('/session/{session}/answer', [User\UserGradedExamController::class, 'answer'])->name('answer');
+    Route::get('/session/{session}/result', [User\UserGradedExamController::class, 'result'])->name('result');
+});
+
+// Admin routes
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/settings', [Admin\SettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [Admin\SettingController::class, 'update'])->name('settings.update');
+
+    Route::get('/assessments', [Admin\AssessmentController::class, 'index'])->name('assessments.index');
+    Route::post('/assessments', [Admin\AssessmentController::class, 'store'])->name('assessments.store');
+    Route::put('/assessments/{assessment}', [Admin\AssessmentController::class, 'update'])->name('assessments.update');
+    Route::delete('/assessments/{assessment}', [Admin\AssessmentController::class, 'destroy'])->name('assessments.destroy');
+    Route::post('/assessments/{assessment}/toggle', [Admin\AssessmentController::class, 'toggle'])->name('assessments.toggle');
+    Route::get('/assessments/{assessment}', [Admin\AssessmentController::class, 'show'])->name('assessments.show');
+    Route::get('/assessments/{assessment}/preview/{level}', [Admin\AssessmentController::class, 'previewResult'])->name('assessments.preview');
+    Route::patch('/assessments/{assessment}/settings', [Admin\AssessmentController::class, 'updateSettings'])->name('assessments.settings');
+
+    Route::get('/questions', [Admin\QuestionController::class, 'index'])->name('questions.index');
+    Route::post('/questions', [Admin\QuestionController::class, 'store'])->name('questions.store');
+    Route::post('/questions/bulk', [Admin\QuestionController::class, 'bulkStore'])->name('questions.bulk');
+    Route::get('/questions/by-assessment/{assessment}', [Admin\QuestionController::class, 'byAssessment'])->name('questions.byAssessment');
+    Route::post('/assessments/{assessment}/questions/import-csv', [Admin\QuestionController::class, 'importCsv'])->name('questions.importCsv');
+    Route::get('/questions/template', [Admin\QuestionController::class, 'downloadTemplate'])->name('questions.template');
+
+    // Admin UX Improvements Routes
+    Route::patch('/questions/reorder', [Admin\QuestionController::class, 'reorder'])->name('questions.reorder');
+    Route::patch('/questions/bulk-dimension', [Admin\QuestionController::class, 'bulkAssignDimension'])->name('questions.bulkAssignDimension');
+    Route::delete('/questions/bulk-delete', [Admin\QuestionController::class, 'bulkDelete'])->name('questions.bulkDelete');
+    Route::patch('/questions/{question}/dimension', [Admin\QuestionController::class, 'assignDimension'])->name('questions.assignDimension');
+    Route::patch('/questions/{question}', [Admin\QuestionController::class, 'update'])->name('questions.update');
+    Route::delete('/questions/{question}', [Admin\QuestionController::class, 'destroy'])->name('questions.destroy');
+
+    // Answer Options Routes
+    Route::get('/questions/{question}/options', [Admin\AnswerOptionController::class, 'index'])->name('options.index');
+    Route::post('/questions/{question}/options', [Admin\AnswerOptionController::class, 'store'])->name('options.store');
+    Route::put('/options/{option}', [Admin\AnswerOptionController::class, 'update'])->name('options.update');
+    Route::delete('/options/{option}', [Admin\AnswerOptionController::class, 'destroy'])->name('options.destroy');
+    Route::post('/questions/{question}/sync-options', [Admin\AnswerOptionController::class, 'syncToAssessment'])->name('options.sync');
+
+    Route::get('/exams/create', [Admin\ExamController::class, 'create'])->name('exams.create');
+    Route::post('/exams', [Admin\ExamController::class, 'store'])->name('exams.store');
+
+    Route::get('/dimensions/by-assessment/{assessment}', [Admin\DimensionController::class, 'byAssessment'])->name('dimensions.byAssessment');
+    Route::patch('/dimensions/reorder', [Admin\DimensionController::class, 'reorder'])->name('dimensions.reorder');
+    Route::post('/assessments/{assessment}/dimensions', [Admin\DimensionController::class, 'store'])->name('dimensions.store');
+    Route::patch('/dimensions/{dimension}', [Admin\DimensionController::class, 'update'])->name('dimensions.update');
+    Route::delete('/dimensions/{dimension}', [Admin\DimensionController::class, 'destroy'])->name('dimensions.destroy');
+    Route::post('/dimensions/{dimension}/interpretations', [Admin\DimensionController::class, 'storeInterpretations'])->name('dimensions.interpretations.store');
+
+    Route::get('/recommendations', [Admin\RecommendationController::class, 'index'])->name('recommendations.index');
+    Route::post('/recommendations', [Admin\RecommendationController::class, 'store'])->name('recommendations.store');
+    Route::delete('/recommendations/{recommendation}', [Admin\RecommendationController::class, 'destroy'])->name('recommendations.destroy');
+
+    Route::get('/statistics', [Admin\StatisticsController::class, 'index'])->name('statistics.index');
+    Route::get('/statistics/data', [Admin\StatisticsController::class, 'data'])->name('statistics.data');
+    Route::get('/statistics/export-csv', [Admin\StatisticsController::class, 'exportCsv'])->name('statistics.exportCsv');
+
+    Route::resource('coupons', Admin\CouponController::class)->except(['show']);
+    Route::resource('icons', Admin\IconController::class)->only(['index', 'store', 'destroy']);
+
+    Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');
+    Route::get('/users/{user}/results', [Admin\UserController::class, 'userResults'])->name('users.results');
+
+    // Graded Exams Admin Routes
+    Route::prefix('graded-exams')->name('graded_exams.')->group(function () {
+        // Certificates and Units
+        Route::get('/', [Admin\GradedExamController::class, 'index'])->name('index');
+        Route::post('/', [Admin\GradedExamController::class, 'store'])->name('store');
+        Route::put('/{exam}', [Admin\GradedExamController::class, 'update'])->name('update');
+        Route::delete('/{exam}', [Admin\GradedExamController::class, 'destroy'])->name('destroy');
+        
+        // Settings
+        Route::get('/{exam}/settings', [Admin\GradedExamController::class, 'settings'])->name('settings');
+        Route::put('/{exam}/settings', [Admin\GradedExamController::class, 'updateSettings'])->name('settings.update');
+        
+        Route::get('/{exam}/units', [Admin\GradedExamController::class, 'showUnits'])->name('units.show');
+        Route::post('/{exam}/units', [Admin\GradedExamController::class, 'storeUnit'])->name('units.store');
+        Route::put('/units/{unit}', [Admin\GradedExamController::class, 'updateUnit'])->name('units.update');
+        Route::delete('/units/{unit}', [Admin\GradedExamController::class, 'destroyUnit'])->name('units.destroy');
+
+        // Questions
+        Route::get('/questions', [Admin\GradedExamQuestionController::class, 'index'])->name('questions.index');
+        Route::post('/questions', [Admin\GradedExamQuestionController::class, 'store'])->name('questions.store');
+        Route::patch('/questions/{question}', [Admin\GradedExamQuestionController::class, 'update'])->name('questions.update');
+        Route::delete('/questions/{question}', [Admin\GradedExamQuestionController::class, 'destroy'])->name('questions.destroy');
+        Route::get('/questions/{question}/options', [Admin\GradedExamQuestionController::class, 'options'])->name('questions.options');
+        
+        Route::get('/api-units', [Admin\GradedExamQuestionController::class, 'getUnits'])->name('units.byExam');
+    });
+});
+````
+
 ## File: database/seeders/DatabaseSeeder.php
 ````php
 <?php
@@ -66424,6 +65813,461 @@ class DatabaseSeeder extends Seeder
         }
     }
 }
+````
+
+## File: resources/views/user/graded_exams/result.blade.php
+````php
+@extends('layouts.user')
+@section('title', 'نتيجة الاختبار')
+
+@push('styles')
+<style>
+:root{
+    --navy: #14213d;
+    --navy-soft: #1e3a5f;
+    --accent: #0ea472;
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --border: #e6e9f0;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 2px 10px rgba(15, 23, 42, .05);
+}
+
+.result-page{
+    background: var(--bg);
+    padding: 20px 14px 56px;
+}
+@media (min-width: 768px){
+    .result-page{ padding: 36px 20px 64px; }
+}
+.result-container{ max-width: 960px; margin: 0 auto; }
+
+.result-hero{ text-align: center; margin-bottom: 28px; }
+.result-hero h1{
+    color: var(--navy);
+    font-weight: 800;
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+}
+@media (min-width: 768px){ .result-hero h1{ font-size: 1.75rem; } }
+.result-hero p{ color: var(--text-muted); font-size: .95rem; margin: 0; }
+
+/* Summary card */
+.summary-card{
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 28px;
+}
+.summary-grid{
+    display: grid;
+    grid-template-columns: 1fr;
+}
+@media (min-width: 640px){
+    .summary-grid{ grid-template-columns: 1fr 1fr; }
+}
+.summary-cell{
+    padding: 24px;
+    text-align: center;
+}
+.summary-cell:first-child{
+    border-bottom: 1px solid var(--border);
+}
+@media (min-width: 640px){
+    .summary-cell:first-child{
+        border-bottom: none;
+        border-inline-end: 1px solid var(--border);
+    }
+}
+.summary-cell h5{ color: var(--text-muted); font-size: .9rem; margin-bottom: 8px; font-weight: 600; }
+.readiness-label{ font-weight: 800; font-size: 1.5rem; margin: 0; }
+@media (min-width: 768px){ .readiness-label{ font-size: 1.75rem; } }
+.score-big{
+    font-weight: 800;
+    color: var(--navy);
+    font-size: 2.6rem;
+    margin: 0;
+    line-height: 1.1;
+}
+@media (min-width: 768px){ .score-big{ font-size: 3.4rem; } }
+.score-fraction{ color: var(--text-muted); margin-top: 6px; font-size: .95rem; }
+.score-perf{ font-weight: 700; margin-top: 8px; font-size: 1rem; }
+
+/* Units breakdown: cards on mobile, table on desktop */
+.units-card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+.units-card-header{
+    background: var(--navy);
+    color: #fff;
+    padding: 14px 18px;
+    font-weight: 700;
+    font-size: .95rem;
+}
+.unit-row{
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+}
+.unit-row:last-child{ border-bottom: none; }
+.unit-row-top{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+.unit-name{ font-weight: 700; color: var(--text); font-size: .95rem; }
+.unit-pct{ font-weight: 800; font-size: 1.05rem; }
+.unit-bar{
+    height: 8px;
+    background: var(--bg);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+.unit-bar > div{ height: 100%; border-radius: 999px; }
+.unit-row-bottom{
+    display: flex;
+    justify-content: space-between;
+    font-size: .82rem;
+    color: var(--text-muted);
+}
+
+@media (min-width: 768px){
+    .units-card-header{ display: none; }
+    .units-table-wrap{ overflow: hidden; }
+}
+
+/* Highlight boxes */
+.highlight-grid{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+@media (min-width: 640px){
+    .highlight-grid{ grid-template-columns: 1fr 1fr; }
+}
+.highlight-box{
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.highlight-box.is-danger{ background: #fef2f2; border: 1px solid #fecaca; }
+.highlight-box.is-success{ background: #ecfdf5; border: 1px solid #a7f3d0; }
+.highlight-icon{
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    background: #fff;
+}
+.highlight-box.is-danger .highlight-icon{ color: #dc2626; border: 2px solid #dc2626; }
+.highlight-box.is-success .highlight-icon{ color: #059669; border: 2px solid #059669; }
+.highlight-box h6{ font-size: .85rem; margin-bottom: 2px; font-weight: 700; }
+.highlight-box.is-danger h6{ color: #dc2626; }
+.highlight-box.is-success h6{ color: #059669; }
+.highlight-box small{ color: var(--text-muted); font-size: .75rem; display: block; margin-bottom: 6px; }
+.highlight-box .value{ font-weight: 800; font-size: 1.2rem; margin: 0; }
+
+/* Legend */
+.legend-card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 18px;
+    margin-bottom: 28px;
+}
+.legend-grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    text-align: center;
+}
+@media (min-width: 640px){
+    .legend-grid{ grid-template-columns: repeat(4, 1fr); }
+}
+.legend-dot{
+    width: 10px; height: 10px; border-radius: 50%;
+    display: inline-block; margin-inline-end: 6px;
+}
+
+/* Actions */
+.result-actions{
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+@media (min-width: 640px){
+    .result-actions{ flex-direction: row; justify-content: center; }
+}
+.result-actions .btn{
+    border-radius: 999px;
+    font-weight: 700;
+    padding: 13px 24px;
+}
+
+@media print {
+    .no-print, #reviewAnswers, #answersAccordion, .btn, .top-navbar, footer { display: none !important; }
+    body { background-color: #fff !important; }
+    .result-page{ padding: 0; background: #fff; }
+    .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    h1.display-3 { font-size: 2.5rem !important; }
+    .py-5, .mb-5, .my-5 { padding-top: 1rem !important; padding-bottom: 1rem !important; margin-bottom: 1.5rem !important; }
+    .row { display: flex !important; flex-wrap: wrap !important; margin-right: -10px !important; margin-left: -10px !important; }
+    .col-md-8 { width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; margin: 0 auto !important; }
+    .col-md-6 { width: 50% !important; flex: 0 0 50% !important; max-width: 50% !important; padding: 0 10px !important; }
+    .row.g-4, .card, .units-card, .summary-card { page-break-inside: avoid !important; break-inside: avoid !important; }
+    .table-responsive { overflow: visible !important; }
+    .card { box-shadow: none !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .progress { border: 1px solid #dee2e6; background-color: #f8f9fa !important; }
+    .table { break-inside: avoid; font-size: 0.9rem !important; }
+    .table th, .table td { padding: 6px !important; }
+    .units-card-header{ display: block !important; }
+}
+</style>
+@endpush
+
+@section('content')
+<div class="result-page">
+<div class="result-container">
+    @if($result)
+        <div class="result-hero">
+            <h1>أداؤك حسب وحدات الاختبار</h1>
+            <p>ترتيب الوحدات من أعلى درجة إلى أقل درجة</p>
+        </div>
+
+        <!-- Top Summary -->
+        <div class="summary-card">
+            <div class="summary-grid">
+                <div class="summary-cell">
+                    <h5>مستوى الجاهزية</h5>
+                    @php
+                        $readinessColor = '#f59e0b';
+                        if ($result->percentage >= 75) $readinessColor = '#059669';
+                        elseif ($result->percentage < 60) $readinessColor = '#dc2626';
+                    @endphp
+                    <p class="readiness-label" style="color: {{ $readinessColor }};">{{ $readinessLevel }}</p>
+                </div>
+                <div class="summary-cell">
+                    <h5>النتيجة الإجمالية</h5>
+                    <p class="score-big">{{ floatval($result->percentage) }}%</p>
+                    <p class="score-fraction">{{ floatval($result->correct_count) }} من {{ $session->total_questions }} درجة</p>
+                    <p class="score-perf {{ $overallPerformance['class'] }}">{{ $overallPerformance['name'] }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Units Breakdown -->
+        <div class="units-card">
+            <div class="units-card-header">تفاصيل الأداء حسب الوحدة</div>
+
+            <!-- Mobile card rows -->
+            <div class="d-block d-md-none">
+                @foreach($unitsStats as $stat)
+                    <div class="unit-row">
+                        <div class="unit-row-top">
+                            <span class="unit-name">{{ $stat['name'] }}</span>
+                            <span class="unit-pct {{ $stat['level_class'] }}">{{ $stat['percentage'] }}%</span>
+                        </div>
+                        <div class="unit-bar">
+                            <div class="progress-bar {{ $stat['bar_color'] }}" style="width: {{ $stat['percentage'] }}%"></div>
+                        </div>
+                        <div class="unit-row-bottom">
+                            <span>{{ floatval($stat['score']) }} من {{ $stat['total'] }}</span>
+                            <span class="fw-bold {{ $stat['level_class'] }}">{{ $stat['level_name'] }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Desktop table -->
+            <div class="table-responsive d-none d-md-block">
+                <table class="table table-borderless table-hover mb-0 align-middle">
+                    <thead class="bg-light text-center">
+                        <tr>
+                            <th class="py-3 px-4 text-end" style="width: 30%">الوحدة</th>
+                            <th class="py-3" style="width: 20%">الدرجة</th>
+                            <th class="py-3" style="width: 25%">شريط التقدم</th>
+                            <th class="py-3" style="width: 10%">النسبة</th>
+                            <th class="py-3" style="width: 15%">مستوى الأداء</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        @foreach($unitsStats as $stat)
+                            <tr class="border-bottom">
+                                <td class="py-3 px-4 text-end fw-bold">{{ $stat['name'] }}</td>
+                                <td class="py-3">{{ floatval($stat['score']) }} من {{ $stat['total'] }}</td>
+                                <td class="py-3">
+                                    <div class="progress rounded-pill" style="height: 10px;">
+                                        <div class="progress-bar {{ $stat['bar_color'] }}" role="progressbar" style="width: {{ $stat['percentage'] }}%" aria-valuenow="{{ $stat['percentage'] }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </td>
+                                <td class="py-3 fw-bold fs-5">{{ $stat['percentage'] }}%</td>
+                                <td class="py-3 fw-bold {{ $stat['level_class'] }}">{{ $stat['level_name'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Highlight boxes -->
+        <div class="highlight-grid">
+            <div class="highlight-box is-danger">
+                <div class="highlight-icon"><i class="bi bi-graph-down-arrow"></i></div>
+                <div>
+                    <h6>أولوية المراجعة</h6>
+                    <small>(أقل وحدة حصلت فيها على درجة)</small>
+                    @if($lowestUnit && $lowestUnit['percentage'] == 100)
+                        <p class="value" style="color:#059669;">أداء مثالي 🌟</p>
+                    @else
+                        <p class="value" style="color:#dc2626;">{{ $lowestUnit ? $lowestUnit['name'].' — '.$lowestUnit['percentage'].'%' : '-' }}</p>
+                    @endif
+                </div>
+            </div>
+            <div class="highlight-box is-success">
+                <div class="highlight-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                <div>
+                    <h6>أعلى أداء</h6>
+                    <small>(أعلى وحدة حصلت فيها على درجة)</small>
+                    <p class="value" style="color:#059669;">{{ $highestUnit ? $highestUnit['name'].' — '.$highestUnit['percentage'].'%' : '-' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend-card">
+            <div class="legend-grid">
+                <div>
+                    <div><span class="legend-dot" style="background:#10b981;"></span><span class="fw-bold" style="color:#10b981;">80% فأكثر</span></div>
+                    <small class="text-muted fw-bold">متميز / جيد جداً</small>
+                </div>
+                <div>
+                    <div><span class="legend-dot" style="background:#f59e0b;"></span><span class="fw-bold" style="color:#f59e0b;">70%-79%</span></div>
+                    <small class="text-muted fw-bold">جيد</small>
+                </div>
+                <div>
+                    <div><span class="legend-dot" style="background:#fd7e14;"></span><span class="fw-bold" style="color:#fd7e14;">60%-69%</span></div>
+                    <small class="text-muted fw-bold">مراجعة</small>
+                </div>
+                <div>
+                    <div><span class="legend-dot" style="background:#ef4444;"></span><span class="fw-bold" style="color:#ef4444;">أقل من 60%</span></div>
+                    <small class="text-muted fw-bold">تطوير</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="result-actions no-print">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="bi bi-printer me-2"></i> طباعة التقرير
+            </button>
+            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#reviewAnswers" aria-expanded="false" aria-controls="reviewAnswers">
+                <i class="bi bi-journal-text me-2"></i> مراجعة الإجابات التفصيلية
+            </button>
+        </div>
+
+        <!-- Review Answers Section -->
+        <div class="collapse" id="reviewAnswers">
+            <div class="card shadow-sm border-0 rounded-4 mb-5">
+                <div class="card-body p-0">
+                    <div class="accordion accordion-flush" id="answersAccordion">
+                        @foreach($reviewData as $review)
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ $review['index'] }}">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $review['index'] }}" aria-expanded="false" aria-controls="collapse{{ $review['index'] }}">
+                                        <div class="d-flex w-100 flex-column flex-md-row justify-content-between align-items-start align-items-md-center pe-3 gap-2">
+                                            <div class="fw-bold">
+                                                <span class="badge bg-secondary me-2">{{ $review['index'] }}</span>
+                                                {{ $review['text'] }}
+                                                @if($review['unit_name'])
+                                                    <span class="badge bg-light text-secondary border ms-2 fw-normal" style="font-size: 0.8rem;"><i class="bi bi-book me-1"></i> {{ $review['unit_name'] }}</span>
+                                                @endif
+                                            </div>
+                                            <div>
+                                                @if($review['points'] == 1)
+                                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> صحيح</span>
+                                                @elseif($review['points'] > 0)
+                                                    <span class="badge bg-warning"><i class="bi bi-dash-circle me-1"></i> صحيح جزئياً ({{ floatval($review['points']) }})</span>
+                                                @else
+                                                    <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> خاطئ</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ $review['index'] }}" class="accordion-collapse collapse" aria-labelledby="heading{{ $review['index'] }}" data-bs-parent="#answersAccordion">
+                                    <div class="accordion-body bg-light">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <h6 class="fw-bold text-muted">إجابتك:</h6>
+                                                <ul class="list-unstyled mb-0">
+                                                    @forelse($review['options'] as $option)
+                                                        @if(in_array($option->id, $review['selected_ids']))
+                                                            <li class="mb-1"><i class="bi bi-check2-square text-primary me-2"></i> {{ $option->option_text_ar }}</li>
+                                                        @endif
+                                                    @empty
+                                                        <li class="text-muted">لم تقم باختيار إجابة</li>
+                                                    @endforelse
+                                                    @if(empty($review['selected_ids']))
+                                                        <li class="text-muted">لم تقم باختيار إجابة</li>
+                                                    @endif
+                                                </ul>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <h6 class="fw-bold text-muted">الإجابة الصحيحة:</h6>
+                                                <p class="mb-0 text-success fw-bold"><i class="bi bi-check-circle-fill me-2"></i> {{ $review['correct_options_text'] }}</p>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div>
+                                            <h6 class="fw-bold text-muted"><i class="bi bi-info-circle me-2"></i> التفسير:</h6>
+                                            <p class="mb-0">{{ $review['explanation'] }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    @else
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">جاري التحميل...</span>
+            </div>
+            <p class="text-muted mt-3">جاري حساب النتيجة...</p>
+        </div>
+    @endif
+
+    <div class="text-center mt-4 no-print">
+        <a href="{{ route('user.graded_exams.index') }}" class="btn btn-secondary px-4 rounded-pill">
+            العودة للقائمة
+        </a>
+    </div>
+</div>
+</div>
+@endsection
 ````
 
 ## File: resources/views/admin/assessments/show.blade.php
@@ -68475,6 +68319,1278 @@ $('#btn-sync-options').on('click', function() {
     $(document).ready(function() {
         window.initDynamicLists();
     });
+</script>
+@endpush
+````
+
+## File: resources/views/user/graded_exams/index.blade.php
+````php
+@extends('layouts.user')
+@section('title', 'الشهادات الاحترافية')
+
+@push('styles')
+<style>
+/* ===== Design tokens (shared visual language for the exams module) ===== */
+:root{
+    --navy: #14213d;
+    --navy-soft: #1e3a5f;
+    --accent: #0ea472;
+    --accent-dark: #0b8a5f;
+    --warning: #f5a623;
+    --danger: #e5484d;
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --border: #e6e9f0;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 2px 10px rgba(15, 23, 42, .05);
+    --shadow-md: 0 10px 30px rgba(15, 23, 42, .09);
+}
+
+.exams-page{
+    background: var(--bg);
+    min-height: 100%;
+    padding: 24px 16px 48px;
+}
+@media (min-width: 768px){
+    .exams-page{ padding: 40px 24px 64px; }
+}
+
+.exams-container{
+    max-width: 880px;
+    margin: 0 auto;
+}
+
+/* Header */
+.exams-header{
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+@media (min-width: 768px){
+    .exams-header{
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 36px;
+    }
+}
+.exams-header h1{
+    color: var(--navy);
+    font-weight: 800;
+    font-size: 1.5rem;
+    margin: 0 0 6px;
+}
+@media (min-width: 768px){
+    .exams-header h1{ font-size: 2rem; }
+}
+.exams-header p{
+    color: var(--text-muted);
+    margin: 0;
+    font-size: .95rem;
+}
+.btn-progress{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 22px;
+    font-weight: 700;
+    font-size: .92rem;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.btn-progress:hover, .btn-progress:focus-visible{
+    background: var(--navy-soft);
+    color: #fff;
+    box-shadow: var(--shadow-md);
+}
+.btn-progress:active{ transform: scale(.97); }
+
+/* Alert */
+.exams-alert{
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    font-size: .9rem;
+}
+
+/* Exam card */
+.exams-list{
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.exam-card{
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow .2s ease, border-color .2s ease;
+}
+@media (min-width: 768px){
+    .exam-card{
+        padding: 26px 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+    }
+}
+.exam-card:hover{
+    box-shadow: var(--shadow-md);
+    border-color: #d6dbe6;
+}
+
+.exam-info h3{
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 1.08rem;
+    line-height: 1.4;
+    margin: 0 0 6px;
+}
+@media (min-width: 768px){
+    .exam-info h3{ font-size: 1.25rem; }
+}
+.exam-info p{
+    color: var(--text-muted);
+    font-size: .9rem;
+    line-height: 1.6;
+    margin: 0 0 14px;
+}
+@media (min-width: 768px){
+    .exam-info p{ max-width: 520px; }
+}
+
+.exam-meta{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+@media (min-width: 768px){
+    .exam-meta{ margin-bottom: 0; }
+}
+.exam-meta span{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: .82rem;
+    font-weight: 600;
+}
+.exam-meta span i{ color: var(--accent); }
+
+.exam-action{ margin-top: 16px; }
+@media (min-width: 768px){
+    .exam-action{ margin-top: 0; flex-shrink: 0; }
+}
+
+.btn-start-exam{
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 15px 24px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 50px;
+    cursor: pointer;
+    transition: background .2s ease, transform .15s ease, box-shadow .15s ease;
+}
+@media (min-width: 768px){
+    .btn-start-exam{ width: auto; padding: 13px 28px; }
+}
+.btn-start-exam:hover, .btn-start-exam:focus-visible{
+    background: var(--accent-dark);
+    box-shadow: 0 8px 18px rgba(14, 164, 114, .25);
+}
+.btn-start-exam:active{ transform: scale(.98); }
+
+/* Empty state */
+.exams-empty{
+    text-align: center;
+    padding: 64px 20px;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--border);
+}
+.exams-empty .icon-wrap{
+    width: 72px; height: 72px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--bg);
+    border-radius: 50%;
+    margin-bottom: 16px;
+}
+.exams-empty .icon-wrap i{ font-size: 2rem; color: var(--text-muted); }
+.exams-empty h5{ color: var(--text-muted); font-weight: 700; margin: 0; }
+
+/* ===== Confirmation sheet ===== */
+.exam-modal .modal-dialog{
+    margin: 0 auto;
+}
+@media (max-width: 767.98px){
+    .exam-modal .modal-dialog{
+        margin: 0;
+        display: flex;
+        align-items: flex-end;
+        min-height: 100vh;
+        max-width: 100%;
+    }
+    .exam-modal .modal-content{
+        border-radius: 22px 22px 0 0 !important;
+        width: 100%;
+        max-height: 90vh;
+    }
+    .exam-modal.fade .modal-dialog{ transform: translateY(40px); }
+    .exam-modal.show .modal-dialog{ transform: translateY(0); }
+}
+.exam-modal .modal-content{
+    border: none;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+.exam-modal .modal-header{
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 18px;
+}
+.exam-modal .drag-handle{
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 999px;
+    margin: 8px auto -4px;
+}
+.exam-modal .modal-title{
+    color: var(--navy);
+    font-weight: 800;
+    font-size: 1rem;
+}
+.exam-modal .modal-body{ padding: 18px; }
+.exam-modal .exam-name{
+    color: var(--navy);
+    font-weight: 800;
+    font-size: 1.1rem;
+    text-align: center;
+    margin-bottom: 18px;
+    line-height: 1.4;
+}
+.exam-modal .info-label{
+    font-weight: 700;
+    color: var(--text-muted);
+    font-size: .82rem;
+    margin-bottom: 8px;
+}
+.exam-modal .info-badges{
+    display: flex; flex-wrap: wrap; gap: 8px;
+}
+.exam-modal .info-badges .badge{
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-weight: 600;
+    font-size: .8rem;
+    padding: 7px 11px;
+    border-radius: 999px;
+}
+.exam-modal .info-badges .badge i{ color: var(--accent); margin-inline-end: 4px; }
+.exam-modal ol{
+    margin: 0; padding: 0; list-style: none; counter-reset: steps;
+}
+.exam-modal ol li{
+    counter-increment: steps;
+    position: relative;
+    padding-inline-end: 28px;
+    margin-bottom: 8px;
+    font-size: .87rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+.exam-modal ol li::before{
+    content: counter(steps);
+    position: absolute;
+    inset-inline-end: 0;
+    top: 1px;
+    width: 18px; height: 18px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    font-size: .68rem;
+    font-weight: 700;
+    color: var(--navy);
+    display: flex; align-items: center; justify-content: center;
+}
+.exam-modal .warn-box{
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+}
+.exam-modal .agree-box{
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+}
+.exam-modal .agree-box input{
+    width: 20px; height: 20px;
+    margin-inline-end: 10px;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+.exam-modal .modal-footer{
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+    display: flex;
+    gap: 10px;
+}
+.exam-modal .modal-footer .btn{
+    flex: 1;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    padding: 13px;
+}
+</style>
+@endpush
+
+@section('content')
+<div class="exams-page">
+<div class="exams-container">
+    <div class="exams-header text-center text-md-end">
+        <div>
+            <h1>الشهادات الاحترافية</h1>
+            <p>اختر الشهادة التي ترغب في أداء اختبارها</p>
+        </div>
+        <a href="{{ route('user.graded_exams.progress') }}" class="btn-progress">
+            <i class="bi bi-graph-up-arrow"></i> تتبع تقدمي وسجل الاختبارات
+        </a>
+    </div>
+
+    @if(session('error'))
+        <div class="exams-alert">{{ session('error') }}</div>
+    @endif
+
+    <div class="exams-list">
+        @forelse($exams as $exam)
+            <div class="exam-card">
+                <div class="exam-info">
+                    <h3>{{ $exam->title_ar }}</h3>
+                    <p>{{ $exam->description_ar ?: 'لا يوجد وصف متوفر.' }}</p>
+                    <div class="exam-meta">
+                        <span><i class="bi bi-file-earmark-text"></i> {{ $exam->constraintSettings ? $exam->constraintSettings->total_questions : 50 }} سؤال</span>
+                        @if($exam->time_limit_min)
+                            <span><i class="bi bi-stopwatch"></i> {{ $exam->time_limit_min }} دقيقة</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="exam-action">
+                    <form action="{{ route('user.graded_exams.start', $exam->id) }}" method="POST" id="form-start-{{ $exam->id }}" class="m-0">
+                        @csrf
+                        <button type="button" class="btn-start-exam btn-open-modal" data-id="{{ $exam->id }}" data-title="{{ $exam->title_ar }}" data-q="{{ $exam->constraintSettings ? $exam->constraintSettings->total_questions : 50 }}" data-time="{{ $exam->time_limit_min }}">
+                            بدء الاختبار <i class="bi bi-arrow-left"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @empty
+            <div class="exams-empty">
+                <div class="icon-wrap"><i class="bi bi-journal-x"></i></div>
+                <h5>لا توجد شهادات متوفرة حالياً</h5>
+            </div>
+        @endforelse
+    </div>
+</div>
+</div>
+
+<div class="modal fade exam-modal" id="examIntroModal" tabindex="-1" aria-labelledby="examIntroModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title" id="examIntroModalLabel">تأكيد بدء الاختبار</h6>
+        <button type="button" class="btn-close m-0 ms-auto" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+      </div>
+      <div class="modal-body" style="text-align: right; direction: rtl;">
+
+          <div class="exam-name" id="modal-exam-title"></div>
+
+          <div class="mb-3">
+              <div class="info-label">وصف الاختبار</div>
+              <p class="text-muted mb-0" style="font-size: .85rem; line-height: 1.6;">يهدف هذا الاختبار إلى قياس مدى استيعابك للمفاهيم والمعارف الأساسية في التسويق، ومساعدتك على تقييم جاهزيتك قبل التقدم إلى الاختبار النهائي للشهادة الاحترافية.</p>
+          </div>
+
+          <div class="mb-3">
+              <div class="info-label">بيانات الاختبار</div>
+              <div class="info-badges">
+                  <span class="badge"><i class="bi bi-patch-question"></i><span id="modal-exam-questions"></span> سؤال</span>
+                  <span class="badge"><i class="bi bi-stopwatch"></i><span id="modal-exam-time"></span></span>
+                  <span class="badge"><i class="bi bi-arrow-repeat"></i>محاولات مفتوحة</span>
+                  <span class="badge"><i class="bi bi-ui-checks-grid"></i>صح/خطأ واختياري</span>
+              </div>
+          </div>
+
+          <div class="mb-3">
+              <div class="info-label">تعليمات هامة</div>
+              <ol>
+                  <li>اقرأ السؤال والبدائل بعناية.</li>
+                  <li>يمكنك مراجعة وتعديل إجاباتك قبل التسليم.</li>
+              </ol>
+          </div>
+
+          <div class="warn-box mb-3">
+              <strong class="d-flex align-items-center mb-1 text-dark" style="font-size: .85rem;"><i class="bi bi-exclamation-triangle-fill text-warning ms-2"></i> تنبيه:</strong>
+              <span class="text-dark" style="font-size: .8rem; line-height: 1.4;">حدد الإجابة أو الإجابات الصحيحة بناءً على المطلوب في كل سؤال، حيث قد يتطلب سؤال واحد اختيار أكثر من خيار.</span>
+          </div>
+
+          <div class="agree-box">
+              <label class="d-flex align-items-center mb-0 fw-bold text-dark" for="agreeCheckbox" style="cursor: pointer; font-size: .85rem;">
+                  <input type="checkbox" id="agreeCheckbox">
+                  قرأت التعليمات وأوافق على البدء.
+              </label>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+        <button type="button" class="btn btn-success" id="btn-confirm-start" disabled>ابدأ الاختبار <i class="bi bi-play-circle-fill ms-1"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    let currentExamId = null;
+
+    $('.btn-open-modal').on('click', function() {
+        currentExamId = $(this).data('id');
+        let title = $(this).data('title');
+        let qCount = $(this).data('q');
+        let timeMin = $(this).data('time');
+
+        if (!timeMin) {
+            timeMin = 60;
+        }
+
+        $('#modal-exam-title').text(title);
+        $('#modal-exam-questions').text(qCount || 50);
+
+        let timeText = 'غير محدد';
+        if (timeMin) {
+            let hours = Math.floor(timeMin / 60);
+            let mins = timeMin % 60;
+            if (hours > 0 && mins === 0) {
+                timeText = (hours == 1 ? 'ساعة واحدة' : (hours == 2 ? 'ساعتان' : hours + ' ساعات'));
+            } else if (hours > 0) {
+                timeText = hours + ' ساعة و ' + mins + ' دقيقة';
+            } else {
+                timeText = mins + ' دقيقة';
+            }
+        }
+        $('#modal-exam-time').text(timeText);
+
+        $('#agreeCheckbox').prop('checked', false);
+        $('#btn-confirm-start').prop('disabled', true);
+
+        new bootstrap.Modal(document.getElementById('examIntroModal')).show();
+    });
+
+    $('#agreeCheckbox').on('change', function() {
+        $('#btn-confirm-start').prop('disabled', !$(this).is(':checked'));
+    });
+
+    $('#btn-confirm-start').on('click', function() {
+        if(currentExamId) {
+            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري البدء...');
+            $('#form-start-' + currentExamId).submit();
+        }
+    });
+</script>
+@endpush
+````
+
+## File: resources/views/user/graded_exams/show.blade.php
+````php
+@extends('layouts.user')
+@section('title', 'إجراء الاختبار')
+
+@push('styles')
+<style>
+:root{
+    --navy: #14213d;
+    --navy-soft: #1e3a5f;
+    --accent: #0ea472;
+    --warning: #f5a623;
+    --danger: #e5484d;
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --border: #e6e9f0;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 2px 10px rgba(15, 23, 42, .05);
+    --shadow-md: 0 10px 28px rgba(15, 23, 42, .09);
+}
+
+body{ background: var(--bg); }
+
+.exam-container{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 8px 4px 100px;
+}
+@media (min-width: 768px){
+    .exam-container{ padding: 24px 15px 40px; }
+}
+
+/* ===== Top bar ===== */
+.exam-topbar{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 10px 12px;
+    position: sticky;
+    top: 6px;
+    z-index: 1000;
+    margin-bottom: 14px;
+}
+@media (min-width: 768px){
+    .exam-topbar{ padding: 14px 20px; top: 10px; margin-bottom: 20px; }
+}
+.exam-topbar-row1{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+.exam-topbar-row1 h1{
+    font-size: .92rem;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 0;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+@media (min-width: 768px){ .exam-topbar-row1 h1{ font-size: 1.05rem; } }
+
+.btn-finish{
+    background: var(--danger);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 700;
+    font-size: .82rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-finish:hover{ background: #d13c40; color: #fff; }
+
+.exam-topbar-row2{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+.q-count-badge{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(14, 164, 114, .1);
+    color: var(--accent);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 700;
+}
+.btn-map{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--navy);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 700;
+}
+.timer-box{
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    flex-shrink: 0;
+}
+.timer-box .bi{ color: var(--danger); font-size: .85rem; margin-inline-end: 6px; }
+.timer-box #exam-timer{
+    font-weight: 700;
+    color: var(--danger);
+    font-family: 'Courier New', monospace;
+    font-size: .92rem;
+    direction: ltr;
+}
+@keyframes pulse{
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: .85; transform: scale(.98); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.progress-mini{
+    height: 5px;
+    background: var(--bg);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+.progress-mini > div{
+    height: 100%;
+    background: var(--accent);
+    border-radius: 999px;
+    transition: width .25s ease;
+    width: 0%;
+}
+
+/* ===== Question card ===== */
+.question-card{
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 18px 14px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    display: none;
+}
+@media (min-width: 768px){
+    .question-card{ padding: 32px; margin-bottom: 20px; }
+}
+.question-card.active{
+    display: block;
+    animation: fadeIn .35s cubic-bezier(.4,0,.2,1);
+}
+@keyframes fadeIn{
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.question-text{
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 20px;
+    line-height: 1.7;
+}
+@media (min-width: 768px){ .question-text{ font-size: 1.25rem; } }
+
+.multi-hint{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-inline-start: 8px;
+}
+
+.option-label{
+    display: flex;
+    align-items: center;
+    padding: 13px 15px 13px 44px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all .15s ease;
+    font-size: .94rem;
+    color: var(--text-muted);
+    background: var(--surface);
+    position: relative;
+    min-height: 48px;
+}
+@media (min-width: 768px){
+    .option-label{ padding: 16px 20px 16px 48px; font-size: 1rem; }
+}
+.option-label:hover{ background: var(--bg); border-color: #d6dbe6; }
+.option-input:checked + .option-label{
+    border-color: var(--accent);
+    background: rgba(14, 164, 114, .06);
+    color: var(--navy);
+    font-weight: 700;
+}
+.option-input:checked + .option-label::before{
+    content: '\F26A';
+    font-family: 'bootstrap-icons';
+    position: absolute;
+    left: 16px;
+    font-size: 1.2rem;
+    color: var(--accent);
+}
+.option-input:focus-visible + .option-label{
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.flag-row{
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+.flag-row input{
+    width: 38px; height: 20px;
+    cursor: pointer;
+    accent-color: var(--warning);
+}
+.flag-row label{
+    color: #b45309;
+    font-weight: 700;
+    font-size: .88rem;
+    cursor: pointer;
+}
+
+/* ===== Sidebar / question navigator ===== */
+.exam-sidebar{
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    position: sticky;
+    top: 100px;
+}
+.sidebar-title{
+    font-weight: 800;
+    color: var(--navy);
+    font-size: .95rem;
+    margin-bottom: 4px;
+}
+.sidebar-sub{ color: var(--text-muted); font-size: .8rem; margin-bottom: 14px; }
+
+.q-grid-container{
+    max-height: 46vh;
+    overflow-y: auto;
+    padding-inline-end: 4px;
+}
+.q-grid-container::-webkit-scrollbar{ width: 4px; }
+.q-grid-container::-webkit-scrollbar-thumb{ background: var(--border); border-radius: 10px; }
+
+.q-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+    gap: 8px;
+}
+.q-btn{
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text-muted);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .15s ease;
+    font-size: .88rem;
+}
+.q-btn:hover{ background: var(--border); color: var(--text); }
+.q-btn.current{
+    border-color: var(--accent);
+    background: #fff;
+    color: var(--accent);
+    box-shadow: 0 3px 8px rgba(14, 164, 114, .2);
+}
+.q-btn.answered{ background: var(--accent); border-color: var(--accent); color: #fff; }
+.q-btn.flagged{ background: var(--warning); border-color: var(--warning); color: #fff; }
+
+.q-legend{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+    font-size: .76rem;
+    color: var(--text-muted);
+}
+.q-legend span{ display: inline-flex; align-items: center; gap: 5px; }
+.q-legend i{ width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+/* Mobile offcanvas navigator */
+.offcanvas.exam-offcanvas{
+    border-radius: 20px 20px 0 0;
+    max-height: 78vh;
+}
+.offcanvas.exam-offcanvas .offcanvas-header{
+    border-bottom: 1px solid var(--border);
+}
+.offcanvas.exam-offcanvas .offcanvas-title{
+    font-weight: 800;
+    color: var(--navy);
+    font-size: 1rem;
+}
+
+/* ===== Sticky bottom action bar (mobile-first, thumb reachable) ===== */
+.nav-buttons{
+    position: sticky;
+    bottom: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 4px calc(12px + env(safe-area-inset-bottom));
+    margin: 0 -4px;
+    display: flex;
+    gap: 10px;
+    box-shadow: 0 -6px 18px rgba(15, 23, 42, .06);
+    z-index: 900;
+}
+@media (min-width: 768px){
+    .nav-buttons{
+        position: static;
+        box-shadow: none;
+        border-top: none;
+        background: transparent;
+        margin: 20px 0 0;
+        padding: 0;
+        justify-content: space-between;
+    }
+}
+.nav-buttons .btn{
+    flex: 1;
+    border-radius: var(--radius-sm);
+    padding: 13px;
+    font-weight: 700;
+    font-size: .98rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+@media (min-width: 768px){
+    .nav-buttons .btn{ flex: none; min-width: 160px; }
+}
+</style>
+@endpush
+
+@section('content')
+@php
+    $timeLimitMinutes = $session->gradedExam->time_limit_min ?? 60;
+    $timeLeftSeconds = 0;
+    $hasTimer = false;
+
+    if ($timeLimitMinutes) {
+        $hasTimer = true;
+        $startedAt = $session->started_at ?? $session->created_at;
+        $endTime = $startedAt->timestamp + ($timeLimitMinutes * 60);
+        $timeLeftSeconds = max(0, $endTime - now()->timestamp);
+    }
+@endphp
+
+<div class="exam-container">
+    <!-- Top bar -->
+    <div class="exam-topbar">
+        <div class="exam-topbar-row1">
+            <h1>{{ $session->gradedExam->title_ar }}</h1>
+            <button type="button" class="btn-finish trigger-submit"><i class="bi bi-check2-all"></i> إنهاء الاختبار</button>
+        </div>
+        <div class="exam-topbar-row2">
+            <span class="q-count-badge"><i class="bi bi-list-ol"></i> سؤال <span id="current-q-number">1</span> من {{ $session->total_questions }}</span>
+
+            <button type="button" class="btn-map d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#examMapOffcanvas" aria-controls="examMapOffcanvas">
+                <i class="bi bi-grid-3x3-gap-fill"></i> خريطة الأسئلة
+            </button>
+
+            @if($hasTimer)
+            <div class="timer-box" id="timer-container">
+                <i class="bi bi-stopwatch"></i>
+                <div id="exam-timer">00:00:00</div>
+            </div>
+            @endif
+        </div>
+        <div class="progress-mini"><div id="progress-mini-bar"></div></div>
+    </div>
+
+    <div class="row g-3 g-lg-4">
+        <!-- Main Form Area -->
+        <div class="col-lg-8">
+            <form id="exam-form" action="{{ route('user.graded_exams.answer', $session->id) }}" method="POST">
+                @csrf
+
+                @foreach($session->sessionQuestions as $index => $sq)
+                    @php
+                        $isMulti = $sq->question->is_multi_correct;
+                        $correctCount = $isMulti ? $sq->question->options->filter(fn($opt) => $opt->is_correct)->count() : 1;
+                    @endphp
+                    <div class="question-card" data-index="{{ $index }}" data-is-multi="{{ $isMulti ? 'true' : 'false' }}" data-required-count="{{ $correctCount }}">
+                        <div class="question-text">
+                            <span class="text-muted me-1">{{ $index + 1 }}.</span> {{ $sq->question->text_ar }}
+                            @if($isMulti && $correctCount > 1)
+                                <span class="multi-hint"><i class="bi bi-info-circle"></i> اختر {{ $correctCount }} إجابات</span>
+                            @endif
+                        </div>
+
+                        <div class="options-list">
+                            @foreach($sq->question->options as $opt)
+                                @if($isMulti)
+                                    <input type="checkbox" class="btn-check option-input"
+                                        name="answers[{{ $sq->id }}][]" value="{{ $opt->id }}" id="opt_{{ $sq->id }}_{{ $opt->id }}">
+                                @else
+                                    <input type="radio" class="btn-check option-input"
+                                        name="answers[{{ $sq->id }}]" value="{{ $opt->id }}" id="opt_{{ $sq->id }}_{{ $opt->id }}">
+                                @endif
+                                <label class="option-label" for="opt_{{ $sq->id }}_{{ $opt->id }}">
+                                    {{ $opt->option_text_ar }}
+                                </label>
+                            @endforeach
+                        </div>
+
+                        <div class="flag-row">
+                            <input class="flag-toggle" type="checkbox" id="flag_{{ $index }}">
+                            <label for="flag_{{ $index }}"><i class="bi bi-flag-fill"></i> تعليم السؤال لمراجعته لاحقاً</label>
+                        </div>
+                    </div>
+                @endforeach
+
+                <div class="nav-buttons">
+                    <button type="button" id="btn-prev" class="btn btn-outline-secondary" style="visibility: hidden;">
+                        <i class="bi bi-arrow-right me-1"></i> السابق
+                    </button>
+
+                    <button type="button" id="btn-next" class="btn btn-primary">
+                        التالي <i class="bi bi-arrow-left ms-1"></i>
+                    </button>
+
+                    <button type="button" id="btn-submit" class="btn btn-success trigger-submit" style="display: none;">
+                        إنهاء الاختبار <i class="bi bi-check-circle ms-1"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Desktop sidebar navigator -->
+        <div class="col-lg-4 d-none d-lg-block">
+            <div class="exam-sidebar">
+                <div class="sidebar-title">خريطة الأسئلة</div>
+                <div class="sidebar-sub">اضغط على أي رقم للانتقال مباشرة إلى السؤال</div>
+                <div class="q-grid-container">
+                    <div class="q-grid">
+                        @for($i = 0; $i < $session->total_questions; $i++)
+                            <button type="button" class="q-btn" data-index="{{ $i }}">{{ $i + 1 }}</button>
+                        @endfor
+                    </div>
+                </div>
+                <div class="q-legend">
+                    <span><i style="background: var(--accent);"></i> تمت الإجابة</span>
+                    <span><i style="background: var(--warning);"></i> معلّم للمراجعة</span>
+                    <span><i style="background: var(--border);"></i> لم تتم الإجابة</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile question navigator (bottom sheet) -->
+<div class="offcanvas offcanvas-bottom exam-offcanvas" tabindex="-1" id="examMapOffcanvas" aria-labelledby="examMapOffcanvasLabel" style="direction: rtl; text-align: right;">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="examMapOffcanvasLabel">خريطة الأسئلة</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="إغلاق"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="sidebar-sub mb-2">اضغط على أي رقم للانتقال مباشرة إلى السؤال</div>
+        <div class="q-grid-container" style="max-height: 50vh;">
+            <div class="q-grid">
+                @for($i = 0; $i < $session->total_questions; $i++)
+                    <button type="button" class="q-btn" data-index="{{ $i }}">{{ $i + 1 }}</button>
+                @endfor
+            </div>
+        </div>
+        <div class="q-legend">
+            <span><i style="background: var(--accent);"></i> تمت الإجابة</span>
+            <span><i style="background: var(--warning);"></i> معلّم للمراجعة</span>
+            <span><i style="background: var(--border);"></i> لم تتم الإجابة</span>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title fw-bold text-dark" id="reviewModalLabel">مراجعة الأسئلة</h5>
+        <button type="button" class="btn-close m-0 ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="reviewModalBody" style="direction: rtl; text-align: right;">
+      </div>
+      <div class="modal-footer bg-light justify-content-between">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">رجوع للاختبار</button>
+        <button type="button" class="btn btn-danger" id="btn-force-submit">إنهاء الاختبار <i class="bi bi-check-circle"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    const totalQuestions = {{ $session->total_questions }};
+    let currentIndex = 0;
+
+    function showQuestion(index) {
+        currentIndex = index;
+
+        $('.question-card').removeClass('active');
+        $(`.question-card[data-index="${currentIndex}"]`).addClass('active');
+
+        $('#current-q-number').text(currentIndex + 1);
+
+        if (currentIndex === 0) {
+            $('#btn-prev').css('visibility', 'hidden');
+        } else {
+            $('#btn-prev').css('visibility', 'visible');
+        }
+
+        if (currentIndex === totalQuestions - 1) {
+            $('#btn-next').hide();
+            $('#btn-submit').show();
+        } else {
+            $('#btn-next').show();
+            $('#btn-submit').hide();
+        }
+
+        updateQuestionMap();
+
+        var offcanvasEl = document.getElementById('examMapOffcanvas');
+        var offcanvasInstance = bootstrap.Offcanvas.getInstance(offcanvasEl);
+        if (offcanvasInstance) offcanvasInstance.hide();
+    }
+
+    function isCurrentAnswered(index) {
+        let card = $(`.question-card[data-index="${index}"]`);
+
+        if (card.find('.flag-toggle').is(':checked')) {
+            return true;
+        }
+
+        let isMulti = card.data('is-multi');
+        let requiredCount = parseInt(card.data('required-count'), 10);
+        let checkedCount = card.find('.option-input:checked').length;
+
+        if (isMulti === true) {
+            return (checkedCount === requiredCount);
+        }
+        return (checkedCount > 0);
+    }
+
+    function updateQuestionMap() {
+        let answeredCount = 0;
+
+        $('.question-card').each(function() {
+            let idx = $(this).data('index');
+            let isFlagged = $(this).find('.flag-toggle').is(':checked');
+            let checkedCount = $(this).find('.option-input:checked').length;
+            let isMulti = $(this).data('is-multi');
+            let requiredCount = parseInt($(this).data('required-count'), 10);
+
+            let isAnswered = isMulti === true ? (checkedCount === requiredCount) : (checkedCount > 0);
+            if (isAnswered) answeredCount++;
+
+            let btns = $(`.q-btn[data-index="${idx}"]`);
+            btns.removeClass('answered flagged current');
+
+            if (isFlagged) {
+                btns.addClass('flagged');
+            } else if (isAnswered) {
+                btns.addClass('answered');
+            }
+
+            if (idx === currentIndex) {
+                btns.addClass('current');
+            }
+        });
+
+        let pct = totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0;
+        $('#progress-mini-bar').css('width', pct + '%');
+    }
+
+    $('.option-input').on('change', function() {
+        let card = $(this).closest('.question-card');
+        let isMulti = card.data('is-multi');
+        let requiredCount = parseInt(card.data('required-count'), 10);
+
+        if (isMulti === true) {
+            let checkedInputs = card.find('.option-input:checked');
+            if (checkedInputs.length > requiredCount) {
+                $(this).prop('checked', false);
+                alert(`هذا السؤال يتطلب اختيار ${requiredCount} إجابات فقط.`);
+                return;
+            }
+        }
+        updateQuestionMap();
+    });
+
+    $('.flag-toggle').on('change', function() {
+        updateQuestionMap();
+    });
+
+    $('.q-btn').on('click', function() {
+        let idx = parseInt($(this).data('index'), 10);
+        showQuestion(idx);
+    });
+
+    $('#btn-next').on('click', function() {
+        if (!isCurrentAnswered(currentIndex)) {
+            alert('يرجى اختيار إجابة للسؤال الحالي أو تعليمه للمراجعة قبل الانتقال للسؤال التالي.');
+            return;
+        }
+        if (currentIndex < totalQuestions - 1) {
+            showQuestion(currentIndex + 1);
+        }
+    });
+
+    $('#btn-prev').on('click', function() {
+        if (currentIndex > 0) {
+            showQuestion(currentIndex - 1);
+        }
+    });
+
+    $('.trigger-submit').on('click', function(e) {
+        e.preventDefault();
+
+        let incompleteOrFlagged = [];
+        $('.question-card').each(function() {
+            let idx = parseInt($(this).data('index'), 10);
+            let isMulti = $(this).data('is-multi');
+            let requiredCount = parseInt($(this).data('required-count'), 10);
+            let checkedCount = $(this).find('.option-input:checked').length;
+            let isFlagged = $(this).find('.flag-toggle').is(':checked');
+
+            let isAnswered = false;
+            if (isMulti === true) {
+                isAnswered = (checkedCount === requiredCount);
+            } else {
+                isAnswered = (checkedCount > 0);
+            }
+
+            if (!isAnswered || isFlagged) {
+                incompleteOrFlagged.push({ index: idx, flagged: isFlagged, answered: isAnswered });
+            }
+        });
+
+        if (incompleteOrFlagged.length > 0) {
+            let html = '<p class="mb-3 text-muted">لديك أسئلة غير مجابة أو قمت بتحديدها للمراجعة. اضغط على رقم السؤال للعودة إليه:</p><div class="d-flex flex-wrap gap-2">';
+            incompleteOrFlagged.forEach(function(item) {
+                let badgeClass = item.answered ? 'btn-warning text-dark' : 'btn-danger';
+                let icon = item.flagged ? '<i class="bi bi-flag-fill me-1"></i>' : '';
+                html += `<button type="button" class="btn btn-sm ${badgeClass} jump-to-q" data-index="${item.index}">${icon}سؤال ${item.index + 1}</button>`;
+            });
+            html += '</div>';
+
+            $('#reviewModalBody').html(html);
+            var reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
+            reviewModal.show();
+        } else {
+            if (confirm('هل أنت متأكد من تسليم الاختبار؟')) {
+                $('#exam-form').submit();
+            }
+        }
+    });
+
+    $(document).on('click', '.jump-to-q', function() {
+        let idx = parseInt($(this).data('index'), 10);
+        $('#reviewModal').modal('hide');
+        showQuestion(idx);
+    });
+
+    $('#btn-force-submit').on('click', function() {
+        if (confirm('سيتم إنهاء الاختبار بالرغم من وجود أسئلة غير مجابة بالكامل. هل أنت متأكد؟')) {
+            $('.option-input, .flag-toggle').prop('disabled', true);
+            $('#btn-force-submit').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري التسليم...');
+            $('#exam-form').submit();
+        }
+    });
+
+    showQuestion(0);
+
+    const hasTimer = {{ $hasTimer ? 'true' : 'false' }};
+    let timeLeft = {{ $timeLeftSeconds }};
+
+    if (hasTimer) {
+        function updateTimerDisplay() {
+            let h = Math.floor(timeLeft / 3600);
+            let m = Math.floor((timeLeft % 3600) / 60);
+            let s = timeLeft % 60;
+
+            let display = '';
+            if (h > 0) display += String(h).padStart(2, '0') + ':';
+            display += String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+
+            $('#exam-timer').text(display);
+
+            if (timeLeft <= 300) {
+                $('#timer-container').css('animation', 'pulse 1s infinite');
+            }
+        }
+
+        updateTimerDisplay();
+
+        let timerInterval = setInterval(function() {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                clearInterval(timerInterval);
+                updateTimerDisplay();
+                alert('انتهى الوقت المخصص للاختبار! سيتم تسليم إجاباتك الآن تلقائياً.');
+
+                $('.option-input').prop('disabled', true);
+                $('#btn-submit, #btn-next, #btn-prev').prop('disabled', true);
+
+                $('#exam-form').submit();
+            } else {
+                updateTimerDisplay();
+            }
+        }, 1000);
+    }
+});
 </script>
 @endpush
 ````
