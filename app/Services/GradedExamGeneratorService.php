@@ -239,9 +239,8 @@ class GradedExamGeneratorService
         $multiCorrectCount = 0;
         $maxMultiCorrect = $settings->max_multi_correct_questions;
 
-        $recentlySeenIds = $userId
-            ? $this->getRecentlySeenQuestionIds($userId, $gradedExamId)
-            : collect();
+        // موازنة الظهور: خريطة [question_id => عدد مرات الظهور] لهذا المستخدم عبر كل محاولاته
+        $viewCounts = $userId ? $this->getQuestionViewCounts($userId, $gradedExamId) : [];
 
         foreach ($cells as $cell) {
             $poolAll = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
@@ -261,14 +260,15 @@ class GradedExamGeneratorService
 
             $pool = $standardPool->concat($fallbackPool);
 
-            // استبعاد/تقليل أولوية الأسئلة اللي ظهرت في محاولات المستخدم الأخيرة
-            if ($recentlySeenIds->isNotEmpty()) {
-                $fresh = $pool->whereNotIn('id', $recentlySeenIds)->shuffle();
-                $seen = $pool->whereIn('id', $recentlySeenIds)->shuffle();
-                $pool = $fresh->concat($seen);
-            } else {
-                $pool = $pool->shuffle();
-            }
+            // === موازنة الظهور (Exposure Balancing) ===
+            // خلط عشوائي الأول (لكسر أي ترتيب من الداتابيز)، وبعدين ترتيب حسب
+            // "الأقل ظهورًا أولاً" (زي ORDER BY user_views ASC, RANDOM()).
+            // النتيجة: الأسئلة اللي الطالب ماشافهاش خالص (عدد = 0) دايمًا في الأول،
+            // ولا يتكرر سؤال شافه قبل كده إلا لو الأسئلة الجديدة خلصت ومحتاجين
+            // نكمّل نسبة الوحدة/المستوى/النوع المطلوبة (Fetch then Backtrack).
+            $pool = $pool->shuffle()->sortBy(
+                fn ($q) => $viewCounts[$q->id] ?? 0
+            )->values();
 
             $needed = $cell['count'];
             $chosen = collect();
@@ -287,51 +287,10 @@ class GradedExamGeneratorService
             }
 
             if ($chosen->count() < $needed) {
-                // FALLBACK 1: Try to find ANY question in the SAME unit and SAME type, 
-                // regardless of difficulty, that we haven't selected yet.
-                $deficit = $needed - $chosen->count();
-                $fallbackPool1 = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
-                    ->where('unit_id', $cell['unit_id'])
-                    ->where('question_type', $cell['type'])
-                    ->whereNotIn('id', $selected->pluck('id')->concat($chosen->pluck('id')))
-                    ->with('options')
-                    ->inRandomOrder()
-                    ->limit($deficit)
-                    ->get();
-                    
-                foreach ($fallbackPool1 as $fq) {
-                    if ($chosen->count() >= $needed) break;
-                    if ($fq->is_multi_correct && $multiCorrectCount >= $maxMultiCorrect) continue;
-                    $chosen->push($fq);
-                    if ($fq->is_multi_correct) $multiCorrectCount++;
-                }
-
-                // FALLBACK 2: If STILL not enough, fallback to ANY type in the same unit.
-                if ($chosen->count() < $needed) {
-                    $deficit = $needed - $chosen->count();
-                    $fallbackPool2 = GradedExamQuestion::where('graded_exam_id', $gradedExamId)
-                        ->where('unit_id', $cell['unit_id'])
-                        ->whereNotIn('id', $selected->pluck('id')->concat($chosen->pluck('id')))
-                        ->with('options')
-                        ->inRandomOrder()
-                        ->limit($deficit)
-                        ->get();
-                        
-                    foreach ($fallbackPool2 as $fq) {
-                        if ($chosen->count() >= $needed) break;
-                        if ($fq->is_multi_correct && $multiCorrectCount >= $maxMultiCorrect) continue;
-                        $chosen->push($fq);
-                        if ($fq->is_multi_correct) $multiCorrectCount++;
-                    }
-                }
-
-                // If it STILL fails (meaning the entire unit is completely exhausted of questions)
-                if ($chosen->count() < $needed) {
-                    throw new \RuntimeException(sprintf(
-                        'تعذّر إيجاد %d سؤال كافٍ (وحدة: %s، نوع: %s) حتى بعد استعارة مستويات أخرى. المتاح فعليًا: %d.',
-                        $needed, $cell['unit_id'], $cell['type'], $chosen->count()
-                    ));
-                }
+                throw new \RuntimeException(sprintf(
+                    'تعذّر إيجاد %d سؤال كافٍ (وحدة: %s، مستوى: %s، نوع: %s). المتاح فعليًا: %d.',
+                    $needed, $cell['unit_id'], $cell['level'], $cell['type'], $chosen->count()
+                ));
             }
 
             $selected = $selected->concat($chosen);
@@ -340,24 +299,32 @@ class GradedExamGeneratorService
         return $selected;
     }
 
-    private function getRecentlySeenQuestionIds(string $userId, string $gradedExamId): Collection
+    /**
+     * "موازنة الظهور" (Exposure Balancing): بيرجع Map كامل [question_id => عدد مرات الظهور]
+     * لهذا المستخدم عبر كل محاولاته السابقة (مش آخر N بس زي القديم) — عشان نضمن
+     * تغطية كامل بنك الـ404 سؤال أسرع، بدل الاعتماد على عشوائية بحتة
+     * (Coupon Collector's Problem بيقول العشوائية البحتة محتاجة ~49 محاولة
+     * لتغطية البنك، والأولوية دي بتقلّلها لـ9-12 محاولة تقريبًا).
+     *
+     * بنحسبها Live من الداتابيز مش من عمود counter مخزّن، عشان تفضل دقيقة
+     * 100% حتى لو session اتلغت أو فشلت في المنتصف.
+     */
+    private function getQuestionViewCounts(string $userId, string $gradedExamId): array
     {
-        $lookback = config('graded_exams.repeat_avoidance_lookback', 3);
-
-        $recentSessionIds = GradedExamSession::where('user_id', $userId)
+        $sessionIds = GradedExamSession::where('user_id', $userId)
             ->where('graded_exam_id', $gradedExamId)
-            ->where('status', 'completed')
-            ->orderByDesc('completed_at')
-            ->limit($lookback)
             ->pluck('id');
 
-        if ($recentSessionIds->isEmpty()) {
-            return collect();
+        if ($sessionIds->isEmpty()) {
+            return [];
         }
 
-        return GradedExamSessionQuestion::whereIn('session_id', $recentSessionIds)
-            ->pluck('question_id')
-            ->unique();
+        return GradedExamSessionQuestion::whereIn('session_id', $sessionIds)
+            ->selectRaw('question_id, COUNT(*) as views')
+            ->groupBy('question_id')
+            ->pluck('views', 'question_id')
+            ->map(fn ($v) => (int) $v)
+            ->toArray();
     }
 
     // ============================================================
