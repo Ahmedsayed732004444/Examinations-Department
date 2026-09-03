@@ -190,8 +190,8 @@
 
 @section('content')
 @php
-    // Default to 120 minutes if not set
-    $timeLimitMinutes = $session->gradedExam->time_limit_min ?? 120;
+    // Default to 30 minutes if not set
+    $timeLimitMinutes = $session->gradedExam->time_limit_min ?? 30;
     $timeLeftSeconds = 0;
     $hasTimer = false;
     

@@ -100,7 +100,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-medium">مدة الاختبار (بالدقائق)</label>
-                    <input type="number" class="form-control" id="e-time-limit" min="1" value="120" placeholder="مثال: 120 لساعتين">
+                    <input type="number" class="form-control" id="e-time-limit" min="1" value="30" placeholder="مثال: 30 لنصف ساعة">
                 </div>
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="e-active" checked>
@@ -216,7 +216,7 @@ $('[data-bs-target="#addExamModal"]').on('click', function() {
     $('#e-id').val('');
     $('#e-title').val('');
     $('#e-desc').val('');
-    $('#e-time-limit').val('120'); // Default to 2 hours
+    $('#e-time-limit').val('30'); // Default to 30 minutes
     $('#e-active').prop('checked', true);
     new bootstrap.Modal(document.getElementById('examModal')).show();
 });
