@@ -3,151 +3,367 @@
 
 @push('styles')
 <style>
-.exams-container {
-    max-width: 1000px;
+/* ===== Design tokens (shared visual language for the exams module) ===== */
+:root{
+    --navy: #14213d;
+    --navy-soft: #1e3a5f;
+    --accent: #0ea472;
+    --accent-dark: #0b8a5f;
+    --warning: #f5a623;
+    --danger: #e5484d;
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --border: #e6e9f0;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 2px 10px rgba(15, 23, 42, .05);
+    --shadow-md: 0 10px 30px rgba(15, 23, 42, .09);
+}
+
+.exams-page{
+    background: var(--bg);
+    min-height: 100%;
+    padding: 24px 16px 48px;
+}
+@media (min-width: 768px){
+    .exams-page{ padding: 40px 24px 64px; }
+}
+
+.exams-container{
+    max-width: 880px;
     margin: 0 auto;
-    padding: 40px 20px;
 }
 
-.page-header {
-    text-align: center;
-    margin-bottom: 40px;
-}
-
-.page-title {
-    color: #1a2b56;
-    font-weight: 800;
-    font-size: 1.75rem;
-    margin-bottom: 10px;
-}
-
-@media (min-width: 768px) {
-    .page-title {
-        font-size: 2.25rem;
-    }
-}
-
-.page-subtitle {
-    color: #64748b;
-    font-size: 1rem;
-}
-
-.exam-card {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
-    border: 1px solid #e2e8f0;
-    margin-bottom: 20px;
+/* Header */
+.exams-header{
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
+    margin-bottom: 28px;
 }
-
-@media (min-width: 768px) {
-    .exam-card {
-        padding: 30px;
+@media (min-width: 768px){
+    .exams-header{
         flex-direction: row;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
+        margin-bottom: 36px;
     }
 }
-
-.exam-card:hover {
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    border-color: #cbd5e1;
+.exams-header h1{
+    color: var(--navy);
+    font-weight: 800;
+    font-size: 1.5rem;
+    margin: 0 0 6px;
 }
-
-.exam-info h3 {
-    color: #1a2b56;
-    font-weight: 700;
-    font-size: 1.2rem;
-    margin-bottom: 8px;
-    line-height: 1.4;
+@media (min-width: 768px){
+    .exams-header h1{ font-size: 2rem; }
 }
-
-@media (min-width: 768px) {
-    .exam-info h3 {
-        font-size: 1.4rem;
-    }
+.exams-header p{
+    color: var(--text-muted);
+    margin: 0;
+    font-size: .95rem;
 }
-
-.exam-info p {
-    color: #64748b;
-    font-size: 0.95rem;
-    margin-bottom: 15px;
-    max-width: 600px;
-    line-height: 1.6;
-}
-
-.exam-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    color: #64748b;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.exam-meta span {
+.btn-progress{
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    background: #f8fafc;
-    padding: 6px 12px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
+    justify-content: center;
+    gap: 8px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 22px;
+    font-weight: 700;
+    font-size: .92rem;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.btn-progress:hover, .btn-progress:focus-visible{
+    background: var(--navy-soft);
+    color: #fff;
+    box-shadow: var(--shadow-md);
+}
+.btn-progress:active{ transform: scale(.97); }
+
+/* Alert */
+.exams-alert{
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    font-size: .9rem;
 }
 
-.btn-start-exam {
-    background: #10b981;
-    color: #ffffff;
-    border: none;
-    padding: 14px 25px;
-    border-radius: 10px;
+/* Exam card */
+.exams-list{
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.exam-card{
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow .2s ease, border-color .2s ease;
+}
+@media (min-width: 768px){
+    .exam-card{
+        padding: 26px 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+    }
+}
+.exam-card:hover{
+    box-shadow: var(--shadow-md);
+    border-color: #d6dbe6;
+}
+
+.exam-info h3{
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 1.08rem;
+    line-height: 1.4;
+    margin: 0 0 6px;
+}
+@media (min-width: 768px){
+    .exam-info h3{ font-size: 1.25rem; }
+}
+.exam-info p{
+    color: var(--text-muted);
+    font-size: .9rem;
+    line-height: 1.6;
+    margin: 0 0 14px;
+}
+@media (min-width: 768px){
+    .exam-info p{ max-width: 520px; }
+}
+
+.exam-meta{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+@media (min-width: 768px){
+    .exam-meta{ margin-bottom: 0; }
+}
+.exam-meta span{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: .82rem;
     font-weight: 600;
-    font-size: 1.05rem;
-    text-decoration: none;
-    transition: all 0.3s ease;
+}
+.exam-meta span i{ color: var(--accent); }
+
+.exam-action{ margin-top: 16px; }
+@media (min-width: 768px){
+    .exam-action{ margin-top: 0; flex-shrink: 0; }
+}
+
+.btn-start-exam{
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 15px 24px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 1rem;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 8px;
     width: 100%;
+    min-height: 50px;
     cursor: pointer;
+    transition: background .2s ease, transform .15s ease, box-shadow .15s ease;
 }
+@media (min-width: 768px){
+    .btn-start-exam{ width: auto; padding: 13px 28px; }
+}
+.btn-start-exam:hover, .btn-start-exam:focus-visible{
+    background: var(--accent-dark);
+    box-shadow: 0 8px 18px rgba(14, 164, 114, .25);
+}
+.btn-start-exam:active{ transform: scale(.98); }
 
-@media (min-width: 768px) {
-    .btn-start-exam {
-        width: auto;
-        padding: 12px 30px;
+/* Empty state */
+.exams-empty{
+    text-align: center;
+    padding: 64px 20px;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--border);
+}
+.exams-empty .icon-wrap{
+    width: 72px; height: 72px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--bg);
+    border-radius: 50%;
+    margin-bottom: 16px;
+}
+.exams-empty .icon-wrap i{ font-size: 2rem; color: var(--text-muted); }
+.exams-empty h5{ color: var(--text-muted); font-weight: 700; margin: 0; }
+
+/* ===== Confirmation sheet ===== */
+.exam-modal .modal-dialog{
+    margin: 0 auto;
+}
+@media (max-width: 767.98px){
+    .exam-modal .modal-dialog{
+        margin: 0;
+        display: flex;
+        align-items: flex-end;
+        min-height: 100vh;
+        max-width: 100%;
     }
+    .exam-modal .modal-content{
+        border-radius: 22px 22px 0 0 !important;
+        width: 100%;
+        max-height: 90vh;
+    }
+    .exam-modal.fade .modal-dialog{ transform: translateY(40px); }
+    .exam-modal.show .modal-dialog{ transform: translateY(0); }
 }
-
-.btn-start-exam:hover {
-    background: #059669;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(16, 185, 129, 0.25);
-    color: #ffffff;
+.exam-modal .modal-content{
+    border: none;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+.exam-modal .modal-header{
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 18px;
+}
+.exam-modal .drag-handle{
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 999px;
+    margin: 8px auto -4px;
+}
+.exam-modal .modal-title{
+    color: var(--navy);
+    font-weight: 800;
+    font-size: 1rem;
+}
+.exam-modal .modal-body{ padding: 18px; }
+.exam-modal .exam-name{
+    color: var(--navy);
+    font-weight: 800;
+    font-size: 1.1rem;
+    text-align: center;
+    margin-bottom: 18px;
+    line-height: 1.4;
+}
+.exam-modal .info-label{
+    font-weight: 700;
+    color: var(--text-muted);
+    font-size: .82rem;
+    margin-bottom: 8px;
+}
+.exam-modal .info-badges{
+    display: flex; flex-wrap: wrap; gap: 8px;
+}
+.exam-modal .info-badges .badge{
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-weight: 600;
+    font-size: .8rem;
+    padding: 7px 11px;
+    border-radius: 999px;
+}
+.exam-modal .info-badges .badge i{ color: var(--accent); margin-inline-end: 4px; }
+.exam-modal ol{
+    margin: 0; padding: 0; list-style: none; counter-reset: steps;
+}
+.exam-modal ol li{
+    counter-increment: steps;
+    position: relative;
+    padding-inline-end: 28px;
+    margin-bottom: 8px;
+    font-size: .87rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+.exam-modal ol li::before{
+    content: counter(steps);
+    position: absolute;
+    inset-inline-end: 0;
+    top: 1px;
+    width: 18px; height: 18px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    font-size: .68rem;
+    font-weight: 700;
+    color: var(--navy);
+    display: flex; align-items: center; justify-content: center;
+}
+.exam-modal .warn-box{
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+}
+.exam-modal .agree-box{
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+}
+.exam-modal .agree-box input{
+    width: 20px; height: 20px;
+    margin-inline-end: 10px;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+.exam-modal .modal-footer{
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+    display: flex;
+    gap: 10px;
+}
+.exam-modal .modal-footer .btn{
+    flex: 1;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    padding: 13px;
 }
 </style>
 @endpush
 
 @section('content')
+<div class="exams-page">
 <div class="exams-container">
-    <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-center mb-5 text-md-end text-center">
+    <div class="exams-header text-center text-md-end">
         <div>
-            <h1 class="page-title mb-1">الشهادات الاحترافية</h1>
-            <p class="page-subtitle mb-0">اختر الشهادة التي ترغب في أداء اختبارها</p>
+            <h1>الشهادات الاحترافية</h1>
+            <p>اختر الشهادة التي ترغب في أداء اختبارها</p>
         </div>
-        <a href="{{ route('user.graded_exams.progress') }}" class="btn btn-primary shadow-sm rounded-pill px-4 py-2 mt-3 mt-md-0 fw-bold">
-            <i class="bi bi-graph-up-arrow me-2"></i> تتبع تقدمي وسجل الاختبارات
+        <a href="{{ route('user.graded_exams.progress') }}" class="btn-progress">
+            <i class="bi bi-graph-up-arrow"></i> تتبع تقدمي وسجل الاختبارات
         </a>
     </div>
 
     @if(session('error'))
-        <div class="alert alert-danger rounded-3 border-0 shadow-sm">{{ session('error') }}</div>
+        <div class="exams-alert">{{ session('error') }}</div>
     @endif
 
     <div class="exams-list">
@@ -157,9 +373,9 @@
                     <h3>{{ $exam->title_ar }}</h3>
                     <p>{{ $exam->description_ar ?: 'لا يوجد وصف متوفر.' }}</p>
                     <div class="exam-meta">
-                        <span><i class="bi bi-file-earmark-text text-primary"></i> {{ $exam->constraintSettings ? $exam->constraintSettings->total_questions : 50 }} سؤال</span>
+                        <span><i class="bi bi-file-earmark-text"></i> {{ $exam->constraintSettings ? $exam->constraintSettings->total_questions : 50 }} سؤال</span>
                         @if($exam->time_limit_min)
-                            <span><i class="bi bi-stopwatch text-primary"></i> {{ $exam->time_limit_min }} دقيقة</span>
+                            <span><i class="bi bi-stopwatch"></i> {{ $exam->time_limit_min }} دقيقة</span>
                         @endif
                     </div>
                 </div>
@@ -167,75 +383,70 @@
                     <form action="{{ route('user.graded_exams.start', $exam->id) }}" method="POST" id="form-start-{{ $exam->id }}" class="m-0">
                         @csrf
                         <button type="button" class="btn-start-exam btn-open-modal" data-id="{{ $exam->id }}" data-title="{{ $exam->title_ar }}" data-q="{{ $exam->constraintSettings ? $exam->constraintSettings->total_questions : 50 }}" data-time="{{ $exam->time_limit_min }}">
-                            بدء الاختبار <i class="bi bi-arrow-left mt-1"></i>
+                            بدء الاختبار <i class="bi bi-arrow-left"></i>
                         </button>
                     </form>
                 </div>
             </div>
         @empty
-            <div class="text-center py-5">
-                <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-3" style="width: 80px; height: 80px;">
-                    <i class="bi bi-journal-x text-muted" style="font-size: 2.5rem;"></i>
-                </div>
-                <h5 class="text-muted fw-bold">لا توجد شهادات متوفرة حالياً</h5>
+            <div class="exams-empty">
+                <div class="icon-wrap"><i class="bi bi-journal-x"></i></div>
+                <h5>لا توجد شهادات متوفرة حالياً</h5>
             </div>
         @endforelse
     </div>
 </div>
+</div>
 
-<div class="modal fade" id="examIntroModal" tabindex="-1" aria-labelledby="examIntroModalLabel" aria-hidden="true">
+<div class="modal fade exam-modal" id="examIntroModal" tabindex="-1" aria-labelledby="examIntroModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header bg-light d-flex align-items-center py-2 px-3">
-        <h6 class="modal-title fw-bold text-primary m-0" id="examIntroModalLabel">تأكيد بدء الاختبار</h6>
-        <button type="button" class="btn-close m-0 ms-auto" data-bs-dismiss="modal" aria-label="Close" style="font-size: 0.8rem;"></button>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title" id="examIntroModalLabel">تأكيد بدء الاختبار</h6>
+        <button type="button" class="btn-close m-0 ms-auto" data-bs-dismiss="modal" aria-label="إغلاق"></button>
       </div>
-      <div class="modal-body p-3 p-md-4 text-end" style="text-align: right !important; direction: rtl;">
-          
-          <div class="mb-3 text-center text-md-end">
-              <h5 class="text-primary fw-bold" id="modal-exam-title" style="line-height: 1.4;"></h5>
-          </div>
-          
+      <div class="modal-body" style="text-align: right; direction: rtl;">
+
+          <div class="exam-name" id="modal-exam-title"></div>
+
           <div class="mb-3">
-              <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.9rem;">وصف الاختبار:</h6>
-              <p class="text-muted mb-0" style="font-size: 0.85rem; line-height: 1.5;">يهدف هذا الاختبار إلى قياس مدي استيعابك للمفاهيم والمعارف الأساسية في التسويق،ومساعدتك علي تقييم جاهزيتك قبل التقدم إلى الاختبار النهائي للشهادة الاحترافية.</p>
+              <div class="info-label">وصف الاختبار</div>
+              <p class="text-muted mb-0" style="font-size: .85rem; line-height: 1.6;">يهدف هذا الاختبار إلى قياس مدى استيعابك للمفاهيم والمعارف الأساسية في التسويق، ومساعدتك على تقييم جاهزيتك قبل التقدم إلى الاختبار النهائي للشهادة الاحترافية.</p>
           </div>
-          
+
           <div class="mb-3">
-              <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.9rem;">بيانات الاختبار:</h6>
-              <div class="d-flex flex-wrap gap-2 text-muted" style="font-size: 0.85rem;">
-                  <span class="badge bg-light text-dark border"><i class="bi bi-patch-question text-primary me-1"></i> <span id="modal-exam-questions"></span> سؤال</span>
-                  <span class="badge bg-light text-dark border"><i class="bi bi-stopwatch text-primary me-1"></i> <span id="modal-exam-time"></span></span>
-                  <span class="badge bg-light text-dark border"><i class="bi bi-arrow-repeat text-primary me-1"></i> محاولات مفتوحة</span>
-                  <span class="badge bg-light text-dark border"><i class="bi bi-ui-checks-grid text-primary me-1"></i> صح/خطأ واختياري</span>
+              <div class="info-label">بيانات الاختبار</div>
+              <div class="info-badges">
+                  <span class="badge"><i class="bi bi-patch-question"></i><span id="modal-exam-questions"></span> سؤال</span>
+                  <span class="badge"><i class="bi bi-stopwatch"></i><span id="modal-exam-time"></span></span>
+                  <span class="badge"><i class="bi bi-arrow-repeat"></i>محاولات مفتوحة</span>
+                  <span class="badge"><i class="bi bi-ui-checks-grid"></i>صح/خطأ واختياري</span>
               </div>
           </div>
 
           <div class="mb-3">
-              <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.9rem;">تعليمات هامة:</h6>
-              <ol class="mb-0 ps-0 pe-3 text-muted" style="line-height: 1.6; font-size: 0.85rem;">
+              <div class="info-label">تعليمات هامة</div>
+              <ol>
                   <li>اقرأ السؤال والبدائل بعناية.</li>
                   <li>يمكنك مراجعة وتعديل إجاباتك قبل التسليم.</li>
               </ol>
           </div>
-          
-          <div class="alert alert-warning py-2 px-3 mb-3 rounded-2 border-warning border-opacity-50 text-end">
-              <strong class="d-flex align-items-center mb-1 text-dark" style="font-size: 0.85rem;"><i class="bi bi-exclamation-triangle-fill text-warning fs-6 ms-2"></i> تنبيه:</strong>
-              <span class="text-dark" style="font-size: 0.8rem; line-height: 1.4;">حدد الإجابة أو الإجابات الصحيحة بناءً على المطلوب في كل سؤال، حيث قد يتطلب سؤال واحد اختيار أكثر من خيار.</span>
+
+          <div class="warn-box mb-3">
+              <strong class="d-flex align-items-center mb-1 text-dark" style="font-size: .85rem;"><i class="bi bi-exclamation-triangle-fill text-warning ms-2"></i> تنبيه:</strong>
+              <span class="text-dark" style="font-size: .8rem; line-height: 1.4;">حدد الإجابة أو الإجابات الصحيحة بناءً على المطلوب في كل سؤال، حيث قد يتطلب سؤال واحد اختيار أكثر من خيار.</span>
           </div>
 
-          <div class="p-2 bg-light rounded-2 border">
-              <div class="form-check d-flex align-items-center mb-0">
-                  <input class="form-check-input border-secondary shadow-sm" type="checkbox" id="agreeCheckbox" style="width: 18px; height: 18px; margin-left: 10px; cursor: pointer;">
-                  <label class="form-check-label fw-bold text-dark w-100" for="agreeCheckbox" style="cursor: pointer; font-size: 0.85rem; line-height: 1.4;">
-                      قرأت التعليمات وأوافق على البدء.
-                  </label>
-              </div>
+          <div class="agree-box">
+              <label class="d-flex align-items-center mb-0 fw-bold text-dark" for="agreeCheckbox" style="cursor: pointer; font-size: .85rem;">
+                  <input type="checkbox" id="agreeCheckbox">
+                  قرأت التعليمات وأوافق على البدء.
+              </label>
           </div>
       </div>
-      <div class="modal-footer bg-light d-flex justify-content-between py-2 px-3 w-100">
-        <button type="button" class="btn btn-sm btn-outline-secondary px-3 fw-bold" data-bs-dismiss="modal">إلغاء</button>
-        <button type="button" class="btn btn-sm btn-success px-3 fw-bold" id="btn-confirm-start" disabled>ابدأ الاختبار <i class="bi bi-play-circle-fill ms-1"></i></button>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+        <button type="button" class="btn btn-success" id="btn-confirm-start" disabled>ابدأ الاختبار <i class="bi bi-play-circle-fill ms-1"></i></button>
       </div>
     </div>
   </div>
@@ -251,15 +462,14 @@
         let title = $(this).data('title');
         let qCount = $(this).data('q');
         let timeMin = $(this).data('time');
-        
-        // Default to 30 minutes if not set in DB
+
         if (!timeMin) {
             timeMin = 30;
         }
-        
+
         $('#modal-exam-title').text(title);
         $('#modal-exam-questions').text(qCount || 50);
-        
+
         let timeText = 'غير محدد';
         if (timeMin) {
             let hours = Math.floor(timeMin / 60);
@@ -273,10 +483,10 @@
             }
         }
         $('#modal-exam-time').text(timeText);
-        
+
         $('#agreeCheckbox').prop('checked', false);
         $('#btn-confirm-start').prop('disabled', true);
-        
+
         new bootstrap.Modal(document.getElementById('examIntroModal')).show();
     });
 

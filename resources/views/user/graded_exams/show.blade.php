@@ -3,198 +3,384 @@
 
 @push('styles')
 <style>
-.exam-container {
-    max-width: 1100px;
+:root{
+    --navy: #14213d;
+    --navy-soft: #1e3a5f;
+    --accent: #0ea472;
+    --warning: #f5a623;
+    --danger: #e5484d;
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --border: #e6e9f0;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 2px 10px rgba(15, 23, 42, .05);
+    --shadow-md: 0 10px 28px rgba(15, 23, 42, .09);
+}
+
+body{ background: var(--bg); }
+
+.exam-container{
+    max-width: 1180px;
     margin: 0 auto;
-    padding: 10px 5px;
+    padding: 8px 4px 100px;
 }
-.question-card {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 20px 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-    border: 1px solid #f1f5f9;
-    display: none;
+@media (min-width: 768px){
+    .exam-container{ padding: 24px 15px 40px; }
 }
-@media (min-width: 768px) {
-    .exam-container {
-        padding: 30px 15px;
-    }
-    .question-card {
-        padding: 35px;
-        margin-bottom: 25px;
-    }
+
+/* ===== Top bar ===== */
+.exam-topbar{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 10px 12px;
+    position: sticky;
+    top: 6px;
+    z-index: 1000;
+    margin-bottom: 14px;
 }
-.question-card.active {
-    display: block;
-    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+@media (min-width: 768px){
+    .exam-topbar{ padding: 14px 20px; top: 10px; margin-bottom: 20px; }
 }
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
+.exam-topbar-row1{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
 }
-.question-text {
-    font-size: 1.15rem;
+.exam-topbar-row1 h1{
+    font-size: .92rem;
     font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 25px;
-    line-height: 1.7;
+    color: var(--navy);
+    margin: 0;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
-@media (min-width: 768px) {
-    .question-text {
-        font-size: 1.3rem;
-    }
+@media (min-width: 768px){ .exam-topbar-row1 h1{ font-size: 1.05rem; } }
+
+.btn-finish{
+    background: var(--danger);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 700;
+    font-size: .82rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
-.option-label {
+.btn-finish:hover{ background: #d13c40; color: #fff; }
+
+.exam-topbar-row2{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+.q-count-badge{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(14, 164, 114, .1);
+    color: var(--accent);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 700;
+}
+.btn-map{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--navy);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 700;
+}
+.timer-box{
     display: flex;
     align-items: center;
-    padding: 12px 15px;
-    border: 2px solid #f1f5f9;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.95rem;
-    color: #475569;
-    background: #ffffff;
-    position: relative;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    flex-shrink: 0;
+}
+.timer-box .bi{ color: var(--danger); font-size: .85rem; margin-inline-end: 6px; }
+.timer-box #exam-timer{
+    font-weight: 700;
+    color: var(--danger);
+    font-family: 'Courier New', monospace;
+    font-size: .92rem;
+    direction: ltr;
+}
+@keyframes pulse{
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: .85; transform: scale(.98); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.progress-mini{
+    height: 5px;
+    background: var(--bg);
+    border-radius: 999px;
     overflow: hidden;
+    margin-top: 10px;
 }
-@media (min-width: 768px) {
-    .option-label {
-        padding: 16px 20px;
-        font-size: 1rem;
-    }
+.progress-mini > div{
+    height: 100%;
+    background: var(--accent);
+    border-radius: 999px;
+    transition: width .25s ease;
+    width: 0%;
 }
-.option-label:hover {
-    background: #f8fafc;
-    border-color: #e2e8f0;
+
+/* ===== Question card ===== */
+.question-card{
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 18px 14px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    display: none;
 }
-.option-input:checked + .option-label {
-    border-color: #3b82f6;
-    background: #eff6ff;
-    color: #1e3a8a;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+@media (min-width: 768px){
+    .question-card{ padding: 32px; margin-bottom: 20px; }
 }
-.option-input:checked + .option-label::before {
-    content: '\F26A'; /* bootstrap icon check-circle-fill */
+.question-card.active{
+    display: block;
+    animation: fadeIn .35s cubic-bezier(.4,0,.2,1);
+}
+@keyframes fadeIn{
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.question-text{
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 20px;
+    line-height: 1.7;
+}
+@media (min-width: 768px){ .question-text{ font-size: 1.25rem; } }
+
+.multi-hint{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-inline-start: 8px;
+}
+
+.option-label{
+    display: flex;
+    align-items: center;
+    padding: 13px 15px 13px 44px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all .15s ease;
+    font-size: .94rem;
+    color: var(--text-muted);
+    background: var(--surface);
+    position: relative;
+    min-height: 48px;
+}
+@media (min-width: 768px){
+    .option-label{ padding: 16px 20px 16px 48px; font-size: 1rem; }
+}
+.option-label:hover{ background: var(--bg); border-color: #d6dbe6; }
+.option-input:checked + .option-label{
+    border-color: var(--accent);
+    background: rgba(14, 164, 114, .06);
+    color: var(--navy);
+    font-weight: 700;
+}
+.option-input:checked + .option-label::before{
+    content: '\F26A';
     font-family: 'bootstrap-icons';
     position: absolute;
-    left: 20px;
-    font-size: 1.25rem;
-    color: #3b82f6;
+    left: 16px;
+    font-size: 1.2rem;
+    color: var(--accent);
+}
+.option-input:focus-visible + .option-label{
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
-/* Sidebar Styles */
-.sidebar-map {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-    border: 1px solid #f1f5f9;
+.flag-row{
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+.flag-row input{
+    width: 38px; height: 20px;
+    cursor: pointer;
+    accent-color: var(--warning);
+}
+.flag-row label{
+    color: #b45309;
+    font-weight: 700;
+    font-size: .88rem;
+    cursor: pointer;
+}
+
+/* ===== Sidebar / question navigator ===== */
+.exam-sidebar{
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
     position: sticky;
-    top: 90px;
+    top: 100px;
 }
-.q-grid-container {
-    max-height: 50vh;
-    overflow-y: auto;
-    padding-right: 5px;
+.sidebar-title{
+    font-weight: 800;
+    color: var(--navy);
+    font-size: .95rem;
+    margin-bottom: 4px;
 }
-.q-grid-container::-webkit-scrollbar { width: 4px; }
-.q-grid-container::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
-.q-grid-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-.q-grid-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.sidebar-sub{ color: var(--text-muted); font-size: .8rem; margin-bottom: 14px; }
 
-.q-grid {
+.q-grid-container{
+    max-height: 46vh;
+    overflow-y: auto;
+    padding-inline-end: 4px;
+}
+.q-grid-container::-webkit-scrollbar{ width: 4px; }
+.q-grid-container::-webkit-scrollbar-thumb{ background: var(--border); border-radius: 10px; }
+
+.q-grid{
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-    gap: 10px;
-    margin-top: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+    gap: 8px;
 }
-@media (max-width: 576px) {
-    .q-grid { grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 8px; }
-}
-.q-btn {
+.q-btn{
     width: 100%;
     aspect-ratio: 1;
     border-radius: 10px;
-    border: 1.5px solid #e2e8f0;
-    background: #f8fafc;
-    color: #64748b;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text-muted);
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.95rem;
+    transition: all .15s ease;
+    font-size: .88rem;
 }
-.q-btn:hover {
-    background: #e2e8f0;
-    color: #334155;
+.q-btn:hover{ background: var(--border); color: var(--text); }
+.q-btn.current{
+    border-color: var(--accent);
+    background: #fff;
+    color: var(--accent);
+    box-shadow: 0 3px 8px rgba(14, 164, 114, .2);
 }
-.q-btn.active {
-    border-color: #3b82f6;
-    background: #ffffff;
-    color: #3b82f6;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
+.q-btn.answered{ background: var(--accent); border-color: var(--accent); color: #fff; }
+.q-btn.flagged{ background: var(--warning); border-color: var(--warning); color: #fff; }
+
+.q-legend{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+    font-size: .76rem;
+    color: var(--text-muted);
 }
-.q-btn.answered {
-    background: #10b981;
-    border-color: #10b981;
-    color: #ffffff;
+.q-legend span{ display: inline-flex; align-items: center; gap: 5px; }
+.q-legend i{ width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+/* Mobile offcanvas navigator */
+.offcanvas.exam-offcanvas{
+    border-radius: 20px 20px 0 0;
+    max-height: 78vh;
 }
-.q-btn.skipped {
-    background: #ef4444;
-    border-color: #ef4444;
-    color: #ffffff;
+.offcanvas.exam-offcanvas .offcanvas-header{
+    border-bottom: 1px solid var(--border);
+}
+.offcanvas.exam-offcanvas .offcanvas-title{
+    font-weight: 800;
+    color: var(--navy);
+    font-size: 1rem;
 }
 
-/* Navigation Buttons */
-.nav-buttons {
+/* ===== Sticky bottom action bar (mobile-first, thumb reachable) ===== */
+.nav-buttons{
+    position: sticky;
+    bottom: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 4px calc(12px + env(safe-area-inset-bottom));
+    margin: 0 -4px;
     display: flex;
-    gap: 12px;
-    margin-top: 25px;
+    gap: 10px;
+    box-shadow: 0 -6px 18px rgba(15, 23, 42, .06);
+    z-index: 900;
 }
-.nav-buttons .btn {
+@media (min-width: 768px){
+    .nav-buttons{
+        position: static;
+        box-shadow: none;
+        border-top: none;
+        background: transparent;
+        margin: 20px 0 0;
+        padding: 0;
+        justify-content: space-between;
+    }
+}
+.nav-buttons .btn{
     flex: 1;
-    border-radius: 12px;
-    padding: 14px;
+    border-radius: var(--radius-sm);
+    padding: 13px;
     font-weight: 700;
-    font-size: 1.05rem;
+    font-size: .98rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
 }
-@media (min-width: 768px) {
-    .nav-buttons {
-        justify-content: space-between;
-        gap: 0;
-    }
-    .nav-buttons .btn {
-        flex: none;
-        min-width: 160px;
-    }
-}
-@keyframes pulse {
-    0% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.85; transform: scale(0.98); }
-    100% { opacity: 1; transform: scale(1); }
+@media (min-width: 768px){
+    .nav-buttons .btn{ flex: none; min-width: 160px; }
 }
 </style>
 @endpush
 
 @section('content')
 @php
-    // Default to 30 minutes if not set
     $timeLimitMinutes = $session->gradedExam->time_limit_min ?? 30;
     $timeLeftSeconds = 0;
     $hasTimer = false;
-    
+
     if ($timeLimitMinutes) {
         $hasTimer = true;
         $startedAt = $session->started_at ?? $session->created_at;
@@ -204,34 +390,35 @@
 @endphp
 
 <div class="exam-container">
-    <!-- Top Sticky/Visible Header with Timer (Compact for Mobile) -->
-    <div class="d-flex flex-column mb-3 bg-white p-2 p-md-3 rounded-3 shadow-sm border" style="position: sticky; top: 5px; z-index: 1000;">
-        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
-            <h1 class="fw-bold text-dark m-0" style="font-size: 0.95rem; line-height: 1.4;">
-                {{ $session->gradedExam->title_ar }}
-            </h1>
-            <button type="button" class="btn btn-sm btn-danger fw-bold ms-2 trigger-submit shadow-sm" style="white-space: nowrap; font-size: 0.85rem;"><i class="bi bi-check2-all me-1"></i> إنهاء الاختبار</button>
+    <!-- Top bar -->
+    <div class="exam-topbar">
+        <div class="exam-topbar-row1">
+            <h1>{{ $session->gradedExam->title_ar }}</h1>
+            <button type="button" class="btn-finish trigger-submit"><i class="bi bi-check2-all"></i> إنهاء الاختبار</button>
         </div>
-        <div class="d-flex justify-content-between align-items-center">
-            <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill" style="font-size: 0.85rem;">
-                <i class="bi bi-list-ol me-1"></i> {{ $session->total_questions }} سؤال
-            </span>
-            
+        <div class="exam-topbar-row2">
+            <span class="q-count-badge"><i class="bi bi-list-ol"></i> سؤال <span id="current-q-number">1</span> من {{ $session->total_questions }}</span>
+
+            <button type="button" class="btn-map d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#examMapOffcanvas" aria-controls="examMapOffcanvas">
+                <i class="bi bi-grid-3x3-gap-fill"></i> خريطة الأسئلة
+            </button>
+
             @if($hasTimer)
-            <div class="d-flex align-items-center px-2 py-1 rounded-2" id="timer-container" style="background-color: #fef2f2; border: 1px solid #fecaca;">
-                <i class="bi bi-stopwatch text-danger me-2" style="font-size: 0.9rem;"></i>
-                <div class="fw-bold text-danger font-monospace" id="exam-timer" dir="ltr" style="font-size: 1rem; line-height: 1; padding-top: 2px;">00:00:00</div>
+            <div class="timer-box" id="timer-container">
+                <i class="bi bi-stopwatch"></i>
+                <div id="exam-timer">00:00:00</div>
             </div>
             @endif
         </div>
+        <div class="progress-mini"><div id="progress-mini-bar"></div></div>
     </div>
 
-    <div class="row">
+    <div class="row g-3 g-lg-4">
         <!-- Main Form Area -->
-        <div class="col-lg-10 mx-auto col-md-12 mb-4">
+        <div class="col-lg-8">
             <form id="exam-form" action="{{ route('user.graded_exams.answer', $session->id) }}" method="POST">
                 @csrf
-                
+
                 @foreach($session->sessionQuestions as $index => $sq)
                     @php
                         $isMulti = $sq->question->is_multi_correct;
@@ -241,19 +428,17 @@
                         <div class="question-text">
                             <span class="text-muted me-1">{{ $index + 1 }}.</span> {{ $sq->question->text_ar }}
                             @if($isMulti && $correctCount > 1)
-                                <span class="badge bg-warning text-dark ms-2" style="font-size: 0.85rem;">
-                                    <i class="bi bi-info-circle me-1"></i> اختر {{ $correctCount }} إجابات
-                                </span>
+                                <span class="multi-hint"><i class="bi bi-info-circle"></i> اختر {{ $correctCount }} إجابات</span>
                             @endif
                         </div>
-                        
+
                         <div class="options-list">
                             @foreach($sq->question->options as $opt)
                                 @if($isMulti)
-                                    <input type="checkbox" class="btn-check option-input" 
+                                    <input type="checkbox" class="btn-check option-input"
                                         name="answers[{{ $sq->id }}][]" value="{{ $opt->id }}" id="opt_{{ $sq->id }}_{{ $opt->id }}">
                                 @else
-                                    <input type="radio" class="btn-check option-input" 
+                                    <input type="radio" class="btn-check option-input"
                                         name="answers[{{ $sq->id }}]" value="{{ $opt->id }}" id="opt_{{ $sq->id }}_{{ $opt->id }}">
                                 @endif
                                 <label class="option-label" for="opt_{{ $sq->id }}_{{ $opt->id }}">
@@ -261,35 +446,75 @@
                                 </label>
                             @endforeach
                         </div>
-                        
-                        <div class="mt-4 pt-3 border-top text-end">
-                            <div class="form-check form-switch d-inline-block">
-                                <input class="form-check-input flag-toggle shadow-sm" type="checkbox" id="flag_{{ $index }}" style="width: 40px; height: 20px; cursor: pointer;">
-                                <label class="form-check-label text-warning fw-bold ms-2" for="flag_{{ $index }}" style="cursor: pointer; padding-right: 10px;">
-                                    <i class="bi bi-flag-fill"></i> تعليم السؤال لمراجعته لاحقاً
-                                </label>
-                            </div>
+
+                        <div class="flag-row">
+                            <input class="flag-toggle" type="checkbox" id="flag_{{ $index }}">
+                            <label for="flag_{{ $index }}"><i class="bi bi-flag-fill"></i> تعليم السؤال لمراجعته لاحقاً</label>
                         </div>
                     </div>
                 @endforeach
-                
+
                 <div class="nav-buttons">
-                    <button type="button" id="btn-prev" class="btn btn-outline-secondary px-4 py-2" style="visibility: hidden;">
+                    <button type="button" id="btn-prev" class="btn btn-outline-secondary" style="visibility: hidden;">
                         <i class="bi bi-arrow-right me-1"></i> السابق
                     </button>
-                    
-                    <button type="button" id="btn-next" class="btn btn-primary px-5 py-2">
+
+                    <button type="button" id="btn-next" class="btn btn-primary">
                         التالي <i class="bi bi-arrow-left ms-1"></i>
                     </button>
 
-                    <button type="button" id="btn-submit" class="btn btn-success px-5 py-2 trigger-submit" style="display: none;">
+                    <button type="button" id="btn-submit" class="btn btn-success trigger-submit" style="display: none;">
                         إنهاء الاختبار <i class="bi bi-check-circle ms-1"></i>
                     </button>
                 </div>
             </form>
         </div>
+
+        <!-- Desktop sidebar navigator -->
+        <div class="col-lg-4 d-none d-lg-block">
+            <div class="exam-sidebar">
+                <div class="sidebar-title">خريطة الأسئلة</div>
+                <div class="sidebar-sub">اضغط على أي رقم للانتقال مباشرة إلى السؤال</div>
+                <div class="q-grid-container">
+                    <div class="q-grid">
+                        @for($i = 0; $i < $session->total_questions; $i++)
+                            <button type="button" class="q-btn" data-index="{{ $i }}">{{ $i + 1 }}</button>
+                        @endfor
+                    </div>
+                </div>
+                <div class="q-legend">
+                    <span><i style="background: var(--accent);"></i> تمت الإجابة</span>
+                    <span><i style="background: var(--warning);"></i> معلّم للمراجعة</span>
+                    <span><i style="background: var(--border);"></i> لم تتم الإجابة</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Mobile question navigator (bottom sheet) -->
+<div class="offcanvas offcanvas-bottom exam-offcanvas" tabindex="-1" id="examMapOffcanvas" aria-labelledby="examMapOffcanvasLabel" style="direction: rtl; text-align: right;">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="examMapOffcanvasLabel">خريطة الأسئلة</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="إغلاق"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="sidebar-sub mb-2">اضغط على أي رقم للانتقال مباشرة إلى السؤال</div>
+        <div class="q-grid-container" style="max-height: 50vh;">
+            <div class="q-grid">
+                @for($i = 0; $i < $session->total_questions; $i++)
+                    <button type="button" class="q-btn" data-index="{{ $i }}">{{ $i + 1 }}</button>
+                @endfor
+            </div>
+        </div>
+        <div class="q-legend">
+            <span><i style="background: var(--accent);"></i> تمت الإجابة</span>
+            <span><i style="background: var(--warning);"></i> معلّم للمراجعة</span>
+            <span><i style="background: var(--border);"></i> لم تتم الإجابة</span>
+        </div>
+    </div>
+</div>
+
 <!-- Review Modal -->
 <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -315,36 +540,38 @@ $(document).ready(function() {
     const totalQuestions = {{ $session->total_questions }};
     let currentIndex = 0;
 
-    // 2. Navigation Function
     function showQuestion(index) {
-        // Update active index
         currentIndex = index;
 
-        // Hide all, show target
         $('.question-card').removeClass('active');
         $(`.question-card[data-index="${currentIndex}"]`).addClass('active');
 
-        // Toggle Prev button
-        if(currentIndex === 0) {
+        $('#current-q-number').text(currentIndex + 1);
+
+        if (currentIndex === 0) {
             $('#btn-prev').css('visibility', 'hidden');
         } else {
             $('#btn-prev').css('visibility', 'visible');
         }
 
-        // Toggle Next / Submit buttons
-        if(currentIndex === totalQuestions - 1) {
+        if (currentIndex === totalQuestions - 1) {
             $('#btn-next').hide();
             $('#btn-submit').show();
         } else {
             $('#btn-next').show();
             $('#btn-submit').hide();
         }
+
+        updateQuestionMap();
+
+        var offcanvasEl = document.getElementById('examMapOffcanvas');
+        var offcanvasInstance = bootstrap.Offcanvas.getInstance(offcanvasEl);
+        if (offcanvasInstance) offcanvasInstance.hide();
     }
 
     function isCurrentAnswered(index) {
         let card = $(`.question-card[data-index="${index}"]`);
-        
-        // If flagged for review, allow skipping
+
         if (card.find('.flag-toggle').is(':checked')) {
             return true;
         }
@@ -352,75 +579,88 @@ $(document).ready(function() {
         let isMulti = card.data('is-multi');
         let requiredCount = parseInt(card.data('required-count'), 10);
         let checkedCount = card.find('.option-input:checked').length;
-        
+
         if (isMulti === true) {
-            return (checkedCount === requiredCount); // MUST select exactly required
+            return (checkedCount === requiredCount);
         }
         return (checkedCount > 0);
     }
 
-    // Update question map buttons
     function updateQuestionMap() {
+        let answeredCount = 0;
+
         $('.question-card').each(function() {
             let idx = $(this).data('index');
             let isFlagged = $(this).find('.flag-toggle').is(':checked');
             let checkedCount = $(this).find('.option-input:checked').length;
-            
-            let mapBtn = $(`.map-btn[data-index="${idx}"]`);
-            
+            let isMulti = $(this).data('is-multi');
+            let requiredCount = parseInt($(this).data('required-count'), 10);
+
+            let isAnswered = isMulti === true ? (checkedCount === requiredCount) : (checkedCount > 0);
+            if (isAnswered) answeredCount++;
+
+            let btns = $(`.q-btn[data-index="${idx}"]`);
+            btns.removeClass('answered flagged current');
+
             if (isFlagged) {
-                mapBtn.removeClass('btn-outline-primary btn-success text-white').addClass('btn-warning text-dark').html(`<i class="bi bi-flag-fill"></i> ${idx + 1}`);
-            } else if (checkedCount > 0) {
-                mapBtn.removeClass('btn-outline-primary btn-warning text-dark').addClass('btn-success text-white').text(idx + 1);
-            } else {
-                mapBtn.removeClass('btn-success text-white btn-warning text-dark').addClass('btn-outline-primary').text(idx + 1);
+                btns.addClass('flagged');
+            } else if (isAnswered) {
+                btns.addClass('answered');
+            }
+
+            if (idx === currentIndex) {
+                btns.addClass('current');
             }
         });
+
+        let pct = totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0;
+        $('#progress-mini-bar').css('width', pct + '%');
     }
 
-    // Listen for option changes to immediately enforce limits
     $('.option-input').on('change', function() {
         let card = $(this).closest('.question-card');
         let isMulti = card.data('is-multi');
         let requiredCount = parseInt(card.data('required-count'), 10);
-        
+
         if (isMulti === true) {
             let checkedInputs = card.find('.option-input:checked');
             if (checkedInputs.length > requiredCount) {
-                $(this).prop('checked', false); // Revert the check
+                $(this).prop('checked', false);
                 alert(`هذا السؤال يتطلب اختيار ${requiredCount} إجابات فقط.`);
-                return; // Stop execution
+                return;
             }
         }
         updateQuestionMap();
     });
 
-    // Listen for flag changes
     $('.flag-toggle').on('change', function() {
         updateQuestionMap();
     });
 
-    // 4. Bind Events
+    $('.q-btn').on('click', function() {
+        let idx = parseInt($(this).data('index'), 10);
+        showQuestion(idx);
+    });
+
     $('#btn-next').on('click', function() {
         if (!isCurrentAnswered(currentIndex)) {
             alert('يرجى اختيار إجابة للسؤال الحالي أو تعليمه للمراجعة قبل الانتقال للسؤال التالي.');
             return;
         }
-        if(currentIndex < totalQuestions - 1) {
+        if (currentIndex < totalQuestions - 1) {
             showQuestion(currentIndex + 1);
         }
     });
 
     $('#btn-prev').on('click', function() {
-        if(currentIndex > 0) {
+        if (currentIndex > 0) {
             showQuestion(currentIndex - 1);
         }
     });
 
     $('.trigger-submit').on('click', function(e) {
         e.preventDefault();
-        
-        // Find incomplete or flagged questions
+
         let incompleteOrFlagged = [];
         $('.question-card').each(function() {
             let idx = parseInt($(this).data('index'), 10);
@@ -428,7 +668,7 @@ $(document).ready(function() {
             let requiredCount = parseInt($(this).data('required-count'), 10);
             let checkedCount = $(this).find('.option-input:checked').length;
             let isFlagged = $(this).find('.flag-toggle').is(':checked');
-            
+
             let isAnswered = false;
             if (isMulti === true) {
                 isAnswered = (checkedCount === requiredCount);
@@ -454,55 +694,50 @@ $(document).ready(function() {
             var reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
             reviewModal.show();
         } else {
-            if(confirm('هل أنت متأكد من تسليم الاختبار؟')) {
+            if (confirm('هل أنت متأكد من تسليم الاختبار؟')) {
                 $('#exam-form').submit();
             }
         }
     });
 
-    // Jump to question from modal
     $(document).on('click', '.jump-to-q', function() {
         let idx = parseInt($(this).data('index'), 10);
         $('#reviewModal').modal('hide');
         showQuestion(idx);
     });
 
-    // Force submit from modal
     $('#btn-force-submit').on('click', function() {
-        if(confirm('سيتم إنهاء الاختبار بالرغم من وجود أسئلة غير مجابة بالكامل. هل أنت متأكد؟')) {
-            // Disable all inputs so user can't change while submitting
+        if (confirm('سيتم إنهاء الاختبار بالرغم من وجود أسئلة غير مجابة بالكامل. هل أنت متأكد؟')) {
             $('.option-input, .flag-toggle').prop('disabled', true);
             $('#btn-force-submit').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري التسليم...');
             $('#exam-form').submit();
         }
     });
 
-    // 5. Initialize First Question
     showQuestion(0);
-    // 6. Timer Logic
+
     const hasTimer = {{ $hasTimer ? 'true' : 'false' }};
     let timeLeft = {{ $timeLeftSeconds }};
-    
+
     if (hasTimer) {
         function updateTimerDisplay() {
             let h = Math.floor(timeLeft / 3600);
             let m = Math.floor((timeLeft % 3600) / 60);
             let s = timeLeft % 60;
-            
+
             let display = '';
             if (h > 0) display += String(h).padStart(2, '0') + ':';
             display += String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-            
+
             $('#exam-timer').text(display);
-            
+
             if (timeLeft <= 300) {
-                // last 5 minutes, blink or make it more prominent
-                $('#timer-container').removeClass('alert-danger border-opacity-25').addClass('alert-danger fw-bold').css('animation', 'pulse 1s infinite');
+                $('#timer-container').css('animation', 'pulse 1s infinite');
             }
         }
-        
+
         updateTimerDisplay();
-        
+
         let timerInterval = setInterval(function() {
             timeLeft--;
             if (timeLeft <= 0) {
@@ -510,11 +745,10 @@ $(document).ready(function() {
                 clearInterval(timerInterval);
                 updateTimerDisplay();
                 alert('انتهى الوقت المخصص للاختبار! سيتم تسليم إجاباتك الآن تلقائياً.');
-                
-                // Disable all inputs so user can't change while submitting
+
                 $('.option-input').prop('disabled', true);
                 $('#btn-submit, #btn-next, #btn-prev').prop('disabled', true);
-                
+
                 $('#exam-form').submit();
             } else {
                 updateTimerDisplay();

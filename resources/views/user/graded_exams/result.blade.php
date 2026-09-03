@@ -3,134 +3,286 @@
 
 @push('styles')
 <style>
+:root{
+    --navy: #14213d;
+    --navy-soft: #1e3a5f;
+    --accent: #0ea472;
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --border: #e6e9f0;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 2px 10px rgba(15, 23, 42, .05);
+}
+
+.result-page{
+    background: var(--bg);
+    padding: 20px 14px 56px;
+}
+@media (min-width: 768px){
+    .result-page{ padding: 36px 20px 64px; }
+}
+.result-container{ max-width: 960px; margin: 0 auto; }
+
+.result-hero{ text-align: center; margin-bottom: 28px; }
+.result-hero h1{
+    color: var(--navy);
+    font-weight: 800;
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+}
+@media (min-width: 768px){ .result-hero h1{ font-size: 1.75rem; } }
+.result-hero p{ color: var(--text-muted); font-size: .95rem; margin: 0; }
+
+/* Summary card */
+.summary-card{
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 28px;
+}
+.summary-grid{
+    display: grid;
+    grid-template-columns: 1fr;
+}
+@media (min-width: 640px){
+    .summary-grid{ grid-template-columns: 1fr 1fr; }
+}
+.summary-cell{
+    padding: 24px;
+    text-align: center;
+}
+.summary-cell:first-child{
+    border-bottom: 1px solid var(--border);
+}
+@media (min-width: 640px){
+    .summary-cell:first-child{
+        border-bottom: none;
+        border-inline-end: 1px solid var(--border);
+    }
+}
+.summary-cell h5{ color: var(--text-muted); font-size: .9rem; margin-bottom: 8px; font-weight: 600; }
+.readiness-label{ font-weight: 800; font-size: 1.5rem; margin: 0; }
+@media (min-width: 768px){ .readiness-label{ font-size: 1.75rem; } }
+.score-big{
+    font-weight: 800;
+    color: var(--navy);
+    font-size: 2.6rem;
+    margin: 0;
+    line-height: 1.1;
+}
+@media (min-width: 768px){ .score-big{ font-size: 3.4rem; } }
+.score-fraction{ color: var(--text-muted); margin-top: 6px; font-size: .95rem; }
+.score-perf{ font-weight: 700; margin-top: 8px; font-size: 1rem; }
+
+/* Units breakdown: cards on mobile, table on desktop */
+.units-card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+.units-card-header{
+    background: var(--navy);
+    color: #fff;
+    padding: 14px 18px;
+    font-weight: 700;
+    font-size: .95rem;
+}
+.unit-row{
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+}
+.unit-row:last-child{ border-bottom: none; }
+.unit-row-top{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+.unit-name{ font-weight: 700; color: var(--text); font-size: .95rem; }
+.unit-pct{ font-weight: 800; font-size: 1.05rem; }
+.unit-bar{
+    height: 8px;
+    background: var(--bg);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+.unit-bar > div{ height: 100%; border-radius: 999px; }
+.unit-row-bottom{
+    display: flex;
+    justify-content: space-between;
+    font-size: .82rem;
+    color: var(--text-muted);
+}
+
+@media (min-width: 768px){
+    .units-card-header{ display: none; }
+    .units-table-wrap{ overflow: hidden; }
+}
+
+/* Highlight boxes */
+.highlight-grid{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+@media (min-width: 640px){
+    .highlight-grid{ grid-template-columns: 1fr 1fr; }
+}
+.highlight-box{
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.highlight-box.is-danger{ background: #fef2f2; border: 1px solid #fecaca; }
+.highlight-box.is-success{ background: #ecfdf5; border: 1px solid #a7f3d0; }
+.highlight-icon{
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    background: #fff;
+}
+.highlight-box.is-danger .highlight-icon{ color: #dc2626; border: 2px solid #dc2626; }
+.highlight-box.is-success .highlight-icon{ color: #059669; border: 2px solid #059669; }
+.highlight-box h6{ font-size: .85rem; margin-bottom: 2px; font-weight: 700; }
+.highlight-box.is-danger h6{ color: #dc2626; }
+.highlight-box.is-success h6{ color: #059669; }
+.highlight-box small{ color: var(--text-muted); font-size: .75rem; display: block; margin-bottom: 6px; }
+.highlight-box .value{ font-weight: 800; font-size: 1.2rem; margin: 0; }
+
+/* Legend */
+.legend-card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 18px;
+    margin-bottom: 28px;
+}
+.legend-grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    text-align: center;
+}
+@media (min-width: 640px){
+    .legend-grid{ grid-template-columns: repeat(4, 1fr); }
+}
+.legend-dot{
+    width: 10px; height: 10px; border-radius: 50%;
+    display: inline-block; margin-inline-end: 6px;
+}
+
+/* Actions */
+.result-actions{
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+@media (min-width: 640px){
+    .result-actions{ flex-direction: row; justify-content: center; }
+}
+.result-actions .btn{
+    border-radius: 999px;
+    font-weight: 700;
+    padding: 13px 24px;
+}
+
 @media print {
-    /* Hide specific elements during print */
-    .no-print, #reviewAnswers, #answersAccordion, .btn, .top-navbar, footer {
-        display: none !important;
-    }
-    
-    body {
-        background-color: #fff !important;
-    }
-    
-    /* Ensure the main container takes full width for printing */
-    .container {
-        max-width: 100% !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    h1.display-3 {
-        font-size: 2.5rem !important; /* Smaller to fit */
-    }
-
-    .py-5, .mb-5, .my-5 {
-        padding-top: 1rem !important;
-        padding-bottom: 1rem !important;
-        margin-bottom: 1.5rem !important;
-    }
-    
-    /* Maintain Grid for Desktop-like layout on Print */
-    .row {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        margin-right: -10px !important;
-        margin-left: -10px !important;
-    }
-    .col-md-8 {
-        width: 100% !important;
-        max-width: 100% !important;
-        flex: 0 0 100% !important;
-        margin: 0 auto !important;
-    }
-    .col-md-6 {
-        width: 50% !important;
-        flex: 0 0 50% !important;
-        max-width: 50% !important;
-        padding: 0 10px !important;
-    }
-
-    /* Prevent breaking inside summary row and legend */
-    .row.g-4, .card {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-    }
-
-    /* Keep table layout clean and remove scrollbars */
-    .table-responsive {
-        overflow: visible !important;
-    }
-    
-    /* Adjust Cards */
-    .card {
-        box-shadow: none !important;
-    }
-
-    /* Print colors accurately */
-    * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-    
-    /* Progress bar outline */
-    .progress {
-        border: 1px solid #dee2e6;
-        background-color: #f8f9fa !important;
-    }
-
-    /* Avoid breaking units table */
-    .table {
-        break-inside: avoid;
-        font-size: 0.9rem !important;
-    }
-    .table th, .table td {
-        padding: 6px !important;
-    }
+    .no-print, #reviewAnswers, #answersAccordion, .btn, .top-navbar, footer { display: none !important; }
+    body { background-color: #fff !important; }
+    .result-page{ padding: 0; background: #fff; }
+    .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    h1.display-3 { font-size: 2.5rem !important; }
+    .py-5, .mb-5, .my-5 { padding-top: 1rem !important; padding-bottom: 1rem !important; margin-bottom: 1.5rem !important; }
+    .row { display: flex !important; flex-wrap: wrap !important; margin-right: -10px !important; margin-left: -10px !important; }
+    .col-md-8 { width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; margin: 0 auto !important; }
+    .col-md-6 { width: 50% !important; flex: 0 0 50% !important; max-width: 50% !important; padding: 0 10px !important; }
+    .row.g-4, .card, .units-card, .summary-card { page-break-inside: avoid !important; break-inside: avoid !important; }
+    .table-responsive { overflow: visible !important; }
+    .card { box-shadow: none !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .progress { border: 1px solid #dee2e6; background-color: #f8f9fa !important; }
+    .table { break-inside: avoid; font-size: 0.9rem !important; }
+    .table th, .table td { padding: 6px !important; }
+    .units-card-header{ display: block !important; }
 }
 </style>
 @endpush
 
 @section('content')
-<div class="container py-5">
+<div class="result-page">
+<div class="result-container">
     @if($result)
-        <div class="text-center mb-5">
-            <h1 class="fw-bold text-darkblue mb-3">أداؤك حسب وحدات الاختبار</h1>
-            <p class="text-muted fs-5">ترتيب الوحدات من أعلى درجة إلى أقل درجة</p>
+        <div class="result-hero">
+            <h1>أداؤك حسب وحدات الاختبار</h1>
+            <p>ترتيب الوحدات من أعلى درجة إلى أقل درجة</p>
         </div>
 
         <!-- Top Summary -->
-        <div class="row justify-content-center mb-5">
-            <div class="col-md-8">
-                <div class="card shadow-sm border-0 rounded-4">
-                    <div class="card-body p-0">
-                        <div class="row g-0 text-center align-items-center">
-                            <div class="col-md-6 p-4 border-end">
-                                <h5 class="text-muted mb-2">مستوى الجاهزية:</h5>
-                                @php
-                                    $readinessColor = 'text-warning';
-                                    if ($result->percentage >= 75) $readinessColor = 'text-success';
-                                    elseif ($result->percentage < 60) $readinessColor = 'text-danger';
-                                @endphp
-                                <h2 class="fw-bold {{ $readinessColor }} mb-0">{{ $readinessLevel }}</h2>
-                            </div>
-                            <div class="col-md-6 p-4">
-                                <h5 class="text-muted mb-2">النتيجة الإجمالية</h5>
-                                <h1 class="display-3 fw-bold text-darkblue mb-0">{{ floatval($result->percentage) }}%</h1>
-                                <h4 class="text-secondary mt-2">{{ floatval($result->correct_count) }} من {{ $session->total_questions }} درجة</h4>
-                                <h5 class="mt-2 fw-bold {{ $overallPerformance['class'] }}">{{ $overallPerformance['name'] }}</h5>
-                            </div>
-                        </div>
-                    </div>
+        <div class="summary-card">
+            <div class="summary-grid">
+                <div class="summary-cell">
+                    <h5>مستوى الجاهزية</h5>
+                    @php
+                        $readinessColor = '#f59e0b';
+                        if ($result->percentage >= 75) $readinessColor = '#059669';
+                        elseif ($result->percentage < 60) $readinessColor = '#dc2626';
+                    @endphp
+                    <p class="readiness-label" style="color: {{ $readinessColor }};">{{ $readinessLevel }}</p>
+                </div>
+                <div class="summary-cell">
+                    <h5>النتيجة الإجمالية</h5>
+                    <p class="score-big">{{ floatval($result->percentage) }}%</p>
+                    <p class="score-fraction">{{ floatval($result->correct_count) }} من {{ $session->total_questions }} درجة</p>
+                    <p class="score-perf {{ $overallPerformance['class'] }}">{{ $overallPerformance['name'] }}</p>
                 </div>
             </div>
         </div>
 
-        <!-- Units Table -->
-        <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden">
-            <div class="table-responsive">
+        <!-- Units Breakdown -->
+        <div class="units-card">
+            <div class="units-card-header">تفاصيل الأداء حسب الوحدة</div>
+
+            <!-- Mobile card rows -->
+            <div class="d-block d-md-none">
+                @foreach($unitsStats as $stat)
+                    <div class="unit-row">
+                        <div class="unit-row-top">
+                            <span class="unit-name">{{ $stat['name'] }}</span>
+                            <span class="unit-pct {{ $stat['level_class'] }}">{{ $stat['percentage'] }}%</span>
+                        </div>
+                        <div class="unit-bar">
+                            <div class="progress-bar {{ $stat['bar_color'] }}" style="width: {{ $stat['percentage'] }}%"></div>
+                        </div>
+                        <div class="unit-row-bottom">
+                            <span>{{ floatval($stat['score']) }} من {{ $stat['total'] }}</span>
+                            <span class="fw-bold {{ $stat['level_class'] }}">{{ $stat['level_name'] }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Desktop table -->
+            <div class="table-responsive d-none d-md-block">
                 <table class="table table-borderless table-hover mb-0 align-middle">
-                    <thead class="bg-darkblue text-white text-center">
+                    <thead class="bg-light text-center">
                         <tr>
                             <th class="py-3 px-4 text-end" style="width: 30%">الوحدة</th>
                             <th class="py-3" style="width: 20%">الدرجة</th>
@@ -158,86 +310,58 @@
             </div>
         </div>
 
-        <!-- Summary Boxes -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-6">
-                <div class="card border-danger bg-light-danger h-100 rounded-4">
-                    <div class="card-body text-center p-4 d-flex align-items-center justify-content-center gap-3">
-                        <div class="rounded-circle border border-danger border-2 text-danger d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; flex-shrink: 0;">
-                            <i class="bi bi-graph-down-arrow"></i>
-                        </div>
-                        <div>
-                            <h5 class="text-danger mb-0">أولوية المراجعة:</h5>
-                            <small class="text-muted d-block mb-2" style="font-size: 0.8rem;">(أقل وحدة حصلت فيها على درجة)</small>
-                            @if($lowestUnit && $lowestUnit['percentage'] == 100)
-                                <h6 class="fw-bold text-success mb-1">لا يوجد</h6>
-                                <h5 class="fw-bold text-success mb-0">أداء مثالي 🌟</h5>
-                            @else
-                                <h6 class="fw-bold mb-1">{{ $lowestUnit ? $lowestUnit['name'] : '-' }}</h6>
-                                <h3 class="fw-bold text-danger mb-0">{{ $lowestUnit ? $lowestUnit['percentage'].'%' : '-' }}</h3>
-                            @endif
-                        </div>
-                    </div>
+        <!-- Highlight boxes -->
+        <div class="highlight-grid">
+            <div class="highlight-box is-danger">
+                <div class="highlight-icon"><i class="bi bi-graph-down-arrow"></i></div>
+                <div>
+                    <h6>أولوية المراجعة</h6>
+                    <small>(أقل وحدة حصلت فيها على درجة)</small>
+                    @if($lowestUnit && $lowestUnit['percentage'] == 100)
+                        <p class="value" style="color:#059669;">أداء مثالي 🌟</p>
+                    @else
+                        <p class="value" style="color:#dc2626;">{{ $lowestUnit ? $lowestUnit['name'].' — '.$lowestUnit['percentage'].'%' : '-' }}</p>
+                    @endif
                 </div>
             </div>
-            
-            <div class="col-md-6">
-                <div class="card border-success bg-light-success h-100 rounded-4">
-                    <div class="card-body text-center p-4 d-flex align-items-center justify-content-center gap-3">
-                        <div class="rounded-circle border border-success border-2 text-success d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; flex-shrink: 0;">
-                            <i class="bi bi-graph-up-arrow"></i>
-                        </div>
-                        <div>
-                            <h5 class="text-success mb-0">أعلى أداء:</h5>
-                            <small class="text-muted d-block mb-2" style="font-size: 0.8rem;">(أعلى وحدة حصلت فيها على درجة)</small>
-                            <h6 class="fw-bold mb-1">{{ $highestUnit ? $highestUnit['name'] : '-' }}</h6>
-                            <h3 class="fw-bold text-success mb-0">{{ $highestUnit ? $highestUnit['percentage'].'%' : '-' }}</h3>
-                        </div>
-                    </div>
+            <div class="highlight-box is-success">
+                <div class="highlight-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                <div>
+                    <h6>أعلى أداء</h6>
+                    <small>(أعلى وحدة حصلت فيها على درجة)</small>
+                    <p class="value" style="color:#059669;">{{ $highestUnit ? $highestUnit['name'].' — '.$highestUnit['percentage'].'%' : '-' }}</p>
                 </div>
             </div>
         </div>
 
         <!-- Legend -->
-        <div class="card shadow-sm border-0 rounded-4 mb-5">
-            <div class="card-body p-4 d-flex flex-wrap justify-content-around align-items-center text-center gap-3">
+        <div class="legend-card">
+            <div class="legend-grid">
                 <div>
-                    <div class="d-flex align-items-center gap-2 mb-1 justify-content-center">
-                        <span class="badge bg-success rounded-circle p-2"></span>
-                        <span class="fw-bold text-success">80% فأكثر:</span>
-                    </div>
+                    <div><span class="legend-dot" style="background:#10b981;"></span><span class="fw-bold" style="color:#10b981;">80% فأكثر</span></div>
                     <small class="text-muted fw-bold">متميز / جيد جداً</small>
                 </div>
                 <div>
-                    <div class="d-flex align-items-center gap-2 mb-1 justify-content-center">
-                        <span class="badge bg-warning rounded-circle p-2"></span>
-                        <span class="fw-bold text-warning">70%-79%:</span>
-                    </div>
+                    <div><span class="legend-dot" style="background:#f59e0b;"></span><span class="fw-bold" style="color:#f59e0b;">70%-79%</span></div>
                     <small class="text-muted fw-bold">جيد</small>
                 </div>
                 <div>
-                    <div class="d-flex align-items-center gap-2 mb-1 justify-content-center">
-                        <span class="badge rounded-circle p-2" style="background-color: #fd7e14;"></span>
-                        <span class="fw-bold" style="color: #fd7e14;">60%-69%:</span>
-                    </div>
+                    <div><span class="legend-dot" style="background:#fd7e14;"></span><span class="fw-bold" style="color:#fd7e14;">60%-69%</span></div>
                     <small class="text-muted fw-bold">مراجعة</small>
                 </div>
                 <div>
-                    <div class="d-flex align-items-center gap-2 mb-1 justify-content-center">
-                        <span class="badge bg-danger rounded-circle p-2"></span>
-                        <span class="fw-bold text-danger">أقل من 60%:</span>
-                    </div>
+                    <div><span class="legend-dot" style="background:#ef4444;"></span><span class="fw-bold" style="color:#ef4444;">أقل من 60%</span></div>
                     <small class="text-muted fw-bold">تطوير</small>
                 </div>
             </div>
         </div>
 
-        <!-- Actions Buttons -->
-        <div class="text-center mb-4 d-flex gap-3 justify-content-center flex-wrap no-print">
-            <button onclick="window.print()" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm">
+        <!-- Actions -->
+        <div class="result-actions no-print">
+            <button onclick="window.print()" class="btn btn-primary">
                 <i class="bi bi-printer me-2"></i> طباعة التقرير
             </button>
-            <button class="btn btn-outline-darkblue btn-lg px-5 rounded-pill shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#reviewAnswers" aria-expanded="false" aria-controls="reviewAnswers">
+            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#reviewAnswers" aria-expanded="false" aria-controls="reviewAnswers">
                 <i class="bi bi-journal-text me-2"></i> مراجعة الإجابات التفصيلية
             </button>
         </div>
@@ -251,7 +375,7 @@
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="heading{{ $review['index'] }}">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $review['index'] }}" aria-expanded="false" aria-controls="collapse{{ $review['index'] }}">
-                                        <div class="d-flex w-100 justify-content-between align-items-center pe-3">
+                                        <div class="d-flex w-100 flex-column flex-md-row justify-content-between align-items-start align-items-md-center pe-3 gap-2">
                                             <div class="fw-bold">
                                                 <span class="badge bg-secondary me-2">{{ $review['index'] }}</span>
                                                 {{ $review['text'] }}
@@ -309,7 +433,7 @@
         </div>
 
     @else
-        <div class="text-center">
+        <div class="text-center py-5">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">جاري التحميل...</span>
             </div>
@@ -317,25 +441,11 @@
         </div>
     @endif
 
-    <div class="text-center mt-5">
+    <div class="text-center mt-4 no-print">
         <a href="{{ route('user.graded_exams.index') }}" class="btn btn-secondary px-4 rounded-pill">
             العودة للقائمة
         </a>
     </div>
 </div>
-
-<style>
-    .bg-darkblue { background-color: #1e3a8a; }
-    .text-darkblue { color: #1e3a8a; }
-    .btn-outline-darkblue {
-        color: #1e3a8a;
-        border-color: #1e3a8a;
-    }
-    .btn-outline-darkblue:hover {
-        background-color: #1e3a8a;
-        color: white;
-    }
-    .bg-light-danger { background-color: #f8d7da; }
-    .bg-light-success { background-color: #d1e7dd; }
-</style>
+</div>
 @endsection
