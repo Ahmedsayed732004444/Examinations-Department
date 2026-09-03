@@ -206,9 +206,12 @@
 <div class="exam-container">
     <!-- Top Sticky/Visible Header with Timer (Compact for Mobile) -->
     <div class="d-flex flex-column mb-3 bg-white p-2 p-md-3 rounded-3 shadow-sm border" style="position: sticky; top: 5px; z-index: 1000;">
-        <h1 class="fw-bold text-dark m-0 pb-2 mb-2 border-bottom" style="font-size: 0.95rem; line-height: 1.4;">
-            {{ $session->gradedExam->title_ar }}
-        </h1>
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+            <h1 class="fw-bold text-dark m-0" style="font-size: 0.95rem; line-height: 1.4;">
+                {{ $session->gradedExam->title_ar }}
+            </h1>
+            <button type="button" class="btn btn-sm btn-danger fw-bold ms-2 trigger-submit shadow-sm" style="white-space: nowrap; font-size: 0.85rem;"><i class="bi bi-check2-all me-1"></i> إنهاء الاختبار</button>
+        </div>
         <div class="d-flex justify-content-between align-items-center">
             <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill" style="font-size: 0.85rem;">
                 <i class="bi bi-list-ol me-1"></i> {{ $session->total_questions }} سؤال
@@ -279,7 +282,7 @@
                         التالي <i class="bi bi-arrow-left ms-1"></i>
                     </button>
 
-                    <button type="button" id="btn-submit" class="btn btn-success px-5 py-2" style="display: none;">
+                    <button type="button" id="btn-submit" class="btn btn-success px-5 py-2 trigger-submit" style="display: none;">
                         إنهاء الاختبار <i class="bi bi-check-circle ms-1"></i>
                     </button>
                 </div>
@@ -414,13 +417,8 @@ $(document).ready(function() {
         }
     });
 
-    $('#btn-submit').on('click', function(e) {
+    $('.trigger-submit').on('click', function(e) {
         e.preventDefault();
-        
-        if (!isCurrentAnswered(currentIndex)) {
-            alert('يرجى اختيار إجابة للسؤال الأخير أو تعليمه للمراجعة.');
-            return;
-        }
         
         // Find incomplete or flagged questions
         let incompleteOrFlagged = [];
