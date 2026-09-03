@@ -708,7 +708,6 @@ $(document).ready(function() {
 
     $('#btn-force-submit').on('click', function() {
         if (confirm('سيتم إنهاء الاختبار بالرغم من وجود أسئلة غير مجابة بالكامل. هل أنت متأكد؟')) {
-            $('.option-input, .flag-toggle').prop('disabled', true);
             $('#btn-force-submit').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري التسليم...');
             $('#exam-form').submit();
         }
@@ -746,7 +745,6 @@ $(document).ready(function() {
                 updateTimerDisplay();
                 alert('انتهى الوقت المخصص للاختبار! سيتم تسليم إجاباتك الآن تلقائياً.');
 
-                $('.option-input').prop('disabled', true);
                 $('#btn-submit, #btn-next, #btn-prev').prop('disabled', true);
 
                 $('#exam-form').submit();
