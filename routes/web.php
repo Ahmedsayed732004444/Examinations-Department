@@ -37,8 +37,8 @@ Route::middleware(['auth', 'user'])->group(function () {
     
 });
 
-// Professional certificates (Graded Exams) - Publicly accessible for guest testing
-Route::prefix('certificates')->name('user.graded_exams.')->group(function () {
+// User Graded Exams
+Route::middleware(['auth'])->prefix('certificates')->name('user.graded_exams.')->group(function () {
     Route::get('/', [User\UserGradedExamController::class, 'index'])->name('index');
     Route::post('/{exam}/start', [User\UserGradedExamController::class, 'start'])->name('start');
     Route::get('/session/{session}', [User\UserGradedExamController::class, 'show'])->name('show');
