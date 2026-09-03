@@ -198,7 +198,6 @@
               <div class="d-flex flex-wrap gap-2 text-muted" style="font-size: 0.85rem;">
                   <span class="badge bg-light text-dark border"><i class="bi bi-patch-question text-primary me-1"></i> <span id="modal-exam-questions"></span> سؤال</span>
                   <span class="badge bg-light text-dark border"><i class="bi bi-stopwatch text-primary me-1"></i> <span id="modal-exam-time"></span></span>
-                  <span class="badge bg-light text-dark border"><i class="bi bi-check-circle text-primary me-1"></i> نجاح 70%</span>
                   <span class="badge bg-light text-dark border"><i class="bi bi-arrow-repeat text-primary me-1"></i> محاولات مفتوحة</span>
                   <span class="badge bg-light text-dark border"><i class="bi bi-ui-checks-grid text-primary me-1"></i> صح/خطأ واختياري</span>
               </div>
@@ -208,7 +207,6 @@
               <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.9rem;">تعليمات هامة:</h6>
               <ol class="mb-0 ps-0 pe-3 text-muted" style="line-height: 1.6; font-size: 0.85rem;">
                   <li>اقرأ السؤال والبدائل بعناية.</li>
-                  <li>قد يحتوي الاختياري على <strong class="text-dark">إجابة صحيحة واحدة أو أكثر</strong> (سيتم التوضيح).</li>
                   <li>يمكنك مراجعة وتعديل إجاباتك قبل التسليم.</li>
               </ol>
           </div>
