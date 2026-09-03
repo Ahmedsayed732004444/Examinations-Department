@@ -258,6 +258,15 @@
                                 </label>
                             @endforeach
                         </div>
+                        
+                        <div class="mt-4 pt-3 border-top text-end">
+                            <div class="form-check form-switch d-inline-block">
+                                <input class="form-check-input flag-toggle shadow-sm" type="checkbox" id="flag_{{ $index }}" style="width: 40px; height: 20px; cursor: pointer;">
+                                <label class="form-check-label text-warning fw-bold ms-2" for="flag_{{ $index }}" style="cursor: pointer; padding-right: 10px;">
+                                    <i class="bi bi-flag-fill"></i> تعليم السؤال لمراجعته لاحقاً
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 @endforeach
                 
@@ -277,6 +286,23 @@
             </form>
         </div>
     </div>
+</div>
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title fw-bold text-dark" id="reviewModalLabel">مراجعة الأسئلة</h5>
+        <button type="button" class="btn-close m-0 ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="reviewModalBody" style="direction: rtl; text-align: right;">
+      </div>
+      <div class="modal-footer bg-light justify-content-between">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">رجوع للاختبار</button>
+        <button type="button" class="btn btn-danger" id="btn-force-submit">إنهاء الاختبار <i class="bi bi-check-circle"></i></button>
+      </div>
+    </div>
+  </div>
 </div>
 @endsection
 
@@ -314,6 +340,12 @@ $(document).ready(function() {
 
     function isCurrentAnswered(index) {
         let card = $(`.question-card[data-index="${index}"]`);
+        
+        // If flagged for review, allow skipping
+        if (card.find('.flag-toggle').is(':checked')) {
+            return true;
+        }
+
         let isMulti = card.data('is-multi');
         let requiredCount = parseInt(card.data('required-count'), 10);
         let checkedCount = card.find('.option-input:checked').length;
@@ -322,6 +354,25 @@ $(document).ready(function() {
             return (checkedCount === requiredCount); // MUST select exactly required
         }
         return (checkedCount > 0);
+    }
+
+    // Update question map buttons
+    function updateQuestionMap() {
+        $('.question-card').each(function() {
+            let idx = $(this).data('index');
+            let isFlagged = $(this).find('.flag-toggle').is(':checked');
+            let checkedCount = $(this).find('.option-input:checked').length;
+            
+            let mapBtn = $(`.map-btn[data-index="${idx}"]`);
+            
+            if (isFlagged) {
+                mapBtn.removeClass('btn-outline-primary btn-success text-white').addClass('btn-warning text-dark').html(`<i class="bi bi-flag-fill"></i> ${idx + 1}`);
+            } else if (checkedCount > 0) {
+                mapBtn.removeClass('btn-outline-primary btn-warning text-dark').addClass('btn-success text-white').text(idx + 1);
+            } else {
+                mapBtn.removeClass('btn-success text-white btn-warning text-dark').addClass('btn-outline-primary').text(idx + 1);
+            }
+        });
     }
 
     // Listen for option changes to immediately enforce limits
@@ -338,12 +389,18 @@ $(document).ready(function() {
                 return; // Stop execution
             }
         }
+        updateQuestionMap();
+    });
+
+    // Listen for flag changes
+    $('.flag-toggle').on('change', function() {
+        updateQuestionMap();
     });
 
     // 4. Bind Events
     $('#btn-next').on('click', function() {
         if (!isCurrentAnswered(currentIndex)) {
-            alert('يرجى اختيار إجابة للسؤال الحالي قبل الانتقال للسؤال التالي.');
+            alert('يرجى اختيار إجابة للسؤال الحالي أو تعليمه للمراجعة قبل الانتقال للسؤال التالي.');
             return;
         }
         if(currentIndex < totalQuestions - 1) {
@@ -361,11 +418,63 @@ $(document).ready(function() {
         e.preventDefault();
         
         if (!isCurrentAnswered(currentIndex)) {
-            alert('يرجى اختيار إجابة للسؤال الأخير قبل تسليم الاختبار.');
+            alert('يرجى اختيار إجابة للسؤال الأخير أو تعليمه للمراجعة.');
             return;
         }
         
-        if(confirm('هل أنت متأكد من تسليم الاختبار؟')) {
+        // Find incomplete or flagged questions
+        let incompleteOrFlagged = [];
+        $('.question-card').each(function() {
+            let idx = parseInt($(this).data('index'), 10);
+            let isMulti = $(this).data('is-multi');
+            let requiredCount = parseInt($(this).data('required-count'), 10);
+            let checkedCount = $(this).find('.option-input:checked').length;
+            let isFlagged = $(this).find('.flag-toggle').is(':checked');
+            
+            let isAnswered = false;
+            if (isMulti === true) {
+                isAnswered = (checkedCount === requiredCount);
+            } else {
+                isAnswered = (checkedCount > 0);
+            }
+
+            if (!isAnswered || isFlagged) {
+                incompleteOrFlagged.push({ index: idx, flagged: isFlagged, answered: isAnswered });
+            }
+        });
+
+        if (incompleteOrFlagged.length > 0) {
+            let html = '<p class="mb-3 text-muted">لديك أسئلة غير مجابة أو قمت بتحديدها للمراجعة. اضغط على رقم السؤال للعودة إليه:</p><div class="d-flex flex-wrap gap-2">';
+            incompleteOrFlagged.forEach(function(item) {
+                let badgeClass = item.answered ? 'btn-warning text-dark' : 'btn-danger';
+                let icon = item.flagged ? '<i class="bi bi-flag-fill me-1"></i>' : '';
+                html += `<button type="button" class="btn btn-sm ${badgeClass} jump-to-q" data-index="${item.index}">${icon}سؤال ${item.index + 1}</button>`;
+            });
+            html += '</div>';
+
+            $('#reviewModalBody').html(html);
+            var reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
+            reviewModal.show();
+        } else {
+            if(confirm('هل أنت متأكد من تسليم الاختبار؟')) {
+                $('#exam-form').submit();
+            }
+        }
+    });
+
+    // Jump to question from modal
+    $(document).on('click', '.jump-to-q', function() {
+        let idx = parseInt($(this).data('index'), 10);
+        $('#reviewModal').modal('hide');
+        showQuestion(idx);
+    });
+
+    // Force submit from modal
+    $('#btn-force-submit').on('click', function() {
+        if(confirm('سيتم إنهاء الاختبار بالرغم من وجود أسئلة غير مجابة بالكامل. هل أنت متأكد؟')) {
+            // Disable all inputs so user can't change while submitting
+            $('.option-input, .flag-toggle').prop('disabled', true);
+            $('#btn-force-submit').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري التسليم...');
             $('#exam-form').submit();
         }
     });
