@@ -377,7 +377,7 @@ body{ background: var(--bg); }
 
 @section('content')
 @php
-    $timeLimitMinutes = $session->gradedExam->time_limit_min ?? 30;
+    $timeLimitMinutes = $session->gradedExam->time_limit_min ?? 60;
     $timeLeftSeconds = 0;
     $hasTimer = false;
 

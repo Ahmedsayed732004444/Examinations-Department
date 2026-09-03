@@ -464,7 +464,7 @@
         let timeMin = $(this).data('time');
 
         if (!timeMin) {
-            timeMin = 30;
+            timeMin = 60;
         }
 
         $('#modal-exam-title').text(title);
