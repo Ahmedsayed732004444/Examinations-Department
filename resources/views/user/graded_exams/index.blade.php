@@ -136,8 +136,16 @@
 
 @section('content')
 <div class="exams-container">
+    <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-center mb-5 text-md-end text-center">
+        <div>
+            <h1 class="page-title mb-1">الشهادات الاحترافية</h1>
+            <p class="page-subtitle mb-0">اختر الشهادة التي ترغب في أداء اختبارها</p>
+        </div>
+        <a href="{{ route('user.graded_exams.progress') }}" class="btn btn-primary shadow-sm rounded-pill px-4 py-2 mt-3 mt-md-0 fw-bold">
+            <i class="bi bi-graph-up-arrow me-2"></i> تتبع تقدمي وسجل الاختبارات
+        </a>
+    </div>
 
-    
     @if(session('error'))
         <div class="alert alert-danger rounded-3 border-0 shadow-sm">{{ session('error') }}</div>
     @endif

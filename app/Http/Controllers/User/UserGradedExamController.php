@@ -21,6 +21,42 @@ class UserGradedExamController extends Controller
         return view('user.graded_exams.index', compact('exams'));
     }
 
+    public function progress()
+    {
+        $userId = Auth::id();
+        if (!$userId) {
+            return redirect()->route('login');
+        }
+
+        $sessions = GradedExamSession::where('user_id', $userId)
+            ->where('status', 'completed')
+            ->with(['result', 'gradedExam'])
+            ->orderBy('completed_at', 'asc')
+            ->get();
+
+        $progressByExam = [];
+        foreach ($sessions as $session) {
+            $examId = $session->graded_exam_id;
+            if (!isset($progressByExam[$examId])) {
+                $progressByExam[$examId] = [
+                    'exam_title' => $session->gradedExam->title_ar ?? 'اختبار غير معروف',
+                    'labels' => [],
+                    'data' => [],
+                    'sessions' => []
+                ];
+            }
+            
+            $attemptNum = count($progressByExam[$examId]['labels']) + 1;
+            $progressByExam[$examId]['labels'][] = "محاولة $attemptNum";
+            $progressByExam[$examId]['data'][] = $session->result ? $session->result->percentage : 0;
+            
+            // Add session to history (prepend so newest is first in the table)
+            array_unshift($progressByExam[$examId]['sessions'], $session);
+        }
+
+        return view('user.graded_exams.progress', compact('progressByExam'));
+    }
+
     public function start(Request $request, GradedExam $exam, GradedExamGeneratorService $generator)
     {
         $userId = Auth::id();
