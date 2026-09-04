@@ -623,7 +623,63 @@ body{ background: var(--bg); }
     border-radius: var(--radius-sm);
     font-weight: 700;
     padding: 12px;
-}
+    /* ===== Inline Marked Review Section ===== */
+    .review-section-inline {
+        margin-top: 10px;
+        margin-bottom: 20px;
+        padding: 0 4px;
+        animation: fadeIn .3s ease;
+    }
+    @media (min-width: 768px){ .review-section-inline { padding: 0 15px; } }
+    .review-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .review-head .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #b45309;
+    }
+    .review-head h2 {
+        font-size: 1.05rem;
+        font-weight: 800;
+        margin: 0;
+        color: var(--navy);
+    }
+    .review-sub {
+        font-size: 0.88rem;
+        color: var(--text-muted);
+        margin: 0 0 14px;
+        line-height: 1.6;
+    }
+    .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .chip-review {
+        min-width: 42px;
+        height: 42px;
+        padding: 0 6px;
+        border-radius: 10px;
+        border: 1.5px solid #d97706;
+        background: #fef3c7;
+        color: #b45309;
+        font-weight: 800;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform .1s ease, background .15s ease;
+    }
+    .chip-review:hover {
+        transform: translateY(-1px);
+        background: #fde68a;
+    }
 </style>
 @endpush
 
@@ -725,6 +781,16 @@ body{ background: var(--bg); }
                         </div>
                     </div>
                 @endforeach
+                <div class="review-section-inline" id="inline-review-section" style="display: none;">
+                    <div class="review-head">
+                        <span class="dot"></span>
+                        <h2>أسئلة معلّمة للمراجعة</h2>
+                    </div>
+                    <div>
+                        <p class="review-sub">دوس على رقم أي سؤال عشان ترجعله وتراجع إجابتك.</p>
+                        <div class="chip-row" id="inline-chip-row"></div>
+                    </div>
+                </div>
 
                 <div class="nav-buttons">
                     <button type="button" id="btn-prev" class="btn btn-outline-secondary" style="visibility: hidden;">
@@ -904,6 +970,7 @@ $(document).ready(function() {
         $('#progress-mini-bar').css('width', pct + '%');
 
         updateSubmitButtonsState(totalQuestions - answeredCount);
+        renderInlineMarkedChips();
     }
 
     // يتحكم في شكل أزرار التسليم (فوق وتحت): رمادي/معطّل الشكل لحد ما يجاوب على الكل
@@ -956,6 +1023,30 @@ $(document).ready(function() {
             }
         });
         return list.sort((a, b) => a - b);
+    }
+
+    function renderInlineMarkedChips() {
+        let marked = buildMarkedList();
+        let container = $('#inline-review-section');
+        let chipRow = $('#inline-chip-row');
+        
+        if (marked.length === 0) {
+            container.hide();
+            return;
+        }
+        
+        container.show();
+        chipRow.empty();
+        
+        marked.forEach(function(idx) {
+            let chip = $('<button type="button" class="chip-review"></button>').text(idx + 1);
+            chip.on('click', function() {
+                showQuestion(idx);
+                // scroll to top of question smoothly
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            chipRow.append(chip);
+        });
     }
 
     function confirmAndSubmit() {
