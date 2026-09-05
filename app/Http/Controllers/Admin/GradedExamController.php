@@ -136,4 +136,15 @@ class GradedExamController extends Controller
         $unit->delete();
         return response()->json(['success' => true, 'message' => 'تم حذف الوحدة بنجاح.']);
     }
+
+    public function preview(GradedExam $exam)
+    {
+        $exam->load(['units.questions' => function($q) {
+            $q->orderBy('order_index');
+        }, 'units.questions.options' => function($q) {
+            $q->orderBy('order_index');
+        }]);
+
+        return view('admin.graded_exams.preview', compact('exam'));
+    }
 }

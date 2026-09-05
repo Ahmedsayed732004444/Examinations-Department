@@ -115,6 +115,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/', [Admin\GradedExamController::class, 'store'])->name('store');
         Route::put('/{exam}', [Admin\GradedExamController::class, 'update'])->name('update');
         Route::delete('/{exam}', [Admin\GradedExamController::class, 'destroy'])->name('destroy');
+        Route::get('/{exam}/preview', [Admin\GradedExamController::class, 'preview'])->name('preview');
         
         // Settings
         Route::get('/{exam}/settings', [Admin\GradedExamController::class, 'settings'])->name('settings');

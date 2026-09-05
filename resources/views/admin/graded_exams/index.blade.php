@@ -70,9 +70,12 @@
                 </div>
                 
             </div>
-            <div class="card-footer bg-white border-top-0 pt-0">
+            <div class="card-footer bg-white border-top-0 pt-0 d-flex flex-column gap-2">
                 <a href="{{ route('admin.graded_exams.questions.index', ['graded_exam_id' => $exam->id]) }}" class="btn btn-light btn-sm w-100">
                     <i class="bi bi-gear me-1"></i>إدارة بنك أسئلة الشهادة
+                </a>
+                <a href="{{ route('admin.graded_exams.preview', $exam->id) }}" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="bi bi-play-circle me-1"></i>اختبار الأسئلة (Preview)
                 </a>
             </div>
         </div>
