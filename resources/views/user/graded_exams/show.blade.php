@@ -1031,7 +1031,7 @@ body {
             </svg>
           </div>
           <div class="review-row-text">
-            <div class="review-row-title">الأسئلة المتروكة</div>
+            <div class="review-row-title">الأسئلة المتروكة (<span id="rev-row-unanswered-cnt">0</span>)</div>
             <div class="review-row-subtitle">مراجعة الأسئلة غير المجابة فقط</div>
           </div>
           <div class="review-row-chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7" /></svg></div>
@@ -1047,7 +1047,7 @@ body {
             </svg>
           </div>
           <div class="review-row-text">
-            <div class="review-row-title">الأسئلة المعلّمة</div>
+            <div class="review-row-title">الأسئلة المعلّمة (<span id="rev-row-flagged-cnt">0</span>)</div>
             <div class="review-row-subtitle">مراجعة الأسئلة التي ميزتها بنجمة</div>
           </div>
           <div class="review-row-chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7" /></svg></div>
@@ -1214,6 +1214,13 @@ $(document).ready(function() {
                 if(!isAns && !isFlag) $(this).css('border-color', 'var(--border)');
             }
         });
+
+        // Update review dashboard counts
+        $('#rev-answered').text(answeredCount);
+        $('#rev-unanswered').text(unansweredCount);
+        $('#rev-flagged').text(flaggedCount);
+        $('#rev-row-unanswered-cnt').text(unansweredCount);
+        $('#rev-row-flagged-cnt').text(flaggedCount);
 
         // Review Dashboard update
         $('#summary-answered').text(answeredCount + ' من ' + totalQuestions);
