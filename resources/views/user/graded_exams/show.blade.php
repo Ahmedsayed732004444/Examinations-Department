@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.user')
 
 @section('title', 'أداء الاختبار - ' . $session->gradedExam->title_ar)
 
