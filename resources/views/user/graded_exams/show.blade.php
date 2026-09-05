@@ -829,11 +829,10 @@ body {
         
         @foreach($questions as $index => $sq)
           @php
-            $isMulti = $sq->question->question_type == 'multiple_choice';
-            $correctCount = 1;
-            if($isMulti) {
-              $correctCount = $sq->question->options()->where('is_correct', true)->count();
-            }
+            $isMulti = (bool) $sq->question->is_multi_correct;
+            $correctCount = $isMulti
+              ? $sq->question->options->filter(fn($opt) => $opt->is_correct)->count()
+              : 1;
           @endphp
           
           <div class="ux-card question-card {{ $index === 0 ? 'active' : 'hidden' }}" data-index="{{ $index }}" data-is-multi="{{ $isMulti ? 'true' : 'false' }}" data-required-count="{{ $correctCount }}">
@@ -930,7 +929,13 @@ body {
             </g>
           </svg>
         </div>
-        <div dir="rtl" style="text-align: right;">
+        <div dir="rtl" style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
+          <button type="button" id="btn-return-from-review" style="background: var(--blueTint); border: none; color: var(--blue); cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: var(--font); font-weight: 800; font-size: 12.5px; padding: 6px 12px; border-radius: 8px; margin-bottom: 12px;">
+            الرجوع للأسئلة
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
           <h1 class="review-title">مراجعة الاختبار</h1>
           <p class="review-subtitle">نظرة عامة قبل تسليم الاختبار</p>
         </div>
@@ -1415,6 +1420,13 @@ $(document).ready(function() {
         $('#view-review').addClass('hidden');
         $('#view-question').removeClass('hidden');
         showQuestion(0);
+    });
+
+    $('#btn-return-from-review').on('click', function() {
+        reviewQueueIds = null;
+        $('#view-review').addClass('hidden');
+        $('#view-question').removeClass('hidden');
+        showQuestion(currentIndex);
     });
 
     // Final Submit
