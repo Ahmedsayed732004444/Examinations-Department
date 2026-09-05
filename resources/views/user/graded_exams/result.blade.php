@@ -20,7 +20,11 @@
 
 .result-page{
     background: var(--bg);
+    min-height: 100vh;
+    min-height: 100dvh;
     padding: 20px 14px 56px;
+    display: flex;
+    flex-direction: column;
 }
 @media (min-width: 768px){
     .result-page{ padding: 36px 20px 64px; }

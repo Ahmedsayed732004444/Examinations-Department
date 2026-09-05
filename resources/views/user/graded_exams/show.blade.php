@@ -45,9 +45,13 @@ body {
   font-family: var(--font);
   max-width: 480px;
   margin: 0 auto;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
   background-color: var(--bg);
   color: var(--text);
+  overflow: hidden;
 }
 
 /* ---------------------------------------------------------------------
