@@ -849,7 +849,7 @@ body {
 
     <!-- Scroll Area (Questions Form) -->
     <div class="scroll-area">
-      <form id="exam-form" action="{{ route('user.graded_exams.submit', $session->id) }}" method="POST">
+      <form id="exam-form" action="{{ route('user.graded_exams.answer', $session->id) }}" method="POST">
         @csrf
         
         @foreach($questions as $index => $sq)
