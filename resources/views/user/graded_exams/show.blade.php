@@ -104,7 +104,7 @@ body {
 /* Header */
 .header-top-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: 10px;
 }
@@ -232,7 +232,7 @@ body {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 13px 50px 13px 16px;
+  padding: 13px 16px;
   border-radius: 14px;
   border: 1.5px solid var(--border);
   background-color: #FFFFFF;
@@ -245,30 +245,6 @@ body {
 .option-button.selected {
   border-color: var(--blue);
   background-color: var(--blueTint);
-}
-
-.option-marker {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1.5px solid #C7CFDD;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--textMuted);
-  background-color: #FFFFFF;
-}
-.option-marker.selected {
-  background-color: var(--blue);
-  border-color: var(--blue);
-  color: #FFFFFF;
 }
 
 .option-text {
@@ -794,7 +770,6 @@ body {
     <div class="top-fixed">
       <div class="ux-card">
         <div class="header-top-row">
-          <span class="exam-badge">{{ $session->gradedExam->course->course_code ?? 'EXAM' }}</span>
           <div class="ltr-group">
             <svg id="timer-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="13" r="8" />
@@ -886,9 +861,6 @@ body {
                     <input type="radio" class="hidden option-input" name="answers[{{ $sq->id }}]" value="{{ $opt->id }}" id="opt_{{ $sq->id }}_{{ $opt->id }}">
                   @endif
                   
-                  <div class="option-marker">
-                    {{ chr(65 + $optIdx) }}
-                  </div>
                   <div class="option-text">{{ $opt->option_text_ar }}</div>
                 </label>
               @endforeach
@@ -1313,18 +1285,14 @@ $(document).ready(function() {
         
         if (type === 'radio') {
             card.find('.option-button').removeClass('selected');
-            card.find('.option-marker').removeClass('selected');
             
             $(this).closest('.option-button').addClass('selected');
-            $(this).closest('.option-button').find('.option-marker').addClass('selected');
         } else {
             let btn = $(this).closest('.option-button');
             if ($(this).is(':checked')) {
                 btn.addClass('selected');
-                btn.find('.option-marker').addClass('selected');
             } else {
                 btn.removeClass('selected');
-                btn.find('.option-marker').removeClass('selected');
             }
         }
         updateQuestionMap();
