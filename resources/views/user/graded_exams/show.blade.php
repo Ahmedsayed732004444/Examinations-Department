@@ -250,7 +250,7 @@ body {
 .option-text {
   flex: 1;
   line-height: 1.5;
-  text-align: center;
+  text-align: right;
   color: var(--text);
 }
 
@@ -785,8 +785,8 @@ body {
           </div>
         </div>
 
-        <div class="progress-line">
-          السؤال <span id="lbl-q-index">1</span> من {{ $session->total_questions }}
+        <div class="progress-line" dir="rtl">
+          السؤال <bdi id="lbl-q-index">1</bdi> من <bdi>{{ $session->total_questions }}</bdi>
         </div>
 
         <div class="progress-track">
