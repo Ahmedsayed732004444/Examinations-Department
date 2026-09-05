@@ -849,7 +849,7 @@ body {
             <!-- Hidden flag input to preserve state if needed, though we track via JS -->
             <input type="checkbox" class="flag-toggle hidden" tabindex="-1">
 
-            <p class="question-text">{{ $sq->question->text_ar }}</p>
+            <p class="question-text"><bdi>{{ $index + 1 }}</bdi>) {{ $sq->question->text_ar }}</p>
 
             @if($isMulti && $correctCount > 1)
               <div style="text-align: center; margin-bottom: 16px;">
