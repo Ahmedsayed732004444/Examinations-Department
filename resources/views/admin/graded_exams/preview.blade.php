@@ -1,9 +1,20 @@
-@extends('layouts.admin')
+@extends('layouts.user')
 @section('title', 'اختبار الأسئلة - ' . $exam->title_ar)
-@section('page-title', 'اختبار الأسئلة - ' . $exam->title_ar)
 
 @section('content')
 <style>
+    body {
+        background-color: #f1f5f9;
+        direction: rtl;
+    }
+    .preview-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px 14px 60px;
+    }
+    @media (min-width: 768px){
+        .preview-container { padding: 36px 20px 64px; }
+    }
     .question-card {
         background: #fff;
         border-radius: 12px;
@@ -14,7 +25,7 @@
     }
     .question-header {
         display: flex;
-        align-items: baseline;
+        align-items: flex-start;
         gap: 12px;
         margin-bottom: 16px;
     }
@@ -32,6 +43,13 @@
         font-weight: 700;
         color: #1e293b;
         margin: 0;
+        line-height: 1.5;
+    }
+    .hint-text {
+        color: #f59e0b;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-top: 4px;
     }
     .options-list {
         display: flex;
@@ -47,6 +65,7 @@
         cursor: pointer;
         transition: all 0.2s;
         margin: 0;
+        text-align: right;
     }
     .option-label:hover {
         background: #f8fafc;
@@ -82,62 +101,71 @@
         border-radius: 4px;
         margin-bottom: 12px;
     }
+    /* override bootstrap spacing for radios */
+    .form-check-input {
+        margin-right: 0 !important;
+        margin-left: 12px !important;
+    }
 </style>
 
-<div class="mb-4">
-    <a href="{{ route('admin.graded_exams.index') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-right me-1"></i> رجوع للامتحانات
-    </a>
-</div>
+<div class="preview-container">
+    <div class="alert alert-info shadow-sm mb-4">
+        <h5 class="alert-heading fw-bold mb-2"><i class="bi bi-info-circle me-2"></i>وضع الاختبار السريع (الآدمن)</h5>
+        <p class="mb-0">
+            هذه الصفحة تعرض <strong>جميع أسئلة الامتحان</strong> في صفحة واحدة لاختبارها ومراجعتها بسرعة.
+            <br>
+            بمجرد النقر على أي إجابة، سيظهر فوراً ما إذا كانت صحيحة أم خاطئة مع عرض التفسير.
+        </p>
+    </div>
 
-<div class="alert alert-info shadow-sm mb-4">
-    <h5 class="alert-heading fw-bold mb-2"><i class="bi bi-info-circle me-2"></i>وضع الاختبار السريع (الآدمن)</h5>
-    <p class="mb-0">
-        هذه الصفحة تعرض <strong>جميع أسئلة الامتحان</strong> في صفحة واحدة لاختبارها ومراجعتها بسرعة.
-        <br>
-        بمجرد النقر على أي إجابة، سيظهر فوراً ما إذا كانت صحيحة أم خاطئة مع عرض التفسير.
-    </p>
-</div>
+    @php
+        $globalIndex = 1;
+    @endphp
 
-@php
-    $globalIndex = 1;
-@endphp
-
-@foreach($exam->units as $unit)
-    <h3 class="mb-4 mt-5 text-primary fw-bold" style="border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
-        {{ $unit->title_ar }}
-    </h3>
-    
-    @foreach($unit->questions as $question)
-        <div class="question-card" id="q-{{ $question->id }}">
-            <div class="unit-badge">{{ $unit->title_ar }} (مستوى: {{ __("app.".$question->level) ?? $question->level }})</div>
-            
-            <div class="question-header">
-                <span class="question-number">سؤال {{ $globalIndex++ }}</span>
-                <h4 class="question-text">{{ $question->text_ar }}</h4>
-            </div>
-
-            <div class="options-list">
-                @foreach($question->options as $option)
-                    <label class="option-label" data-q-id="{{ $question->id }}" data-is-correct="{{ $option->is_correct ? 'true' : 'false' }}">
-                        <input type="{{ $question->is_multi_correct ? 'checkbox' : 'radio' }}" 
-                               name="q_{{ $question->id }}{{ $question->is_multi_correct ? '[]' : '' }}" 
-                               value="{{ $option->id }}" 
-                               class="form-check-input me-3 ms-0 option-input">
-                        <span>{{ $option->option_text_ar }}</span>
-                    </label>
-                @endforeach
-            </div>
-
-            @if($question->explanation_ar)
-                <div class="explanation-box" id="exp-{{ $question->id }}">
-                    <strong>التفسير:</strong>
-                    <div class="mt-2">{{ $question->explanation_ar }}</div>
+    @foreach($exam->units as $unit)
+        <h3 class="mb-4 mt-5 text-primary fw-bold" style="border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+            {{ $unit->title_ar }}
+        </h3>
+        
+        @foreach($unit->questions as $question)
+            @php
+                $correctCount = $question->options->where('is_correct', true)->count();
+            @endphp
+            <div class="question-card" id="q-{{ $question->id }}">
+                <div class="unit-badge">{{ $unit->title_ar }} (مستوى: {{ __("app.".$question->level) ?? $question->level }})</div>
+                
+                <div class="question-header">
+                    <span class="question-number"><bdi>{{ $globalIndex++ }}</bdi></span>
+                    <div>
+                        <h4 class="question-text">{{ $question->text_ar }}</h4>
+                        @if($question->is_multi_correct)
+                            <div class="hint-text">(حدد {{ $correctCount }} إجابات صحيحة)</div>
+                        @endif
+                    </div>
                 </div>
-            @endif
-        </div>
+
+                <div class="options-list">
+                    @foreach($question->options as $option)
+                        <label class="option-label" data-q-id="{{ $question->id }}" data-is-correct="{{ $option->is_correct ? 'true' : 'false' }}">
+                            <input type="{{ $question->is_multi_correct ? 'checkbox' : 'radio' }}" 
+                                   name="q_{{ $question->id }}{{ $question->is_multi_correct ? '[]' : '' }}" 
+                                   value="{{ $option->id }}" 
+                                   class="form-check-input option-input">
+                            <span>{{ $option->option_text_ar }}</span>
+                        </label>
+                    @endforeach
+                </div>
+
+                @if($question->explanation_ar)
+                    <div class="explanation-box" id="exp-{{ $question->id }}">
+                        <strong>التفسير:</strong>
+                        <div class="mt-2">{{ $question->explanation_ar }}</div>
+                    </div>
+                @endif
+            </div>
+        @endforeach
     @endforeach
-@endforeach
+</div>
 
 @push('scripts')
 <script>

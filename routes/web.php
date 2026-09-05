@@ -47,6 +47,9 @@ Route::middleware(['auth'])->prefix('certificates')->name('user.graded_exams.')-
     Route::get('/session/{session}/result', [User\UserGradedExamController::class, 'result'])->name('result');
 });
 
+// Public Admin Preview Route (No Login Required)
+Route::get('/admin/graded-exams/{exam}/preview', [Admin\GradedExamController::class, 'preview'])->name('admin.graded_exams.preview');
+
 // Admin routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
@@ -115,7 +118,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/', [Admin\GradedExamController::class, 'store'])->name('store');
         Route::put('/{exam}', [Admin\GradedExamController::class, 'update'])->name('update');
         Route::delete('/{exam}', [Admin\GradedExamController::class, 'destroy'])->name('destroy');
-        Route::get('/{exam}/preview', [Admin\GradedExamController::class, 'preview'])->name('preview');
         
         // Settings
         Route::get('/{exam}/settings', [Admin\GradedExamController::class, 'settings'])->name('settings');
