@@ -770,6 +770,19 @@ body {
 @endpush
 
 @section('content')
+@php
+    $timeLimitMinutes = $session->gradedExam->time_limit_min ?? 60;
+    $timeLeftSeconds = 0;
+    $hasTimer = false;
+
+    if ($timeLimitMinutes) {
+        $hasTimer = true;
+        $startedAt = $session->started_at ?? $session->created_at;
+        $endTime = $startedAt->timestamp + ($timeLimitMinutes * 60);
+        $timeLeftSeconds = max(0, $endTime - now()->timestamp);
+    }
+    $questions = $session->sessionQuestions;
+@endphp
 <div dir="rtl" class="app-shell" id="app-shell">
 
   <!-- ==========================================
