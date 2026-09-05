@@ -852,6 +852,18 @@ body {
 
             <p class="question-text">{{ $sq->question->text_ar }}</p>
 
+            @if($isMulti && $correctCount > 1)
+              <div style="text-align: center; margin-bottom: 16px;">
+                <span style="color: var(--blue); font-size: 13px; font-weight: 700; background: var(--blueTint); padding: 5px 14px; border-radius: 8px;">
+                   @if($correctCount == 2)
+                     (حدد إجابتين صحيحتين)
+                   @else
+                     (حدد {{ $correctCount }} إجابات صحيحة)
+                   @endif
+                </span>
+              </div>
+            @endif
+
             <div class="options-list">
               @foreach($sq->question->options as $optIdx => $opt)
                 <label class="option-button" for="opt_{{ $sq->id }}_{{ $opt->id }}">
