@@ -556,7 +556,7 @@ return [
             'level' => 'hard',
             'question_type' => 'mcq',
             'text_ar' => 'يشير الاختصار TFC إلى:',
-            'explanation_ar' => 'التفسير: يستخدم الاختصار TFC للدلالة على التكاليف الثابتة الكلية  Total Fixed Costs .',
+            'explanation_ar' => 'التفسير: يستخدم الاختصار TFC للدلالة على التكاليف الثابتة الكلية Total Fixed Costs .',
             'is_multi_correct' => false,
             'order_index' => 20,
             'options' => [

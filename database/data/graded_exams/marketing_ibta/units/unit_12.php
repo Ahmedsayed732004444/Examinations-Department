@@ -11,7 +11,7 @@ return [
             'original_number' => 341,
             'level' => 'easy',
             'question_type' => 'mcq',
-            'text_ar' => 'أيٌّ مما يلي يُعرف بأنه تطبيق التكنولوجيا الرقمية والإنترنت لتحقيق الأهداف التسويقية للشركة؟',
+            'text_ar' => 'أيٌّ مما يلي يُعرف بأنه تطبيق التكنولوجيا الرقمية والإنترنت لتحقيق الأهداف التسويقية للشركة؟',
             'explanation_ar' => 'التفسير: يتضمن التسويق الرقمي استخدام الوسائط والتكنولوجيا الرقمية لتوسيع نطاق الوصول للعملاء وتحقيق أهداف التسويق. راجع الوحدة 12: التكنولوجيا في التسويق، ص 228',
             'is_multi_correct' => false,
             'order_index' => 1,
@@ -43,7 +43,7 @@ return [
             'level' => 'medium',
             'question_type' => 'mcq',
             'text_ar' => 'من أنواع التسويق الرقمي (الإلكتروني ) ما يلي:',
-            'explanation_ar' => 'راجع الوحدة 12: التكنولوجيا في التسويق ، ص : 230',
+            'explanation_ar' => 'راجع الوحدة 12: التكنولوجيا في التسويق ، ص: 230',
             'is_multi_correct' => false,
             'order_index' => 2,
             'options' => [
@@ -79,7 +79,7 @@ return [
             'level' => 'easy',
             'question_type' => 'true_false',
             'text_ar' => 'من أنواع التسويق عبر الإنترنت (الشبكي ) الدفع لكل نقرة (Click).',
-            'explanation_ar' => 'راجع الوحدة 12: التكنولوجيا في التسويق، درس التكنولوجيات في التسويق، ص : 230',
+            'explanation_ar' => 'راجع الوحدة 12: التكنولوجيا في التسويق، درس التكنولوجيات في التسويق، ص: 230',
             'is_multi_correct' => false,
             'order_index' => 3,
             'options' => [
@@ -779,7 +779,7 @@ return [
             'level' => 'medium',
             'question_type' => 'mcq',
             'text_ar' => 'أي من الأدوات التالية يرتبط بسياق البحث عن الكلمات المفتاحية والأفكار المتعلقة بها؟',
-            'explanation_ar' => 'التفسير: تعتبر Google Trendsو Answer the Public Keyword Generatorضمن الأدوات المرتبطة بالبحث في محركات البحث والكلمات المفتاحية.',
+            'explanation_ar' => 'التفسير: تعتبر Google Trends, Answer the Public, Keyword Generator ضمن الأدوات المرتبطة بالبحث في محركات البحث والكلمات المفتاحية.',
             'is_multi_correct' => false,
             'order_index' => 28,
             'options' => [
@@ -1023,12 +1023,12 @@ return [
             'order_index' => 37,
             'options' => [
                 [
-                    'option_text_ar' => 'ð Google وAmazon',
+                    'option_text_ar' => 'Google وAmazon',
                     'order_index' => 1,
                     'is_correct' => false,
                 ],
                 [
-                    'option_text_ar' => 'ð HTML وCSS',
+                    'option_text_ar' => 'HTML وCSS',
                     'order_index' => 2,
                     'is_correct' => false,
                 ],
@@ -1038,7 +1038,7 @@ return [
                     'is_correct' => true,
                 ],
                 [
-                    'option_text_ar' => 'ð PPC وSEO',
+                    'option_text_ar' => 'PPC وSEO',
                     'order_index' => 4,
                     'is_correct' => false,
                 ],
