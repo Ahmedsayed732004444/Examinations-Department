@@ -36,15 +36,35 @@
   --font: 'Tajawal', sans-serif;
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden; /* الصفحة نفسها متتسكرولش؛ السكرول جوه الشاشات بس */
+}
+
 body {
   background-color: var(--bg) !important;
   font-family: var(--font);
 }
 
+/* بيطفي هيدر وفوتر الموقع (layouts.user) بحيث الاختبار ياخد الشاشة كلها */
+body > .top-navbar,
+body > footer,
+body > #alert-container {
+  display: none !important;
+}
+main {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
 .app-shell {
   font-family: var(--font);
   max-width: 480px;
+  width: 100%;
   margin: 0 auto;
+  position: fixed;
+  inset: 0;
+  z-index: 1030; /* أعلى من top-navbar بتاع الليّاوت (z-index: 1020) لو ظهر لأي سبب */
   height: 100vh;
   height: 100dvh;
   display: flex;
@@ -741,6 +761,43 @@ body {
 .hidden { display: none !important; }
 .v-hidden { visibility: hidden !important; }
 
+/* ---------------------------------------------------------------------
+ * Custom thin scrollbars
+ * (dir="rtl" على app-shell بيخلي أي سكرول بار يظهر على شمال الشاشة
+ *  بالشكل الافتراضي السميك/الغامق. هنا بنستبدله بشريط رفيع فاتح
+ *  يناسب تصميم الشاشة بدل الخط البني اللي كان بيظهر) 
+ * --------------------------------------------------------------------- */
+.scroll-area,
+.page-centered,
+.review-main,
+.q-grid,
+.sheet-content {
+  scrollbar-width: thin;
+  scrollbar-color: #D7DEEA transparent;
+}
+.scroll-area::-webkit-scrollbar,
+.page-centered::-webkit-scrollbar,
+.review-main::-webkit-scrollbar,
+.q-grid::-webkit-scrollbar,
+.sheet-content::-webkit-scrollbar {
+  width: 4px;
+}
+.scroll-area::-webkit-scrollbar-track,
+.page-centered::-webkit-scrollbar-track,
+.review-main::-webkit-scrollbar-track,
+.q-grid::-webkit-scrollbar-track,
+.sheet-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-area::-webkit-scrollbar-thumb,
+.page-centered::-webkit-scrollbar-thumb,
+.review-main::-webkit-scrollbar-thumb,
+.q-grid::-webkit-scrollbar-thumb,
+.sheet-content::-webkit-scrollbar-thumb {
+  background-color: #D7DEEA;
+  border-radius: 10px;
+}
+
 /* Status cell styles */
 .status-unanswered { background: #FFFFFF; border-color: var(--border); color: var(--textMuted); }
 .status-answered { background: var(--greenTint); border-color: var(--green); color: #146C48; }
@@ -1184,7 +1241,7 @@ $(document).ready(function() {
     function updateQuestionMap() {
         syncState();
         let answeredCount = Object.keys(answers).length;
-        let flaggedCount = Object.keys(flags).length;
+        let flaggedCount = Object.keys(flags).filter(k => flags[k]).length;
         let unansweredCount = totalQuestions - answeredCount;
 
         // Progress bar
@@ -1218,7 +1275,7 @@ $(document).ready(function() {
             }
         });
 
-        // Update review dashboard counts
+        // Update review dashboard counts (يتنفذوا كل مرة يتغير فيها أي إجابة أو علامة مراجعة)
         $('#rev-answered').text(answeredCount);
         $('#rev-unanswered').text(unansweredCount);
         $('#rev-flagged').text(flaggedCount);
@@ -1282,18 +1339,30 @@ $(document).ready(function() {
 
         $('#btn-prev').prop('disabled', (reviewQueueIds && reviewQueuePos === 0) || (!reviewQueueIds && currentIndex === 0));
 
+        // تحديث حالة زر "علّم للمراجعة" الظاهر فوق السؤال الحالي عشان يتزامن مع أي تعديل حصل
+        let currentCard = $(`.question-card[data-index="${idx}"]`);
+        let starBtn = currentCard.find('.btn-mark-star');
+        let starLabel = starBtn.find('.mark-label');
+        if (flags[idx]) {
+            starBtn.addClass('flagged');
+            starLabel.text('معلّم للمراجعة');
+        } else {
+            starBtn.removeClass('flagged');
+            starLabel.text('علّم السؤال للمراجعة');
+        }
+
         updateQuestionMap();
         window.scrollTo({top: 0});
     }
 
-    // Toggle Flag
-    $('.btn-mark-star').on('click', function() {
+    // Toggle Flag (event delegation عشان تفضل شغالة مهما اتغيرت الشاشة الظاهرة،
+    // وعشان الأرقام تتحدث فورًا لحظة بلحظة مع كل تعليم/إلغاء تعليم)
+    $(document).on('click', '.btn-mark-star', function() {
         let idx = $(this).data('index');
         flags[idx] = !flags[idx];
         
         let link = $(this);
         let label = link.find('.mark-label');
-        let iconPath = link.find('path');
 
         if (flags[idx]) {
             link.addClass('flagged');
@@ -1305,8 +1374,9 @@ $(document).ready(function() {
         updateQuestionMap();
     });
 
-    // Options Selection Visuals
-    $('.option-input').on('change', function() {
+    // Options Selection Visuals (event delegation لنفس السبب: تحديث فوري
+    // لعدد "الأسئلة المجابة/المتروكة" مع كل اختيار إجابة)
+    $(document).on('change', '.option-input', function() {
         let type = $(this).attr('type');
         let card = $(this).closest('.question-card');
         
@@ -1370,12 +1440,13 @@ $(document).ready(function() {
 
     // Navigator Sheet
     $('#btn-open-nav').on('click', function() {
+        updateQuestionMap();
         $('#nav-sheet').css('display', 'flex');
     });
     $('#btn-close-sheet').on('click', function() {
         $('#nav-sheet').css('display', 'none');
     });
-    $('.grid-cell').on('click', function() {
+    $(document).on('click', '.grid-cell', function() {
         let idx = $(this).data('map-index');
         $('#nav-sheet').css('display', 'none');
         reviewQueueIds = null; // drop out of queue if map used
